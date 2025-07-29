@@ -1,0 +1,1026 @@
+import { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import type { Player, WeightRange, Tournament } from '../types';
+import { MatchesStorage, type Fixture } from '../utils/matchesStorage';
+import DeleteConfirmationModal from '../components/UI/DeleteConfirmationModal';
+
+// Import all double elimination components
+import {
+  DoubleElimination1,
+  DoubleElimination2,
+  DoubleElimination4,
+  DoubleElimination5,
+  DoubleElimination6,
+  DoubleElimination7,
+  DoubleElimination8,
+  DoubleElimination9_11,
+  DoubleElimination12_16,
+  DoubleElimination17_23,
+  DoubleElimination24_32,
+  DoubleElimination33_47,
+  DoubleElimination48_64,
+  DoubleElimination65_95,
+  DoubleElimination96_128,
+  DoubleElimination129_191,
+  DoubleElimination192_256,
+  DoubleElimination257_383,
+  DoubleElimination384_512,
+} from '../components/double elimination';
+
+const Matches = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [fixtures, setFixtures] = useState<Fixture[]>([]);
+  const [activeFixture, setActiveFixture] = useState<Fixture | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [desiredTab, setDesiredTab] = useState<'active' | 'completed' | 'rankings' | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    fixtureId: string | null;
+    fixtureName: string;
+  }>({
+    isOpen: false,
+    fixtureId: null,
+    fixtureName: ''
+  });
+
+  // Use ref to track current fixtures to avoid dependency issues
+  const fixturesRef = useRef<Fixture[]>([]);
+  fixturesRef.current = fixtures;
+
+  // Load data on component mount
+  useEffect(() => {
+    console.log('Loading matches data...');
+    
+    // Load players from localStorage
+    const savedPlayers = localStorage.getItem('arm-wrestling-players');
+    if (savedPlayers) {
+      try {
+        const parsedPlayers = JSON.parse(savedPlayers);
+        setPlayers(parsedPlayers);
+      } catch (error) {
+        console.error('Error loading players from localStorage:', error);
+      }
+    }
+
+    // Load fixtures from matches storage
+    const matchesData = MatchesStorage.getMatchesData();
+    setFixtures(matchesData.fixtures);
+    
+    // Set active fixture if exists
+    if (matchesData.activeFixtureId) {
+      const active = matchesData.fixtures.find(f => f.id === matchesData.activeFixtureId);
+      setActiveFixture(active || null);
+    }
+
+    setIsLoading(false);
+  }, []);
+
+  // Handle URL parameters for fixture selection and tab switching
+  useEffect(() => {
+    if (!isLoading && fixtures.length > 0) {
+      const tab = searchParams.get('tab') as 'active' | 'completed' | 'rankings' | null;
+      const fixtureId = searchParams.get('fixture');
+      
+      if (tab) {
+        setDesiredTab(tab);
+      }
+      
+      if (fixtureId) {
+        const targetFixture = fixtures.find(f => f.id === fixtureId);
+        if (targetFixture) {
+          setActiveFixture(targetFixture);
+          MatchesStorage.setActiveFixture(fixtureId);
+        }
+      }
+      
+      // Clear URL parameters after processing
+      if (tab || fixtureId) {
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [isLoading, fixtures, searchParams]);
+
+  // Save fixtures whenever they change
+  useEffect(() => {
+    if (!isLoading) {
+      const matchesData = {
+        fixtures,
+        activeFixtureId: activeFixture?.id,
+        lastUpdated: new Date().toISOString()
+      };
+      MatchesStorage.saveMatchesData(matchesData);
+    }
+  }, [fixtures, activeFixture, isLoading]);
+
+  // Handle tournament start from Tournaments page
+  useEffect(() => {
+    if (location.state) {
+      const state = location.state as {
+        tournament: Tournament;
+        weightRange: WeightRange;
+      };
+      
+      // Check if fixture already exists for this tournament and weight range
+      const existingFixture = fixturesRef.current.find(f => 
+        f.tournamentId === state.tournament.id && 
+        f.weightRangeId === state.weightRange.id
+      );
+      
+      if (existingFixture) {
+        // If fixture already exists, just set it as active
+        setActiveFixture(existingFixture);
+        MatchesStorage.setActiveFixture(existingFixture.id);
+        // Clear location state to prevent duplicate creation on page refresh
+        window.history.replaceState({}, document.title);
+        return;
+      }
+      
+      // Create new fixture only if it doesn't exist
+      const eligiblePlayers = players.filter(player => {
+        const withinWeightRange = player.weight >= state.weightRange.min && player.weight <= state.weightRange.max;
+        const notExcluded = !state.weightRange.excludedPlayerIds?.includes(player.id);
+        const genderMatch = !state.tournament.genderFilter || player.gender === state.tournament.genderFilter;
+        const handMatch = !state.tournament.handPreferenceFilter || 
+          player.handPreference === state.tournament.handPreferenceFilter ||
+          player.handPreference === 'both';
+        let birthYearMatch = true;
+        if (player.birthday && (state.tournament.birthYearMin || state.tournament.birthYearMax)) {
+          const birthYear = new Date(player.birthday).getFullYear();
+          if (state.tournament.birthYearMin && birthYear < state.tournament.birthYearMin) {
+            birthYearMatch = false;
+          }
+          if (state.tournament.birthYearMax && birthYear > state.tournament.birthYearMax) {
+            birthYearMatch = false;
+          }
+        }
+        return withinWeightRange && notExcluded && genderMatch && handMatch && birthYearMatch;
+      });
+
+      if (eligiblePlayers.length > 0) {
+        const newFixture = MatchesStorage.createNewFixture(state.tournament, state.weightRange, eligiblePlayers);
+        setFixtures(prev => [...prev, newFixture]);
+        setActiveFixture(newFixture);
+        MatchesStorage.setActiveFixture(newFixture.id);
+        // Clear location state to prevent duplicate creation on page refresh
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, players]);
+
+  const handleFixtureSelect = (fixtureId: string) => {
+    const fixture = fixtures.find(f => f.id === fixtureId);
+    if (fixture) {
+      setActiveFixture(fixture);
+      MatchesStorage.setActiveFixture(fixtureId);
+    }
+  };
+
+  const handleFixtureClose = (fixtureId: string, fixtureName: string) => {
+    setDeleteModal({
+      isOpen: true,
+      fixtureId,
+      fixtureName
+    });
+  };
+
+  const confirmDeleteFixture = () => {
+    if (!deleteModal.fixtureId) return;
+    
+    // Remove from localStorage
+    MatchesStorage.deleteFixture(deleteModal.fixtureId);
+    
+    // Remove from state
+    setFixtures(prev => prev.filter(f => f.id !== deleteModal.fixtureId));
+    
+    // If this was the active fixture, clear it
+    if (activeFixture?.id === deleteModal.fixtureId) {
+      setActiveFixture(null);
+      MatchesStorage.setActiveFixture(null);
+    }
+  };
+
+  const handleMatchResult = (type: string, winnerId: string, loserId?: string) => {
+    if (!activeFixture) return;
+
+    console.log(`Match completed. Type: ${type}, Winner: ${winnerId}${loserId ? `, Loser: ${loserId}` : ''}`);
+    
+    // Add match result to fixture
+    const result = {
+      matchId: `match-${Date.now()}`,
+      winnerId,
+      loserId,
+      timestamp: new Date().toISOString(),
+      type
+    };
+    
+    MatchesStorage.addMatchResult(activeFixture.id, result);
+    
+    // Update fixture in state
+    setFixtures(prev => prev.map(f => 
+      f.id === activeFixture.id 
+        ? { ...f, results: [...f.results, result], lastUpdated: new Date().toISOString() }
+        : f
+    ));
+  };
+
+  const handleTournamentComplete = (rankings: { first?: string; second?: string; third?: string }) => {
+    if (!activeFixture) return;
+
+    console.log('Tournament completed with rankings:', rankings);
+    
+    // Save rankings to localStorage
+    MatchesStorage.completeFixtureWithRankings(activeFixture.id, rankings);
+    
+    // Update fixture with completed status and rankings
+    const updatedFixture = {
+      ...activeFixture,
+      status: 'completed' as const,
+      rankings,
+      completedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString()
+    };
+    
+    // Update in state
+    setFixtures(prev => prev.map(f => 
+      f.id === activeFixture.id ? updatedFixture : f
+    ));
+    
+    // Update active fixture
+    setActiveFixture(updatedFixture);
+  };
+
+
+  const getDoubleEliminationComponentWithKey = () => {
+    if (!activeFixture || activeFixture.players.length === 0) {
+      return <div className="text-center text-gray-600">No players in this fixture</div>;
+    }
+
+    const playerCount = activeFixture.players.length;
+    // If fixture is completed, automatically show rankings, otherwise respect user's desired tab
+    const defaultTab = activeFixture.status === 'completed' ? 'rankings' : 'active';
+    const finalTab = desiredTab || defaultTab;
+    
+    const props = {
+      players: activeFixture.players,
+      onMatchResult: handleMatchResult,
+      onTournamentComplete: handleTournamentComplete,
+      initialTab: finalTab,
+      fixtureId: activeFixture.id
+    };
+
+    // Return appropriate component based on player count
+    switch (playerCount) {
+      case 1:
+        return <DoubleElimination1 {...props} />;
+      case 2:
+      case 3:
+        return <DoubleElimination2 {...props} />;
+      case 4:
+        return <DoubleElimination4 {...props} />;
+      case 5:
+        return <DoubleElimination5 {...props} />;
+      case 6:
+        return <DoubleElimination6 {...props} />;
+      case 7:
+        return <DoubleElimination7 {...props} />;
+      case 8:
+        return <DoubleElimination8 {...props} />;
+      case 9:
+      case 10:
+      case 11:
+        return <DoubleElimination9_11 {...props} />;
+      case 12:
+      case 13:
+      case 14:
+      case 15:
+      case 16:
+        return <DoubleElimination12_16 {...props} />;
+      case 17:
+      case 18:
+      case 19:
+      case 20:
+      case 21:
+      case 22:
+      case 23:
+        return <DoubleElimination17_23 {...props} />;
+      case 24:
+      case 25:
+      case 26:
+      case 27:
+      case 28:
+      case 29:
+      case 30:
+      case 31:
+      case 32:
+        return <DoubleElimination24_32 {...props} />;
+      case 33:
+      case 34:
+      case 35:
+      case 36:
+      case 37:
+      case 38:
+      case 39:
+      case 40:
+      case 41:
+      case 42:
+      case 43:
+      case 44:
+      case 45:
+      case 46:
+      case 47:
+        return <DoubleElimination33_47 {...props} />;
+      case 48:
+      case 49:
+      case 50:
+      case 51:
+      case 52:
+      case 53:
+      case 54:
+      case 55:
+      case 56:
+      case 57:
+      case 58:
+      case 59:
+      case 60:
+      case 61:
+      case 62:
+      case 63:
+      case 64:
+        return <DoubleElimination48_64 {...props} />;
+      case 65:
+      case 66:
+      case 67:
+      case 68:
+      case 69:
+      case 70:
+      case 71:
+      case 72:
+      case 73:
+      case 74:
+      case 75:
+      case 76:
+      case 77:
+      case 78:
+      case 79:
+      case 80:
+      case 81:
+      case 82:
+      case 83:
+      case 84:
+      case 85:
+      case 86:
+      case 87:
+      case 88:
+      case 89:
+      case 90:
+      case 91:
+      case 92:
+      case 93:
+      case 94:
+      case 95:
+        return <DoubleElimination65_95 {...props} />;
+      case 96:
+      case 97:
+      case 98:
+      case 99:
+      case 100:
+      case 101:
+      case 102:
+      case 103:
+      case 104:
+      case 105:
+      case 106:
+      case 107:
+      case 108:
+      case 109:
+      case 110:
+      case 111:
+      case 112:
+      case 113:
+      case 114:
+      case 115:
+      case 116:
+      case 117:
+      case 118:
+      case 119:
+      case 120:
+      case 121:
+      case 122:
+      case 123:
+      case 124:
+      case 125:
+      case 126:
+      case 127:
+      case 128:
+        return <DoubleElimination96_128 {...props} />;
+      case 129:
+      case 130:
+      case 131:
+      case 132:
+      case 133:
+      case 134:
+      case 135:
+      case 136:
+      case 137:
+      case 138:
+      case 139:
+      case 140:
+      case 141:
+      case 142:
+      case 143:
+      case 144:
+      case 145:
+      case 146:
+      case 147:
+      case 148:
+      case 149:
+      case 150:
+      case 151:
+      case 152:
+      case 153:
+      case 154:
+      case 155:
+      case 156:
+      case 157:
+      case 158:
+      case 159:
+      case 160:
+      case 161:
+      case 162:
+      case 163:
+      case 164:
+      case 165:
+      case 166:
+      case 167:
+      case 168:
+      case 169:
+      case 170:
+      case 171:
+      case 172:
+      case 173:
+      case 174:
+      case 175:
+      case 176:
+      case 177:
+      case 178:
+      case 179:
+      case 180:
+      case 181:
+      case 182:
+      case 183:
+      case 184:
+      case 185:
+      case 186:
+      case 187:
+      case 188:
+      case 189:
+      case 190:
+      case 191:
+        return <DoubleElimination129_191 {...props} />;
+      case 192:
+      case 193:
+      case 194:
+      case 195:
+      case 196:
+      case 197:
+      case 198:
+      case 199:
+      case 200:
+      case 201:
+      case 202:
+      case 203:
+      case 204:
+      case 205:
+      case 206:
+      case 207:
+      case 208:
+      case 209:
+      case 210:
+      case 211:
+      case 212:
+      case 213:
+      case 214:
+      case 215:
+      case 216:
+      case 217:
+      case 218:
+      case 219:
+      case 220:
+      case 221:
+      case 222:
+      case 223:
+      case 224:
+      case 225:
+      case 226:
+      case 227:
+      case 228:
+      case 229:
+      case 230:
+      case 231:
+      case 232:
+      case 233:
+      case 234:
+      case 235:
+      case 236:
+      case 237:
+      case 238:
+      case 239:
+      case 240:
+      case 241:
+      case 242:
+      case 243:
+      case 244:
+      case 245:
+      case 246:
+      case 247:
+      case 248:
+      case 249:
+      case 250:
+      case 251:
+      case 252:
+      case 253:
+      case 254:
+      case 255:
+      case 256:
+        return <DoubleElimination192_256 {...props} />;
+      case 257:
+      case 258:
+      case 259:
+      case 260:
+      case 261:
+      case 262:
+      case 263:
+      case 264:
+      case 265:
+      case 266:
+      case 267:
+      case 268:
+      case 269:
+      case 270:
+      case 271:
+      case 272:
+      case 273:
+      case 274:
+      case 275:
+      case 276:
+      case 277:
+      case 278:
+      case 279:
+      case 280:
+      case 281:
+      case 282:
+      case 283:
+      case 284:
+      case 285:
+      case 286:
+      case 287:
+      case 288:
+      case 289:
+      case 290:
+      case 291:
+      case 292:
+      case 293:
+      case 294:
+      case 295:
+      case 296:
+      case 297:
+      case 298:
+      case 299:
+      case 300:
+      case 301:
+      case 302:
+      case 303:
+      case 304:
+      case 305:
+      case 306:
+      case 307:
+      case 308:
+      case 309:
+      case 310:
+      case 311:
+      case 312:
+      case 313:
+      case 314:
+      case 315:
+      case 316:
+      case 317:
+      case 318:
+      case 319:
+      case 320:
+      case 321:
+      case 322:
+      case 323:
+      case 324:
+      case 325:
+      case 326:
+      case 327:
+      case 328:
+      case 329:
+      case 330:
+      case 331:
+      case 332:
+      case 333:
+      case 334:
+      case 335:
+      case 336:
+      case 337:
+      case 338:
+      case 339:
+      case 340:
+      case 341:
+      case 342:
+      case 343:
+      case 344:
+      case 345:
+      case 346:
+      case 347:
+      case 348:
+      case 349:
+      case 350:
+      case 351:
+      case 352:
+      case 353:
+      case 354:
+      case 355:
+      case 356:
+      case 357:
+      case 358:
+      case 359:
+      case 360:
+      case 361:
+      case 362:
+      case 363:
+      case 364:
+      case 365:
+      case 366:
+      case 367:
+      case 368:
+      case 369:
+      case 370:
+      case 371:
+      case 372:
+      case 373:
+      case 374:
+      case 375:
+      case 376:
+      case 377:
+      case 378:
+      case 379:
+      case 380:
+      case 381:
+      case 382:
+      case 383:
+        return <DoubleElimination257_383 {...props} />;
+      case 384:
+      case 385:
+      case 386:
+      case 387:
+      case 388:
+      case 389:
+      case 390:
+      case 391:
+      case 392:
+      case 393:
+      case 394:
+      case 395:
+      case 396:
+      case 397:
+      case 398:
+      case 399:
+      case 400:
+      case 401:
+      case 402:
+      case 403:
+      case 404:
+      case 405:
+      case 406:
+      case 407:
+      case 408:
+      case 409:
+      case 410:
+      case 411:
+      case 412:
+      case 413:
+      case 414:
+      case 415:
+      case 416:
+      case 417:
+      case 418:
+      case 419:
+      case 420:
+      case 421:
+      case 422:
+      case 423:
+      case 424:
+      case 425:
+      case 426:
+      case 427:
+      case 428:
+      case 429:
+      case 430:
+      case 431:
+      case 432:
+      case 433:
+      case 434:
+      case 435:
+      case 436:
+      case 437:
+      case 438:
+      case 439:
+      case 440:
+      case 441:
+      case 442:
+      case 443:
+      case 444:
+      case 445:
+      case 446:
+      case 447:
+      case 448:
+      case 449:
+      case 450:
+      case 451:
+      case 452:
+      case 453:
+      case 454:
+      case 455:
+      case 456:
+      case 457:
+      case 458:
+      case 459:
+      case 460:
+      case 461:
+      case 462:
+      case 463:
+      case 464:
+      case 465:
+      case 466:
+      case 467:
+      case 468:
+      case 469:
+      case 470:
+      case 471:
+      case 472:
+      case 473:
+      case 474:
+      case 475:
+      case 476:
+      case 477:
+      case 478:
+      case 479:
+      case 480:
+      case 481:
+      case 482:
+      case 483:
+      case 484:
+      case 485:
+      case 486:
+      case 487:
+      case 488:
+      case 489:
+      case 490:
+      case 491:
+      case 492:
+      case 493:
+      case 494:
+      case 495:
+      case 496:
+      case 497:
+      case 498:
+      case 499:
+      case 500:
+      case 501:
+      case 502:
+      case 503:
+      case 504:
+      case 505:
+      case 506:
+      case 507:
+      case 508:
+      case 509:
+      case 510:
+      case 511:
+      case 512:
+        return <DoubleElimination384_512 {...props} />;
+      default:
+        return <div className="text-center text-gray-600">Too many players for this tournament format</div>;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading matches...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
+      <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
+        <div className="backdrop-blur-md bg-white/80 rounded-2xl border border-gray-200 shadow-2xl p-6 transition-all duration-300">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">Matches</h1>
+              <p className="text-base text-gray-500 mt-1">Total Fixtures: {fixtures.length}</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => {
+                  const testFixture = MatchesStorage.createTestFixture();
+                  setFixtures(prev => [...prev, testFixture]);
+                  setActiveFixture(testFixture);
+                  MatchesStorage.setActiveFixture(testFixture.id);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-base font-semibold"
+              >
+                Add Test Fixture
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Current matches data:', MatchesStorage.getMatchesData());
+                  console.log('All fixtures:', MatchesStorage.getAllFixtures());
+                  console.log('Active fixture:', MatchesStorage.getActiveFixture());
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-400 to-gray-600 text-white rounded-lg shadow hover:from-gray-500 hover:to-gray-700 transition-all duration-200 text-base font-semibold"
+              >
+                Debug Matches
+              </button>
+              <button
+                onClick={() => {
+                  MatchesStorage.clearAllMatchesData();
+                  setFixtures([]);
+                  setActiveFixture(null);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-base font-semibold"
+              >
+                Clear All Data
+              </button>
+            </div>
+          </div>
+
+          {/* Fixtures Navigation */}
+          {fixtures.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h0m0 0h6m-6 0h0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Active Fixtures</h2>
+                  <p className="text-sm text-gray-500">{fixtures.length} fixture{fixtures.length !== 1 ? 's' : ''} available</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {fixtures.map((fixture) => (
+                  <div
+                    key={fixture.id}
+                    className={`group relative bg-white rounded-xl border-2 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 overflow-hidden ${
+                      activeFixture?.id === fixture.id
+                        ? 'border-blue-500 ring-2 ring-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <button
+                      onClick={() => handleFixtureSelect(fixture.id)}
+                      className="w-full p-6 text-left"
+                    >
+                      {/* Header with status indicator */}
+                      <div className="flex items-center justify-between mb-4">
+                                                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                           fixture.status === 'completed' 
+                             ? 'bg-green-100 text-green-800' 
+                             : fixture.status === 'active'
+                             ? 'bg-yellow-100 text-yellow-800'
+                             : 'bg-blue-100 text-blue-800'
+                         }`}>
+                           <div className={`w-2 h-2 rounded-full ${
+                             fixture.status === 'completed' 
+                               ? 'bg-green-500' 
+                               : fixture.status === 'active'
+                               ? 'bg-yellow-500'
+                               : 'bg-blue-500'
+                           }`}></div>
+                           {fixture.status === 'completed' ? 'Completed' : 
+                            fixture.status === 'active' ? 'In Progress' : 'Ready'}
+                        </div>
+                        
+                        {activeFixture?.id === fixture.id && (
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span className="text-xs text-blue-600 font-medium">Active</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Fixture Name */}
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                        {fixture.name}
+                      </h3>
+                      
+                      {/* Tournament Info */}
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          <span className="font-medium">{fixture.playerCount} players</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          <span className="truncate">{fixture.weightRangeName}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          <span className="truncate">{fixture.tournamentName}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Footer with timestamp */}
+                      <div className="pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-xs text-gray-500">
+                            Updated {new Date(fixture.lastUpdated).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFixtureClose(fixture.id, fixture.name);
+                      }}
+                      className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                      title="Delete fixture"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Active Fixture Content */}
+          {activeFixture ? (
+            <div className="space-y-6">
+              {getDoubleEliminationComponentWithKey()}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-12 h-12 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No active fixtures</h3>
+              <p className="text-gray-600 mb-6">Start a tournament from the Tournaments page to create a fixture</p>
+              <button
+                onClick={() => navigate('/tournaments')}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
+              >
+                Go to Tournaments
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, fixtureId: null, fixtureName: '' })}
+        onConfirm={confirmDeleteFixture}
+        title="Delete Fixture"
+        message={`Are you sure you want to delete "${deleteModal.fixtureName}"? This action cannot be undone.`}
+        confirmText="Delete Fixture"
+        cancelText="Cancel"
+      />
+    </div>
+  );
+};
+
+export default Matches;
