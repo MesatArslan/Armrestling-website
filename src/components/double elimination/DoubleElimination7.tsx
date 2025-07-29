@@ -22,7 +22,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
   const [tournamentComplete, setTournamentComplete] = useState(false);
   const [selectedWinner, setSelectedWinner] = useState<{ [matchId: string]: string | null }>({});
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(initialTab || 'active');
-  const [showCompletedMatches, setShowCompletedMatches] = useState(false);
+  const [] = useState(false);
 
   // Save tournament state using utility
   const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean) => {
@@ -111,7 +111,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         initializeTournament();
       }
     }
-  }, [players]);
+  }, []); // Remove players dependency to prevent re-initialization
 
   // Auto-complete bye matches
   React.useEffect(() => {
@@ -388,36 +388,8 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     return player ? `${player.name} ${player.surname}` : 'Unknown';
   };
 
-  const getPlayerDetails = (playerId: string) => {
-    return players.find(p => p.id === playerId);
-  };
 
-  const getBracketName = (bracket: string) => {
-    switch (bracket) {
-      case 'winner': return 'Winner Bracket';
-      case 'loser': return 'Loser Bracket';
-      case 'placement': return 'Placement';
-      default: return bracket;
-    }
-  };
 
-  const getMatchTitle = (match: Match) => {
-    if (match.id === 'wb1-1') return 'WB Round 1';
-    if (match.id === 'wb1-2') return 'WB Round 1';
-    if (match.id === 'wb1-3') return 'WB Round 1';
-    if (match.id === 'lb1') return 'LB Round 1';
-    if (match.id === 'wb2-1') return 'WB Round 2';
-    if (match.id === 'wb2-2') return 'WB Round 2';
-    if (match.id === 'lb2-1') return 'LB Round 2';
-    if (match.id === 'lb2-2') return 'LB Round 2';
-    if (match.id === 'wb3') return 'WB Semifinal';
-    if (match.id === 'place56') return '5th/6th Place';
-    if (match.id === 'lb3') return 'LB Round 3';
-    if (match.id === 'lb4') return 'LB Final';
-    if (match.id === 'final') return 'Final';
-    if (match.id === 'grandfinal') return 'Grand Final';
-    return 'Match';
-  };
 
   const renderMatch = (match: Match) => {
     const player1Name = getPlayerName(match.player1Id);
@@ -471,112 +443,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     );
   };
 
-  const renderCompletedMatches = () => {
-    const completedMatches = matches.filter(m => m.winnerId);
 
-    if (completedMatches.length === 0) {
-      return (
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="text-gray-500 text-lg mb-4">Henüz oynanmış maç yok</div>
-          <div className="text-gray-400 text-sm">Maçlar tamamlandıkça burada görünecek</div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
-          <h3 className="text-lg font-bold">Oynanmış Maçlar</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Maç No</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Bracket</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Sol Masa</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Sağ Masa</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Kazanan</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Kaybeden</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {completedMatches.map((match, index) => {
-                const winnerName = getPlayerName(match.winnerId!);
-                const loserId = match.player1Id === match.winnerId ? match.player2Id : match.player1Id;
-                const loserName = getPlayerName(loserId);
-                const player1Name = getPlayerName(match.player1Id);
-                const player2Name = match.player2Id ? getPlayerName(match.player2Id) : '—';
-
-                return (
-                  <tr key={match.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-gray-900">{match.matchNumber}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${match.bracket === 'winner'
-                          ? 'bg-green-100 text-green-800'
-                          : match.bracket === 'placement'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                        {getBracketName(match.bracket)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{player1Name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{player2Name}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-green-600">{winnerName}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-red-600">{loserName}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  };
-
-  const renderRankings = () => {
-    const places = [
-      { key: 'first', emoji: '🥇', place: '1.', bgColor: 'bg-gradient-to-r from-yellow-400 to-yellow-500', textColor: 'text-white' },
-      { key: 'second', emoji: '🥈', place: '2.', bgColor: 'bg-gradient-to-r from-gray-400 to-gray-500', textColor: 'text-white' },
-      { key: 'third', emoji: '🥉', place: '3.', bgColor: 'bg-gradient-to-r from-orange-400 to-orange-500', textColor: 'text-white' },
-      { key: 'fourth', emoji: '🏅', place: '4.', bgColor: 'bg-gradient-to-r from-blue-400 to-blue-500', textColor: 'text-white' },
-      { key: 'fifth', emoji: '🎖️', place: '5.', bgColor: 'bg-gradient-to-r from-purple-400 to-purple-500', textColor: 'text-white' },
-      { key: 'sixth', emoji: '🏆', place: '6.', bgColor: 'bg-gradient-to-r from-green-400 to-green-500', textColor: 'text-white' },
-      { key: 'seventh', emoji: '🏵️', place: '7.', bgColor: 'bg-gradient-to-r from-red-400 to-red-500', textColor: 'text-white' }
-    ];
-
-    return (
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-4">
-          <h3 className="text-lg font-bold">🏆 Turnuva Sıralaması</h3>
-        </div>
-        <div className="p-6">
-          <div className="space-y-3">
-            {places.map(({ key, emoji, place, bgColor, textColor }) => {
-              const playerId = rankings[key as keyof typeof rankings];
-              if (!playerId) return null;
-
-              return (
-                <div key={key} className={`flex items-center ${bgColor} rounded-xl p-4 shadow-md`}>
-                  <div className="text-2xl mr-4">{emoji}</div>
-                  <div className="flex-1">
-                    <div className={`font-bold text-lg ${textColor}`}>{place} Sıra</div>
-                    <div className={`text-sm ${textColor} opacity-90`}>{getPlayerName(playerId)}</div>
-                    {getPlayerDetails(playerId) && (
-                      <div className={`text-xs ${textColor} opacity-75`}>
-                        {getPlayerDetails(playerId)!.weight} kg
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const activeMatches = matches.filter(m => !m.winnerId);
   const completedMatches = matches.filter(m => m.winnerId);
@@ -593,10 +460,29 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     <div className="p-6 bg-gray-50 min-h-screen">
       <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
         Double Elimination Tournament ({players.length} players)
-          </h2>
+      </h2>
       <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {/* Content */}
+      
+      {/* Reset Tournament Button */}
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={() => {
+            if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+              clearTournamentState();
+              initializeTournament();
+              setSelectedWinner({});
+            }
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Turnuvayı Sıfırla
+        </button>
+      </div>
+      
+      {/* Sekme içerikleri */}
         {activeTab === 'active' && (
           <div>
             {activeMatches.length === 0 ? (

@@ -6,8 +6,9 @@ import MatchCard from '../UI/MatchCard';
 import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
+import { DoubleEliminationStorage } from '../../utils/localStorage';
 
-const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, initialTab}) => {
+const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, initialTab, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{
     first?: string;
@@ -19,24 +20,41 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(initialTab || 'active');
   const [selectedWinner, setSelectedWinner] = useState<{[matchId: string]: string | null}>({});
 
-  // Create unique storage key for this tournament
-
-  // Save tournament state - now handled by parent component
+  // Save tournament state using utility
   const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean, winsState: any) => {
-    // State is now managed by parent component through props
-    console.log('Tournament state updated:', { matchesState, rankingsState, completeState, winsState });
+    const state = {
+      matches: matchesState,
+      rankings: rankingsState,
+      tournamentComplete: completeState,
+      playerWins: winsState,
+      timestamp: new Date().toISOString()
+    };
+    const playerIds = players.map(p => p.id).sort().join('-');
+    DoubleEliminationStorage.saveDoubleEliminationState(2, playerIds, state, fixtureId);
   };
 
-  // Load tournament state - now handled by parent component
+  // Load tournament state using utility
   const loadTournamentState = () => {
-    // State is now managed by parent component
-    return false; // Always initialize new tournament for now
+    try {
+      const playerIds = players.map(p => p.id).sort().join('-');
+      const state = DoubleEliminationStorage.getDoubleEliminationState(2, playerIds, fixtureId);
+      if (state) {
+        setMatches(state.matches || []);
+        setRankings(state.rankings || {});
+        setTournamentComplete(state.tournamentComplete || false);
+        setPlayerWins(state.playerWins || {});
+        return true; // State was loaded
+      }
+    } catch (error) {
+      console.error('Error loading tournament state:', error);
+    }
+    return false; // No state found
   };
 
-  // Clear tournament state - now handled by parent component
+  // Clear tournament state using utility
   const clearTournamentState = () => {
-    // State is now managed by parent component
-    console.log('Tournament state cleared');
+    const playerIds = players.map(p => p.id).sort().join('-');
+    DoubleEliminationStorage.clearDoubleEliminationState(2, playerIds, fixtureId);
   };
 
   // Initialize tournament structure for 2-3 players
@@ -92,10 +110,10 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
       
       // If no saved state exists, initialize new tournament
       if (!stateLoaded) {
-      initializeTournament();
+        initializeTournament();
       }
     }
-  }, [players]);
+  }, []); // Remove players dependency to prevent re-initialization
 
   // Auto-complete bye matches (only once to prevent infinite loop)
   const byeMatchesProcessedRef = React.useRef(new Set<string>());
@@ -403,7 +421,26 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
         Double Elimination Tournament ({players.length} players)
       </h2>
       <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
-      {/* Sekme içerikleri */}
+      
+      {/* Reset Tournament Button */}
+      <div className="flex justify-center">
+        <button
+          onClick={() => {
+            if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+              clearTournamentState();
+              initializeTournament();
+              setSelectedWinner({});
+            }
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Turnuvayı Sıfırla
+        </button>
+      </div>
+
       {activeTab === 'active' && (
         <div className="flex flex-wrap justify-center gap-4 max-w-6xl mx-auto">
           {activeMatches.length === 0 ? (

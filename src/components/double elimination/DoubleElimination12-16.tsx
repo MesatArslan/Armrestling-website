@@ -118,10 +118,6 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
   };
 
   // Fixtürü sıfırlama fonksiyonu
-  const resetTournament = () => {
-    initializeTournament();
-    setSelectedWinner({});
-  };
 
   // Maç sonucu onaylama fonksiyonu
   const handleMatchResult = (matchId: string, winnerId: string) => {
@@ -167,7 +163,7 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
         initializeTournament();
       }
     }
-  }, [players]);
+  }, []); // Remove players dependency to prevent re-initialization
 
   // Auto-complete bye matches
   React.useEffect(() => {
@@ -597,12 +593,43 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="text-center mb-6">
         <button
-          onClick={resetTournament}
-          className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+          onClick={() => {
+            if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+              clearTournamentState();
+              initializeTournament();
+              setSelectedWinner({});
+            }
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
         >
-          🔄 Turnuvayı Sıfırla
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Turnuvayı Sıfırla
         </button>
       </div>
+      
+      {/* Otomatik Kazananları Seç Butonu */}
+      {activeTab === 'active' && !tournamentComplete && activeMatches.length > 0 && (
+        <div className="flex justify-center mb-4">
+          <button
+            onClick={() => {
+              activeMatches.forEach(match => {
+                // Her maç için rastgele bir kazanan seç
+                const winnerId = Math.random() < 0.5 ? match.player1Id : match.player2Id;
+                handleMatchResult(match.id, winnerId);
+              });
+            }}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Aktif Maçların Kazananlarını Otomatik Seç
+          </button>
+        </div>
+      )}
+      
       <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
         Double Elimination Tournament ({players.length} players)
       </h2>

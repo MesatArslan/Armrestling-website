@@ -29,6 +29,7 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatch
       tournamentComplete: complete,
       timestamp: Date.now()
     };
+    console.log('Saving tournament state:', state);
     const playerIds = players.map(p => p.id).sort().join('-');
     DoubleEliminationStorage.saveDoubleEliminationState(4, playerIds, state, fixtureId);
   };
@@ -39,6 +40,7 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatch
       const playerIds = players.map(p => p.id).sort().join('-');
       const state = DoubleEliminationStorage.getDoubleEliminationState(4, playerIds, fixtureId);
       if (state) {
+        console.log('Loading tournament state:', state);
         setMatches(state.matches || []);
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
@@ -48,6 +50,12 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatch
       console.error('Error loading tournament state:', error);
     }
     return false; // No state found
+  };
+
+  // Clear tournament state from local storage
+  const clearTournamentState = () => {
+    const playerIds = players.map(p => p.id).sort().join('-');
+    DoubleEliminationStorage.clearDoubleEliminationState(4, playerIds, fixtureId);
   };
 
 
@@ -98,10 +106,12 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatch
 
   // Load state on component mount
   useEffect(() => {
+    if (players.length === 4) {
       if (!loadTournamentState()) {
         initializeTournament();
+      }
     }
-  }, []);
+  }, [players]); // Add players dependency to ensure state loads when players change
 
   // Auto-complete bye matches (only once to prevent infinite loop)
   const byeMatchesProcessedRef = React.useRef(new Set<string>());
@@ -269,6 +279,9 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatch
       setTournamentComplete(true);
       setCurrentStage('Tournament Complete');
       
+      // Save state with final rankings
+      saveTournamentState(newMatches, finalRankings, true);
+      
       // Call parent's tournament complete handler
       if (onTournamentComplete) {
         onTournamentComplete(finalRankings);
@@ -276,7 +289,11 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatch
     }
     
     setMatches(newMatches);
-    saveTournamentState(newMatches, rankings, tournamentComplete);
+    
+    // Only save state if tournament is not complete (for final match, we already saved above)
+    if (matchId !== 'final-1') {
+      saveTournamentState(newMatches, rankings, tournamentComplete);
+    }
     
          // Call parent's match result handler
      const matchForResult = matches.find(m => m.id === matchId);
@@ -363,6 +380,25 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatch
         Double Elimination Tournament ({players.length} players)
       </h2>
       <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Reset Tournament Button */}
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={() => {
+            if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+              clearTournamentState();
+              initializeTournament();
+              setSelectedWinner({});
+            }
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Turnuvayı Sıfırla
+        </button>
+      </div>
 
       {/* Sekme içerikleri */}
       {activeTab === 'active' && (
