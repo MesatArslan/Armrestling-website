@@ -19,7 +19,7 @@ interface DoubleElimination129_191Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, initialTab, fixtureId }) => {
+const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);

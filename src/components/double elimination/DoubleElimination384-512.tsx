@@ -18,7 +18,7 @@ interface DoubleElimination384_512Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, initialTab, fixtureId }) => {
+const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [currentRoundKey, setCurrentRoundKey] = useState<RoundKey>('WB1');
   const [tournamentComplete, setTournamentComplete] = useState(false);

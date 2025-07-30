@@ -19,7 +19,7 @@ interface DoubleElimination48_64Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players, resetKey, onTournamentComplete, initialTab, fixtureId }) => {
+const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players, resetKey, onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);

@@ -19,7 +19,7 @@ interface DoubleElimination24_32Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players, resetKey, onTournamentComplete, initialTab, fixtureId }) => {
+const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players, resetKey, onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);

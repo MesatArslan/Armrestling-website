@@ -19,7 +19,7 @@ interface DoubleElimination96_128Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ players, resetKey, onTournamentComplete, initialTab, fixtureId }) => {
+const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ players, resetKey, onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);

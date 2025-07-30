@@ -30,7 +30,7 @@ const ROUND_ORDER = [
 
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onMatchResult: _, onTournamentComplete, initialTab, fixtureId }) => {
+const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onMatchResult: _, onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);

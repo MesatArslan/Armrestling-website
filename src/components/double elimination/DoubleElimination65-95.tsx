@@ -19,7 +19,7 @@ interface DoubleElimination65_95Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players, resetKey, onTournamentComplete, initialTab, fixtureId }) => {
+const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players, resetKey, onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);

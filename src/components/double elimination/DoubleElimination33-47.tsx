@@ -19,7 +19,7 @@ interface DoubleElimination33_47Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players, resetKey,onTournamentComplete, initialTab, fixtureId }) => {
+const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players, resetKey,onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);

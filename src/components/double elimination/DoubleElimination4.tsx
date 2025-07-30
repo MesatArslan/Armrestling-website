@@ -9,7 +9,7 @@ import RankingsTable from '../UI/RankingsTable';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 
-const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, initialTab, fixtureId }) => {
+const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{
     first?: string;
