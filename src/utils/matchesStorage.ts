@@ -27,6 +27,7 @@ export interface Fixture {
   tournamentComplete: boolean;
   playerWins: {[playerId: string]: number};
   matches: Match[];
+  activeTab?: 'active' | 'completed' | 'rankings'; // Track which tab is active for this fixture
 }
 
 export interface Player {
@@ -195,6 +196,26 @@ export const MatchesStorage = {
     }
   },
 
+  // Fixture'ın aktif tab'ını güncelle
+  updateFixtureActiveTab: (fixtureId: string, activeTab: 'active' | 'completed' | 'rankings') => {
+    const data = MatchesStorage.getMatchesData();
+    const fixture = data.fixtures.find(f => f.id === fixtureId);
+    if (fixture) {
+      fixture.activeTab = activeTab;
+      fixture.lastUpdated = new Date().toISOString();
+      data.lastUpdated = new Date().toISOString();
+      MatchesStorage.saveMatchesData(data);
+      console.log('Active tab updated for fixture:', fixtureId, activeTab);
+    }
+  },
+
+  // Fixture'ın aktif tab'ını al
+  getFixtureActiveTab: (fixtureId: string): 'active' | 'completed' | 'rankings' => {
+    const data = MatchesStorage.getMatchesData();
+    const fixture = data.fixtures.find(f => f.id === fixtureId);
+    return fixture?.activeTab || 'active';
+  },
+
   // Fixture'ı rankings ile tamamla
   completeFixtureWithRankings: (fixtureId: string, rankings: { first?: string; second?: string; third?: string }) => {
     const data = MatchesStorage.getMatchesData();
@@ -272,7 +293,8 @@ export const MatchesStorage = {
       results: [],
       tournamentComplete: false,
       playerWins: {},
-      matches: []
+      matches: [],
+      activeTab: 'active'
     };
   },
 
@@ -304,7 +326,8 @@ export const MatchesStorage = {
       results: [],
       tournamentComplete: false,
       playerWins: {},
-      matches: []
+      matches: [],
+      activeTab: 'active'
     };
   }
 }; 

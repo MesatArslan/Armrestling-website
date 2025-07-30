@@ -177,6 +177,8 @@ const Matches = () => {
     if (fixture) {
       setActiveFixture(fixture);
       MatchesStorage.setActiveFixture(fixtureId);
+      // Clear desired tab when switching fixtures to use saved tab state
+      setDesiredTab(null);
     }
   };
 
@@ -261,9 +263,18 @@ const Matches = () => {
     }
 
     const playerCount = activeFixture.players.length;
-    // If fixture is completed, automatically show rankings, otherwise respect user's desired tab
-    const defaultTab = activeFixture.status === 'completed' ? 'rankings' : 'active';
-    const finalTab = desiredTab || defaultTab;
+    
+    // Get the saved tab state for this fixture, or use desired tab, or default
+    let finalTab: 'active' | 'completed' | 'rankings';
+    if (desiredTab) {
+      finalTab = desiredTab;
+    } else if (activeFixture.activeTab) {
+      finalTab = activeFixture.activeTab;
+    } else if (activeFixture.status === 'completed') {
+      finalTab = 'rankings';
+    } else {
+      finalTab = 'active';
+    }
     
     const props = {
       players: activeFixture.players,

@@ -7,6 +7,7 @@ import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
+import { TabManager } from '../../utils/tabManager';
 
 const ROUND_ORDER = [
   'WB1', 'WB2', 'LB1', 'LB2', 'WB3', 'LB3', 'LB4', 'WB4', 'LB5', 'LB6', 'WB5', 'LB7', 'YariFinal', 'LB8', '7-8', 'LBFinal', '5-6', 'Final', 'GrandFinal'
@@ -24,7 +25,9 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
   const [tournamentComplete, setTournamentComplete] = useState(false);
   const [currentRoundKey, setCurrentRoundKey] = useState<RoundKey>('WB1');
   const [showLb1ByeMessage, setShowLb1ByeMessage] = useState(false);
-  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(initialTab || 'active');
+  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(
+    TabManager.getInitialTab(fixtureId, initialTab)
+  );
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [, setLastCompletedMatch] = useState<Match | null>(null);
   const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
@@ -884,7 +887,7 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
           )}
         </div>
       </div>
-      <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+              <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
       <div className="max-w-4xl mx-auto">
         <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">Aktif Tur: {currentRoundKey}</h3>
       </div>
@@ -922,7 +925,7 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
                     Tüm maçlar başarıyla tamamlandı. Sonuçları ve sıralamaları görmek için aşağıdaki butona tıklayın.
                   </p>
                   <button
-                    onClick={() => setActiveTab('rankings')}
+                    onClick={() => TabManager.createTabChangeHandler(setActiveTab, fixtureId)('rankings')}
                     className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg shadow-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -7,6 +7,7 @@ import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
+import { TabManager } from '../../utils/tabManager';
 
 const ROUND_ORDER = [
   'WB_R1',
@@ -34,7 +35,9 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
   const [currentRoundKey, setCurrentRoundKey] = useState<RoundKey>('WB_R1');
-  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(initialTab || 'active');
+  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(
+    TabManager.getInitialTab(fixtureId, initialTab)
+  );
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [, setLastCompletedMatch] = useState<Match | null>(null);
   const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
@@ -620,7 +623,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
       <h2 className="text-2xl font-bold text-center mb-2">
         Double Elimination Tournament ({players.length} players)
       </h2>
-      <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+              <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
       <div className="text-center text-gray-600 mb-6 text-sm bg-blue-50 p-4 rounded-lg max-w-4xl mx-auto">
         <p className="font-semibold mb-2">17-23 Oyuncu için Çift Eleme Turnuva Formatı:</p>
         <p>• WB R1: 32'ye tamamlamak için byeler, kalanlar eşleşir</p>

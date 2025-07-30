@@ -7,6 +7,7 @@ import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
+import { TabManager } from '../../utils/tabManager';
 
 const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, initialTab, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -17,10 +18,15 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
   }>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
   const [playerWins, setPlayerWins] = useState<{[playerId: string]: number}>({});
-  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(initialTab || 'active');
+  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(
+    TabManager.getInitialTab(fixtureId, initialTab)
+  );
   const [selectedWinner, setSelectedWinner] = useState<{[matchId: string]: string | null}>({});
   const [, setLastCompletedMatch] = useState<Match | null>(null);
   const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
+
+  // Handle tab change and save to storage
+  const handleTabChange = TabManager.createTabChangeHandler(setActiveTab, fixtureId);
 
   // Save tournament state using utility
   const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean, winsState: any) => {
@@ -456,7 +462,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
       <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
         Double Elimination Tournament ({players.length} players)
       </h2>
-      <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+              <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
       
       {/* Reset Tournament Button */}
       <div className="flex justify-center gap-4 mb-4">
@@ -526,7 +532,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
                     Sonuçları ve sıralamaları görmek için aşağıdaki butona tıklayın.
                   </p>
                   <button
-                    onClick={() => setActiveTab('rankings')}
+                    onClick={() => handleTabChange('rankings')}
                     className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg shadow-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
