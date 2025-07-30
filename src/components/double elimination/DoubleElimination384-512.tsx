@@ -24,7 +24,7 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
   const [tournamentComplete, setTournamentComplete] = useState(false);
   const [] = useState(false); // <-- yeni state
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(
-    TabManager.getInitialTab(fixtureId, initialTab)
+    TabManager.getInitialTab(fixtureId)
   );
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [, setLastCompletedMatch] = useState<Match | null>(null);

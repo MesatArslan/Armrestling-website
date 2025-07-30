@@ -27,6 +27,7 @@ import {
   DoubleElimination257_383,
   DoubleElimination384_512,
 } from '../components/double elimination';
+import { TabManager } from '../utils/tabManager';
 
 const Matches = () => {
   const location = useLocation();
@@ -54,7 +55,7 @@ const Matches = () => {
   // Load data on component mount
   useEffect(() => {
     console.log('Loading matches data...');
-    
+
     // Load players from localStorage
     const savedPlayers = localStorage.getItem('arm-wrestling-players');
     if (savedPlayers) {
@@ -69,7 +70,7 @@ const Matches = () => {
     // Load fixtures from matches storage
     const matchesData = MatchesStorage.getMatchesData();
     setFixtures(matchesData.fixtures);
-    
+
     // Set active fixture if exists
     if (matchesData.activeFixtureId) {
       const active = matchesData.fixtures.find(f => f.id === matchesData.activeFixtureId);
@@ -84,11 +85,11 @@ const Matches = () => {
     if (!isLoading && fixtures.length > 0) {
       const tab = searchParams.get('tab') as 'active' | 'completed' | 'rankings' | null;
       const fixtureId = searchParams.get('fixture');
-      
+
       if (tab) {
         setDesiredTab(tab);
       }
-      
+
       if (fixtureId) {
         const targetFixture = fixtures.find(f => f.id === fixtureId);
         if (targetFixture) {
@@ -96,7 +97,7 @@ const Matches = () => {
           MatchesStorage.setActiveFixture(fixtureId);
         }
       }
-      
+
       // Clear URL parameters after processing
       if (tab || fixtureId) {
         const newUrl = window.location.pathname;
@@ -108,8 +109,14 @@ const Matches = () => {
   // Save fixtures whenever they change
   useEffect(() => {
     if (!isLoading) {
+      // Her fixture'ın en güncel tab'ını localStorage'dan oku
+      const updatedFixtures = fixtures.map(fixture => ({
+        ...fixture,
+        activeTab: MatchesStorage.getFixtureActiveTab(fixture.id)
+      }));
+
       const matchesData = {
-        fixtures,
+        fixtures: updatedFixtures,
         activeFixtureId: activeFixture?.id,
         lastUpdated: new Date().toISOString()
       };
@@ -124,13 +131,13 @@ const Matches = () => {
         tournament: Tournament;
         weightRange: WeightRange;
       };
-      
+
       // Check if fixture already exists for this tournament and weight range
-      const existingFixture = fixturesRef.current.find(f => 
-        f.tournamentId === state.tournament.id && 
+      const existingFixture = fixturesRef.current.find(f =>
+        f.tournamentId === state.tournament.id &&
         f.weightRangeId === state.weightRange.id
       );
-      
+
       if (existingFixture) {
         // If fixture already exists, just set it as active
         setActiveFixture(existingFixture);
@@ -139,13 +146,13 @@ const Matches = () => {
         window.history.replaceState({}, document.title);
         return;
       }
-      
+
       // Create new fixture only if it doesn't exist
       const eligiblePlayers = players.filter(player => {
         const withinWeightRange = player.weight >= state.weightRange.min && player.weight <= state.weightRange.max;
         const notExcluded = !state.weightRange.excludedPlayerIds?.includes(player.id);
         const genderMatch = !state.tournament.genderFilter || player.gender === state.tournament.genderFilter;
-        const handMatch = !state.tournament.handPreferenceFilter || 
+        const handMatch = !state.tournament.handPreferenceFilter ||
           player.handPreference === state.tournament.handPreferenceFilter ||
           player.handPreference === 'both';
         let birthYearMatch = true;
@@ -163,8 +170,13 @@ const Matches = () => {
 
       if (eligiblePlayers.length > 0) {
         const newFixture = MatchesStorage.createNewFixture(state.tournament, state.weightRange, eligiblePlayers);
-        setFixtures(prev => [...prev, newFixture]);
-        setActiveFixture(newFixture);
+        // Yeni fixture'ın activeTab'ını localStorage'dan oku
+        const fixtureWithActiveTab = {
+          ...newFixture,
+          activeTab: MatchesStorage.getFixtureActiveTab(newFixture.id)
+        };
+        setFixtures(prev => [...prev, fixtureWithActiveTab]);
+        setActiveFixture(fixtureWithActiveTab);
         MatchesStorage.setActiveFixture(newFixture.id);
         // Clear location state to prevent duplicate creation on page refresh
         window.history.replaceState({}, document.title);
@@ -192,13 +204,13 @@ const Matches = () => {
 
   const confirmDeleteFixture = () => {
     if (!deleteModal.fixtureId) return;
-    
+
     // Remove from localStorage
     MatchesStorage.deleteFixture(deleteModal.fixtureId);
-    
+
     // Remove from state
     setFixtures(prev => prev.filter(f => f.id !== deleteModal.fixtureId));
-    
+
     // If this was the active fixture, clear it
     if (activeFixture?.id === deleteModal.fixtureId) {
       setActiveFixture(null);
@@ -210,7 +222,7 @@ const Matches = () => {
     if (!activeFixture) return;
 
     console.log(`Match completed. Type: ${type}, Winner: ${winnerId}${loserId ? `, Loser: ${loserId}` : ''}`);
-    
+
     // Add match result to fixture
     const result = {
       matchId: `match-${Date.now()}`,
@@ -219,13 +231,18 @@ const Matches = () => {
       timestamp: new Date().toISOString(),
       type
     };
-    
+
     MatchesStorage.addMatchResult(activeFixture.id, result);
-    
+
     // Update fixture in state
-    setFixtures(prev => prev.map(f => 
-      f.id === activeFixture.id 
-        ? { ...f, results: [...f.results, result], lastUpdated: new Date().toISOString() }
+    setFixtures(prev => prev.map(f =>
+      f.id === activeFixture.id
+        ? { 
+            ...f, 
+            results: [...f.results, result], 
+            lastUpdated: new Date().toISOString(),
+            activeTab: MatchesStorage.getFixtureActiveTab(f.id) // activeTab'ı localStorage'dan oku
+          }
         : f
     ));
   };
@@ -234,24 +251,25 @@ const Matches = () => {
     if (!activeFixture) return;
 
     console.log('Tournament completed with rankings:', rankings);
-    
+
     // Save rankings to localStorage
     MatchesStorage.completeFixtureWithRankings(activeFixture.id, rankings);
-    
+
     // Update fixture with completed status and rankings
     const updatedFixture = {
       ...activeFixture,
       status: 'completed' as const,
       rankings,
       completedAt: new Date().toISOString(),
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      activeTab: MatchesStorage.getFixtureActiveTab(activeFixture.id) // activeTab'ı localStorage'dan oku
     };
-    
+
     // Update in state
-    setFixtures(prev => prev.map(f => 
+    setFixtures(prev => prev.map(f =>
       f.id === activeFixture.id ? updatedFixture : f
     ));
-    
+
     // Update active fixture
     setActiveFixture(updatedFixture);
   };
@@ -263,54 +281,50 @@ const Matches = () => {
     }
 
     const playerCount = activeFixture.players.length;
-    
+
     // Get the saved tab state for this fixture, or use desired tab, or default
     let finalTab: 'active' | 'completed' | 'rankings';
     if (desiredTab) {
       finalTab = desiredTab;
-    } else if (activeFixture.activeTab) {
-      finalTab = activeFixture.activeTab;
-    } else if (activeFixture.status === 'completed') {
-      finalTab = 'rankings';
     } else {
-      finalTab = 'active';
+      // Sadece localStorage'dan oku, activeFixture.activeTab'ı kullanma
+      finalTab = TabManager.getInitialTab(activeFixture.id);
     }
-    
+
     const props = {
       players: activeFixture.players,
       onMatchResult: handleMatchResult,
       onTournamentComplete: handleTournamentComplete,
-      initialTab: finalTab,
       fixtureId: activeFixture.id
     };
 
     // Return appropriate component based on player count
     switch (playerCount) {
       case 1:
-        return <DoubleElimination1 {...props} />;
+        return <DoubleElimination1 key={activeFixture.id} {...props} />;
       case 2:
       case 3:
-        return <DoubleElimination2 {...props} />;
+        return <DoubleElimination2 key={activeFixture.id} {...props} />;
       case 4:
-        return <DoubleElimination4 {...props} />;
+        return <DoubleElimination4 key={activeFixture.id} {...props} />;
       case 5:
-        return <DoubleElimination5 {...props} />;
+        return <DoubleElimination5 key={activeFixture.id} {...props} />;
       case 6:
-        return <DoubleElimination6 {...props} />;
+        return <DoubleElimination6 key={activeFixture.id} {...props} />;
       case 7:
-        return <DoubleElimination7 {...props} />;
+        return <DoubleElimination7 key={activeFixture.id} {...props} />;
       case 8:
-        return <DoubleElimination8 {...props} />;
+        return <DoubleElimination8 key={activeFixture.id} {...props} />;
       case 9:
       case 10:
       case 11:
-        return <DoubleElimination9_11 {...props} />;
+        return <DoubleElimination9_11 key={activeFixture.id} {...props} />;
       case 12:
       case 13:
       case 14:
       case 15:
       case 16:
-        return <DoubleElimination12_16 {...props} />;
+        return <DoubleElimination12_16 key={activeFixture.id} {...props} />;
       case 17:
       case 18:
       case 19:
@@ -318,7 +332,7 @@ const Matches = () => {
       case 21:
       case 22:
       case 23:
-        return <DoubleElimination17_23 {...props} />;
+        return <DoubleElimination17_23 key={activeFixture.id} {...props} />;
       case 24:
       case 25:
       case 26:
@@ -328,7 +342,7 @@ const Matches = () => {
       case 30:
       case 31:
       case 32:
-        return <DoubleElimination24_32 {...props} />;
+        return <DoubleElimination24_32 key={activeFixture.id} {...props} />;
       case 33:
       case 34:
       case 35:
@@ -344,7 +358,7 @@ const Matches = () => {
       case 45:
       case 46:
       case 47:
-        return <DoubleElimination33_47 {...props} />;
+        return <DoubleElimination33_47 key={activeFixture.id} {...props} />;
       case 48:
       case 49:
       case 50:
@@ -362,7 +376,7 @@ const Matches = () => {
       case 62:
       case 63:
       case 64:
-        return <DoubleElimination48_64 {...props} />;
+        return <DoubleElimination48_64 key={activeFixture.id} {...props} />;
       case 65:
       case 66:
       case 67:
@@ -394,7 +408,7 @@ const Matches = () => {
       case 93:
       case 94:
       case 95:
-        return <DoubleElimination65_95 {...props} />;
+        return <DoubleElimination65_95 key={activeFixture.id} {...props} />;
       case 96:
       case 97:
       case 98:
@@ -428,7 +442,7 @@ const Matches = () => {
       case 126:
       case 127:
       case 128:
-        return <DoubleElimination96_128 {...props} />;
+        return <DoubleElimination96_128 key={activeFixture.id} {...props} />;
       case 129:
       case 130:
       case 131:
@@ -492,7 +506,7 @@ const Matches = () => {
       case 189:
       case 190:
       case 191:
-        return <DoubleElimination129_191 {...props} />;
+        return <DoubleElimination129_191 key={activeFixture.id} {...props} />;
       case 192:
       case 193:
       case 194:
@@ -558,7 +572,7 @@ const Matches = () => {
       case 254:
       case 255:
       case 256:
-        return <DoubleElimination192_256 {...props} />;
+        return <DoubleElimination192_256 key={activeFixture.id} {...props} />;
       case 257:
       case 258:
       case 259:
@@ -686,139 +700,9 @@ const Matches = () => {
       case 381:
       case 382:
       case 383:
-        return <DoubleElimination257_383 {...props} />;
-      case 384:
-      case 385:
-      case 386:
-      case 387:
-      case 388:
-      case 389:
-      case 390:
-      case 391:
-      case 392:
-      case 393:
-      case 394:
-      case 395:
-      case 396:
-      case 397:
-      case 398:
-      case 399:
-      case 400:
-      case 401:
-      case 402:
-      case 403:
-      case 404:
-      case 405:
-      case 406:
-      case 407:
-      case 408:
-      case 409:
-      case 410:
-      case 411:
-      case 412:
-      case 413:
-      case 414:
-      case 415:
-      case 416:
-      case 417:
-      case 418:
-      case 419:
-      case 420:
-      case 421:
-      case 422:
-      case 423:
-      case 424:
-      case 425:
-      case 426:
-      case 427:
-      case 428:
-      case 429:
-      case 430:
-      case 431:
-      case 432:
-      case 433:
-      case 434:
-      case 435:
-      case 436:
-      case 437:
-      case 438:
-      case 439:
-      case 440:
-      case 441:
-      case 442:
-      case 443:
-      case 444:
-      case 445:
-      case 446:
-      case 447:
-      case 448:
-      case 449:
-      case 450:
-      case 451:
-      case 452:
-      case 453:
-      case 454:
-      case 455:
-      case 456:
-      case 457:
-      case 458:
-      case 459:
-      case 460:
-      case 461:
-      case 462:
-      case 463:
-      case 464:
-      case 465:
-      case 466:
-      case 467:
-      case 468:
-      case 469:
-      case 470:
-      case 471:
-      case 472:
-      case 473:
-      case 474:
-      case 475:
-      case 476:
-      case 477:
-      case 478:
-      case 479:
-      case 480:
-      case 481:
-      case 482:
-      case 483:
-      case 484:
-      case 485:
-      case 486:
-      case 487:
-      case 488:
-      case 489:
-      case 490:
-      case 491:
-      case 492:
-      case 493:
-      case 494:
-      case 495:
-      case 496:
-      case 497:
-      case 498:
-      case 499:
-      case 500:
-      case 501:
-      case 502:
-      case 503:
-      case 504:
-      case 505:
-      case 506:
-      case 507:
-      case 508:
-      case 509:
-      case 510:
-      case 511:
-      case 512:
-        return <DoubleElimination384_512 {...props} />;
+        return <DoubleElimination257_383 key={activeFixture.id} {...props} />;
       default:
-        return <div className="text-center text-gray-600">Too many players for this tournament format</div>;
+        return <DoubleElimination384_512 key={activeFixture.id} {...props} />;
     }
   };
 
@@ -853,6 +737,11 @@ const Matches = () => {
                   console.log('Current matches data:', MatchesStorage.getMatchesData());
                   console.log('All fixtures:', MatchesStorage.getAllFixtures());
                   console.log('Active fixture:', MatchesStorage.getActiveFixture());
+                  console.log('Active fixture tab:', activeFixture ? TabManager.getInitialTab(activeFixture.id) : 'No active fixture');
+                  console.log('All fixture tabs:');
+                  fixtures.forEach(fixture => {
+                    console.log(`Fixture ${fixture.name}: ${TabManager.getInitialTab(fixture.id)}`);
+                  });
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-400 to-gray-600 text-white rounded-lg shadow hover:from-gray-500 hover:to-gray-700 transition-all duration-200 text-base font-semibold"
               >
@@ -885,16 +774,15 @@ const Matches = () => {
                   <p className="text-sm text-gray-500">{fixtures.length} fixture{fixtures.length !== 1 ? 's' : ''} available</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {fixtures.map((fixture) => (
                   <div
                     key={fixture.id}
-                    className={`group relative bg-white rounded-xl border-2 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 overflow-hidden ${
-                      activeFixture?.id === fixture.id
+                    className={`group relative bg-white rounded-xl border-2 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 overflow-hidden ${activeFixture?.id === fixture.id
                         ? 'border-blue-500 ring-2 ring-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50'
                         : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     <button
                       onClick={() => handleFixtureSelect(fixture.id)}
@@ -902,24 +790,22 @@ const Matches = () => {
                     >
                       {/* Header with status indicator */}
                       <div className="flex items-center justify-between mb-4">
-                                                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                           fixture.status === 'completed' 
-                             ? 'bg-green-100 text-green-800' 
-                             : fixture.status === 'active'
-                             ? 'bg-yellow-100 text-yellow-800'
-                             : 'bg-blue-100 text-blue-800'
-                         }`}>
-                           <div className={`w-2 h-2 rounded-full ${
-                             fixture.status === 'completed' 
-                               ? 'bg-green-500' 
-                               : fixture.status === 'active'
-                               ? 'bg-yellow-500'
-                               : 'bg-blue-500'
-                           }`}></div>
-                           {fixture.status === 'completed' ? 'Completed' : 
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${fixture.status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : fixture.status === 'active'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                          <div className={`w-2 h-2 rounded-full ${fixture.status === 'completed'
+                              ? 'bg-green-500'
+                              : fixture.status === 'active'
+                                ? 'bg-yellow-500'
+                                : 'bg-blue-500'
+                            }`}></div>
+                          {fixture.status === 'completed' ? 'Completed' :
                             fixture.status === 'active' ? 'In Progress' : 'Ready'}
                         </div>
-                        
+
                         {activeFixture?.id === fixture.id && (
                           <div className="flex items-center gap-1">
                             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
@@ -927,12 +813,12 @@ const Matches = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Fixture Name */}
                       <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
                         {fixture.name}
                       </h3>
-                      
+
                       {/* Tournament Info */}
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -941,14 +827,14 @@ const Matches = () => {
                           </svg>
                           <span className="font-medium">{fixture.playerCount} players</span>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                           </svg>
                           <span className="truncate">{fixture.weightRangeName}</span>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -956,7 +842,7 @@ const Matches = () => {
                           <span className="truncate">{fixture.tournamentName}</span>
                         </div>
                       </div>
-                      
+
                       {/* Footer with timestamp */}
                       <div className="pt-3 border-t border-gray-100">
                         <div className="flex items-center gap-2">
@@ -969,7 +855,7 @@ const Matches = () => {
                         </div>
                       </div>
                     </button>
-                    
+
                     {/* Delete Button */}
                     <button
                       onClick={(e) => {
@@ -1013,7 +899,7 @@ const Matches = () => {
           )}
         </div>
       </div>
-      
+
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={deleteModal.isOpen}

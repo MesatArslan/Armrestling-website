@@ -23,7 +23,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
   const [tournamentComplete, setTournamentComplete] = useState(false);
   const [selectedWinner, setSelectedWinner] = useState<{ [matchId: string]: string | null }>({});
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(
-    TabManager.getInitialTab(fixtureId, initialTab)
+    TabManager.getInitialTab(fixtureId)
   );
   const [, setLastCompletedMatch] = useState<Match | null>(null);
   const [matchHistory, setMatchHistory] = useState<Match[][]>([]);

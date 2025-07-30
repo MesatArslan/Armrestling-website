@@ -26,7 +26,7 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
   const [currentRoundKey, setCurrentRoundKey] = useState<RoundKey>('WB1');
   const [showLb1ByeMessage, setShowLb1ByeMessage] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(
-    TabManager.getInitialTab(fixtureId, initialTab)
+    TabManager.getInitialTab(fixtureId)
   );
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [, setLastCompletedMatch] = useState<Match | null>(null);

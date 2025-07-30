@@ -16,12 +16,7 @@ export const TabManager = {
 
   // Get the initial tab for a fixture
   getInitialTab: (
-    fixtureId?: string,
-    initialTab?: 'active' | 'completed' | 'rankings'
-  ): 'active' | 'completed' | 'rankings' => {
-    if (initialTab) {
-      return initialTab;
-    }
+    fixtureId?: string  ): 'active' | 'completed' | 'rankings' => {
     if (fixtureId) {
       return MatchesStorage.getFixtureActiveTab(fixtureId);
     }

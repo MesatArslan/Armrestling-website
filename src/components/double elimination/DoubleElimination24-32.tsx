@@ -27,7 +27,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
   // viewMode kullanılmıyor, kaldırıldı
   const [showLb1ByeMessage, setShowLb1ByeMessage] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(
-    TabManager.getInitialTab(fixtureId, initialTab)
+    TabManager.getInitialTab(fixtureId)
   );
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [, setLastCompletedMatch] = useState<Match | null>(null);
