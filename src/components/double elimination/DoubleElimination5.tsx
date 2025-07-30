@@ -20,6 +20,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
   const [tournamentComplete, setTournamentComplete] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(initialTab || 'active');
   const [selectedWinner, setSelectedWinner] = useState<{ [matchId: string]: string | null }>({});
+  const [, setLastCompletedMatch] = useState<Match | null>(null);
+  const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
 
   // Save tournament state using utility
   const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean) => {
@@ -42,6 +44,9 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
         setMatches(state.matches || []);
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
+        // Reset history when loading from storage
+        setMatchHistory([]);
+        setLastCompletedMatch(null);
         return true; // State was loaded
       }
     } catch (error) {
@@ -71,7 +76,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
         bracket: 'winner',
         round: 1,
         matchNumber: 1,
-        isBye: false
+        isBye: false,
+        description: 'Winner Bracket Round 1'
       });
     }
     
@@ -111,6 +117,10 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
   }, [matches.length, tournamentComplete]); // Removed matches from deps
 
   const handleMatchResult = (matchId: string, winnerId: string) => {
+    // Save current state to history before updating
+    setMatchHistory(prev => [...prev, [...matches]]);
+    setLastCompletedMatch(matches.find(m => m.id === matchId) || null);
+    
     const updatedMatches = matches.map(match => 
       match.id === matchId ? { ...match, winnerId } : match
     );
@@ -133,7 +143,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
         bracket: 'winner',
         round: 2,
         matchNumber: 1,
-        isBye: false
+        isBye: false,
+        description: 'Winner Bracket Round 2: Match 1'
       });
       
       updatedMatches.push({
@@ -143,7 +154,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
         bracket: 'winner',
         round: 2,
         matchNumber: 2,
-        isBye: false
+        isBye: false,
+        description: 'Winner Bracket Round 2: Match 2'
       });
       
       // Create LB Round 1
@@ -154,7 +166,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
           bracket: 'loser',
           round: 1,
           matchNumber: 1,
-          isBye: false
+          isBye: false,
+          description: 'Loser Bracket Round 1'
         });
     } else if (matchId === 'wb2-1') {
       // C vs D completed - check if we can create WB Round 3
@@ -167,7 +180,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
           bracket: 'winner',
           round: 3,
           matchNumber: 1,
-          isBye: false
+          isBye: false,
+          description: 'Winner Bracket Semifinal'
         });
       }
     } else if (matchId === 'wb2-2') {
@@ -181,7 +195,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
           bracket: 'winner',
           round: 3,
           matchNumber: 1,
-          isBye: false
+          isBye: false,
+          description: 'Winner Bracket Semifinal'
         });
       }
     } else if (matchId === 'lb1') {
@@ -195,7 +210,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
         bracket: 'loser',
         round: 2,
         matchNumber: 1,
-        isBye: false
+        isBye: false,
+        description: 'Loser Bracket Round 2'
       });
       }
     } else if (matchId === 'wb3') {
@@ -209,22 +225,24 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
           bracket: 'winner',
           round: 4,
           matchNumber: 1,
-          isBye: false
+          isBye: false,
+          description: 'Final'
         });
       }
     } else if (matchId === 'lb2') {
       // LB Round 2 completed - create LB Final
       const wb3 = updatedMatches.find(m => m.id === 'wb3');
       if (wb3?.winnerId) {
-        updatedMatches.push({
-          id: 'lb3',
-          player1Id: winnerId, // LB Round 2 winner
-          player2Id: wb3.player1Id === wb3.winnerId ? wb3.player2Id : wb3.player1Id, // WB loser
-          bracket: 'loser',
-          round: 3,
-          matchNumber: 1,
-          isBye: false
-        });
+                  updatedMatches.push({
+        id: 'lb3',
+            player1Id: winnerId, // LB Round 2 winner
+            player2Id: wb3.player1Id === wb3.winnerId ? wb3.player2Id : wb3.player1Id, // WB loser
+        bracket: 'loser',
+        round: 3,
+        matchNumber: 1,
+        isBye: false,
+        description: 'Loser Bracket Final'
+      });
       }
     } else if (matchId === 'lb3') {
         // LB Final completed - create 4th/5th place match first
@@ -244,7 +262,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
         bracket: 'placement',
         round: 1,
         matchNumber: 1,
-        isBye: false
+        isBye: false,
+        description: '4th/5th Place Match'
       });
         }
       
@@ -258,7 +277,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
         bracket: 'winner',
         round: 4,
         matchNumber: 1,
-        isBye: false
+        isBye: false,
+        description: 'Final'
       });
         }
     } else if (matchId === 'final') {
@@ -280,7 +300,8 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
             bracket: 'winner',
             round: 5,
             matchNumber: 1,
-            isBye: false
+            isBye: false,
+            description: 'Grand Final'
           });
         } else {
           // wb3 veya winnerId yoksa grandfinal eklenmesin veya logla
@@ -318,6 +339,24 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
   const getPlayerName = (playerId: string) => {
     const player = players.find(p => p.id === playerId);
     return player ? `${player.name} ${player.surname}` : 'Unknown';
+  };
+
+  const undoLastMatch = () => {
+    if (matchHistory.length > 0) {
+      const previousState = matchHistory[matchHistory.length - 1];
+      setMatches(previousState);
+      setMatchHistory(prev => prev.slice(0, -1));
+      setLastCompletedMatch(null);
+      
+      // Reset tournament completion if we're going back
+      if (tournamentComplete) {
+        setTournamentComplete(false);
+        setRankings({});
+      }
+      
+      // Save the reverted state
+      saveTournamentState(previousState, rankings, false);
+    }
   };
 
 
@@ -361,7 +400,7 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
-        bracket={match.bracket === 'placement' ? 'winner' : (match.bracket as 'winner' | 'loser')}
+        bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}
         isBye={match.isBye}
@@ -370,6 +409,7 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
         onWinnerConfirm={handleWinnerConfirm}
         onSelectionCancel={handleSelectionCancel}
         playersLength={players.length}
+        matchTitle={match.description}
       />
     );
   };
@@ -392,13 +432,15 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
       <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
       
       {/* Reset Tournament Button */}
-      <div className="flex justify-center mb-4">
+      <div className="flex justify-center gap-4 mb-4">
         <button
           onClick={() => {
             if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
               clearTournamentState();
               initializeTournament();
               setSelectedWinner({});
+              setMatchHistory([]);
+              setLastCompletedMatch(null);
             }
           }}
           className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
@@ -408,6 +450,23 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
           </svg>
           Turnuvayı Sıfırla
         </button>
+        
+        {/* Undo Last Match Button */}
+        {matchHistory.length > 0 && (
+          <button
+            onClick={() => {
+              if (window.confirm('Son maçı geri almak istediğinizden emin misiniz?')) {
+                undoLastMatch();
+              }
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            Bir Önceki Maç
+          </button>
+        )}
       </div>
       
       {/* Sekme içerikleri */}
@@ -469,7 +528,7 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
       )}
       
       {activeTab === 'rankings' && (
-        <RankingsTable rankings={rankings} players={players} getPlayerName={getPlayerName} />
+        <RankingsTable rankings={rankings} players={players} getPlayerName={getPlayerName} playersLength={players.length} />
       )}
       
       {/* Turnuva ilerlemesi sadece aktif sekmede gösterilsin */}

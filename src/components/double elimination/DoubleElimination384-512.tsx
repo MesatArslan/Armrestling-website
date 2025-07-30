@@ -24,6 +24,8 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
   const [] = useState(false); // <-- yeni state
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(initialTab || 'active');
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
+  const [, setLastCompletedMatch] = useState<Match | null>(null);
+  const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
 
   // Save tournament state using utility
   const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean, roundKey: RoundKey) => {
@@ -46,6 +48,9 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
       if (state) {
         setMatches(state.matches || []);
         setCurrentRoundKey(state.currentRound || 'WB1');
+        // Reset history when loading from storage
+        setMatchHistory([]);
+        setLastCompletedMatch(null);
         return true; // State was loaded
       }
     } catch (error) {
@@ -704,7 +709,7 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
           id: 'seventh_eighth',
           player1Id: lb13Losers[0],
           player2Id: lb13Losers[1],
-          bracket: 'loser',
+          bracket: 'placement',
           round: 16,
           matchNumber: 1,
           isBye: false,
@@ -739,7 +744,7 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
           id: 'fifth_sixth',
           player1Id: lb14Losers[0],
           player2Id: lb14Losers[1],
-          bracket: 'loser',
+          bracket: 'placement',
           round: 18,
           matchNumber: 1,
           isBye: false,
@@ -816,8 +821,29 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
     return player ? `${player.name} ${player.surname}` : 'Unknown Player';
   };
 
+  const undoLastMatch = () => {
+    if (matchHistory.length > 0) {
+      const previousState = matchHistory[matchHistory.length - 1];
+      setMatches(previousState);
+      setMatchHistory(prev => prev.slice(0, -1));
+      setLastCompletedMatch(null);
+      
+      // Reset tournament completion if we're going back
+      if (tournamentComplete) {
+        setTournamentComplete(false);
+      }
+      
+      // Save the reverted state
+      saveTournamentState(previousState, {}, false, currentRoundKey);
+    }
+  };
+
 
   const handleMatchResult = (matchId: string, winnerId: string) => {
+    // Save current state to history before updating
+    setMatchHistory(prev => [...prev, [...matches]]);
+    setLastCompletedMatch(matches.find(m => m.id === matchId) || null);
+    
     setMatches(prevMatches => {
       const updatedMatches = prevMatches.map(match => 
         match.id === matchId ? { ...match, winnerId } : match
@@ -887,7 +913,7 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
-        bracket={match.bracket as 'winner' | 'loser'}
+        bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}
         isBye={match.isBye}
@@ -1046,21 +1072,42 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         <h2 className="text-2xl font-bold text-gray-800">
           Double Elimination Tournament (384-512 oyuncu)
         </h2>
-        <button
-          onClick={() => {
-            if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
-              clearTournamentState();
-              initializeTournament();
-              setSelectedWinner({});
-            }
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Turnuvayı Sıfırla
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={() => {
+              if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+                clearTournamentState();
+                initializeTournament();
+                setSelectedWinner({});
+                setMatchHistory([]);
+                setLastCompletedMatch(null);
+              }
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Turnuvayı Sıfırla
+          </button>
+          
+          {/* Undo Last Match Button */}
+          {matchHistory.length > 0 && (
+            <button
+              onClick={() => {
+                if (window.confirm('Son maçı geri almak istediğinizden emin misiniz?')) {
+                  undoLastMatch();
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              Bir Önceki Maç
+            </button>
+          )}
+        </div>
       </div>
       <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="max-w-4xl mx-auto">

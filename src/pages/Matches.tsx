@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Player, WeightRange, Tournament } from '../types';
 import { MatchesStorage, type Fixture } from '../utils/matchesStorage';
 import DeleteConfirmationModal from '../components/UI/DeleteConfirmationModal';
+import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 // Import all double elimination components
 import {
@@ -811,14 +812,7 @@ const Matches = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading matches...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (

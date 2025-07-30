@@ -22,9 +22,10 @@ interface RankingsTableProps {
   rankings: Rankings;
   players: Player[];
   getPlayerName: (playerId: string) => string;
+  playersLength?: number;
 }
 
-const RankingsTable: React.FC<RankingsTableProps> = ({ rankings, getPlayerName }) => {
+const RankingsTable: React.FC<RankingsTableProps> = ({ rankings, getPlayerName, playersLength }) => {
   const placeLabels = [
     { key: 'first', label: '1st Place', icon: '🥇', color: 'yellow', text: 'text-yellow-800', bg: 'bg-yellow-100', border: 'border-yellow-400' },
     { key: 'second', label: '2nd Place', icon: '🥈', color: 'gray', text: 'text-gray-700', bg: 'bg-gray-100', border: 'border-gray-400' },
@@ -35,11 +36,14 @@ const RankingsTable: React.FC<RankingsTableProps> = ({ rankings, getPlayerName }
     { key: 'seventh', label: '7th Place', icon: '7️⃣', color: 'green', text: 'text-green-700', bg: 'bg-green-100', border: 'border-green-400' },
     { key: 'eighth', label: '8th Place', icon: '8️⃣', color: 'red', text: 'text-red-700', bg: 'bg-red-100', border: 'border-red-400' },
   ];
+  // Filter place labels based on number of players
+  const filteredPlaceLabels = playersLength ? placeLabels.slice(0, playersLength) : placeLabels;
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border-2 border-yellow-300 mb-6">
       <h3 className="text-xl font-bold text-center mb-4 text-gray-800">🏆 Tournament Results</h3>
       <div className="space-y-4">
-        {placeLabels.map((place) => (
+        {filteredPlaceLabels.map((place) => (
           <div key={place.key} className={`flex items-center ${place.bg} border-2 ${place.border} rounded-lg p-4`}>
             <div className="text-3xl mr-4">{place.icon}</div>
             <div>

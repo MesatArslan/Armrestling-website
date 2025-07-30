@@ -56,22 +56,37 @@ const MatchCard: React.FC<MatchCardProps> = ({
               </div>
             )}
           </div>
-          {/* Maç Oynanıyor Butonu */}
+          {/* Maç Durumu Butonu */}
           <button
             onClick={() => setIsPlaying(p => !p)}
-            className={`ml-2 px-3 py-1 rounded-lg text-xs font-bold transition-colors duration-200 shadow ${
-              isPlaying ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-yellow-400'
+            className={`ml-2 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 ${
+              isPlaying 
+                ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg' 
+                : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-300 border border-gray-300'
             }`}
             type="button"
           >
-            {isPlaying ? 'Maç Oynanıyor' : 'Maç Oynanıyor Değil'}
+            <div className="flex items-center gap-1">
+              {isPlaying ? (
+                <>
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  <span>Maç Aktif</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                  <span>Maç Bekliyor</span>
+                </>
+              )}
+            </div>
           </button>
         </div>
-        {/* Eğer maç oynanıyor ise üstte bir etiket göster */}
+        {/* Maç durumu etiketi */}
         {isPlaying && (
           <div className="mt-2 text-center">
-            <span className="inline-block bg-yellow-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
-              Maç Şu An Sahada
+            <span className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg animate-pulse">
+              <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+              <span>⚡ MAÇ SAHADA DEVAM EDİYOR</span>
             </span>
           </div>
         )}
