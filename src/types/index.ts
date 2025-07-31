@@ -71,7 +71,7 @@ export interface Column {
 export interface DoubleEliminationProps {
   players: Player[];
   onMatchResult: (type: string, winnerId: string, loserId?: string) => void;
-  onTournamentComplete?: (rankings: { first?: string; second?: string; third?: string }) => void;
+  onTournamentComplete?: (rankings: { first?: string; second?: string; third?: string; fourth?: string }) => void;
   initialTab?: 'active' | 'completed' | 'rankings';
   fixtureId?: string;
 }

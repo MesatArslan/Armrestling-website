@@ -8,6 +8,7 @@ import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
+import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
 
 const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -82,7 +83,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         round: 1,
         matchNumber: 1,
         isBye: false,
-        description: 'Winner Bracket Round 1: Match 1'
+        description: RoundDescriptionUtils.createMatchDescription('WB1', 1)
       });
 
       newMatches.push({
@@ -93,7 +94,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         round: 1,
         matchNumber: 2,
         isBye: false,
-        description: 'Winner Bracket Round 1: Match 2'
+        description: RoundDescriptionUtils.createMatchDescription('WB1', 2)
       });
 
       newMatches.push({
@@ -104,7 +105,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         round: 1,
         matchNumber: 3,
         isBye: false,
-        description: 'Winner Bracket Round 1: Match 3'
+        description: RoundDescriptionUtils.createMatchDescription('WB1', 3)
       });
     }
 
@@ -183,7 +184,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
           round: 1,
           matchNumber: 1,
           isBye: false,
-          description: 'Loser Bracket Round 1'
+          description: RoundDescriptionUtils.getDescription('LB1')
         });
       }
 
@@ -209,7 +210,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         round: 2,
         matchNumber: 1,
         isBye: false,
-        description: 'Winner Bracket Round 2: Match 1'
+        description: RoundDescriptionUtils.getDescription('WB_QuarterFinal')
       });
 
       // WB Round 2: C vs E
@@ -221,7 +222,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         round: 2,
         matchNumber: 2,
         isBye: false,
-        description: 'Winner Bracket Round 2: Match 2'
+        description: RoundDescriptionUtils.getDescription('WB_QuarterFinal')
       });
 
     } else if (matchId === 'wb2-1' || matchId === 'wb2-2') {
@@ -245,7 +246,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
           round: 2,
           matchNumber: 1,
           isBye: false,
-          description: 'Loser Bracket Round 2: Match 1'
+          description: RoundDescriptionUtils.createMatchDescription('LB2', 1)
         });
 
         // LB Round 2: F vs G
@@ -257,7 +258,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
           round: 2,
           matchNumber: 2,
           isBye: false,
-          description: 'Loser Bracket Round 2: Match 2'
+          description: RoundDescriptionUtils.createMatchDescription('LB2', 2)
         });
       }
 
@@ -279,30 +280,14 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
           round: 3,
           matchNumber: 1,
           isBye: false,
-          description: 'Winner Bracket Semifinal'
+          description: RoundDescriptionUtils.getDescription('WB_SemiFinal')
         });
       }
 
     } else if (matchId === 'wb3') {
-      // WB Round 3 (Semifinal) completed, create 5th/6th place match and LB R3
+      // WB Round 3 (Semifinal) completed, create LB R3
       const lb2_1Winner = finalMatches.find(m => m.id === 'lb2-1')!.winnerId; // B
       const lb2_2Winner = finalMatches.find(m => m.id === 'lb2-2')!.winnerId; // F
-      const lb2_1Loser = finalMatches.find(m => m.id === 'lb2-1')!.player1Id === finalMatches.find(m => m.id === 'lb2-1')!.winnerId ?
-        finalMatches.find(m => m.id === 'lb2-1')!.player2Id : finalMatches.find(m => m.id === 'lb2-1')!.player1Id; // E
-      const lb2_2Loser = finalMatches.find(m => m.id === 'lb2-2')!.player1Id === finalMatches.find(m => m.id === 'lb2-2')!.winnerId ?
-        finalMatches.find(m => m.id === 'lb2-2')!.player2Id : finalMatches.find(m => m.id === 'lb2-2')!.player1Id; // G
-
-      // 5th/6th Place Match: G vs E
-      finalMatches.push({
-        id: 'place56',
-        player1Id: lb2_2Loser, // G (loser from F vs G)
-        player2Id: lb2_1Loser, // E (loser from B vs E)
-        bracket: 'placement',
-        round: 3,
-        matchNumber: 1,
-        isBye: false,
-        description: '5th/6th Place Match'
-      });
 
       // LB Round 3: B vs F
       finalMatches.push({
@@ -313,7 +298,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         round: 3,
         matchNumber: 1,
         isBye: false,
-        description: 'Loser Bracket Round 3'
+        description: RoundDescriptionUtils.getDescription('LB3')
       });
 
     } else if (matchId === 'place56') {
@@ -336,14 +321,33 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         round: 4,
         matchNumber: 1,
         isBye: false,
-        description: 'Loser Bracket Final'
+        description: RoundDescriptionUtils.getDescription('LB_Final')
       });
 
     } else if (matchId === 'lb4') {
       // LB Round 4 (LB Final) completed, loser gets 3rd place
       finalRankings = { ...finalRankings, third: loserId };
 
-      // Create Final: A vs B
+      // Create 5th/6th place match first
+      const lb2_1Match = finalMatches.find(m => m.id === 'lb2-1');
+      const lb2_2Match = finalMatches.find(m => m.id === 'lb2-2');
+      if (lb2_1Match && lb2_2Match) {
+        const lb2_1Loser = lb2_1Match.player1Id === lb2_1Match.winnerId ? lb2_1Match.player2Id : lb2_1Match.player1Id; // E
+        const lb2_2Loser = lb2_2Match.player1Id === lb2_2Match.winnerId ? lb2_2Match.player2Id : lb2_2Match.player1Id; // G
+
+        finalMatches.push({
+          id: 'place56',
+          player1Id: lb2_2Loser, // G (loser from F vs G)
+          player2Id: lb2_1Loser, // E (loser from B vs E)
+          bracket: 'placement',
+          round: 4,
+          matchNumber: 1,
+          isBye: false,
+          description: RoundDescriptionUtils.getDescription('5-6')
+        });
+      }
+
+      // Then create Final: A vs B
       const wb3Winner = finalMatches.find(m => m.id === 'wb3')!.winnerId;
 
       finalMatches.push({
@@ -354,7 +358,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         round: 5,
         matchNumber: 1,
         isBye: false,
-        description: 'Final'
+        description: RoundDescriptionUtils.getDescription('Final')
       });
 
     } else if (matchId === 'final') {
@@ -373,7 +377,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
           round: 6,
           matchNumber: 1,
           isBye: false,
-          description: 'Grand Final'
+          description: RoundDescriptionUtils.getDescription('GrandFinal')
         });
       }
 

@@ -283,12 +283,8 @@ const Matches = () => {
     const playerCount = activeFixture.players.length;
 
     // Get the saved tab state for this fixture, or use desired tab, or default
-    let finalTab: 'active' | 'completed' | 'rankings';
     if (desiredTab) {
-      finalTab = desiredTab;
     } else {
-      // Sadece localStorage'dan oku, activeFixture.activeTab'ı kullanma
-      finalTab = TabManager.getInitialTab(activeFixture.id);
     }
 
     const props = {

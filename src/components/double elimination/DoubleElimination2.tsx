@@ -8,6 +8,7 @@ import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
+import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
 
 const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -86,7 +87,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
         round: 1,
         matchNumber: 1,
         isBye: false,
-        description: 'Semifinal'
+        description: RoundDescriptionUtils.getDescription('WB_SemiFinal')
       });
     } else if (players.length === 3) {
       // 3-player double elimination: Start with A vs B
@@ -98,7 +99,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
         round: 1,
         matchNumber: 1,
         isBye: false,
-        description: 'Winner Bracket Round 1'
+        description: RoundDescriptionUtils.getDescription('WB1')
       });
     }
     
@@ -189,7 +190,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
           round: 2,
           matchNumber: 1,
           isBye: false,
-          description: 'Final'
+          description: RoundDescriptionUtils.getDescription('Final')
         });
       } else if (matchId === 'final') {
         // Check who won the semifinal
@@ -225,7 +226,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
             round: 3,
             matchNumber: 1,
             isBye: false,
-            description: 'Grand Final'
+            description: RoundDescriptionUtils.getDescription('GrandFinal')
           });
         }
       } else if (matchId === 'grandfinal') {
@@ -257,7 +258,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
           round: 2,
           matchNumber: 1,
           isBye: false,
-          description: 'Winner Bracket Semifinal'
+          description: RoundDescriptionUtils.getDescription('WB_SemiFinal')
         });
       } else if (matchId === 'wb2') {
         // WB Semifinal (Winner vs C) completed
@@ -273,7 +274,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
           round: 1,
           matchNumber: 1,
           isBye: false,
-          description: 'Loser Bracket Semifinal'
+          description: RoundDescriptionUtils.getDescription('LB_Final')
         });
       } else if (matchId === 'lbsf') {
         // LB Semifinal completed, loser gets 3rd place
@@ -294,7 +295,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
           round: 3,
           matchNumber: 1,
           isBye: false,
-          description: 'Final'
+          description: RoundDescriptionUtils.getDescription('Final')
         });
       } else if (matchId === 'final') {
         // Check if WB winner won the final
@@ -333,7 +334,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
             round: 4,
             matchNumber: 1,
             isBye: false,
-            description: 'Grand Final'
+            description: RoundDescriptionUtils.getDescription('GrandFinal')
           });
         }
       } else if (matchId === 'grandfinal') {

@@ -8,6 +8,7 @@ import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
+import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
 
 const ROUND_ORDER = [
   'WB_R1',
@@ -102,7 +103,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
           round: 1,
           matchNumber: Math.floor(i/2) + 1,
           isBye: false,
-          description: `WB Round 1 - Match ${Math.floor(i/2) + 1}`
+          description: RoundDescriptionUtils.createMatchDescription('WB1', Math.floor(i/2) + 1)
         });
       }
     }
@@ -116,7 +117,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
         round: 1,
         matchNumber: wb1Matches.length + 1,
         isBye: true,
-        description: `WB Round 1 - Bye for ${player.name} ${player.surname}`
+                  description: `${RoundDescriptionUtils.getDescription('WB1')} - Bye for ${player.name} ${player.surname}`
       });
     });
     setMatches(wb1Matches);
@@ -183,7 +184,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
     if (!isRoundComplete(currentRoundKey, matches)) return;
     // Sıradaki roundu oluştur
     const nextRoundKey = ROUND_ORDER[currentIdx + 1] as RoundKey;
-    const newMatches = createNextRound(nextRoundKey, matches);
+    const newMatches = createNextRound();
     if (newMatches.length > 0) {
       setMatches([...matches, ...newMatches]);
       setCurrentRoundKey(nextRoundKey);
@@ -264,246 +265,347 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
   };
 
   // --- Next Round Match Creation Logic ---
-  function createNextRound(roundKey: RoundKey, matchList: Match[]): Match[] {
-    // Helper: get winners/losers from a round
-    const getWinners = (rk: RoundKey) => matchList.filter(m => getMatchRoundKey(m) === rk && m.winnerId && !m.isBye).map(m => m.winnerId!);
-    const getLosers = (rk: RoundKey) => matchList.filter(m => getMatchRoundKey(m) === rk && m.winnerId && !m.isBye).map(m => {
-      if (m.player1Id === m.winnerId) return m.player2Id;
-      return m.player1Id;
-    }).filter(Boolean);
-    // Helper: get byes from a round
-    const getByePlayers = (rk: RoundKey) => matchList.filter(m => getMatchRoundKey(m) === rk && m.isBye).map(m => m.player1Id);
+  function createNextRound(): Match[] {
+    // Son roundun maçlarını bulmak için
+    const matchList = matches;
+    const currentIdx = ROUND_ORDER.indexOf(currentRoundKey);
+    const nextRoundKey = ROUND_ORDER[currentIdx + 1] as RoundKey;
 
-    // Helper: pair up players
-    const pairUp = (arr: string[], baseId: string, bracket: 'winner'|'loser', round: number, descPrefix: string) => {
-      const matches: Match[] = [];
-      for (let i = 0; i < arr.length; i += 2) {
-        if (i + 1 < arr.length) {
-          matches.push({
-            id: `${baseId}_${Math.floor(i/2)+1}`,
-            player1Id: arr[i],
-            player2Id: arr[i+1],
-            bracket,
-            round,
-            matchNumber: Math.floor(i/2)+1,
-            isBye: false,
-            description: `${descPrefix} - Match ${Math.floor(i/2)+1}`
-          });
+    switch (nextRoundKey) {
+      case 'WB_R2': {
+        // WB R2: WB R1 kazananları + byeler
+        const wb1Matches = matchList.filter(m => getMatchRoundKey(m) === 'WB_R1');
+        const wb1Winners = wb1Matches.filter(m => m.winnerId && !m.isBye).map(m => m.winnerId!);
+        const wb1Byes = wb1Matches.filter(m => m.isBye).map(m => m.player1Id);
+        const allWb2Players = [...wb1Winners, ...wb1Byes];
+        const wb2Matches: Match[] = [];
+        for (let i = 0; i < allWb2Players.length; i += 2) {
+          if (i + 1 < allWb2Players.length) {
+            wb2Matches.push({
+              id: `wb_r2_${Math.floor(i/2) + 1}`,
+              player1Id: allWb2Players[i],
+              player2Id: allWb2Players[i + 1],
+              bracket: 'winner',
+              round: 2,
+              matchNumber: Math.floor(i/2) + 1,
+              isBye: false,
+              description: RoundDescriptionUtils.createMatchDescription('WB2', Math.floor(i/2) + 1)
+            });
+          }
         }
+        return wb2Matches;
       }
-      return matches;
-    };
-
-    // --- ROUND LOGIC ---
-    if (roundKey === 'WB_R2') {
-      // WB R2: 16 oyuncu (byeler + WB R1 kazananları)
-      const wb1Winners = getWinners('WB_R1');
-      const wb1Byes = getByePlayers('WB_R1');
-      const wb2Players = [...wb1Winners, ...wb1Byes];
-      return pairUp(wb2Players, 'wb_r2', 'winner', 2, 'WB Round 2');
-    }
-    if (roundKey === 'LB_R1') {
-      // LB R1: WB R1 kaybedenleri + WB R2 kaybedenleri
-      const wb1Losers = getLosers('WB_R1');
-      const wb2Losers = getLosers('WB_R2');
-      let lbR1Players = [...wb1Losers, ...wb2Losers];
-      // 16'ya tamamlamak için bye
-      const byesNeeded = 16 - lbR1Players.length;
-      const sorted = [...lbR1Players].sort((a, b) => getPlayerDetails(b)!.weight - getPlayerDetails(a)!.weight);
-      const byePlayers = sorted.slice(0, byesNeeded);
-      const forMatches = sorted.slice(byesNeeded);
-      const matches: Match[] = [];
-      for (let i = 0; i < forMatches.length; i += 2) {
-        if (i + 1 < forMatches.length) {
-          matches.push({
-            id: `lb_r1_${Math.floor(i/2)+1}`,
-            player1Id: forMatches[i],
-            player2Id: forMatches[i+1],
+      case 'LB_R1': {
+        // LB R1: WB R1 ve WB R2 kaybedenleri, byelerle 16'ya tamamlanır
+        const wb1Matches = matchList.filter(m => getMatchRoundKey(m) === 'WB_R1');
+        const wb2Matches = matchList.filter(m => getMatchRoundKey(m) === 'WB_R2');
+        const wb1Losers = wb1Matches.filter(m => m.winnerId && !m.isBye).map(m => m.player1Id === m.winnerId ? m.player2Id : m.player1Id);
+        const wb2Losers = wb2Matches.filter(m => m.winnerId).map(m => m.player1Id === m.winnerId ? m.player2Id : m.player1Id);
+        const lb1Players = [...wb1Losers, ...wb2Losers];
+        const byesNeeded = 16 - lb1Players.length;
+        const sorted = [...lb1Players].sort((a, b) => getPlayerDetails(b)!.weight - getPlayerDetails(a)!.weight);
+        const byePlayers = sorted.slice(0, byesNeeded);
+        const matchPlayers = sorted.slice(byesNeeded);
+        const lb1Matches: Match[] = [];
+        
+        // Byeler
+        byePlayers.forEach((playerId, i) => {
+          lb1Matches.push({
+            id: `lb_r1_bye_${i + 1}`,
+            player1Id: playerId,
+            player2Id: '',
             bracket: 'loser',
             round: 1,
-            matchNumber: Math.floor(i/2)+1,
-            isBye: false,
-            description: `LB Round 1 - Match ${Math.floor(i/2)+1}`
+            matchNumber: i + 1,
+            isBye: true,
+            description: `${RoundDescriptionUtils.getDescription('LB1')} - Bye for ${getPlayerName(playerId)}`
           });
-        }
-      }
-      byePlayers.forEach((pid, idx) => {
-        matches.push({
-          id: `lb_r1_bye_${idx+1}`,
-          player1Id: pid,
-          player2Id: '',
-          bracket: 'loser',
-          round: 1,
-          matchNumber: matches.length+1,
-          isBye: true,
-          description: `LB Round 1 - Bye for ${getPlayerName(pid)}`
         });
-      });
-      return matches;
-    }
-    if (roundKey === 'LB_R2') {
-      // LB R2: LB R1 kazananları + LB R1 byeleri
-      const lbR1Winners = [...getWinners('LB_R1'), ...getByePlayers('LB_R1')];
-      return pairUp(lbR1Winners, 'lb_r2', 'loser', 2, 'LB Round 2');
-    }
-    if (roundKey === 'WB_R3') {
-      // WB R3: WB R2 kazananları
-      const wb2Winners = getWinners('WB_R2');
-      return pairUp(wb2Winners, 'wb_r3', 'winner', 3, 'WB Round 3');
-    }
-    if (roundKey === 'LB_R3') {
-      // LB R3: LB R2 kazananları + WB R3 kaybedenleri
-      const lbR2Winners = getWinners('LB_R2');
-      const wb3Losers = getLosers('WB_R3');
-      const players = [...lbR2Winners, ...wb3Losers];
-      return pairUp(players, 'lb_r3', 'loser', 3, 'LB Round 3');
-    }
-    if (roundKey === 'LB_R4') {
-      // LB R4: LB R3 kazananları
-      const lbR3Winners = getWinners('LB_R3');
-      return pairUp(lbR3Winners, 'lb_r4', 'loser', 4, 'LB Round 4');
-    }
-    if (roundKey === 'WB_R4') {
-      // WB R4: WB R3 kazananları
-      const wb3Winners = getWinners('WB_R3');
-      return pairUp(wb3Winners, 'wb_r4', 'winner', 4, 'WB Round 4');
-    }
-    if (roundKey === 'LB_R5') {
-      // LB R5: WB R4 kaybedenleri + LB R4 kazananları
-      const wb4Losers = getLosers('WB_R4');
-      const lbR4Winners = getWinners('LB_R4');
-      const players = [...wb4Losers, ...lbR4Winners];
-      return pairUp(players, 'lb_r5', 'loser', 5, 'LB Round 5');
-    }
-    if (roundKey === 'YARI_FINAL') {
-      // Yarı Final: WB R4 kazananları
-      const wb4Winners = getWinners('WB_R4');
-      if (wb4Winners.length === 2) {
-        return [{
-          id: 'yari_final',
-          player1Id: wb4Winners[0],
-          player2Id: wb4Winners[1],
-          bracket: 'winner',
-          round: 5,
-          matchNumber: 1,
-          isBye: false,
-          description: 'Yarı Final'
-        }];
+        
+        // Maçlar
+        for (let i = 0; i < matchPlayers.length; i += 2) {
+          if (i + 1 < matchPlayers.length) {
+            lb1Matches.push({
+              id: `lb_r1_${Math.floor(i/2) + 1}`,
+              player1Id: matchPlayers[i],
+              player2Id: matchPlayers[i + 1],
+              bracket: 'loser',
+              round: 1,
+              matchNumber: byePlayers.length + Math.floor(i/2) + 1,
+              isBye: false,
+              description: RoundDescriptionUtils.createMatchDescription('LB1', Math.floor(i/2) + 1)
+            });
+          }
+        }
+        return lb1Matches;
       }
-      return [];
-    }
-    if (roundKey === 'LB_R6') {
-      // LB R6: LB R5 kazananları
-      const lbR5Winners = getWinners('LB_R5');
-      if (lbR5Winners.length === 2) {
-        return [{
-          id: 'lb_r6',
-          player1Id: lbR5Winners[0],
-          player2Id: lbR5Winners[1],
-          bracket: 'loser',
-          round: 6,
-          matchNumber: 1,
-          isBye: false,
-          description: 'LB Round 6'
-        }];
+      case 'LB_R2': {
+        // LB R2: LB R1 kazananları + byeler
+        const lb1Matches = matchList.filter(m => getMatchRoundKey(m) === 'LB_R1');
+        const lb1Winners = lb1Matches.filter(m => m.winnerId && !m.isBye).map(m => m.winnerId!);
+        const lb1Byes = lb1Matches.filter(m => m.isBye).map(m => m.player1Id);
+        const lb2Players = [...lb1Winners, ...lb1Byes];
+        const lb2Matches: Match[] = [];
+        for (let i = 0; i < lb2Players.length; i += 2) {
+          if (i + 1 < lb2Players.length) {
+            lb2Matches.push({
+              id: `lb_r2_${Math.floor(i/2) + 1}`,
+              player1Id: lb2Players[i],
+              player2Id: lb2Players[i + 1],
+              bracket: 'loser',
+              round: 2,
+              matchNumber: Math.floor(i/2) + 1,
+              isBye: false,
+              description: RoundDescriptionUtils.createMatchDescription('LB2', Math.floor(i/2) + 1)
+            });
+          }
+        }
+        return lb2Matches;
       }
-      return [];
-    }
-    if (roundKey === '7-8') {
-      // 7-8.lik: LB R4 kaybedenleri
-      const lbR4Losers = getLosers('LB_R4');
-      if (lbR4Losers.length === 2) {
-        return [{
-          id: 'seventh_eighth',
-          player1Id: lbR4Losers[0],
-          player2Id: lbR4Losers[1],
-          bracket: 'placement',
-          round: 4,
-          matchNumber: 1,
-          isBye: false,
-          description: '7.lik-8.lik Maçı'
-        }];
+      case 'WB_R3': {
+        // WB R3: WB R2 kazananları
+        const wb2Matches = matchList.filter(m => getMatchRoundKey(m) === 'WB_R2');
+        const wb2Winners = wb2Matches.filter(m => m.winnerId).map(m => m.winnerId!);
+        const wb3Matches: Match[] = [];
+        for (let i = 0; i < wb2Winners.length; i += 2) {
+          if (i + 1 < wb2Winners.length) {
+            wb3Matches.push({
+              id: `wb_r3_${Math.floor(i/2) + 1}`,
+              player1Id: wb2Winners[i],
+              player2Id: wb2Winners[i + 1],
+              bracket: 'winner',
+              round: 3,
+              matchNumber: Math.floor(i/2) + 1,
+              isBye: false,
+              description: RoundDescriptionUtils.createMatchDescription('WB3', Math.floor(i/2) + 1)
+            });
+          }
+        }
+        return wb3Matches;
       }
-      return [];
-    }
-    if (roundKey === 'LB_FINAL') {
-      // LB Final: Yarı Final kaybedeni + LB R6 kazananı
-      const yariFinal = matchList.find(m => m.id === 'yari_final');
-      const lbR6 = matchList.find(m => m.id === 'lb_r6');
-      if (yariFinal && lbR6 && yariFinal.winnerId && lbR6.winnerId) {
-        const yariFinalLoser = yariFinal.player1Id === yariFinal.winnerId ? yariFinal.player2Id : yariFinal.player1Id;
-        return [{
-          id: 'lb_final',
-          player1Id: lbR6.winnerId,
-          player2Id: yariFinalLoser,
-          bracket: 'loser',
-          round: 7,
-          matchNumber: 1,
-          isBye: false,
-          description: 'LB Final'
-        }];
+      case 'LB_R3': {
+        // LB R3: LB R2 kazananları + WB R3 kaybedenleri
+        const lb2Matches = matchList.filter(m => getMatchRoundKey(m) === 'LB_R2');
+        const wb3Matches = matchList.filter(m => getMatchRoundKey(m) === 'WB_R3');
+        const lb2Winners = lb2Matches.filter(m => m.winnerId).map(m => m.winnerId!);
+        const wb3Losers = wb3Matches.filter(m => m.winnerId).map(m => m.player1Id === m.winnerId ? m.player2Id : m.player1Id);
+        const lb3Players = [...lb2Winners, ...wb3Losers];
+        const lb3Matches: Match[] = [];
+        for (let i = 0; i < lb3Players.length; i += 2) {
+          if (i + 1 < lb3Players.length) {
+            lb3Matches.push({
+              id: `lb_r3_${Math.floor(i/2) + 1}`,
+              player1Id: lb3Players[i],
+              player2Id: lb3Players[i + 1],
+              bracket: 'loser',
+              round: 3,
+              matchNumber: Math.floor(i/2) + 1,
+              isBye: false,
+              description: RoundDescriptionUtils.createMatchDescription('LB3', Math.floor(i/2) + 1)
+            });
+          }
+        }
+        return lb3Matches;
       }
-      return [];
-    }
-    if (roundKey === '5-6') {
-      // 5-6.lık: LB R5 kaybedenleri
-      const lbR5Losers = getLosers('LB_R5');
-      if (lbR5Losers.length === 2) {
-        return [{
-          id: 'fifth_sixth',
-          player1Id: lbR5Losers[0],
-          player2Id: lbR5Losers[1],
-          bracket: 'placement',
-          round: 5,
-          matchNumber: 1,
-          isBye: false,
-          description: '5.lik-6.lık Maçı'
-        }];
+      case 'LB_R4': {
+        // LB R4: LB R3 kazananları
+        const lb3Matches = matchList.filter(m => getMatchRoundKey(m) === 'LB_R3');
+        const lb3Winners = lb3Matches.filter(m => m.winnerId).map(m => m.winnerId!);
+        const lb4Matches: Match[] = [];
+        for (let i = 0; i < lb3Winners.length; i += 2) {
+          if (i + 1 < lb3Winners.length) {
+            lb4Matches.push({
+              id: `lb_r4_${Math.floor(i/2) + 1}`,
+              player1Id: lb3Winners[i],
+              player2Id: lb3Winners[i + 1],
+              bracket: 'loser',
+              round: 4,
+              matchNumber: Math.floor(i/2) + 1,
+              isBye: false,
+              description: RoundDescriptionUtils.createMatchDescription('LB4', Math.floor(i/2) + 1)
+            });
+          }
+        }
+        return lb4Matches;
       }
-      return [];
-    }
-    if (roundKey === 'FINAL') {
-      // Final: Yarı Final kazananı + LB Final kazananı
-      const yariFinal = matchList.find(m => m.id === 'yari_final');
-      const lbFinal = matchList.find(m => m.id === 'lb_final');
-      if (yariFinal && lbFinal && yariFinal.winnerId && lbFinal.winnerId) {
-        return [{
-          id: 'final',
-          player1Id: yariFinal.winnerId,
-          player2Id: lbFinal.winnerId,
-          bracket: 'winner',
-          round: 8,
-          matchNumber: 1,
-          isBye: false,
-          description: 'Final'
-        }];
+      case 'WB_R4': {
+        // WB R4: WB R3 kazananları
+        const wb3Matches = matchList.filter(m => getMatchRoundKey(m) === 'WB_R3');
+        const wb3Winners = wb3Matches.filter(m => m.winnerId).map(m => m.winnerId!);
+        const wb4Matches: Match[] = [];
+        for (let i = 0; i < wb3Winners.length; i += 2) {
+          if (i + 1 < wb3Winners.length) {
+            wb4Matches.push({
+              id: `wb_r4_${Math.floor(i/2) + 1}`,
+              player1Id: wb3Winners[i],
+              player2Id: wb3Winners[i + 1],
+              bracket: 'winner',
+              round: 4,
+              matchNumber: Math.floor(i/2) + 1,
+              isBye: false,
+              description: RoundDescriptionUtils.createMatchDescription('WB_QuarterFinal', Math.floor(i/2) + 1)
+            });
+          }
+        }
+        return wb4Matches;
       }
-      return [];
-    }
-    if (roundKey === 'GRAND_FINAL') {
-      // Grand Final: Finali LB'den gelen kazanırsa, A ve E tekrar karşılaşır
-      const final = matchList.find(m => m.id === 'final');
-      if (final && final.winnerId) {
-        // Finalde LB'den gelen kazandıysa (LB Final kazananı)
-        const yariFinal = matchList.find(m => m.id === 'yari_final');
-        const lbFinal = matchList.find(m => m.id === 'lb_final');
-        if (yariFinal && lbFinal && lbFinal.winnerId === final.winnerId) {
-          // Grand Final oynanmalı
+      case 'LB_R5': {
+        // LB R5: WB R4 kaybedenleri + LB R4 kazananları
+        const wb4Matches = matchList.filter(m => getMatchRoundKey(m) === 'WB_R4');
+        const lb4Matches = matchList.filter(m => getMatchRoundKey(m) === 'LB_R4');
+        const wb4Losers = wb4Matches.filter(m => m.winnerId).map(m => m.player1Id === m.winnerId ? m.player2Id : m.player1Id);
+        const lb4Winners = lb4Matches.filter(m => m.winnerId).map(m => m.winnerId!);
+        const lb5Players = [...wb4Losers, ...lb4Winners];
+        const lb5Matches: Match[] = [];
+        for (let i = 0; i < lb5Players.length; i += 2) {
+          if (i + 1 < lb5Players.length) {
+            lb5Matches.push({
+              id: `lb_r5_${Math.floor(i/2) + 1}`,
+              player1Id: lb5Players[i],
+              player2Id: lb5Players[i + 1],
+              bracket: 'loser',
+              round: 5,
+              matchNumber: Math.floor(i/2) + 1,
+              isBye: false,
+              description: RoundDescriptionUtils.createMatchDescription('LB5', Math.floor(i/2) + 1)
+            });
+          }
+        }
+        return lb5Matches;
+      }
+      case 'YARI_FINAL': {
+        // Yarı Final: WB R4 kazananları
+        const wb4Matches = matchList.filter(m => getMatchRoundKey(m) === 'WB_R4');
+        const wb4Winners = wb4Matches.filter(m => m.winnerId).map(m => m.winnerId!);
+        if (wb4Winners.length >= 2) {
           return [{
-            id: 'grand_final',
-            player1Id: yariFinal.winnerId!,
-            player2Id: lbFinal.winnerId!,
+            id: 'yari_final',
+            player1Id: wb4Winners[0],
+            player2Id: wb4Winners[1],
             bracket: 'winner',
-            round: 9,
+            round: 5,
             matchNumber: 1,
             isBye: false,
-            description: 'Grand Final'
+            description: RoundDescriptionUtils.getDescription('WB_SemiFinal')
           }];
         }
+        return [];
       }
-      return [];
+      case 'LB_R6': {
+        // LB R6: LB R5 kazananları
+        const lb5Matches = matchList.filter(m => getMatchRoundKey(m) === 'LB_R5');
+        const lb5Winners = lb5Matches.filter(m => m.winnerId).map(m => m.winnerId!);
+        if (lb5Winners.length >= 2) {
+          return [{
+            id: 'lb_r6',
+            player1Id: lb5Winners[0],
+            player2Id: lb5Winners[1],
+            bracket: 'loser',
+            round: 6,
+            matchNumber: 1,
+            isBye: false,
+            description: RoundDescriptionUtils.getDescription('LB6')
+          }];
+        }
+        return [];
+      }
+      case '7-8': {
+        // 7-8.lik: LB R4 kaybedenleri
+        const lb4Matches = matchList.filter(m => getMatchRoundKey(m) === 'LB_R4');
+        const lb4Losers = lb4Matches.filter(m => m.winnerId).map(m => m.player1Id === m.winnerId ? m.player2Id : m.player1Id);
+        if (lb4Losers.length >= 2) {
+          return [{
+            id: 'seventh_eighth',
+            player1Id: lb4Losers[0],
+            player2Id: lb4Losers[1],
+            bracket: 'placement',
+            round: 4,
+            matchNumber: 1,
+            isBye: false,
+            description: RoundDescriptionUtils.getDescription('7-8')
+          }];
+        }
+        return [];
+      }
+      case 'LB_FINAL': {
+        // LB Final: Yarı Final kaybedeni + LB R6 kazananı
+        const yariFinal = matchList.find(m => m.id === 'yari_final');
+        const lbR6 = matchList.find(m => m.id === 'lb_r6');
+        if (yariFinal && lbR6 && yariFinal.winnerId && lbR6.winnerId) {
+          const yariFinalLoser = yariFinal.player1Id === yariFinal.winnerId ? yariFinal.player2Id : yariFinal.player1Id;
+          return [{
+            id: 'lb_final',
+            player1Id: lbR6.winnerId,
+            player2Id: yariFinalLoser,
+            bracket: 'loser',
+            round: 7,
+            matchNumber: 1,
+            isBye: false,
+            description: RoundDescriptionUtils.getDescription('LB_Final')
+          }];
+        }
+        return [];
+      }
+      case '5-6': {
+        // 5-6.lık: LB R5 kaybedenleri
+        const lb5Matches = matchList.filter(m => getMatchRoundKey(m) === 'LB_R5');
+        const lb5Losers = lb5Matches.filter(m => m.winnerId).map(m => m.player1Id === m.winnerId ? m.player2Id : m.player1Id);
+        if (lb5Losers.length >= 2) {
+          return [{
+            id: 'fifth_sixth',
+            player1Id: lb5Losers[0],
+            player2Id: lb5Losers[1],
+            bracket: 'placement',
+            round: 5,
+            matchNumber: 1,
+            isBye: false,
+            description: RoundDescriptionUtils.getDescription('5-6')
+          }];
+        }
+        return [];
+      }
+      case 'FINAL': {
+        // Final: Yarı Final kazananı + LB Final kazananı
+        const yariFinal = matchList.find(m => m.id === 'yari_final');
+        const lbFinal = matchList.find(m => m.id === 'lb_final');
+        if (yariFinal && lbFinal && yariFinal.winnerId && lbFinal.winnerId) {
+          return [{
+            id: 'final',
+            player1Id: yariFinal.winnerId,
+            player2Id: lbFinal.winnerId,
+            bracket: 'winner',
+            round: 8,
+            matchNumber: 1,
+            isBye: false,
+            description: RoundDescriptionUtils.getDescription('Final')
+          }];
+        }
+        return [];
+      }
+      case 'GRAND_FINAL': {
+        // Grand Final: Finali LB'den gelen kazanırsa
+        const final = matchList.find(m => m.id === 'final');
+        if (final && final.winnerId) {
+          const yariFinal = matchList.find(m => m.id === 'yari_final');
+          const lbFinal = matchList.find(m => m.id === 'lb_final');
+          if (yariFinal && lbFinal && lbFinal.winnerId === final.winnerId) {
+            return [{
+              id: 'grand_final',
+              player1Id: yariFinal.winnerId!,
+              player2Id: lbFinal.winnerId!,
+              bracket: 'winner',
+              round: 9,
+              matchNumber: 1,
+              isBye: false,
+              description: RoundDescriptionUtils.getDescription('GrandFinal')
+            }];
+          }
+        }
+        return [];
+      }
+      default:
+        return [];
     }
-    return [];
   }
 
   // --- Reset Matches Only ---
@@ -624,19 +726,6 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
         Double Elimination Tournament ({players.length} players)
       </h2>
               <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
-      <div className="text-center text-gray-600 mb-6 text-sm bg-blue-50 p-4 rounded-lg max-w-4xl mx-auto">
-        <p className="font-semibold mb-2">17-23 Oyuncu için Çift Eleme Turnuva Formatı:</p>
-        <p>• WB R1: 32'ye tamamlamak için byeler, kalanlar eşleşir</p>
-        <p>• WB R2: 16 oyuncu, 8 maç</p>
-        <p>• LB R1: WB R1 ve WB R2 kaybedenleri, byelerle 16'ya tamamlanır</p>
-        <p>• LB R2: 8 oyuncu, 4 maç</p>
-        <p>• WB R3: 8 oyuncu, 4 maç</p>
-        <p>• LB R3: LB R2 ve WB R3 kaybedenleri, 8 oyuncu</p>
-        <p>• LB R4: 4 oyuncu</p>
-        <p>• WB R4: 4 oyuncu</p>
-        <p>• LB R5: 4 oyuncu</p>
-        <p>• Yarı Final, LB R6, 7-8, LB Final, 5-6, Final, Grand Final</p>
-      </div>
       {activeTab === 'active' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto">
           {activeMatches.filter(m => !m.isBye && !m.winnerId).map(renderMatch)}

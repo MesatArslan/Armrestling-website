@@ -8,6 +8,7 @@ import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
+import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
 
 const ROUND_ORDER = [
   'WB1', 'LB1', 'WB2', 'LB2', 'LB3', 'WB3', 'LB4', 'LB5', 'WB4', 'LB6', 'LB7', 'WB5', 'LB8', 'LB9', 'WB6', 'LB10', 'YariFinal', 'LB11', '7-8', 'LBFinal', '5-6', 'Final', 'GrandFinal'
@@ -87,13 +88,13 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
       if (i + 1 < playersForMatches.length) {
         wb1Matches.push({
           id: `wb1_${Math.floor(i/2) + 1}`,
-          player1Id: playersForMatches[i].id,
-          player2Id: playersForMatches[i + 1].id,
-          bracket: 'winner',
-          round: 1,
-          matchNumber: Math.floor(i/2) + 1,
-          isBye: false,
-          description: `WB Round 1 - Match ${Math.floor(i/2) + 1}`
+                  player1Id: playersForMatches[i].id,
+        player2Id: playersForMatches[i + 1].id,
+        bracket: 'winner',
+        round: 1,
+        matchNumber: Math.floor(i/2) + 1,
+        isBye: false,
+        description: RoundDescriptionUtils.createMatchDescription('WB1', Math.floor(i/2) + 1)
         });
       }
     }
@@ -108,7 +109,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
         round: 1,
         matchNumber: wb1Matches.length + 1,
         isBye: true,
-        description: `WB Round 1 - Bye for ${player.name} ${player.surname}`
+        description: `${RoundDescriptionUtils.getDescription('WB1')} - Bye for ${player.name} ${player.surname}`
       });
     });
     
@@ -278,7 +279,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 1,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `WB Round 1 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('WB1', Math.floor(i/2) + 1)
             });
           }
         }
@@ -291,7 +292,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
             round: 1,
             matchNumber: wb1Matches.length + 1,
             isBye: true,
-            description: `WB Round 1 - Bye for ${player.name} ${player.surname}`
+            description: `${RoundDescriptionUtils.getDescription('WB1')} - Bye for ${player.name} ${player.surname}`
           });
         });
         return wb1Matches;
@@ -316,7 +317,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
             round: 1,
             matchNumber: i+1,
             isBye: true,
-            description: `LB Round 1 - Bye for ${getPlayerName(playerId)}`
+            description: `${RoundDescriptionUtils.getDescription('LB1')} - Bye for ${getPlayerName(playerId)}`
           });
         });
         
@@ -330,7 +331,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 1,
               matchNumber: byesNeeded + Math.floor(i/2)+1,
               isBye: false,
-              description: `LB Round 1 - Match ${Math.floor(i/2)+1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB1', Math.floor(i/2)+1)
             });
           }
         }
@@ -352,7 +353,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 2,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `WB Round 2 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('WB2', Math.floor(i/2) + 1)
             });
           }
         }
@@ -377,7 +378,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 2,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `LB Round 2 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB2', Math.floor(i/2) + 1)
             });
           }
         }
@@ -397,7 +398,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 3,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `LB Round 3 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB3', Math.floor(i/2) + 1)
             });
           }
         }
@@ -417,7 +418,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 3,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `WB Round 3 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('WB3', Math.floor(i/2) + 1)
             });
           }
         }
@@ -442,7 +443,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 4,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `LB Round 4 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB4', Math.floor(i/2) + 1)
             });
           }
         }
@@ -462,7 +463,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 5,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `LB Round 5 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB5', Math.floor(i/2) + 1)
             });
           }
         }
@@ -482,7 +483,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 4,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `WB Round 4 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('WB4', Math.floor(i/2) + 1)
             });
           }
         }
@@ -507,7 +508,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 6,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `LB Round 6 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB6', Math.floor(i/2) + 1)
             });
           }
         }
@@ -527,7 +528,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 7,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `LB Round 7 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB7', Math.floor(i/2) + 1)
             });
           }
         }
@@ -547,7 +548,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 5,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `WB Round 5 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('WB5', Math.floor(i/2) + 1)
             });
           }
         }
@@ -572,7 +573,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 8,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `LB Round 8 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB8', Math.floor(i/2) + 1)
             });
           }
         }
@@ -592,7 +593,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 9,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `LB Round 9 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB9', Math.floor(i/2) + 1)
             });
           }
         }
@@ -612,7 +613,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 6,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `WB Round 6 (Çeyrek Final) - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('WB_QuarterFinal', Math.floor(i/2) + 1)
             });
           }
         }
@@ -648,7 +649,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 10,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `LB Round 10 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB10', Math.floor(i/2) + 1)
             });
           }
         }
@@ -669,7 +670,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 7,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `Yarı Final (WB) - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.getDescription('WB_SemiFinal')
             });
           }
         }
@@ -689,7 +690,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
               round: 11,
               matchNumber: Math.floor(i/2) + 1,
               isBye: false,
-              description: `LB Round 11 - Match ${Math.floor(i/2) + 1}`
+              description: RoundDescriptionUtils.createMatchDescription('LB11', Math.floor(i/2) + 1)
             });
           }
         }
@@ -709,7 +710,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
           round: 8,
           matchNumber: 1,
           isBye: false,
-          description: '7.lik-8.lik Maçı'
+          description: RoundDescriptionUtils.getDescription('7-8')
         }];
       }
       case 'LBFinal': {
@@ -727,7 +728,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
           round: 12,
           matchNumber: 1,
           isBye: false,
-          description: 'LB Final'
+          description: RoundDescriptionUtils.getDescription('LB_Final')
         }];
       }
       case '5-6': {
@@ -748,7 +749,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
           round: 9,
           matchNumber: 1,
           isBye: false,
-          description: '5.lik-6.lık Maçı'
+          description: RoundDescriptionUtils.getDescription('5-6')
         }];
       }
       case 'Final': {
@@ -763,7 +764,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
           round: 13,
           matchNumber: 1,
           isBye: false,
-          description: 'Final'
+          description: RoundDescriptionUtils.getDescription('Final')
         }];
       }
       case 'GrandFinal': {
@@ -778,7 +779,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
           round: 14,
           matchNumber: 1,
           isBye: false,
-          description: 'Grand Final (Gerekirse)'
+          description: RoundDescriptionUtils.getDescription('GrandFinal')
         }];
       }
       default:
