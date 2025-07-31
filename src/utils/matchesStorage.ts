@@ -1,6 +1,8 @@
 // Matches localStorage utility
 // Bu dosya matches ile ilgili tüm localStorage işlemlerini merkezi olarak yönetir
 
+import { DoubleEliminationStorage, TournamentResultsStorage } from './localStorage';
+
 export interface Fixture {
   id: string;
   name: string; // "1. Lig 1. Fixture", "1. Lig 2. Fixture" gibi
@@ -114,9 +116,35 @@ export const MatchesStorage = {
   // Fixture sil
   deleteFixture: (fixtureId: string) => {
     const data = MatchesStorage.getMatchesData();
+    const fixtureToDelete = data.fixtures.find(f => f.id === fixtureId);
+    
     data.fixtures = data.fixtures.filter(f => f.id !== fixtureId);
     data.lastUpdated = new Date().toISOString();
     MatchesStorage.saveMatchesData(data);
+    
+    // Clear double elimination tournament state for this fixture
+    try {
+      // Clear all possible double elimination states for this fixture
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.includes(`double-elimination-fixture-${fixtureId}`)) {
+          localStorage.removeItem(key);
+        }
+      });
+      console.log('Cleared double elimination state for fixture:', fixtureId);
+    } catch (error) {
+      console.error('Error clearing double elimination state:', error);
+    }
+    
+    // Clear tournament results if fixture exists
+    if (fixtureToDelete) {
+      try {
+        TournamentResultsStorage.clearTournamentResults(fixtureToDelete.tournamentId, fixtureToDelete.weightRangeId);
+        console.log('Cleared tournament results for fixture:', fixtureId);
+      } catch (error) {
+        console.error('Error clearing tournament results:', error);
+      }
+    }
   },
 
   // Aktif fixture'ı ayarla
