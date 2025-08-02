@@ -9,6 +9,7 @@ import LoadingSpinner from '../components/UI/LoadingSpinner';
 import {
   DoubleElimination1,
   DoubleElimination2,
+  DoubleElimination3,
   DoubleElimination4,
   DoubleElimination5,
   DoubleElimination6,
@@ -299,8 +300,9 @@ const Matches = () => {
       case 1:
         return <DoubleElimination1 key={activeFixture.id} {...props} />;
       case 2:
-      case 3:
         return <DoubleElimination2 key={activeFixture.id} {...props} />;
+      case 3:
+        return <DoubleElimination3 key={activeFixture.id} {...props} />;
       case 4:
         return <DoubleElimination4 key={activeFixture.id} {...props} />;
       case 5:

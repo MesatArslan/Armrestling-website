@@ -86,11 +86,12 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
   const initializeTournament = () => {
     console.log('Initializing tournament with', players.length, 'players');
     clearTournamentState();
-    const sortedPlayers = [...players].sort((a, b) => b.weight - a.weight);
+    // Shuffle players randomly instead of seeding by weight
+    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
     const totalSlots = 512; // 257-383 players need 512 slots for WB1
     const byesNeeded = totalSlots - players.length;
-    const playersWithByes = sortedPlayers.slice(0, byesNeeded);
-    const playersForMatches = sortedPlayers.slice(byesNeeded);
+    const playersWithByes = shuffledPlayers.slice(0, byesNeeded);
+    const playersForMatches = shuffledPlayers.slice(byesNeeded);
     const wb1Matches: Match[] = [];
     
     console.log('Tournament setup:', {

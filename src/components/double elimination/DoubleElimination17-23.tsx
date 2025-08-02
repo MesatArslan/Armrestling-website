@@ -86,11 +86,12 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
   // --- Tournament Initialization ---
   const initializeTournament = () => {
     clearTournamentState();
-    const sortedPlayers = [...players].sort((a, b) => b.weight - a.weight);
+    // Shuffle players randomly instead of seeding by weight
+    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
     const totalSlots = 32;
     const byesNeeded = totalSlots - players.length;
-    const playersWithByes = sortedPlayers.slice(0, byesNeeded);
-    const playersForMatches = sortedPlayers.slice(byesNeeded);
+    const playersWithByes = shuffledPlayers.slice(0, byesNeeded);
+    const playersForMatches = shuffledPlayers.slice(byesNeeded);
     const wb1Matches: Match[] = [];
     // WB1: Pair up remaining players
     for (let i = 0; i < playersForMatches.length; i += 2) {

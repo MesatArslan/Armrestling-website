@@ -65,13 +65,14 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
   const initializeTournament = () => {
     if (players.length !== 4) return;
     clearTournamentState();
-    const sortedPlayers = [...players].sort((a, b) => b.weight - a.weight);
+    // Shuffle players randomly instead of seeding by weight
+    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
     const newMatches: Match[] = [
-      // WB Quarterfinals
+      // WB Quarterfinals - Random pairing
       {
         id: 'wbqf-1',
-        player1Id: sortedPlayers[0].id,
-        player2Id: sortedPlayers[1].id,
+        player1Id: shuffledPlayers[0].id,
+        player2Id: shuffledPlayers[1].id,
         bracket: 'winner',
         round: 1,
         matchNumber: 1,
@@ -80,8 +81,8 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
       },
       {
         id: 'wbqf-2',
-        player1Id: sortedPlayers[2].id,
-        player2Id: sortedPlayers[3].id,
+        player1Id: shuffledPlayers[2].id,
+        player2Id: shuffledPlayers[3].id,
         bracket: 'winner',
         round: 1,
         matchNumber: 2,
@@ -246,33 +247,47 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
     if (!tournamentComplete) {
       const finalMatch = matches.find(m => m.id === 'final' && m.winnerId);
       const grandFinalMatch = matches.find(m => m.id === 'grandfinal' && m.winnerId);
-      if (finalMatch || grandFinalMatch) {
-        let first = '', second = '', third = '', fourth = '';
-        if (grandFinalMatch) {
-          first = grandFinalMatch.winnerId!;
-          second = grandFinalMatch.player1Id === grandFinalMatch.winnerId ? grandFinalMatch.player2Id! : grandFinalMatch.player1Id!;
-        } else if (finalMatch) {
-          first = finalMatch.winnerId!;
-          second = finalMatch.player1Id === finalMatch.winnerId ? finalMatch.player2Id! : finalMatch.player1Id!;
-        }
-        // 3. ve 4. için LB maçlarına bakılır
-        const lbfinal = matches.find(m => m.id === 'lbfinal' && m.winnerId);
-        const lbfinal1 = matches.find(m => m.id === 'lbfinal1' && m.winnerId);
-        if (lbfinal) {
-          third = lbfinal.player1Id === lbfinal.winnerId ? lbfinal.player2Id! : lbfinal.player1Id!;
-          fourth = lbfinal1 && lbfinal1.winnerId === lbfinal.winnerId
-            ? (lbfinal1.player1Id === lbfinal1.winnerId ? lbfinal1.player2Id! : lbfinal1.player1Id!)
-            : (lbfinal1?.winnerId || '');
-        } else if (lbfinal1) {
-          third = lbfinal1.player1Id === lbfinal1.winnerId ? lbfinal1.player2Id! : lbfinal1.player1Id!;
-          fourth = '';
-        }
+      const lbfinal1 = matches.find(m => m.id === 'lbfinal1' && m.winnerId);
+      const lbfinal = matches.find(m => m.id === 'lbfinal' && m.winnerId);
+      
+      let first = '', second = '', third = '', fourth = '';
+      
+      // 4. sıra: LB Final 1 kaybedeni (LB Final 1'den sonra belirlenir)
+      if (lbfinal1) {
+        fourth = lbfinal1.player1Id === lbfinal1.winnerId ? lbfinal1.player2Id! : lbfinal1.player1Id!;
+      }
+      
+      // 3. sıra: LB Final kaybedeni (LB Final'dan sonra belirlenir)
+      if (lbfinal) {
+        third = lbfinal.player1Id === lbfinal.winnerId ? lbfinal.player2Id! : lbfinal.player1Id!;
+      }
+      
+      // 1. ve 2. sıra: Sadece turnuva tamamlandığında belirlenir
+      if (grandFinalMatch) {
+        // Grand Final oynandı - final ranking belirlenir
+        first = grandFinalMatch.winnerId!;
+        second = grandFinalMatch.player1Id === grandFinalMatch.winnerId ? grandFinalMatch.player2Id! : grandFinalMatch.player1Id!;
         setRankings({ first, second, third, fourth });
         setTournamentComplete(true);
         saveTournamentState(matches, { first, second, third, fourth }, true, currentRoundKey);
         if (onTournamentComplete) {
           onTournamentComplete({ first, second, third, fourth });
         }
+      } else if (finalMatch) {
+        // Final oynandı ama Grand Final oynanmadı - WB kazananı kazandı
+        const wbsemi = matches.find(m => m.id === 'wbsemi' && m.winnerId);
+        if (finalMatch.winnerId === wbsemi?.winnerId) {
+          // WB kazananı Final'i kazandı - turnuva biter
+          first = finalMatch.winnerId!;
+          second = finalMatch.player1Id === finalMatch.winnerId ? finalMatch.player2Id! : finalMatch.player1Id!;
+          setRankings({ first, second, third, fourth });
+          setTournamentComplete(true);
+          saveTournamentState(matches, { first, second, third, fourth }, true, currentRoundKey);
+          if (onTournamentComplete) {
+            onTournamentComplete({ first, second, third, fourth });
+          }
+        }
+        // Eğer LB kazananı Final'i kazandıysa, Grand Final oynanacak, ranking henüz belirlenmez
       }
     }
     // eslint-disable-next-line

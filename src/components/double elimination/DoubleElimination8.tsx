@@ -72,14 +72,15 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
   const initializeTournament = () => {
     clearTournamentState();
     const newMatches: Match[] = [];
-    const sortedPlayers = [...players].sort((a, b) => b.weight - a.weight);
+    // Shuffle players randomly instead of seeding by weight
+    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
     
     if (players.length === 8) {
-      // WB Round 1: A vs B, C vs D, E vs F, G vs H
+      // WB Round 1: Random pairing
       newMatches.push({
         id: 'wb1-1',
-        player1Id: sortedPlayers[0].id, // A
-        player2Id: sortedPlayers[1].id, // B
+        player1Id: shuffledPlayers[0].id, // Random player 1
+        player2Id: shuffledPlayers[1].id, // Random player 2
         bracket: 'winner',
         round: 1,
         matchNumber: 1,
@@ -89,8 +90,8 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
       
       newMatches.push({
         id: 'wb1-2',
-        player1Id: sortedPlayers[2].id, // C
-        player2Id: sortedPlayers[3].id, // D
+        player1Id: shuffledPlayers[2].id, // Random player 3
+        player2Id: shuffledPlayers[3].id, // Random player 4
         bracket: 'winner',
         round: 1,
         matchNumber: 2,
@@ -100,8 +101,8 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
 
       newMatches.push({
         id: 'wb1-3',
-        player1Id: sortedPlayers[4].id, // E
-        player2Id: sortedPlayers[5].id, // F
+        player1Id: shuffledPlayers[4].id, // Random player 5
+        player2Id: shuffledPlayers[5].id, // Random player 6
         bracket: 'winner',
         round: 1,
         matchNumber: 3,
@@ -111,8 +112,8 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
 
       newMatches.push({
         id: 'wb1-4',
-        player1Id: sortedPlayers[6].id, // G
-        player2Id: sortedPlayers[7].id, // H
+        player1Id: shuffledPlayers[6].id, // Random player 7
+        player2Id: shuffledPlayers[7].id, // Random player 8
         bracket: 'winner',
         round: 1,
         matchNumber: 4,

@@ -1,5 +1,6 @@
 export { default as DoubleElimination1 } from './DoubleElimination1';
 export { default as DoubleElimination2 } from './DoubleElimination2';
+export { default as DoubleElimination3 } from './DoubleElimination3';
 export { default as DoubleElimination4 } from './DoubleElimination4';
 export { default as DoubleElimination5 } from './DoubleElimination5';
 export { default as DoubleElimination6 } from './DoubleElimination6';
