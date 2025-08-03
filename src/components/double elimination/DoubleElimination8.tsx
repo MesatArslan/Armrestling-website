@@ -54,6 +54,7 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
       rankings: rankingsState,
       tournamentComplete: completeState,
       currentRoundKey: roundKey,
+      matchHistory: matchHistory,
       timestamp: new Date().toISOString()
     };
     const playerIds = players.map(p => p.id).sort().join('-');
@@ -70,7 +71,7 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
         setCurrentRoundKey(state.currentRoundKey || 'WB1');
-        setMatchHistory([]);
+        setMatchHistory(state.matchHistory || []);
         return true;
       }
     } catch (error) {
@@ -470,9 +471,18 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
           : match
       );
       setMatches(updatedMatches);
-      saveTournamentState(updatedMatches, rankings, tournamentComplete, currentRoundKey);
+      const state = {
+        matches: updatedMatches,
+        rankings: rankings,
+        tournamentComplete: tournamentComplete,
+        currentRoundKey: currentRoundKey,
+        matchHistory: matchHistory,
+        timestamp: new Date().toISOString()
+      };
+      const playerIds = players.map(p => p.id).sort().join('-');
+      DoubleEliminationStorage.saveDoubleEliminationState(8, playerIds, state, fixtureId);
     }
-  }, [matches, rankings, tournamentComplete, currentRoundKey]);
+  }, [matches, rankings, tournamentComplete, currentRoundKey, matchHistory]);
 
   // Check for round completion and create next round
   useEffect(() => {
@@ -484,11 +494,20 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
           const updatedMatches = [...matches, ...newMatches];
           setMatches(updatedMatches);
           setCurrentRoundKey(nextRoundKey);
-          saveTournamentState(updatedMatches, rankings, tournamentComplete, nextRoundKey);
+          const state = {
+            matches: updatedMatches,
+            rankings: rankings,
+            tournamentComplete: tournamentComplete,
+            currentRoundKey: nextRoundKey,
+            matchHistory: matchHistory,
+            timestamp: new Date().toISOString()
+          };
+          const playerIds = players.map(p => p.id).sort().join('-');
+          DoubleEliminationStorage.saveDoubleEliminationState(8, playerIds, state, fixtureId);
         }
       }
     }
-  }, [matches, currentRoundKey, rankings, tournamentComplete, isUndoing]);
+  }, [matches, currentRoundKey, rankings, tournamentComplete, isUndoing, matchHistory]);
 
   const handleMatchResult = (matchId: string, winnerId: string) => {
     // Save current state to history before updating (only if not undoing)
@@ -535,7 +554,18 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
     setRankings(finalRankings);
     setTournamentComplete(finalTournamentComplete);
     
-    saveTournamentState(finalMatches, finalRankings, finalTournamentComplete, currentRoundKey);
+    // Update match history before saving
+    const updatedMatchHistory = isUndoing ? matchHistory : [...matchHistory, [...matches]];
+    const state = {
+      matches: finalMatches,
+      rankings: finalRankings,
+      tournamentComplete: finalTournamentComplete,
+      currentRoundKey: currentRoundKey,
+      matchHistory: updatedMatchHistory,
+      timestamp: new Date().toISOString()
+    };
+    const playerIds = players.map(p => p.id).sort().join('-');
+    DoubleEliminationStorage.saveDoubleEliminationState(8, playerIds, state, fixtureId);
     
     if (onMatchResult) {
       onMatchResult(matchId, winnerId);
@@ -623,8 +653,18 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
         return newSelected;
       });
       
-      // Save the reverted state
-      saveTournamentState(previousState, updatedRankings, false, previousRoundKey);
+      // Save the reverted state with updated match history
+      const updatedMatchHistory = matchHistory.slice(0, -1);
+      const state = {
+        matches: previousState,
+        rankings: updatedRankings,
+        tournamentComplete: false,
+        currentRoundKey: previousRoundKey,
+        matchHistory: updatedMatchHistory,
+        timestamp: new Date().toISOString()
+      };
+      const playerIds = players.map(p => p.id).sort().join('-');
+      DoubleEliminationStorage.saveDoubleEliminationState(8, playerIds, state, fixtureId);
       
       // Reset the undoing flag after a short delay
       setTimeout(() => {

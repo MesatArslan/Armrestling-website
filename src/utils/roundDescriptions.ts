@@ -146,6 +146,24 @@ export const ROUND_DESCRIPTIONS: { [key: string]: RoundDescription } = {
     shortName: 'LB R12',
     description: 'Loser Bracket Round 12'
   },
+  'LB13': {
+    key: 'LB13',
+    displayName: 'Loser Bracket Round 13',
+    shortName: 'LB R13',
+    description: 'Loser Bracket Round 13'
+  },
+  'LB14': {
+    key: 'LB14',
+    displayName: 'Loser Bracket Round 14',
+    shortName: 'LB R14',
+    description: 'Loser Bracket Round 14'
+  },
+  'LB15': {
+    key: 'LB15',
+    displayName: 'Loser Bracket Round 15',
+    shortName: 'LB R15',
+    description: 'Loser Bracket Round 15'
+  },
 
   // Special Loser Bracket Rounds
   'LB_Final': {

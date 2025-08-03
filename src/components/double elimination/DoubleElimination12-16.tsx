@@ -141,19 +141,43 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
     let newRankings = { ...rankings };
     const match = matches.find(m => m.id === matchId);
     if (match) {
+      // 7-8 maçı
       if (match.id === 'seventh_eighth') {
         newRankings.seventh = winnerId;
         newRankings.eighth = match.player1Id === winnerId ? match.player2Id : match.player1Id;
       }
+      // 5-6 maçı
       if (match.id === 'fifth_sixth') {
         newRankings.fifth = winnerId;
         newRankings.sixth = match.player1Id === winnerId ? match.player2Id : match.player1Id;
       }
-      if (match.id === 'lb_final' || match.id === 'lb4_final' || match.id === 'lb5_final') {
-        newRankings.third = winnerId;
-        newRankings.fourth = match.player1Id === winnerId ? match.player2Id : match.player1Id;
+      // LB_R5 - 4. sıralama (LB_R5 kaybedeni 4. olur)
+      if (match.id === 'lb_r5') {
+        const lb5Loser = match.player1Id === winnerId ? match.player2Id : match.player1Id;
+        newRankings.fourth = lb5Loser;
+        // LB_R5 kazananı LB_FINAL'e gider
       }
-      if (match.id.toLowerCase().includes('final') || match.id.toLowerCase().includes('grand')) {
+      // LB_FINAL - 3. sıralama (LB_FINAL kaybedeni 3. olur)
+      if (match.id === 'lb_final') {
+        const lbFinalLoser = match.player1Id === winnerId ? match.player2Id : match.player1Id;
+        newRankings.third = lbFinalLoser;
+        // LB_FINAL kazananı Final'e gider
+      }
+      // Final - 1. ve 2. sıralama (sadece Grand Final yoksa)
+      if (match.id === 'final') {
+        // WB'den gelen kazanırsa turnuva biter, sıralama belli olur
+        const finalMatch = matches.find(m => m.id === 'final');
+        if (finalMatch && finalMatch.player1Id && finalMatch.player2Id) {
+          // WB'den gelen oyuncu (player1) kazanırsa turnuva biter
+          if (winnerId === finalMatch.player1Id) {
+            newRankings.first = winnerId;
+            newRankings.second = match.player1Id === winnerId ? match.player2Id : match.player1Id;
+          }
+          // LB'den gelen kazanırsa Grand Final oynanır, henüz sıralama belli değil
+        }
+      }
+      // Grand Final - 1. ve 2. sıralama (Grand Final bittikten sonra)
+      if (match.id === 'grand_final') {
         newRankings.first = winnerId;
         newRankings.second = match.player1Id === winnerId ? match.player2Id : match.player1Id;
       }
@@ -163,7 +187,7 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
     saveTournamentState(updatedMatches, newRankings, tournamentComplete, currentRoundKey);
     
     // Call parent's tournament complete handler if tournament is complete
-    if (match && (match.id.toLowerCase().includes('final') || match.id.toLowerCase().includes('grand'))) {
+    if (match && (match.id === 'final' || match.id === 'grand_final')) {
       if (onTournamentComplete) {
         onTournamentComplete(newRankings);
       }

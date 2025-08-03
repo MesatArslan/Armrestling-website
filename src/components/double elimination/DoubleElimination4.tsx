@@ -28,6 +28,7 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
   const [selectedWinner, setSelectedWinner] = useState<{ [matchId: string]: string | null }>({});
   const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
   const [currentRoundKey, setCurrentRoundKey] = useState<RoundKey>('WB_QuarterFinal');
+  const [isUndoing, setIsUndoing] = useState(false);
 
   // Save/load/clear state helpers
   const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean, roundKey: RoundKey) => {
@@ -36,6 +37,7 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
       rankings: rankingsState,
       tournamentComplete: completeState,
       currentRoundKey: roundKey,
+      matchHistory: matchHistory,
       timestamp: new Date().toISOString(),
     };
     const playerIds = players.map(p => p.id).sort().join('-');
@@ -50,7 +52,7 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
         setCurrentRoundKey(state.currentRoundKey || 'WB_QuarterFinal');
-        setMatchHistory([]);
+        setMatchHistory(state.matchHistory || []);
         return true;
       }
     } catch {}
@@ -300,12 +302,74 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
   };
   const undoLastMatch = () => {
     if (matchHistory.length > 0) {
+      setIsUndoing(true);
+      
       const previousState = matchHistory[matchHistory.length - 1];
+      const currentState = matches;
+      
+      // Find which match was undone by comparing current and previous states
+      const undoneMatch = currentState.find(match => 
+        match.winnerId && !previousState.find(pm => pm.id === match.id)?.winnerId
+      );
+      
       setMatches(previousState);
       setMatchHistory(prev => prev.slice(0, -1));
-      setRankings({});
-      setTournamentComplete(false);
-      saveTournamentState(previousState, {}, false, currentRoundKey);
+      
+      // Reset tournament completion if we're going back
+      if (tournamentComplete) {
+        setTournamentComplete(false);
+      }
+      
+      // Remove rankings that were affected by the undone match
+      let updatedRankings = { ...rankings };
+      
+      if (undoneMatch) {
+        const matchId = undoneMatch.id;
+        
+        // Remove rankings based on the undone match
+        if (matchId === 'final') {
+          delete updatedRankings.first;
+          delete updatedRankings.second;
+        } else if (matchId === 'grandfinal') {
+          delete updatedRankings.first;
+          delete updatedRankings.second;
+        } else if (matchId === 'lb-final') {
+          delete updatedRankings.third;
+          delete updatedRankings.fourth;
+        }
+      }
+      
+      setRankings(updatedRankings);
+      
+      // Clear any selected winners for matches that no longer exist
+      const previousMatchIds = previousState.map(m => m.id);
+      setSelectedWinner(prev => {
+        const newSelected = { ...prev };
+        Object.keys(newSelected).forEach(matchId => {
+          if (!previousMatchIds.includes(matchId)) {
+            delete newSelected[matchId];
+          }
+        });
+        return newSelected;
+      });
+      
+      // Save the reverted state with updated match history
+      const updatedMatchHistory = matchHistory.slice(0, -1);
+      const state = {
+        matches: previousState,
+        rankings: updatedRankings,
+        tournamentComplete: false,
+        currentRoundKey: currentRoundKey,
+        matchHistory: updatedMatchHistory,
+        timestamp: new Date().toISOString()
+      };
+      const playerIds = players.map(p => p.id).sort().join('-');
+      DoubleEliminationStorage.saveDoubleEliminationState(4, playerIds, state, fixtureId);
+      
+      // Reset the undoing flag after a short delay
+      setTimeout(() => {
+        setIsUndoing(false);
+      }, 100);
     }
   };
   const renderMatch = (match: Match) => {
@@ -319,7 +383,9 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
     };
     const handleWinnerConfirm = () => {
       if (currentSelectedWinner) {
-        setMatchHistory(prev => [...prev, [...matches]]);
+        if (!isUndoing) {
+          setMatchHistory(prev => [...prev, [...matches]]);
+        }
         setSelectedWinner(prev => ({ ...prev, [match.id]: null }));
         setMatches(matches.map(m => m.id === match.id ? { ...m, winnerId: currentSelectedWinner } : m));
       }

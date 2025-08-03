@@ -595,30 +595,45 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     const match = matches.find(m => m.id === matchId);
     if (!match) return;
     const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
-    // 1-2-3-4-5-6-7-8 sıralama güncellemeleri (örnek, detaylandırılabilir)
-    if (match.id === 'final') {
-      updatedRankings.first = winnerId;
-      updatedRankings.second = loserId;
-      complete = true;
+    // 7-8 maçı
+    if (match.id === 'seventh_eighth') {
+      updatedRankings.seventh = winnerId;
+      updatedRankings.eighth = loserId;
     }
-    if (match.id === 'grandfinal') {
-      updatedRankings.first = winnerId;
-      updatedRankings.second = loserId;
-      complete = true;
-    }
-    if (match.id === 'lbfinal') {
-      updatedRankings.third = loserId;
-    }
-    if (match.id === 'yarifinal') {
-      updatedRankings.fourth = loserId;
-    }
+    // 5-6 maçı
     if (match.id === 'fifth_sixth') {
       updatedRankings.fifth = winnerId;
       updatedRankings.sixth = loserId;
     }
-    if (match.id === 'seventh_eighth') {
-      updatedRankings.seventh = winnerId;
-      updatedRankings.eighth = loserId;
+    // LB7 - 4. sıralama (LB7 kaybedeni 4. olur)
+    if (match.id === 'lb7') {
+      updatedRankings.fourth = loserId;
+      // LB7 kazananı LBFinal'e gider
+    }
+    // LBFinal - 3. sıralama (LBFinal kaybedeni 3. olur)
+    if (match.id === 'lbfinal') {
+      updatedRankings.third = loserId;
+      // LBFinal kazananı Final'e gider
+    }
+    // Final - 1. ve 2. sıralama (sadece GrandFinal yoksa)
+    if (match.id === 'final') {
+      // WB'den gelen kazanırsa turnuva biter, sıralama belli olur
+      const yariFinalMatch = matches.find(m => m.id === 'yarifinal');
+      if (yariFinalMatch && yariFinalMatch.player1Id && yariFinalMatch.player2Id) {
+        // WB'den gelen oyuncu (player1) kazanırsa turnuva biter
+        if (winnerId === yariFinalMatch.player1Id) {
+          updatedRankings.first = winnerId;
+          updatedRankings.second = loserId;
+          complete = true;
+        }
+        // LB'den gelen kazanırsa GrandFinal oynanır, henüz sıralama belli değil
+      }
+    }
+    // GrandFinal - 1. ve 2. sıralama (GrandFinal bittikten sonra)
+    if (match.id === 'grandfinal') {
+      updatedRankings.first = winnerId;
+      updatedRankings.second = loserId;
+      complete = true;
     }
     setMatches(updatedMatches);
     setRankings(updatedRankings);

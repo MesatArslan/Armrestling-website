@@ -628,30 +628,21 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
       }
       case 'LB10': {
         const lb9Winners = matchList.filter(m => getMatchRoundKey(m) === 'LB9' && m.winnerId && !m.isBye).map(m => m.winnerId!);
-        const wb6Losers = matchList.filter(m => getMatchRoundKey(m) === 'WB6' && m.winnerId && !m.isBye).map(m => {
-          if (m.player1Id === m.winnerId) return m.player2Id;
-          return m.player1Id;
-        }).filter(Boolean);
-        const lb10Players = [...lb9Winners, ...wb6Losers];
         console.log('LB10 Debug (65-95):', {
           lb9Winners,
-          wb6Losers,
-          lb10Players,
-          lb9WinnersLength: lb9Winners.length,
-          wb6LosersLength: wb6Losers.length,
-          lb10PlayersLength: lb10Players.length
+          lb9WinnersLength: lb9Winners.length
         });
-        if (lb10Players.length !== 4) {
-          console.log('LB10 (65-95): Yeterli oyuncu yok, 4 bekleniyor ama', lb10Players.length, 'var');
+        if (lb9Winners.length !== 2) {
+          console.log('LB10 (65-95): Yeterli oyuncu yok, 2 bekleniyor ama', lb9Winners.length, 'var');
           return [];
         }
         const lb10Matches: Match[] = [];
-        for (let i = 0; i < lb10Players.length; i += 2) {
-          if (i + 1 < lb10Players.length) {
+        for (let i = 0; i < lb9Winners.length; i += 2) {
+          if (i + 1 < lb9Winners.length) {
             lb10Matches.push({
               id: `lb10_${Math.floor(i/2) + 1}`,
-              player1Id: lb10Players[i],
-              player2Id: lb10Players[i + 1],
+              player1Id: lb9Winners[i],
+              player2Id: lb9Winners[i + 1],
               bracket: 'loser',
               round: 10,
               matchNumber: Math.floor(i/2) + 1,
@@ -704,19 +695,14 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
         }];
       }
       case '5-6': {
-        const wb6Losers = matchList.filter(m => getMatchRoundKey(m) === 'WB6' && m.winnerId && !m.isBye).map(m => {
-          if (m.player1Id === m.winnerId) return m.player2Id;
-          return m.player1Id;
-        }).filter(Boolean);
         const lb9Losers = matchList.filter(m => getMatchRoundKey(m) === 'LB9' && m.winnerId && !m.isBye).map(m => {
           if (m.player1Id === m.winnerId) return m.player2Id;
           return m.player1Id;
         }).filter(Boolean);
-        if (wb6Losers.length !== 2 || lb9Losers.length !== 2) return [];
-        // B ve G: wb6Losers[0], lb9Losers[1] (örnek)
+        if (lb9Losers.length !== 2) return [];
         return [{
           id: 'fifth_sixth',
-          player1Id: wb6Losers[0],
+          player1Id: lb9Losers[0],
           player2Id: lb9Losers[1],
           bracket: 'placement',
           round: 9,
@@ -741,20 +727,31 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
         }];
       }
       case 'GrandFinal': {
-        const finalWinners = matchList.filter(m => getMatchRoundKey(m) === 'Final' && m.winnerId && !m.isBye).map(m => m.winnerId!);
-        const lbFinalWinners = matchList.filter(m => getMatchRoundKey(m) === 'LBFinal' && m.winnerId && !m.isBye).map(m => m.winnerId!);
-        if (finalWinners.length !== 1 || lbFinalWinners.length !== 1) return [];
-        // Eğer LB kazananı Final'i kazanırsa Grand Final oynanır
-        return [{
-          id: 'grandfinal',
-          player1Id: lbFinalWinners[0],
-          player2Id: finalWinners[0],
-          bracket: 'winner',
-          round: 13,
-          matchNumber: 1,
-          isBye: false,
-          description: RoundDescriptionUtils.getDescription('GrandFinal')
-        }];
+        const finalMatch = matchList.find(m => getMatchRoundKey(m) === 'Final' && m.winnerId && !m.isBye);
+        const lbFinalMatch = matchList.find(m => getMatchRoundKey(m) === 'LBFinal' && m.winnerId && !m.isBye);
+        
+        if (!finalMatch || !lbFinalMatch) return [];
+        
+        const finalWinner = finalMatch.winnerId;
+        const lbFinalWinner = lbFinalMatch.winnerId;
+        
+        // Eğer LBFinal kazananı Final'i kazandıysa GrandFinal oynanır
+        if (finalWinner === lbFinalWinner && finalWinner) {
+          const finalLoser = finalWinner === finalMatch.player1Id ? finalMatch.player2Id : finalMatch.player1Id;
+          if (finalLoser && finalLoser !== '') {
+            return [{
+              id: 'grandfinal',
+              player1Id: finalWinner,
+              player2Id: finalLoser as string,
+              bracket: 'winner',
+              round: 13,
+              matchNumber: 1,
+              isBye: false,
+              description: RoundDescriptionUtils.getDescription('GrandFinal')
+            }];
+          }
+        }
+        return [];
       }
       default:
         return [];
@@ -800,7 +797,9 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
         const lbfinalWinner = updatedMatches.find(m => m.id === 'lbfinal')?.winnerId;
         const finalWinner = finalMatch.winnerId;
         if (lbfinalWinner && finalWinner === lbfinalWinner) {
+          // Tournament continues to Grand Final - don't complete tournament yet
         } else {
+          // Final tamamlandı ve GrandFinal oynanmayacaksa turnuvayı tamamla
           const newRankings = calculateRankings(updatedMatches);
           setRankings(newRankings);
           setTournamentComplete(true);
@@ -813,6 +812,7 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
           saveTournamentState(updatedMatches, newRankings || rankings, true, currentRoundKey);
         }
       } else if (grandFinalMatch?.winnerId) {
+        // GrandFinal tamamlandıysa turnuvayı tamamla
         const newRankings = calculateRankings(updatedMatches);
         setRankings(newRankings);
         setTournamentComplete(true);
@@ -833,26 +833,42 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
     const rankings: Ranking = {};
     const finalMatch = matchList.find(m => m.id === 'final');
     const grandFinalMatch = matchList.find(m => m.id === 'grandfinal');
+    
+    // GrandFinal oynanacaksa Final'dan sonra 1. ve 2. sıralama hesaplanmamalı
+    const lbfinalMatch = matchList.find(m => m.id === 'lbfinal');
+    const lbfinalWinner = lbfinalMatch?.winnerId;
+    const finalWinner = finalMatch?.winnerId;
+    
+    // Eğer LBFinal kazananı Final'i kazandıysa GrandFinal oynanacak
+    const willHaveGrandFinal = lbfinalWinner && finalWinner && finalWinner === lbfinalWinner;
+    
     if (grandFinalMatch?.winnerId) {
+      // GrandFinal tamamlandıysa 1. ve 2. sıralama hesapla
       rankings.first = grandFinalMatch.winnerId;
       rankings.second = grandFinalMatch.winnerId === grandFinalMatch.player1Id ? grandFinalMatch.player2Id : grandFinalMatch.player1Id;
-    } else if (finalMatch?.winnerId) {
+    } else if (finalMatch?.winnerId && !willHaveGrandFinal) {
+      // Final tamamlandı ve GrandFinal oynanmayacaksa 1. ve 2. sıralama hesapla
       rankings.first = finalMatch.winnerId;
       rankings.second = finalMatch.winnerId === finalMatch.player1Id ? finalMatch.player2Id : finalMatch.player1Id;
     }
-    const lbfinalMatch = matchList.find(m => m.id === 'lbfinal');
+    // Eğer GrandFinal oynanacaksa Final'dan sonra 1. ve 2. sıralama hesaplanmaz
+    
+    // 3: LB Final kaybedeni
     if (lbfinalMatch?.winnerId) {
       rankings.third = lbfinalMatch.winnerId === lbfinalMatch.player1Id ? lbfinalMatch.player2Id : lbfinalMatch.player1Id;
     }
+    // 4: LB10 kaybedeni (LB10 roundunun ilk maçı)
     const lb10Match = matchList.find(m => m.id === 'lb10_1');
     if (lb10Match?.winnerId) {
       rankings.fourth = lb10Match.winnerId === lb10Match.player1Id ? lb10Match.player2Id : lb10Match.player1Id;
     }
+    // 5-6: 5.lik-6.lık maçı
     const fifthSixthMatch = matchList.find(m => m.id === 'fifth_sixth');
     if (fifthSixthMatch?.winnerId) {
       rankings.fifth = fifthSixthMatch.winnerId;
       rankings.sixth = fifthSixthMatch.winnerId === fifthSixthMatch.player1Id ? fifthSixthMatch.player2Id : fifthSixthMatch.player1Id;
     }
+    // 7-8: 7.lik-8.lik maçı
     const seventhEighthMatch = matchList.find(m => m.id === 'seventh_eighth');
     if (seventhEighthMatch?.winnerId) {
       rankings.seventh = seventhEighthMatch.winnerId;

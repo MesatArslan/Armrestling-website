@@ -691,9 +691,9 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
         
         // If LB Final winner won the Final, we need Grand Final
         if (lbfinalWinner && finalWinner === lbfinalWinner) {
-          // Tournament continues to Grand Final
+          // Tournament continues to Grand Final - don't calculate rankings yet
         } else {
-          // Tournament is complete, calculate rankings
+          // WB Final winner won, tournament is complete
           const newRankings = calculateRankings(updatedMatches);
           setRankings(newRankings);
           setTournamentComplete(true);
@@ -742,12 +742,21 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
     const finalMatch = matchList.find(m => m.id === 'final');
     const grandFinalMatch = matchList.find(m => m.id === 'grandfinal');
     
+    // Only calculate 1st and 2nd if GrandFinal is completed or if WB won Final
     if (grandFinalMatch?.winnerId) {
       rankings.first = grandFinalMatch.winnerId;
       rankings.second = grandFinalMatch.winnerId === grandFinalMatch.player1Id ? grandFinalMatch.player2Id : grandFinalMatch.player1Id;
     } else if (finalMatch?.winnerId) {
-      rankings.first = finalMatch.winnerId;
-      rankings.second = finalMatch.winnerId === finalMatch.player1Id ? finalMatch.player2Id : finalMatch.player1Id;
+      // Check if WB won Final (if LB won, don't set 1st and 2nd yet)
+      const lbfinalMatch = matchList.find(m => m.id === 'lbfinal');
+      const lbfinalWinner = lbfinalMatch?.winnerId;
+      const finalWinner = finalMatch.winnerId;
+      
+      // Only set 1st and 2nd if WB won Final
+      if (!lbfinalWinner || finalWinner !== lbfinalWinner) {
+        rankings.first = finalMatch.winnerId;
+        rankings.second = finalMatch.winnerId === finalMatch.player1Id ? finalMatch.player2Id : finalMatch.player1Id;
+      }
     }
     
     // LB Final loser is 3rd
