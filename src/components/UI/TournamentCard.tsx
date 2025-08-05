@@ -1,8 +1,11 @@
 import * as React from 'react';
-import { useState } from 'react';
-import { ChevronDownIcon, ChevronRightIcon, PencilIcon, PlayIcon, UserGroupIcon, XMarkIcon, TrashIcon, TrophyIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect, useRef } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PencilIcon, TrashIcon, XMarkIcon, PlayIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import PlayersTable from './PlayersTable';
-import { MatchesStorage} from '../../utils/matchesStorage';
+import { MatchesStorage } from '../../utils/matchesStorage';
+import { PlayersStorage, type Column } from '../../utils/playersStorage';
+
 
 interface WeightRange {
   id: string;
@@ -49,6 +52,8 @@ interface TournamentCardProps {
   selectedWeightRange?: string | null;
   selectedTournament?: string | null;
   className?: string;
+  onShowPDFPreview?: (tournament: Tournament, weightRange: WeightRange) => void;
+  onShowPDFColumnModal?: (tournament: Tournament, weightRange: WeightRange) => void;
 }
 
 const TournamentCard: React.FC<TournamentCardProps> = ({
@@ -64,15 +69,19 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   getAvailablePlayersCount,
   selectedWeightRange,
   selectedTournament,
-  className = ""
+  className = "",
+  onShowPDFPreview,
+  onShowPDFColumnModal
 }) => {
-  const [] = useState({
+  const [filters, setFilters] = useState({
     gender: null as 'male' | 'female' | null,
     handPreference: null as 'left' | 'right' | null,
     weightMin: null as number | null,
     weightMax: null as number | null,
   });
   const [isPlayerManagementOpen, setIsPlayerManagementOpen] = useState(false);
+
+
 
   const getFilteredPlayers = (weightRange: WeightRange) => {
     return players.filter(player => {
@@ -153,6 +162,15 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     setIsPlayerManagementOpen(false);
     onSelectWeightRange(tournament.id, '');
   };
+
+  const handleShowPreview = () => {
+    const weightRange = tournament.weightRanges.find(wr => wr.id === selectedWeightRange);
+    if (!weightRange || !onShowPDFPreview) return;
+    
+    onShowPDFPreview(tournament, weightRange);
+  };
+
+
 
   return (
     <div className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 ${className}`}>
@@ -236,13 +254,44 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       Weight Range: {tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.min} - {tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.max} kg
                     </p>
                   </div>
-                  <button
-                    onClick={handleClosePlayerManagement}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
-                    title="Close player management"
-                  >
-                    <XMarkIcon className="w-6 h-6" />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        const filteredPlayers = getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!);
+                        const dataStr = JSON.stringify(filteredPlayers, null, 2);
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `tournament_${tournament.name}_${tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.name}_players.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg shadow hover:from-purple-500 hover:to-purple-700 transition-all duration-200 text-sm font-semibold"
+                    >
+                      Dışa Aktar (JSON)
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (onShowPDFColumnModal) {
+                          const weightRange = tournament.weightRanges.find(wr => wr.id === selectedWeightRange);
+                          if (weightRange) {
+                            onShowPDFColumnModal(tournament, weightRange);
+                          }
+                        }
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
+                    >
+                      PDF Oluştur
+                    </button>
+                    <button
+                      onClick={handleClosePlayerManagement}
+                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                      title="Close player management"
+                    >
+                      <XMarkIcon className="w-6 h-6" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Available Players Table */}
@@ -308,6 +357,10 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           )}
         </div>
       )}
+      
+
+
+
     </div>
   );
 };

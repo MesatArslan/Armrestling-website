@@ -2,9 +2,12 @@ import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import type { Player } from '../types';
 import TournamentCard from '../components/UI/TournamentCard';
 import { TournamentsStorage, type Tournament, type WeightRange, type PlayerFilters} from '../utils/tournamentsStorage';
+import { PlayersStorage, type Column } from '../utils/playersStorage';
+import { openPreviewModal, generatePDF } from '../utils/pdfGenerator';
 
 // Tournaments sayfası için Player interface'ini genişletiyoruz
 interface ExtendedPlayer extends Player {
@@ -43,6 +46,32 @@ const Tournaments = () => {
   const [createTournamentBirthYearMax, setCreateTournamentBirthYearMax] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  // PDF Preview Modal States
+  const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
+  const [previewPages, setPreviewPages] = useState<string[]>([]);
+  const [currentPreviewPage, setCurrentPreviewPage] = useState<number>(0);
+  const [selectedPDFColumns, setSelectedPDFColumns] = useState<string[]>([
+    'name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'
+  ]);
+  const [availablePDFColumns, setAvailablePDFColumns] = useState<Column[]>([]);
+  const [playersPerPage, setPlayersPerPage] = useState<number>(33);
+  const [currentTournamentForPDF, setCurrentTournamentForPDF] = useState<Tournament | null>(null);
+  const [currentWeightRangeForPDF, setCurrentWeightRangeForPDF] = useState<WeightRange | null>(null);
+  const [isPDFColumnModalOpen, setIsPDFColumnModalOpen] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isCreateModalOpen || isPDFPreviewModalOpen || isPDFColumnModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isCreateModalOpen, isPDFPreviewModalOpen, isPDFColumnModalOpen]);
 
   // Load all data from localStorage
   useEffect(() => {
@@ -83,6 +112,15 @@ const Tournaments = () => {
 
     // Mark loading as complete after a short delay to ensure all state is set
     setTimeout(() => setIsLoadingFromStorage(false), 100);
+  }, []);
+
+  // Load PDF columns from PlayersStorage
+  useEffect(() => {
+    const columns = PlayersStorage.getColumns();
+    setAvailablePDFColumns(columns);
+    // Set default selected columns to visible ones
+    const visibleColumnIds = columns.filter(col => col.visible).map(col => col.id);
+    setSelectedPDFColumns(visibleColumnIds);
   }, []);
 
   // Save tournaments to localStorage whenever they change (except during initial load)
@@ -387,7 +425,82 @@ const Tournaments = () => {
     }
   };
 
+  // PDF Preview Modal Functions
+  const getFilteredPlayers = (weightRange: WeightRange, tournament: Tournament) => {
+    return players.filter(player => {
+      // Weight range filter
+      const weightMatch = player.weight >= weightRange.min && player.weight <= weightRange.max;
+      
+      // Tournament filters
+      const genderMatch = !tournament.genderFilter || player.gender === tournament.genderFilter;
+      const handMatch = !tournament.handPreferenceFilter || 
+        player.handPreference === tournament.handPreferenceFilter || 
+        player.handPreference === 'both';
+      
+      // Birth year filters
+      let birthYearMatch = true;
+      if (tournament.birthYearMin || tournament.birthYearMax) {
+        const birthYear = player.birthday ? new Date(player.birthday).getFullYear() : null;
+        if (birthYear) {
+          if (tournament.birthYearMin && birthYear < tournament.birthYearMin) birthYearMatch = false;
+          if (tournament.birthYearMax && birthYear > tournament.birthYearMax) birthYearMatch = false;
+        }
+      }
+      
+      // Not excluded
+      const notExcluded = !weightRange.excludedPlayerIds?.includes(player.id);
+      
+      return weightMatch && genderMatch && handMatch && birthYearMatch && notExcluded;
+    });
+  };
+
+  const handleShowPDFPreview = (tournament: Tournament, weightRange: WeightRange) => {
+    setCurrentTournamentForPDF(tournament);
+    setCurrentWeightRangeForPDF(weightRange);
+    
+    const previewData = openPreviewModal(
+      tournament,
+      weightRange,
+      selectedPDFColumns,
+      playersPerPage,
+      availablePDFColumns,
+      (wr) => getFilteredPlayers(wr, tournament)
+    );
+    
+    setPreviewPages(previewData.pages);
+    setCurrentPreviewPage(previewData.currentPage);
+    setIsPDFPreviewModalOpen(true);
+  };
+
+  const handleExportPDF = async () => {
+    if (!currentTournamentForPDF || !currentWeightRangeForPDF) return;
+
+    try {
+      const result = await generatePDF(
+        currentTournamentForPDF,
+        currentWeightRangeForPDF,
+        selectedPDFColumns,
+        playersPerPage,
+        availablePDFColumns,
+        (wr) => getFilteredPlayers(wr, currentTournamentForPDF)
+      );
+      
+      alert(`PDF başarıyla oluşturuldu!\nDosya boyutu: ${result.fileSize}\nToplam sayfa: ${result.totalPages}\nSayfa başına oyuncu: ${playersPerPage}`);
+      
+    } catch (error) {
+      console.error('PDF oluşturulurken hata:', error);
+      alert('PDF oluşturulurken bir hata oluştu.');
+    }
+  };
+
+  const handleShowPDFColumnModal = (tournament: Tournament, weightRange: WeightRange) => {
+    setCurrentTournamentForPDF(tournament);
+    setCurrentWeightRangeForPDF(weightRange);
+    setIsPDFColumnModalOpen(true);
+  };
+
   return (
+    <>
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="backdrop-blur-md bg-white/80 rounded-2xl border border-gray-200 shadow-2xl p-6 transition-all duration-300">
@@ -486,15 +599,252 @@ const Tournaments = () => {
                   getAvailablePlayersCount={getAvailablePlayersCount}
                   selectedWeightRange={selectedWeightRange}
                   selectedTournament={selectedTournament}
+                  onShowPDFPreview={handleShowPDFPreview}
+                  onShowPDFColumnModal={handleShowPDFColumnModal}
                 />
               ))
             )}
         </div>
 
-        {/* Create Tournament Modal */}
+        </div>
+      </div>
+    </div>
+
+    {/* PDF Column Selection Modal - Moved outside main content */}
+    {isPDFColumnModalOpen && (
+      <div 
+        className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9998] overflow-hidden"
+        onClick={() => {
+          setIsPDFColumnModalOpen(false);
+          setCurrentTournamentForPDF(null);
+          setCurrentWeightRangeForPDF(null);
+        }}
+      >
+        <div 
+          className="bg-white rounded-2xl shadow-2xl p-8 w-[500px] max-h-[85vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">PDF Kolon Seçimi</h3>
+              <p className="text-sm text-gray-600">PDF'te görünmesini istediğiniz kolonları seçin</p>
+            </div>
+            <button
+              onClick={() => setIsPDFColumnModalOpen(false)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <div className="mb-8">
+            <div className="grid grid-cols-2 gap-4">
+              {availablePDFColumns.map((column) => (
+                <label key={column.id} className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
+                  <input
+                    type="checkbox"
+                    checked={selectedPDFColumns.includes(column.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedPDFColumns([...selectedPDFColumns, column.id]);
+                      } else {
+                        setSelectedPDFColumns(selectedPDFColumns.filter(id => id !== column.id));
+                      }
+                    }}
+                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <span className="text-sm font-medium text-gray-700">{column.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Sayfa Başına Oyuncu Sayısı
+            </label>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Min: 1</span>
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Max: 40</span>
+            </div>
+            <input
+              type="number"
+              min="1"
+              max="40"
+              value={playersPerPage || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '') {
+                  setPlayersPerPage(0);
+                } else {
+                  const numValue = parseInt(value);
+                  if (numValue >= 1 && numValue <= 40) {
+                    setPlayersPerPage(numValue);
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                if (!e.target.value || parseInt(e.target.value) < 1) {
+                  setPlayersPerPage(33);
+                }
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg font-semibold"
+              placeholder="33"
+            />
+          </div>
+          
+          <div className="flex justify-center">
+            <button
+              onClick={() => {
+                if (selectedPDFColumns.length === 0) {
+                  alert('En az bir kolon seçmelisiniz!');
+                  return;
+                }
+                setIsPDFColumnModalOpen(false);
+                if (currentTournamentForPDF && currentWeightRangeForPDF) {
+                  handleShowPDFPreview(currentTournamentForPDF, currentWeightRangeForPDF);
+                }
+              }}
+              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
+            >
+              Önizleme Aç
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* PDF Preview Modal - Moved outside main content */}
+    {isPDFPreviewModalOpen && (
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[9999] overflow-hidden"
+        onClick={() => {
+          setIsPDFPreviewModalOpen(false);
+          setCurrentTournamentForPDF(null);
+          setCurrentWeightRangeForPDF(null);
+          setPreviewPages([]);
+          setCurrentPreviewPage(0);
+        }}
+      >
+        <div 
+          className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-5xl max-h-[95vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-gray-900">PDF Önizleme</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setIsPDFPreviewModalOpen(false);
+                  handleExportPDF();
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
+              >
+                PDF İndir
+              </button>
+              <button
+                onClick={() => {
+                  setIsPDFPreviewModalOpen(false);
+                  if (currentTournamentForPDF && currentWeightRangeForPDF) {
+                    handleShowPDFColumnModal(currentTournamentForPDF, currentWeightRangeForPDF);
+                  }
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+              >
+                Kolon Seçimine Dön
+              </button>
+              <button
+                onClick={() => setIsPDFPreviewModalOpen(false)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 p-8 rounded-xl border-2 border-dashed border-gray-300">
+
+            {/* Page Navigation - Fixed Position */}
+            {previewPages.length > 1 && (
+              <div className="sticky top-0 z-10 bg-white border-b border-gray-200 py-3 mb-4 rounded-t-lg">
+                <div className="flex justify-center items-center gap-4">
+                  <button
+                    onClick={() => setCurrentPreviewPage(Math.max(0, currentPreviewPage - 1))}
+                    disabled={currentPreviewPage === 0}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold"
+                  >
+                    ← Önceki Sayfa
+                  </button>
+                  <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">
+                    Sayfa {currentPreviewPage + 1} / {previewPages.length}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
+                    disabled={currentPreviewPage === previewPages.length - 1}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold"
+                  >
+                    Sonraki Sayfa →
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-center">
+              <div 
+                className="preview-content"
+                style={{
+                  width: '210mm',
+                  height: 'auto',
+                  minHeight: '297mm',
+                  padding: '10mm 15mm 15mm 15mm',
+                  boxSizing: 'border-box',
+                  fontFamily: 'Arial, sans-serif',
+                  fontSize: '12px',
+                  lineHeight: '1.6',
+                  color: '#000000',
+                  backgroundColor: '#ffffff',
+                  overflow: 'visible',
+                  border: '1px solid #ccc',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                  position: 'relative',
+                  transform: 'translateY(-35px)'
+                }}
+                dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }}
+              />
+            </div>
+          </div>
+          
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Bu, PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki "PDF İndir" butonunu kullanabilirsiniz.
+            </p>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Create Tournament Modal - Moved outside main content */}
         {isCreateModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden">
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 overflow-hidden"
+        onClick={() => {
+          setIsCreateModalOpen(false);
+          setIsEditMode(false);
+          setEditingTournamentId(null);
+          setNewTournamentName('');
+          setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
+          setCreateTournamentGenderFilter(null);
+          setCreateTournamentHandPreferenceFilter(null);
+          setCreateTournamentBirthYearMin(null);
+          setCreateTournamentBirthYearMax(null);
+          setPlayerFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
+          setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
+        }}
+      >
+        <div 
+          className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden transform-none"
+          onClick={(e) => e.stopPropagation()}
+        >
               {/* Header */}
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex-shrink-0">
                 <h2 className="text-3xl font-bold text-white">
@@ -738,9 +1088,7 @@ const Tournaments = () => {
             </div>
           </div>
         )}
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
 
