@@ -63,7 +63,7 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
         return true; // State was loaded
       }
     } catch (error) {
-      console.error('Error loading tournament state:', error);
+      // Error loading tournament state
     }
     return false; // No state found
   };

@@ -59,7 +59,7 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players,onTou
         return true; // State was loaded
       }
     } catch (error) {
-      console.error('Error loading tournament state:', error);
+      // Error loading tournament state
     }
     return false; // No state found
   };

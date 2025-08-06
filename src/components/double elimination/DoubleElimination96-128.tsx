@@ -62,7 +62,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
         return true; // State was loaded
       }
     } catch (error) {
-      console.error('Error loading tournament state:', error);
+      // Error loading tournament state
     }
     return false; // No state found
   };
@@ -162,29 +162,10 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
     }
   }, [matches, tournamentComplete, currentRoundKey]);
 
-  // Debug tournament completion
-  React.useEffect(() => {
-    console.log('Tournament completion state changed:', {
-      tournamentComplete,
-      matchesCount: matches.length,
-      grandFinalMatch: matches.find(m => m.id === 'grandfinal'),
-      finalMatch: matches.find(m => m.id === 'final')
-    });
-  }, [tournamentComplete, matches]);
-
   const isRoundComplete = (roundKey: RoundKey, matchList: Match[]) => {
     const roundMatches = matchList.filter(m => getMatchRoundKey(m) === roundKey);
     const nonByeMatches = roundMatches.filter(m => !m.isBye);
     const byeMatches = roundMatches.filter(m => m.isBye);
-    
-    console.log('isRoundComplete Debug:', {
-      roundKey,
-      roundMatchesCount: roundMatches.length,
-      nonByeMatchesCount: nonByeMatches.length,
-      byeMatchesCount: byeMatches.length,
-      nonByeMatchesWithWinners: nonByeMatches.filter(m => m.winnerId).length,
-      allNonByeHaveWinners: nonByeMatches.every(m => m.winnerId)
-    });
     
     if (nonByeMatches.length === 0 && byeMatches.length > 0) {
       return true;
@@ -223,22 +204,13 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
   React.useEffect(() => {
     if (matches.length === 0) return;
     const currentIdx = ROUND_ORDER.indexOf(currentRoundKey);
-    console.log('useEffect Debug:', {
-      currentRoundKey,
-      currentIdx,
-      isLastRound: currentIdx === ROUND_ORDER.length - 1,
-      isRoundComplete: isRoundComplete(currentRoundKey, matches),
-      matchesLength: matches.length
-    });
     
     if (currentIdx === -1 || currentIdx === ROUND_ORDER.length - 1) return;
     if (!isRoundComplete(currentRoundKey, matches)) return;
     
     const nextRoundKey = ROUND_ORDER[currentIdx + 1] as RoundKey;
-    console.log('Creating next round:', nextRoundKey);
     
     const newMatches = createNextRound();
-    console.log('New matches created:', newMatches.length);
     
     if (newMatches.length > 0) {
       setMatches([...matches, ...newMatches]);
@@ -251,27 +223,6 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
     const matchList = matches;
     const currentIdx = ROUND_ORDER.indexOf(currentRoundKey);
     const nextRoundKey = ROUND_ORDER[currentIdx + 1] as RoundKey;
-
-    console.log('[createNextRound] currentRoundKey:', currentRoundKey, 'nextRoundKey:', nextRoundKey);
-    // LB9, WB6, LB10 debug logları
-    if (nextRoundKey === 'LB10' || nextRoundKey === 'LB9' || nextRoundKey === 'WB6') {
-      const lb9Winners = matchList.filter(m => getMatchRoundKey(m) === 'LB9' && m.winnerId && !m.isBye).map(m => m.winnerId!);
-      const wb6Losers = matchList.filter(m => getMatchRoundKey(m) === 'WB6' && m.winnerId && !m.isBye).map(m => {
-        if (m.player1Id === m.winnerId) return m.player2Id;
-        return m.player1Id;
-      }).filter(Boolean);
-      const lb10Players = [...lb9Winners, ...wb6Losers];
-      console.log('[LB10 DEBUG]', {
-        lb9Winners,
-        wb6Losers,
-        lb10Players,
-        lb9WinnersLength: lb9Winners.length,
-        wb6LosersLength: wb6Losers.length,
-        lb10PlayersLength: lb10Players.length,
-        lb9Matches: matchList.filter(m => getMatchRoundKey(m) === 'LB9'),
-        wb6Matches: matchList.filter(m => getMatchRoundKey(m) === 'WB6'),
-      });
-    }
 
     switch (nextRoundKey) {
       case 'WB1': {
@@ -639,16 +590,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
           return m.player1Id;
         }).filter(Boolean);
         const lb10Players = [...lb9Winners, ...wb6Losers];
-        console.log('LB10 Debug:', {
-          lb9Winners,
-          wb6Losers,
-          lb10Players,
-          lb9WinnersLength: lb9Winners.length,
-          wb6LosersLength: wb6Losers.length,
-          lb10PlayersLength: lb10Players.length
-        });
         if (lb10Players.length !== 4) {
-          console.log('LB10: Yeterli oyuncu yok, 4 bekleniyor ama', lb10Players.length, 'var');
           return [];
         }
         const lb10Matches: Match[] = [];
@@ -666,7 +608,6 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
             });
           }
         }
-        console.log('LB10 Matches created:', lb10Matches);
         return lb10Matches;
       }
       case 'YariFinal': {
@@ -917,21 +858,11 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
       const finalMatch = updatedMatches.find(m => m.id === 'final');
       const grandFinalMatch = updatedMatches.find(m => m.id === 'grandfinal');
       
-      console.log('handleMatchResult Debug:', {
-        matchId,
-        winnerId,
-        finalMatch: finalMatch ? { id: finalMatch.id, winnerId: finalMatch.winnerId } : null,
-        grandFinalMatch: grandFinalMatch ? { id: grandFinalMatch.id, winnerId: grandFinalMatch.winnerId } : null,
-        allMatches: updatedMatches.map(m => ({ id: m.id, winnerId: m.winnerId }))
-      });
-      
       if (finalMatch?.winnerId) {
         const lbfinalWinner = updatedMatches.find(m => m.id === 'lbfinal')?.winnerId;
         const finalWinner = finalMatch.winnerId;
         if (lbfinalWinner && finalWinner === lbfinalWinner) {
           // Tournament continues to Grand Final - don't complete tournament yet
-          console.log('Tournament continues to Grand Final');
-          // Save with updated history
           const state = {
             matches: updatedMatches,
             rankings: rankings,
@@ -944,7 +875,6 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
           DoubleEliminationStorage.saveDoubleEliminationState(96, playerIds, state, fixtureId);
         } else {
           // Final tamamlandı ve GrandFinal oynanmayacaksa turnuvayı tamamla
-          console.log('Final completed, tournament ends');
           const newRankings = calculateRankings(updatedMatches);
           setRankings(newRankings);
           setTournamentComplete(true);
@@ -968,7 +898,6 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
         }
       } else if (grandFinalMatch?.winnerId) {
         // GrandFinal tamamlandıysa turnuvayı tamamla
-        console.log('GrandFinal completed, tournament ends');
         const newRankings = calculateRankings(updatedMatches);
         setRankings(newRankings);
         setTournamentComplete(true);
@@ -991,7 +920,6 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
         DoubleEliminationStorage.saveDoubleEliminationState(96, playerIds, state, fixtureId);
       } else {
         // Normal match completion - save with updated history
-        console.log('Normal match completion');
         const state = {
           matches: updatedMatches,
           rankings: rankings,
@@ -1116,19 +1044,6 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
 
   // --- Aktif ve tamamlanan maçları göster ---
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
-
-  // LB10 roundunda debug logu
-  if (currentRoundKey === 'LB10') {
-    console.log('[LB10 UI DEBUG] currentRoundKey:', currentRoundKey, 'activeRoundMatches:', activeRoundMatches);
-  }
-  
-  console.log('Debug Info:', {
-    currentRoundKey,
-    totalMatches: matches.length,
-    activeRoundMatches: activeRoundMatches.length,
-    allMatches: matches.map(m => ({ id: m.id, roundKey: getMatchRoundKey(m), winnerId: m.winnerId })),
-    activeMatches: activeRoundMatches.map(m => ({ id: m.id, roundKey: getMatchRoundKey(m), winnerId: m.winnerId }))
-  });
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">

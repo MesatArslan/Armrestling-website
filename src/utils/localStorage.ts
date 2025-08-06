@@ -18,7 +18,7 @@ export const PlayerStorage = {
       const players = localStorage.getItem(STORAGE_KEYS.PLAYERS);
       return players ? JSON.parse(players) : [];
     } catch (error) {
-      console.error('Error loading players:', error);
+      // Error loading players
       return [];
     }
   },
@@ -28,7 +28,7 @@ export const PlayerStorage = {
     try {
       localStorage.setItem(STORAGE_KEYS.PLAYERS, JSON.stringify(players));
     } catch (error) {
-      console.error('Error saving players:', error);
+      // Error saving players
     }
   },
 
@@ -70,7 +70,7 @@ export const TournamentStorage = {
       const tournaments = localStorage.getItem(STORAGE_KEYS.TOURNAMENTS);
       return tournaments ? JSON.parse(tournaments) : [];
     } catch (error) {
-      console.error('Error loading tournaments:', error);
+      // Error loading tournaments
       return [];
     }
   },
@@ -80,7 +80,7 @@ export const TournamentStorage = {
     try {
       localStorage.setItem(STORAGE_KEYS.TOURNAMENTS, JSON.stringify(tournaments));
     } catch (error) {
-      console.error('Error saving tournaments:', error);
+      // Error saving tournaments
     }
   },
 
@@ -122,7 +122,7 @@ export const ActiveFixturesStorage = {
       const fixtures = localStorage.getItem(STORAGE_KEYS.ACTIVE_FIXTURES);
       return fixtures ? JSON.parse(fixtures) : [];
     } catch (error) {
-      console.error('Error loading active fixtures:', error);
+      // Error loading active fixtures
       return [];
     }
   },
@@ -136,7 +136,7 @@ export const ActiveFixturesStorage = {
         localStorage.removeItem(STORAGE_KEYS.ACTIVE_FIXTURES);
       }
     } catch (error) {
-      console.error('Error saving active fixtures:', error);
+      // Error saving active fixtures
     }
   },
 
@@ -175,7 +175,7 @@ export const CurrentTournamentStorage = {
       const currentTournament = localStorage.getItem(STORAGE_KEYS.CURRENT_TOURNAMENT);
       return currentTournament ? JSON.parse(currentTournament) : null;
     } catch (error) {
-      console.error('Error loading current tournament:', error);
+      // Error loading current tournament
       return null;
     }
   },
@@ -185,7 +185,7 @@ export const CurrentTournamentStorage = {
     try {
       localStorage.setItem(STORAGE_KEYS.CURRENT_TOURNAMENT, JSON.stringify(tournamentState));
     } catch (error) {
-      console.error('Error saving current tournament:', error);
+      // Error saving current tournament
     }
   },
 
@@ -204,7 +204,7 @@ export const TournamentResultsStorage = {
       const results = localStorage.getItem(key);
       return results ? JSON.parse(results) : [];
     } catch (error) {
-      console.error('Error loading tournament results:', error);
+      // Error loading tournament results
       return [];
     }
   },
@@ -215,7 +215,7 @@ export const TournamentResultsStorage = {
       const key = `${STORAGE_KEYS.TOURNAMENT_RESULTS}-${tournamentId}-${weightRangeId}`;
       localStorage.setItem(key, JSON.stringify(results));
     } catch (error) {
-      console.error('Error saving tournament results:', error);
+      // Error saving tournament results
     }
   },
 
@@ -245,7 +245,7 @@ export const DoubleEliminationStorage = {
       const state = localStorage.getItem(key);
       return state ? JSON.parse(state) : null;
     } catch (error) {
-      console.error('Error loading double elimination state:', error);
+      // Error loading double elimination state
       return null;
     }
   },
@@ -259,7 +259,7 @@ export const DoubleEliminationStorage = {
         : `${STORAGE_KEYS.DOUBLE_ELIMINATION}-${playerCount}-${playerIds}`;
       localStorage.setItem(key, JSON.stringify(state));
     } catch (error) {
-      console.error('Error saving double elimination state:', error);
+      // Error saving double elimination state
     }
   },
 
@@ -364,7 +364,7 @@ export const StorageUtils = {
         });
       }
     } catch (error) {
-      console.error('Error importing data:', error);
+      // Error importing data
       throw error;
     }
   },

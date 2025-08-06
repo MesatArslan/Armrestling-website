@@ -63,7 +63,7 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
         return true; // State was loaded
       }
     } catch (error) {
-      console.error('Error loading tournament state:', error);
+      // Error loading tournament state
     }
     return false; // No state found
   };
@@ -166,15 +166,6 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
     const nonByeMatches = roundMatches.filter(m => !m.isBye);
     const byeMatches = roundMatches.filter(m => m.isBye);
     
-    console.log('isRoundComplete Debug (65-95):', {
-      roundKey,
-      roundMatchesCount: roundMatches.length,
-      nonByeMatchesCount: nonByeMatches.length,
-      byeMatchesCount: byeMatches.length,
-      nonByeMatchesWithWinners: nonByeMatches.filter(m => m.winnerId).length,
-      allNonByeHaveWinners: nonByeMatches.every(m => m.winnerId)
-    });
-    
     if (nonByeMatches.length === 0 && byeMatches.length > 0) {
       return true;
     }
@@ -211,22 +202,13 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
   React.useEffect(() => {
     if (matches.length === 0) return;
     const currentIdx = ROUND_ORDER.indexOf(currentRoundKey);
-    console.log('useEffect Debug (65-95):', {
-      currentRoundKey,
-      currentIdx,
-      isLastRound: currentIdx === ROUND_ORDER.length - 1,
-      isRoundComplete: isRoundComplete(currentRoundKey, matches),
-      matchesLength: matches.length
-    });
     
     if (currentIdx === -1 || currentIdx === ROUND_ORDER.length - 1) return;
     if (!isRoundComplete(currentRoundKey, matches)) return;
     
     const nextRoundKey = ROUND_ORDER[currentIdx + 1] as RoundKey;
-    console.log('Creating next round (65-95):', nextRoundKey);
     
     const newMatches = createNextRound();
-    console.log('New matches created (65-95):', newMatches.length);
     
     if (newMatches.length > 0) {
       setMatches([...matches, ...newMatches]);
@@ -631,12 +613,7 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
       }
       case 'LB10': {
         const lb9Winners = matchList.filter(m => getMatchRoundKey(m) === 'LB9' && m.winnerId && !m.isBye).map(m => m.winnerId!);
-        console.log('LB10 Debug (65-95):', {
-          lb9Winners,
-          lb9WinnersLength: lb9Winners.length
-        });
         if (lb9Winners.length !== 2) {
-          console.log('LB10 (65-95): Yeterli oyuncu yok, 2 bekleniyor ama', lb9Winners.length, 'var');
           return [];
         }
         const lb10Matches: Match[] = [];
@@ -654,7 +631,6 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
             });
           }
         }
-        console.log('LB10 Matches created (65-95):', lb10Matches);
         return lb10Matches;
       }
       case '7-8': {
@@ -1041,14 +1017,6 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
   // --- Aktif ve tamamlanan maçları göster ---
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
   
-  console.log('Debug Info (65-95):', {
-    currentRoundKey,
-    totalMatches: matches.length,
-    activeRoundMatches: activeRoundMatches.length,
-    allMatches: matches.map(m => ({ id: m.id, roundKey: getMatchRoundKey(m), winnerId: m.winnerId })),
-    activeMatches: activeRoundMatches.map(m => ({ id: m.id, roundKey: getMatchRoundKey(m), winnerId: m.winnerId }))
-  });
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <h2 className="text-2xl font-bold text-center mb-6">

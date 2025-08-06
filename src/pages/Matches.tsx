@@ -28,7 +28,6 @@ import {
   DoubleElimination257_383,
   DoubleElimination384_512,
 } from '../components/double elimination';
-import { TabManager } from '../utils/tabManager';
 
 const Matches = () => {
   const location = useLocation();
@@ -55,8 +54,6 @@ const Matches = () => {
 
   // Load data on component mount
   useEffect(() => {
-    console.log('Loading matches data...');
-
     // Load players from localStorage
     const savedPlayers = localStorage.getItem('arm-wrestling-players');
     if (savedPlayers) {
@@ -64,7 +61,7 @@ const Matches = () => {
         const parsedPlayers = JSON.parse(savedPlayers);
         setPlayers(parsedPlayers);
       } catch (error) {
-        console.error('Error loading players from localStorage:', error);
+        // Error loading players from localStorage
       }
     }
 
@@ -222,8 +219,6 @@ const Matches = () => {
   const handleMatchResult = (type: string, winnerId: string, loserId?: string) => {
     if (!activeFixture) return;
 
-    console.log(`Match completed. Type: ${type}, Winner: ${winnerId}${loserId ? `, Loser: ${loserId}` : ''}`);
-
     // Add match result to fixture
     const result = {
       matchId: `match-${Date.now()}`,
@@ -250,8 +245,6 @@ const Matches = () => {
 
   const handleTournamentComplete = (rankings: { first?: string; second?: string; third?: string }) => {
     if (!activeFixture) return;
-
-    console.log('Tournament completed with rankings:', rankings);
 
     // Save rankings to localStorage
     MatchesStorage.completeFixtureWithRankings(activeFixture.id, rankings);

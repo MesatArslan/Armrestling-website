@@ -1,7 +1,7 @@
 // Matches localStorage utility
 // Bu dosya matches ile ilgili tüm localStorage işlemlerini merkezi olarak yönetir
 
-import { DoubleEliminationStorage, TournamentResultsStorage } from './localStorage';
+import { TournamentResultsStorage } from './localStorage';
 
 export interface Fixture {
   id: string;
@@ -73,23 +73,19 @@ export const MatchesStorage = {
   // Ana matches verisi
   saveMatchesData: (data: MatchesData) => {
     try {
-      console.log('Saving matches data:', data);
       localStorage.setItem('arm-wrestling-matches', JSON.stringify(data));
-      console.log('Matches data saved successfully');
     } catch (error) {
-      console.error('Error saving matches data to localStorage:', error);
+      // Error saving matches data to localStorage
     }
   },
 
   getMatchesData: (): MatchesData => {
     try {
       const saved = localStorage.getItem('arm-wrestling-matches');
-      console.log('Loading matches data from localStorage:', saved);
       const result = saved ? JSON.parse(saved) : { fixtures: [], lastUpdated: new Date().toISOString() };
-      console.log('Loaded matches data:', result);
       return result;
     } catch (error) {
-      console.error('Error loading matches data from localStorage:', error);
+      // Error loading matches data from localStorage
       return { fixtures: [], lastUpdated: new Date().toISOString() };
     }
   },
@@ -131,18 +127,16 @@ export const MatchesStorage = {
           localStorage.removeItem(key);
         }
       });
-      console.log('Cleared double elimination state for fixture:', fixtureId);
     } catch (error) {
-      console.error('Error clearing double elimination state:', error);
+      // Error clearing double elimination state
     }
     
     // Clear tournament results if fixture exists
     if (fixtureToDelete) {
       try {
         TournamentResultsStorage.clearTournamentResults(fixtureToDelete.tournamentId, fixtureToDelete.weightRangeId);
-        console.log('Cleared tournament results for fixture:', fixtureId);
       } catch (error) {
-        console.error('Error clearing tournament results:', error);
+        // Error clearing tournament results
       }
     }
   },
@@ -220,7 +214,6 @@ export const MatchesStorage = {
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
       MatchesStorage.saveMatchesData(data);
-      console.log('Rankings saved for fixture:', fixtureId, rankings);
     }
   },
 
@@ -233,7 +226,6 @@ export const MatchesStorage = {
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
       MatchesStorage.saveMatchesData(data);
-      console.log('Active tab updated for fixture:', fixtureId, activeTab);
     }
   },
 
@@ -255,7 +247,6 @@ export const MatchesStorage = {
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
       MatchesStorage.saveMatchesData(data);
-      console.log('Fixture completed with rankings:', fixtureId, rankings);
     }
   },
 
@@ -298,9 +289,7 @@ export const MatchesStorage = {
 
   // Tüm matches verilerini temizle
   clearAllMatchesData: () => {
-    console.log('Clearing all matches data');
     localStorage.removeItem('arm-wrestling-matches');
-    console.log('All matches data cleared');
   },
 
   // Test fixture'ı oluştur

@@ -58,7 +58,7 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         return true; // State was loaded
       }
     } catch (error) {
-      console.error('Error loading tournament state:', error);
+      // Error loading tournament state
     }
     return false; // No state found
   };
@@ -121,15 +121,6 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
     const nonByeMatches = roundMatches.filter(m => !m.isBye);
     const byeMatches = roundMatches.filter(m => m.isBye);
     
-    console.log('isRoundComplete Debug:', {
-      roundKey,
-      roundMatchesCount: roundMatches.length,
-      nonByeMatchesCount: nonByeMatches.length,
-      byeMatchesCount: byeMatches.length,
-      nonByeMatchesWithWinners: nonByeMatches.filter(m => m.winnerId).length,
-      allNonByeHaveWinners: nonByeMatches.every(m => m.winnerId)
-    });
-    
     if (nonByeMatches.length === 0 && byeMatches.length > 0) {
       return true;
     }
@@ -173,11 +164,8 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
   }
 
   function createNextRoundWithMatches(matchList: Match[], nextRoundKey: RoundKey): Match[] {
-    console.log('Creating next round:', { nextRoundKey, matchListLength: matchList.length });
-    
     switch (nextRoundKey) {
       case 'LB1': {
-        console.log('Creating LB1 matches');
         const wb1Losers = matchList.filter(m => getMatchRoundKey(m) === 'WB1' && m.winnerId && !m.isBye).map(m => {
           if (m.player1Id === m.winnerId) return m.player2Id;
           return m.player1Id;
@@ -187,14 +175,6 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         const byePlayers = lb1Players.slice(0, byesNeeded);
         const matchPlayers = lb1Players.slice(byesNeeded);
         const lb1Matches: Match[] = [];
-        
-        console.log('LB1 creation details:', {
-          wb1Losers: wb1Losers.length,
-          lb1Players: lb1Players.length,
-          byesNeeded,
-          byePlayers: byePlayers.length,
-          matchPlayers: matchPlayers.length
-        });
         
         byePlayers.forEach((playerId, i) => {
           lb1Matches.push({
@@ -223,7 +203,6 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
             });
           }
         }
-        console.log('LB1 matches created:', lb1Matches.length);
         return lb1Matches;
       }
       case 'WB2': {
@@ -759,13 +738,6 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         const semifinalWinners = matchList.filter(m => getMatchRoundKey(m) === 'Semifinals' && m.winnerId && !m.isBye).map(m => m.winnerId!);
         const lbFinalWinners = matchList.filter(m => getMatchRoundKey(m) === 'LBFinal' && m.winnerId && !m.isBye).map(m => m.winnerId!);
         
-        console.log('Final Debug:', {
-          semifinalWinners,
-          lbFinalWinners,
-          semifinalWinnersLength: semifinalWinners.length,
-          lbFinalWinnersLength: lbFinalWinners.length
-        });
-        
         if (semifinalWinners.length !== 1 || lbFinalWinners.length !== 1) return [];
         
         const finalMatch: Match = {
@@ -778,12 +750,6 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
           isBye: false,
           description: RoundDescriptionUtils.getDescription('Final')
         };
-        
-        console.log('Final Match Created:', {
-          player1Id: finalMatch.player1Id,
-          player2Id: finalMatch.player2Id,
-          description: finalMatch.description
-        });
         
         return [finalMatch];
       }
@@ -858,18 +824,6 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
       const updatedMatches = prevMatches.map(match => 
         match.id === matchId ? { ...match, winnerId } : match
       );
-      
-      // Debug for Final match
-      if (matchId === 'final') {
-        const finalMatch = updatedMatches.find(m => m.id === 'final');
-        console.log('Final Match Result:', {
-          matchId,
-          winnerId,
-          player1Id: finalMatch?.player1Id,
-          player2Id: finalMatch?.player2Id,
-          isLBWinnerWon: finalMatch?.player2Id === winnerId
-        });
-      }
       
       // Call the onMatchResult prop if provided
       if (onMatchResult) {
@@ -999,22 +953,13 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
   useEffect(() => {
     if (matches.length === 0) return;
     const currentIdx = ROUND_ORDER.indexOf(currentRoundKey);
-    console.log('useEffect Debug:', {
-      currentRoundKey,
-      currentIdx,
-      isLastRound: currentIdx === ROUND_ORDER.length - 1,
-      isRoundComplete: isRoundComplete(currentRoundKey, matches),
-      matchesLength: matches.length
-    });
     
     if (currentIdx === -1 || currentIdx === ROUND_ORDER.length - 1) return;
     if (!isRoundComplete(currentRoundKey, matches)) return;
     
     const nextRoundKey = ROUND_ORDER[currentIdx + 1] as RoundKey;
-    console.log('Creating next round:', nextRoundKey);
     
     const newMatches = createNextRound();
-    console.log('New matches created:', newMatches.length);
     
     if (newMatches.length > 0) {
       const updatedMatches = [...matches, ...newMatches];
@@ -1026,7 +971,7 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
 
   // Debug useEffect to track currentRoundKey changes
   useEffect(() => {
-    console.log('CurrentRoundKey changed to:', currentRoundKey);
+    // CurrentRoundKey changed
   }, [currentRoundKey]);
 
   // --- Yardımcı Fonksiyonlar ---
@@ -1093,16 +1038,6 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
 
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
   
-  console.log('Debug Info:', {
-    currentRoundKey,
-    totalMatches: matches.length,
-    activeRoundMatches: activeRoundMatches.length,
-    playersLength: players.length,
-    allMatches: matches.map(m => ({ id: m.id, roundKey: getMatchRoundKey(m), winnerId: m.winnerId })),
-    activeMatches: activeRoundMatches.map(m => ({ id: m.id, roundKey: getMatchRoundKey(m), winnerId: m.winnerId })),
-    currentRoundMatches: matches.filter(m => getMatchRoundKey(m) === currentRoundKey).map(m => m.id)
-  });
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6 flex justify-between items-center">

@@ -60,7 +60,7 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
         return true;
       }
     } catch (error) {
-      console.error('Error loading tournament state:', error);
+      // Error loading tournament state
     }
     return false;
   };

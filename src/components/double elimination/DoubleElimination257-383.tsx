@@ -41,11 +41,6 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
       currentRoundKey: roundKey,
       timestamp: new Date().toISOString()
     };
-    console.log('Saving tournament state:', {
-      matchesCount: matchesState.length,
-      currentRoundKey: roundKey,
-      matches: matchesState.map(m => ({ id: m.id, roundKey: getMatchRoundKey(m) }))
-    });
     const playerIds = players.map(p => p.id).sort().join('-');
     DoubleEliminationStorage.saveDoubleEliminationState(257, playerIds, state, fixtureId);
   };
@@ -56,11 +51,6 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
       const playerIds = players.map(p => p.id).sort().join('-');
       const state = DoubleEliminationStorage.getDoubleEliminationState(257, playerIds, fixtureId);
       if (state) {
-        console.log('Loading tournament state:', {
-          matchesCount: state.matches?.length || 0,
-          currentRoundKey: state.currentRoundKey,
-          matches: state.matches?.map((m: any) => ({ id: m.id, roundKey: getMatchRoundKey(m) })) || []
-        });
         setMatches(state.matches || []);
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
@@ -71,7 +61,7 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
         return true; // State was loaded
       }
     } catch (error) {
-      console.error('Error loading tournament state:', error);
+      // Error loading tournament state
     }
     return false; // No state found
   };
@@ -84,7 +74,6 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
 
   // --- Tournament Initialization ---
   const initializeTournament = () => {
-    console.log('Initializing tournament with', players.length, 'players');
     clearTournamentState();
     // Shuffle players randomly instead of seeding by weight
     const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
@@ -93,13 +82,6 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
     const playersWithByes = shuffledPlayers.slice(0, byesNeeded);
     const playersForMatches = shuffledPlayers.slice(byesNeeded);
     const wb1Matches: Match[] = [];
-    
-    console.log('Tournament setup:', {
-      totalSlots,
-      byesNeeded,
-      playersWithByesCount: playersWithByes.length,
-      playersForMatchesCount: playersForMatches.length
-    });
     
     // WB1: Pair up remaining players
     for (let i = 0; i < playersForMatches.length; i += 2) {
@@ -133,7 +115,6 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
             });
     });
     
-    console.log('Created', wb1Matches.length, 'WB1 matches');
     setMatches(wb1Matches);
     setRankings({});
     setTournamentComplete(false);
@@ -141,12 +122,9 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
   };
 
   React.useEffect(() => {
-    console.log('DoubleElimination257_383 useEffect - players:', players.length);
     if (players.length >= 257 && players.length <= 383) {
       const stateLoaded = loadTournamentState();
-      console.log('State loaded:', stateLoaded);
       if (!stateLoaded) {
-        console.log('Initializing tournament...');
         initializeTournament();
       }
     }
@@ -188,15 +166,6 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
     const roundMatches = matchList.filter(m => getMatchRoundKey(m) === roundKey);
     const nonByeMatches = roundMatches.filter(m => !m.isBye);
     const byeMatches = roundMatches.filter(m => m.isBye);
-    
-    console.log('isRoundComplete Debug:', {
-      roundKey,
-      roundMatchesCount: roundMatches.length,
-      nonByeMatchesCount: nonByeMatches.length,
-      byeMatchesCount: byeMatches.length,
-      nonByeMatchesWithWinners: nonByeMatches.filter(m => m.winnerId).length,
-      allNonByeHaveWinners: nonByeMatches.every(m => m.winnerId)
-    });
     
     if (nonByeMatches.length === 0 && byeMatches.length > 0) {
       return true;
@@ -240,22 +209,13 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
   React.useEffect(() => {
     if (matches.length === 0) return;
     const currentIdx = ROUND_ORDER.indexOf(currentRoundKey);
-    console.log('useEffect Debug:', {
-      currentRoundKey,
-      currentIdx,
-      isLastRound: currentIdx === ROUND_ORDER.length - 1,
-      isRoundComplete: isRoundComplete(currentRoundKey, matches),
-      matchesLength: matches.length
-    });
     
     if (currentIdx === -1 || currentIdx === ROUND_ORDER.length - 1) return;
     if (!isRoundComplete(currentRoundKey, matches)) return;
     
     const nextRoundKey = ROUND_ORDER[currentIdx + 1] as RoundKey;
-    console.log('Creating next round:', nextRoundKey);
     
     const newMatches = createNextRound();
-    console.log('New matches created:', newMatches.length);
     
     if (newMatches.length > 0) {
       const updatedMatches = [...matches, ...newMatches];
@@ -267,9 +227,6 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
 
   // Debug useEffect to track currentRoundKey changes
   React.useEffect(() => {
-    console.log('CurrentRoundKey changed to:', currentRoundKey);
-    const matchesForCurrentRound = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
-    console.log('Matches for current round:', matchesForCurrentRound.length, matchesForCurrentRound.map(m => m.id));
   }, [currentRoundKey, matches]);
 
   function createNextRound(): Match[] {
@@ -783,13 +740,7 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
           if (m.player1Id === m.winnerId) return m.player2Id;
           return m.player1Id;
         }).filter(Boolean);
-        console.log('7-8 Debug:', {
-          lb12Losers,
-          lb12LosersLength: lb12Losers.length,
-          lb12Matches: matchList.filter(m => getMatchRoundKey(m) === 'LB12').map(m => ({ id: m.id, winnerId: m.winnerId, player1Id: m.player1Id, player2Id: m.player2Id }))
-        });
         if (lb12Losers.length !== 2) {
-          console.log('7-8: Yeterli LB12 kaybeden yok, 2 bekleniyor ama', lb12Losers.length, 'var');
           return [];
         }
         return [{
@@ -1070,16 +1021,6 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
   // --- Aktif ve tamamlanan maçları göster ---
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
   
-  console.log('Debug Info:', {
-    currentRoundKey,
-    totalMatches: matches.length,
-    activeRoundMatches: activeRoundMatches.length,
-    playersLength: players.length,
-    allMatches: matches.map(m => ({ id: m.id, roundKey: getMatchRoundKey(m), winnerId: m.winnerId })),
-    activeMatches: activeRoundMatches.map(m => ({ id: m.id, roundKey: getMatchRoundKey(m), winnerId: m.winnerId })),
-    currentRoundMatches: matches.filter(m => getMatchRoundKey(m) === currentRoundKey).map(m => m.id)
-  });
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6 flex justify-between items-center">

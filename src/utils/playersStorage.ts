@@ -39,7 +39,6 @@ export const PlayersStorage = {
   // Players listesi
   savePlayers: (players: ExtendedPlayer[]) => {
     if (!isLocalStorageAvailable()) {
-      console.error('localStorage is not available');
       return;
     }
     
@@ -49,13 +48,12 @@ export const PlayersStorage = {
       
       // Verify the save
     } catch (error) {
-      console.error('Error saving players to localStorage:', error);
+      // Error saving players to localStorage
     }
   },
 
   getPlayers: (): ExtendedPlayer[] => {
     if (!isLocalStorageAvailable()) {
-      console.error('localStorage is not available');
       return [];
     }
     
@@ -64,14 +62,13 @@ export const PlayersStorage = {
       const result = saved ? JSON.parse(saved) : [];
       return result;
     } catch (error) {
-      console.error('Error loading players from localStorage:', error);
+      // Error loading players from localStorage
       return [];
     }
   },
 
   clearPlayers: () => {
     if (!isLocalStorageAvailable()) {
-      console.error('localStorage is not available');
       return;
     }
     localStorage.removeItem('arm-wrestling-players');
@@ -82,7 +79,7 @@ export const PlayersStorage = {
     try {
       localStorage.setItem('arm-wrestling-columns', JSON.stringify(columns));
     } catch (error) {
-      console.error('Error saving columns to localStorage:', error);
+      // Error saving columns to localStorage
     }
   },
 
@@ -91,7 +88,7 @@ export const PlayersStorage = {
       const saved = localStorage.getItem('arm-wrestling-columns');
       return saved ? JSON.parse(saved) : defaultColumns;
     } catch (error) {
-      console.error('Error loading columns from localStorage:', error);
+      // Error loading columns from localStorage
       return defaultColumns;
     }
   },
@@ -162,7 +159,7 @@ export const PlayersStorage = {
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error exporting players to JSON:', error);
+      // Error exporting players to JSON
     }
   },
 
@@ -189,7 +186,7 @@ export const PlayersStorage = {
       const merged = Array.from(playerMap.values());
       return merged;
     } catch (error) {
-      console.error('Error importing players from JSON:', error);
+      // Error importing players from JSON
       throw error;
     }
   },

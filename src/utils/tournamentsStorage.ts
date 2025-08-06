@@ -39,7 +39,7 @@ export const TournamentsStorage = {
     try {
       localStorage.setItem('arm-wrestling-tournaments', JSON.stringify(tournaments));
     } catch (error) {
-      console.error('Error saving tournaments to localStorage:', error);
+      // Error saving tournaments to localStorage
     }
   },
 
@@ -48,7 +48,7 @@ export const TournamentsStorage = {
       const saved = localStorage.getItem('arm-wrestling-tournaments');
       return saved ? JSON.parse(saved) : [];
     } catch (error) {
-      console.error('Error loading tournaments from localStorage:', error);
+      // Error loading tournaments from localStorage
       return [];
     }
   },
@@ -66,7 +66,7 @@ export const TournamentsStorage = {
         localStorage.removeItem('selected-tournament');
       }
     } catch (error) {
-      console.error('Error saving selected tournament to localStorage:', error);
+      // Error saving selected tournament to localStorage
     }
   },
 
@@ -74,7 +74,7 @@ export const TournamentsStorage = {
     try {
       return localStorage.getItem('selected-tournament');
     } catch (error) {
-      console.error('Error loading selected tournament from localStorage:', error);
+      // Error loading selected tournament from localStorage
       return null;
     }
   },
@@ -92,7 +92,7 @@ export const TournamentsStorage = {
         localStorage.removeItem('selected-weight-range');
       }
     } catch (error) {
-      console.error('Error saving selected weight range to localStorage:', error);
+      // Error saving selected weight range to localStorage
     }
   },
 
@@ -100,7 +100,7 @@ export const TournamentsStorage = {
     try {
       return localStorage.getItem('selected-weight-range');
     } catch (error) {
-      console.error('Error loading selected weight range from localStorage:', error);
+      // Error loading selected weight range from localStorage
       return null;
     }
   },
@@ -114,7 +114,7 @@ export const TournamentsStorage = {
     try {
       localStorage.setItem('tournament-player-filters', JSON.stringify(filters));
     } catch (error) {
-      console.error('Error saving player filters to localStorage:', error);
+      // Error saving player filters to localStorage
     }
   },
 
@@ -128,7 +128,7 @@ export const TournamentsStorage = {
         weightMax: null,
       };
     } catch (error) {
-      console.error('Error loading player filters from localStorage:', error);
+      // Error loading player filters from localStorage
       return {
         gender: null,
         handPreference: null,
@@ -147,7 +147,7 @@ export const TournamentsStorage = {
     try {
       localStorage.setItem('current-tournament', JSON.stringify(state));
     } catch (error) {
-      console.error('Error saving current tournament to localStorage:', error);
+      // Error saving current tournament to localStorage
     }
   },
 
@@ -156,7 +156,7 @@ export const TournamentsStorage = {
       const saved = localStorage.getItem('current-tournament');
       return saved ? JSON.parse(saved) : null;
     } catch (error) {
-      console.error('Error loading current tournament from localStorage:', error);
+      // Error loading current tournament from localStorage
       return null;
     }
   },

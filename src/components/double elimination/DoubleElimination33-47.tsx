@@ -85,7 +85,7 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
         return true; // State was loaded
       }
     } catch (error) {
-      console.error('Error loading tournament state:', error);
+      // Error loading tournament state
     }
     return false; // No state found
   };

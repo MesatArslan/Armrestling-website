@@ -262,7 +262,6 @@ export const generatePDF = async (
     return { fileName, fileSize: sizeText, totalPages };
 
   } catch (error) {
-    console.error('PDF oluşturulurken hata:', error);
     throw new Error('PDF oluşturulurken bir hata oluştu.');
   }
 };

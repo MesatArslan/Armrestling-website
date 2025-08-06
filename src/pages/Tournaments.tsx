@@ -82,7 +82,7 @@ const Tournaments = () => {
         const parsedPlayers = JSON.parse(savedPlayers);
         setPlayers(parsedPlayers);
       } catch (error) {
-        console.error('Error loading players from localStorage:', error);
+        // Error loading players from localStorage
       }
     }
 
@@ -447,7 +447,7 @@ const Tournaments = () => {
       alert(`PDF başarıyla oluşturuldu!\nDosya boyutu: ${result.fileSize}\nToplam sayfa: ${result.totalPages}\nSayfa başına oyuncu: ${playersPerPage}`);
       
     } catch (error) {
-      console.error('PDF oluşturulurken hata:', error);
+      // PDF oluşturulurken hata
       alert('PDF oluşturulurken bir hata oluştu.');
     }
   };
