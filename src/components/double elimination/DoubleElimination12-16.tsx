@@ -42,6 +42,7 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [, setLastCompletedMatch] = useState<Match | null>(null);
   const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
+  const [, setIsUndoing] = useState(false);
 
   // Save tournament state using utility
   const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean, roundKey: RoundKey) => {
@@ -50,6 +51,7 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
       rankings: rankingsState,
       tournamentComplete: completeState,
       currentRoundKey: roundKey,
+      matchHistory: matchHistory,
       timestamp: new Date().toISOString()
     };
     const playerIds = players.map(p => p.id).sort().join('-');
@@ -66,8 +68,7 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
         setCurrentRoundKey(state.currentRoundKey || 'WB_R1');
-        // Reset history when loading from storage
-        setMatchHistory([]);
+        setMatchHistory(state.matchHistory || []);
         setLastCompletedMatch(null);
         return true; // State was loaded
       }
@@ -551,19 +552,83 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
 
   const undoLastMatch = () => {
     if (matchHistory.length > 0) {
-      const previousState = matchHistory[matchHistory.length - 1];
-      setMatches(previousState);
+      setIsUndoing(true);
+      
+      const previousMatches = matchHistory[matchHistory.length - 1];
+      const currentState = matches;
+      
+      // Find which match was undone by comparing current and previous states
+      const undoneMatch = currentState.find(match => 
+        match.winnerId && !previousMatches.find(pm => pm.id === match.id)?.winnerId
+      );
+      
+      setMatches(previousMatches);
       setMatchHistory(prev => prev.slice(0, -1));
-      setLastCompletedMatch(null);
       
       // Reset tournament completion if we're going back
       if (tournamentComplete) {
         setTournamentComplete(false);
-        setRankings({});
       }
       
-      // Save the reverted state
-      saveTournamentState(previousState, rankings, false, currentRoundKey);
+      // Remove rankings that were affected by the undone match
+      let updatedRankings = { ...rankings };
+      
+      if (undoneMatch) {
+        const matchId = undoneMatch.id;
+        
+        // Remove rankings based on the undone match
+        if (matchId === 'final') {
+          delete updatedRankings.first;
+          delete updatedRankings.second;
+        } else if (matchId === 'grand_final') {
+          delete updatedRankings.first;
+          delete updatedRankings.second;
+        } else if (matchId === 'lb_final') {
+          delete updatedRankings.third;
+        } else if (matchId === 'place56') {
+          delete updatedRankings.fifth;
+          delete updatedRankings.sixth;
+        }
+      }
+      
+      setRankings(updatedRankings);
+      
+      // Update current round key based on the last match
+      const lastMatch = previousMatches[previousMatches.length - 1];
+      if (lastMatch) {
+        const matchRoundKey = getMatchRoundKey(lastMatch);
+        setCurrentRoundKey(matchRoundKey);
+      }
+      
+      // Clear any selected winners for matches that no longer exist
+      const previousMatchIds = previousMatches.map(m => m.id);
+      setSelectedWinner(prev => {
+        const newSelected = { ...prev };
+        Object.keys(newSelected).forEach(matchId => {
+          if (!previousMatchIds.includes(matchId)) {
+            delete newSelected[matchId];
+          }
+        });
+        return newSelected;
+      });
+      
+      // Save the reverted state with updated match history
+      const updatedMatchHistory = matchHistory.slice(0, -1);
+      const state = {
+        matches: previousMatches,
+        rankings: updatedRankings,
+        tournamentComplete: false,
+        currentRoundKey: getMatchRoundKey(previousMatches[previousMatches.length - 1] || previousMatches[0]),
+        matchHistory: updatedMatchHistory,
+        timestamp: new Date().toISOString()
+      };
+      const playerIds = players.map(p => p.id).sort().join('-');
+      DoubleEliminationStorage.saveDoubleEliminationState(12, playerIds, state, fixtureId);
+      
+      // Reset the undoing flag after a short delay
+      setTimeout(() => {
+        setIsUndoing(false);
+      }, 100);
     }
   };
 
@@ -601,6 +666,30 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
       }));
     };
 
+    // For grandfinal matches, swap player positions
+    if (match.id === 'grand_final') {
+      return (
+        <MatchCard
+          matchId={match.id}
+          player1Name={player2Name}
+          player2Name={player1Name}
+          winnerId={match.winnerId}
+          player1Id={match.player2Id || ''}
+          player2Id={match.player1Id || ''}
+          bracket={match.bracket as 'winner' | 'loser' | 'placement'}
+          round={match.round}
+          matchNumber={match.matchNumber}
+          isBye={match.isBye}
+          currentSelectedWinner={currentSelectedWinner}
+          onWinnerSelect={handleWinnerSelect}
+          onWinnerConfirm={handleWinnerConfirm}
+          onSelectionCancel={handleSelectionCancel}
+          playersLength={players.length}
+          matchTitle={match.description}
+        />
+      );
+    }
+
     return (
       <MatchCard
         matchId={match.id}
@@ -630,44 +719,45 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="text-center mb-6">
-        <div className="flex justify-center gap-4">
-          <button
-            onClick={() => {
-              if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
-                clearTournamentState();
-                initializeTournament();
-                setSelectedWinner({});
-                setMatchHistory([]);
-                setLastCompletedMatch(null);
-              }
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Turnuvayı Sıfırla
-          </button>
-          
-          {/* Undo Last Match Button */}
-          {matchHistory.length > 0 && (
+      <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
+        Double Elimination Tournament ({players.length} players)
+      </h2>
+      <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
+      {activeTab === 'active' && (
+        <div className="text-center mb-6">
+          <div className="flex justify-center gap-4">
             <button
               onClick={() => {
-                if (window.confirm('Son maçı geri almak istediğinizden emin misiniz?')) {
-                  undoLastMatch();
+                if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+                  clearTournamentState();
+                  initializeTournament();
+                  setSelectedWinner({});
+                  setMatchHistory([]);
+                  setLastCompletedMatch(null);
                 }
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Bir Önceki Maç
+              Turnuvayı Sıfırla
             </button>
-          )}
+            
+            {matchHistory.length > 0 && (
+              <button
+                onClick={undoLastMatch}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+                Bir Önceki Maç
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Otomatik Kazananları Seç Butonu */}
       {activeTab === 'active' && !tournamentComplete && activeMatches.length > 0 && (
@@ -690,10 +780,6 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
         </div>
       )}
       
-      <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
-        Double Elimination Tournament ({players.length} players)
-      </h2>
-              <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
       {/* Sekme içerikleri */}
       {activeTab === 'active' && (
         <div className="flex flex-wrap justify-center gap-4 max-w-6xl mx-auto">

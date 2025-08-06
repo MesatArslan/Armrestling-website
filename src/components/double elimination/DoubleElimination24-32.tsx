@@ -33,6 +33,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [, setLastCompletedMatch] = useState<Match | null>(null);
   const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
+  const [, setIsUndoing] = useState(false);
 
   // LB1'de herkes bye geçtiyse mesajı göster ve 3 saniye sonra WB2'ye geç
   React.useEffect(() => {
@@ -63,6 +64,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
       rankings: rankingsState,
       tournamentComplete: completeState,
       currentRoundKey: roundKey,
+      matchHistory: matchHistory,
       timestamp: new Date().toISOString()
     };
     const playerIds = players.map(p => p.id).sort().join('-');
@@ -79,8 +81,8 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
         setCurrentRoundKey(state.currentRoundKey || 'WB1');
-        // Reset history when loading from storage
-        setMatchHistory([]);
+        // Load match history from storage
+        setMatchHistory(state.matchHistory || []);
         setLastCompletedMatch(null);
         return true; // State was loaded
       }
@@ -94,6 +96,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
   const clearTournamentState = () => {
     const playerIds = players.map(p => p.id).sort().join('-');
     DoubleEliminationStorage.clearDoubleEliminationState(24, playerIds, fixtureId);
+    setMatchHistory([]);
   };
 
   // --- Tournament Initialization ---
@@ -138,6 +141,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     setRankings({});
     setTournamentComplete(false);
     setCurrentRoundKey('WB1');
+    setMatchHistory([]);
   };
 
   React.useEffect(() => {
@@ -654,19 +658,88 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
 
   const undoLastMatch = () => {
     if (matchHistory.length > 0) {
-      const previousState = matchHistory[matchHistory.length - 1];
-      setMatches(previousState);
+      setIsUndoing(true);
+      
+      const previousMatches = matchHistory[matchHistory.length - 1];
+      const currentState = matches;
+      
+      // Find which match was undone by comparing current and previous states
+      const undoneMatch = currentState.find(match => 
+        match.winnerId && !previousMatches.find(pm => pm.id === match.id)?.winnerId
+      );
+      
+      setMatches(previousMatches);
       setMatchHistory(prev => prev.slice(0, -1));
-      setLastCompletedMatch(null);
       
       // Reset tournament completion if we're going back
       if (tournamentComplete) {
         setTournamentComplete(false);
-        setRankings({});
       }
       
-      // Save the reverted state
-      saveTournamentState(previousState, rankings, false, currentRoundKey);
+      // Remove rankings that were affected by the undone match
+      let updatedRankings = { ...rankings };
+      
+      if (undoneMatch) {
+        const matchId = undoneMatch.id;
+        
+        // Remove rankings based on the undone match
+        if (matchId === 'final') {
+          delete updatedRankings.first;
+          delete updatedRankings.second;
+        } else if (matchId === 'grandfinal') {
+          delete updatedRankings.first;
+          delete updatedRankings.second;
+        } else if (matchId === 'lbfinal') {
+          delete updatedRankings.third;
+        } else if (matchId === 'seventh_eighth') {
+          delete updatedRankings.seventh;
+          delete updatedRankings.eighth;
+        } else if (matchId === 'fifth_sixth') {
+          delete updatedRankings.fifth;
+          delete updatedRankings.sixth;
+        } else if (matchId === 'lb7') {
+          delete updatedRankings.fourth;
+        }
+      }
+      
+      setRankings(updatedRankings);
+      
+      // Update current round key based on the last match
+      const lastMatch = previousMatches[previousMatches.length - 1];
+      if (lastMatch) {
+        const matchRoundKey = getMatchRoundKey(lastMatch);
+        setCurrentRoundKey(matchRoundKey);
+      }
+      
+      // Clear any selected winners for matches that no longer exist
+      const previousMatchIds = previousMatches.map(m => m.id);
+      setSelectedWinner(prev => {
+        const newSelected = { ...prev };
+        Object.keys(newSelected).forEach(matchId => {
+          if (!previousMatchIds.includes(matchId)) {
+            delete newSelected[matchId];
+          }
+        });
+        return newSelected;
+      });
+      
+      // Save the reverted state with updated match history
+      const updatedMatchHistory = matchHistory.slice(0, -1);
+      const state = {
+        matches: previousMatches,
+        rankings: updatedRankings,
+        tournamentComplete: false,
+        currentRoundKey: getMatchRoundKey(previousMatches[previousMatches.length - 1] || previousMatches[0]),
+        matchHistory: updatedMatchHistory,
+        timestamp: new Date().toISOString()
+      };
+      const playerIds = players.map(p => p.id).sort().join('-');
+      DoubleEliminationStorage.saveDoubleEliminationState(24, playerIds, state, fixtureId);
+      
+      // Reset the undoing flag after a short delay
+      setTimeout(() => {
+        setIsUndoing(false);
+      }, 100);
     }
   };
   const handleWinnerSelect = (matchId: string, winnerId: string) => {
@@ -732,14 +805,10 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
             Turnuvayı Sıfırla
           </button>
           
-          {/* Undo Last Match Button */}
+          {/* Undo Last Match Button - pop-up kaldırıldı */}
           {matchHistory.length > 0 && (
             <button
-              onClick={() => {
-                if (window.confirm('Son maçı geri almak istediğinizden emin misiniz?')) {
-                  undoLastMatch();
-                }
-              }}
+              onClick={undoLastMatch}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
