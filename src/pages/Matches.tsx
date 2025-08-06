@@ -721,32 +721,6 @@ const Matches = () => {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => {
-                  const testFixture = MatchesStorage.createTestFixture();
-                  setFixtures(prev => [...prev, testFixture]);
-                  setActiveFixture(testFixture);
-                  MatchesStorage.setActiveFixture(testFixture.id);
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-base font-semibold"
-              >
-                Add Test Fixture
-              </button>
-              <button
-                onClick={() => {
-                  console.log('Current matches data:', MatchesStorage.getMatchesData());
-                  console.log('All fixtures:', MatchesStorage.getAllFixtures());
-                  console.log('Active fixture:', MatchesStorage.getActiveFixture());
-                  console.log('Active fixture tab:', activeFixture ? TabManager.getInitialTab(activeFixture.id) : 'No active fixture');
-                  console.log('All fixture tabs:');
-                  fixtures.forEach(fixture => {
-                    console.log(`Fixture ${fixture.name}: ${TabManager.getInitialTab(fixture.id)}`);
-                  });
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-400 to-gray-600 text-white rounded-lg shadow hover:from-gray-500 hover:to-gray-700 transition-all duration-200 text-base font-semibold"
-              >
-                Debug Matches
-              </button>
-              <button
-                onClick={() => {
                   MatchesStorage.clearAllMatchesData();
                   setFixtures([]);
                   setActiveFixture(null);

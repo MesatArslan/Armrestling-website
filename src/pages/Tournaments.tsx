@@ -1,5 +1,4 @@
-import * as React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
@@ -44,7 +43,6 @@ const Tournaments = () => {
   const [createTournamentHandPreferenceFilter, setCreateTournamentHandPreferenceFilter] = useState<'left' | 'right' | null>(null);
   const [createTournamentBirthYearMin, setCreateTournamentBirthYearMin] = useState<number | null>(null);
   const [createTournamentBirthYearMax, setCreateTournamentBirthYearMax] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   // PDF Preview Modal States
@@ -203,47 +201,8 @@ const Tournaments = () => {
   };
 
   // JSON Export
-  const handleExportJSON = () => {
-    const dataToExport = {
-      tournaments,
-      exportDate: new Date().toISOString()
-    };
-    const dataStr = JSON.stringify(dataToExport, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `tournaments_${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
 
   // JSON Import
-  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const jsonData = ev.target?.result as string;
-        const importedData = JSON.parse(jsonData);
-        if (importedData.tournaments && Array.isArray(importedData.tournaments)) {
-          const mergedTournaments = [...tournaments, ...importedData.tournaments];
-          setTournaments(mergedTournaments);
-          TournamentsStorage.saveTournaments(mergedTournaments);
-          alert('Turnuvalar başarıyla eklendi!');
-        } else {
-          alert('Geçersiz tournament dosyası formatı!');
-        }
-      } catch (err: any) {
-        alert('JSON okunamadı veya format hatalı: ' + err.message);
-      }
-      // Aynı dosya tekrar yüklenirse de çalışsın diye input'u sıfırla
-      if (e.target) e.target.value = '';
-    };
-    reader.readAsText(file);
-  };
 
   const handleCreateTournament = () => {
     if (!newTournamentName.trim()) return;
@@ -511,25 +470,6 @@ const Tournaments = () => {
               <p className="text-base text-gray-500 mt-1">Total Tournaments: {tournaments.length}</p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={handleExportJSON}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg shadow hover:from-purple-500 hover:to-purple-700 transition-all duration-200 text-base font-semibold"
-              >
-                Dışa Aktar (JSON)
-              </button>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-lg shadow hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200 text-base font-semibold"
-              >
-                İçe Aktar (JSON)
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/json"
-                style={{ display: 'none' }}
-                onChange={handleImportJSON}
-              />
             <button
               onClick={handleClearAllTournamentData}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-base font-semibold"

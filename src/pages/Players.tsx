@@ -137,35 +137,10 @@ const Players = () => {
                 Add 5 Test Players
               </button>
               <button
-                onClick={() => {
-                  const testPlayer = {
-                    id: uuidv4(),
-                    name: 'Test',
-                    surname: 'Player',
-                    weight: 75.5,
-                    gender: 'male' as const,
-                    handPreference: 'right' as const,
-                    birthday: '1990-01-01',
-                    city: 'Test City'
-                  };
-                  setPlayers([...players, testPlayer]);
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-400 to-orange-600 text-white rounded-lg shadow hover:from-orange-500 hover:to-orange-700 transition-all duration-200 text-base font-semibold"
-              >
-                Add 1 Test Player
-              </button>
-              <button
                 onClick={handleClearAllData}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-base font-semibold"
               >
                 Clear All Data
-              </button>
-              <button
-                onClick={() => {
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-400 to-gray-600 text-white rounded-lg shadow hover:from-gray-500 hover:to-gray-700 transition-all duration-200 text-base font-semibold"
-              >
-                Debug localStorage
               </button>
               <button
                 onClick={() => setIsAddColumnModalOpen(true)}
