@@ -81,7 +81,6 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
         setCurrentRoundKey(state.currentRoundKey || 'WB1');
-        // Load match history from storage
         setMatchHistory(state.matchHistory || []);
         setLastCompletedMatch(null);
         return true; // State was loaded
@@ -134,7 +133,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
         round: 1,
         matchNumber: wb1Matches.length + 1,
         isBye: true,
-                  description: `${RoundDescriptionUtils.getDescription('WB1')} - Bye for ${player.name} ${player.surname}`
+        description: `${RoundDescriptionUtils.getDescription('WB1')} - Bye for ${player.name} ${player.surname}`
       });
     });
     setMatches(wb1Matches);
@@ -785,75 +784,51 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="text-center mb-6">
-        <div className="flex justify-center gap-4">
-          <button
-            onClick={() => {
-              if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
-                clearTournamentState();
-                initializeTournament();
-                setSelectedWinner({});
-                setMatchHistory([]);
-                setLastCompletedMatch(null);
-              }
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Turnuvayı Sıfırla
-          </button>
-          
-          {/* Undo Last Match Button - pop-up kaldırıldı */}
-          {matchHistory.length > 0 && (
-            <button
-              onClick={undoLastMatch}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-              </svg>
-              Bir Önceki Maç
-            </button>
-          )}
-        </div>
-      </div>
-      
-      {/* Otomatik Kazananları Seç Butonu */}
-      {activeTab === 'active' && !tournamentComplete && (() => {
-        const roundMatches = activeRoundMatches.filter(m => !m.isBye && !m.winnerId);
-        return roundMatches.length > 0;
-      })() && (
-        <div className="flex justify-center mb-4">
-          <button
-            onClick={() => {
-              const roundMatches = activeRoundMatches.filter(m => !m.isBye && !m.winnerId);
-              roundMatches.forEach(match => {
-                // Her maç için rastgele bir kazanan seç
-                const winnerId = Math.random() < 0.5 ? match.player1Id : match.player2Id;
-                handleMatchResult(match.id, winnerId);
-              });
-            }}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Bu Turun Kazananlarını Otomatik Seç
-          </button>
-        </div>
-      )}
-      
       <h2 className="text-2xl font-bold text-center mb-6">
         Double Elimination Tournament (24-32 oyuncu)
       </h2>
-              <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
+      <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
       <div className="max-w-4xl mx-auto">
         <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">Aktif Tur: {currentRoundKey}</h3>
       </div>
       {activeTab === 'active' && (
         <>
+          {/* Butonlar hem aktif hem de tamamlanmış turnuvalarda gösteriliyor */}
+          <div className="text-center mb-6">
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => {
+                  if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+                    clearTournamentState();
+                    initializeTournament();
+                    setSelectedWinner({});
+                    setMatchHistory([]);
+                    setLastCompletedMatch(null);
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Turnuvayı Sıfırla
+              </button>
+              
+              {/* Undo Last Match Button - pop-up kaldırıldı */}
+              {matchHistory.length > 0 && (
+                <button
+                  onClick={undoLastMatch}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  Bir Önceki Maç
+                </button>
+              )}
+            </div>
+          </div>
+          
           {tournamentComplete ? (
             <div className="max-w-4xl mx-auto">
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 text-center shadow-lg">
@@ -873,57 +848,84 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    Sıralama Sekmesine Git
-                  </button>
-                </div>
+                  </svg>
+                  Sıralama Sekmesine Git
+                </button>
               </div>
             </div>
-          ) : (
+          </div>
+        ) : (
+          <>
+            {/* Otomatik Kazananları Seç Butonu */}
+            {(() => {
+              const roundMatches = activeRoundMatches.filter(m => !m.isBye && !m.winnerId);
+              return roundMatches.length > 0;
+            })() && (
+              <div className="flex justify-center mb-4">
+                <button
+                  onClick={() => {
+                    const roundMatches = activeRoundMatches.filter(m => !m.isBye && !m.winnerId);
+                    roundMatches.forEach(match => {
+                      // Her maç için rastgele bir kazanan seç
+                      const winnerId = Math.random() < 0.5 ? match.player1Id : match.player2Id;
+                      handleMatchResult(match.id, winnerId);
+                    });
+                  }}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Bu Turun Kazananlarını Otomatik Seç
+                </button>
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-7xl w-full mx-auto overflow-y-auto" style={{minHeight: 200, maxHeight: '60vh'}}>
               {activeRoundMatches.filter(m => !m.isBye && !m.winnerId).map(renderMatch)}
             </div>
-          )}
-        </>
-      )}
-      {activeTab === 'completed' && (
-        <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
-      )}
-      {activeTab === 'rankings' && (
-        <RankingsTable rankings={rankings} players={players} getPlayerName={getPlayerName} />
-      )}
-      {/* LB1'de tüm oyuncular bye geçtiyse özel mesaj */}
-      {currentRoundKey === 'LB1' && activeRoundMatches.length > 0 && activeRoundMatches.every(m => m.isBye) && (
-        <div className="text-center text-blue-600 mb-4 font-semibold">
-          {showLb1ByeMessage ? 'LB R1\'de herkes bye geçti, WB R2\ye geçiliyor...' : 'Tüm oyuncular bye geçti, bir sonraki tur başlatılıyor...'}
+          </>
+        )}
+      </>
+    )}
+    {activeTab === 'completed' && (
+      <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+    )}
+    {activeTab === 'rankings' && (
+      <RankingsTable rankings={rankings} players={players} getPlayerName={getPlayerName} />
+    )}
+    {/* LB1'de tüm oyuncular bye geçtiyse özel mesaj */}
+    {currentRoundKey === 'LB1' && activeRoundMatches.length > 0 && activeRoundMatches.every(m => m.isBye) && (
+      <div className="text-center text-blue-600 mb-4 font-semibold">
+        {showLb1ByeMessage ? 'LB R1\'de herkes bye geçti, WB R2\ye geçiliyor...' : 'Tüm oyuncular bye geçti, bir sonraki tur başlatılıyor...'}
+      </div>
+    )}
+    {/* Turnuva ilerlemesi göstergesi */}
+    {!tournamentComplete && activeTab === 'active' && (
+      <div className="mt-6 text-center">
+        <div className="text-sm text-gray-600">
+          {(() => {
+            const nonByeMatches = matches.filter(m => !m.isBye);
+            const completedCount = nonByeMatches.filter(m => m.winnerId).length;
+            const totalMatches = nonByeMatches.length;
+            return `${completedCount} / ${totalMatches} maç tamamlandı`;
+          })()}
         </div>
-      )}
-      {/* Turnuva ilerlemesi göstergesi */}
-      {!tournamentComplete && activeTab === 'active' && (
-        <div className="mt-6 text-center">
-          <div className="text-sm text-gray-600">
-            {(() => {
+        <div className="w-full bg-gray-200 rounded-full h-2 mt-2 max-w-xs mx-auto">
+          <div 
+            className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+            style={{ width: `${(() => {
               const nonByeMatches = matches.filter(m => !m.isBye);
               const completedCount = nonByeMatches.filter(m => m.winnerId).length;
               const totalMatches = nonByeMatches.length;
-              return `${completedCount} / ${totalMatches} maç tamamlandı`;
-            })()}
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-2 max-w-xs mx-auto">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-              style={{ width: `${(() => {
-                const nonByeMatches = matches.filter(m => !m.isBye);
-                const completedCount = nonByeMatches.filter(m => m.winnerId).length;
-                const totalMatches = nonByeMatches.length;
-                return totalMatches > 0 ? (completedCount / totalMatches) * 100 : 0;
-              })()}%` }}
-            ></div>
-          </div>
+              return totalMatches > 0 ? (completedCount / totalMatches) * 100 : 0;
+            })()}%` }}
+          ></div>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    )}
+  </div>
+);
 }
 
 export default DoubleElimination24_32;
