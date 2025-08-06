@@ -426,28 +426,34 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
         Double Elimination Tournament ({players.length} players)
       </h2>
       <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
-      <div className="flex justify-center gap-4 mb-4">
-        <button
-          onClick={resetTournament}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Turnuvayı Sıfırla
-        </button>
-        {matchHistory.length > 0 && (
+      {activeTab === 'active' && (
+        <div className="flex justify-center gap-4 mb-4">
+          {matchHistory.length > 0 && (
+            <button
+              onClick={undoLastMatch}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              Bir Önceki Maç
+            </button>
+          )}
+        </div>
+      )}
+      {activeTab === 'rankings' && (
+        <div className="flex justify-end mb-4">
           <button
-            onClick={undoLastMatch}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+            onClick={resetTournament}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Bir Önceki Maç
+            Turnuvayı Sıfırla
           </button>
-        )}
-      </div>
+        </div>
+      )}
       {activeTab === 'active' && (
         <div className="flex flex-wrap justify-center gap-4 max-w-6xl mx-auto">
           {activeMatches.length === 0 ? (

@@ -571,14 +571,6 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     return rankings;
   };
 
-  const resetTournament = () => {
-    if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
-    clearTournamentState();
-    initializeTournament();
-    setSelectedWinner({});
-      setMatchHistory([]);
-    }
-  };
 
   const getPlayerName = (playerId: string) => {
     const player = players.find(p => p.id === playerId);
@@ -597,7 +589,6 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         match.winnerId && !previousMatches.find(pm => pm.id === match.id)?.winnerId
       );
       
-      // Reset all states to previous state
       setMatches(previousMatches);
       setMatchHistory(prev => prev.slice(0, -1));
       
@@ -629,11 +620,11 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
       
       setRankings(updatedRankings);
       
-      // Recalculate current round based on previous matches
-      const activeMatches = previousMatches.filter(m => !m.winnerId);
-      if (activeMatches.length > 0) {
-        const currentRound = getMatchRoundKey(activeMatches[0]);
-        setCurrentRoundKey(currentRound);
+      // Update current round key based on the last match
+      const lastMatch = previousMatches[previousMatches.length - 1];
+      if (lastMatch) {
+        const matchRoundKey = getMatchRoundKey(lastMatch);
+        setCurrentRoundKey(matchRoundKey);
       }
       
       // Clear any selected winners for matches that no longer exist
@@ -654,7 +645,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         matches: previousMatches,
         rankings: updatedRankings,
         tournamentComplete: false,
-        currentRoundKey: getMatchRoundKey(activeMatches[0] || previousMatches[0]),
+        currentRoundKey: getMatchRoundKey(previousMatches[previousMatches.length - 1] || previousMatches[0]),
         matchHistory: updatedMatchHistory,
         timestamp: new Date().toISOString()
       };
@@ -669,6 +660,50 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
   };
 
   const renderMatch = (match: Match) => {
+    // Grand Final maçında oyuncuları ters göster (final'daki pozisyonların tersi)
+    if (match.id === 'grandfinal') {
+      const player1Name = getPlayerName(match.player2Id);
+      const player2Name = match.player1Id ? getPlayerName(match.player1Id) : 'Bye';
+      const currentSelectedWinner = selectedWinner[match.id] || null;
+
+      const handleWinnerSelect = (winnerId: string) => {
+        setSelectedWinner(prev => ({ ...prev, [match.id]: winnerId }));
+      };
+
+      const handleWinnerConfirm = () => {
+        if (currentSelectedWinner) {
+          handleMatchResult(match.id, currentSelectedWinner);
+          setSelectedWinner(prev => ({ ...prev, [match.id]: null }));
+        }
+      };
+
+      const handleSelectionCancel = () => {
+        setSelectedWinner(prev => ({ ...prev, [match.id]: null }));
+      };
+
+      return (
+        <MatchCard
+          key={match.id}
+          matchId={match.id}
+          player1Name={player1Name}
+          player2Name={player2Name}
+          winnerId={match.winnerId}
+          player1Id={match.player2Id || ''}
+          player2Id={match.player1Id || ''}
+          bracket={match.bracket as 'winner' | 'loser' | 'placement'}
+          round={match.round}
+          matchNumber={match.matchNumber}
+          isBye={match.isBye}
+          matchTitle={match.description}
+          currentSelectedWinner={currentSelectedWinner}
+          playersLength={players.length}
+          onWinnerSelect={handleWinnerSelect}
+          onWinnerConfirm={handleWinnerConfirm}
+          onSelectionCancel={handleSelectionCancel}
+        />
+      );
+    }
+    // Diğer maçlar için mevcut haliyle devam
     const player1Name = getPlayerName(match.player1Id);
     const player2Name = match.player2Id ? getPlayerName(match.player2Id) : 'Bye';
     const currentSelectedWinner = selectedWinner[match.id] || null;
@@ -734,42 +769,38 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
       </h2>
               <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
       
-      {/* Reset Tournament Button */}
-      <div className="flex justify-center gap-4 mb-4">
-        <button
-          onClick={() => {
-            if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
-              clearTournamentState();
-              initializeTournament();
-              setSelectedWinner({});
-              setMatchHistory([]);
-            }
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Turnuvayı Sıfırla
-        </button>
-        
-        {/* Undo Last Match Button */}
-        {matchHistory.length > 0 && (
+      {activeTab === 'active' && (
+        <div className="flex justify-center gap-4 mb-4">
           <button
             onClick={() => {
-              if (window.confirm('Son maçı geri almak istediğinizden emin misiniz?')) {
-                undoLastMatch();
+              if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+                clearTournamentState();
+                initializeTournament();
+                setSelectedWinner({});
+                setMatchHistory([]);
               }
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Bir Önceki Maç
+            Turnuvayı Sıfırla
           </button>
-        )}
-      </div>
+          
+          {matchHistory.length > 0 && (
+            <button
+              onClick={undoLastMatch}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              Bir Önceki Maç
+            </button>
+          )}
+        </div>
+      )}
       
       {/* Sekme içerikleri */}
         {activeTab === 'active' && (
@@ -815,17 +846,6 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
         <RankingsTable rankings={rankings} players={players} getPlayerName={getPlayerName} playersLength={players.length} />
       )}
 
-        {/* Reset Button */}
-        {!tournamentComplete && matches.length > 0 && (
-          <div className="text-center mt-8">
-            <button
-              onClick={resetTournament}
-              className="bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-3 rounded-xl text-sm font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              🔄 Turnuvayı Sıfırla
-            </button>
-          </div>
-        )}
     </div>
   );
 };
