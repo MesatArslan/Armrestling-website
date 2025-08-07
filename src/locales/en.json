@@ -81,7 +81,8 @@
     "filters": "Filters",
     "selectGender": "Select gender",
     "name": "Name",
-    "addPlayerRow": "Add Player Row"
+    "addPlayerRow": "Add Player Row",
+    "all": "All"
   },
   "matches": {
     "title": "Matches",

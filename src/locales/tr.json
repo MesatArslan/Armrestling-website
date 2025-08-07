@@ -90,7 +90,7 @@
     "enterCity": "Şehir girin",
     "enterBirthday": "Doğum tarihi girin",
     "addPlayerRow": "Oyuncu Satırı Ekle",
-    "deletePlayer": "Oyuncuyu sil"
+     "all": "Tümü"
   },
   "matches": {
     "title": "Maçlar",

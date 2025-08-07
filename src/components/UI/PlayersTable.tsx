@@ -74,19 +74,38 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   }, []);
 
   const getUniqueValues = (columnId: string) => {
-    const values = players
+    let values = players
       .map(player => player[columnId])
       .filter((value): value is string | number => value !== undefined && value !== null)
       .map(String)
       .map(value => value.trim())
       .filter(value => value !== '');
-    return ['All', ...Array.from(new Set(values))];
+    // Gender için çeviri uygula
+    if (columnId === 'gender') {
+      values = values.map(value => t(`players.${value}`));
+    }
+    // HandPreference için çeviri uygula
+    if (columnId === 'handPreference') {
+      values = values.map(value => t(`players.${value}`));
+    }
+    return [t('players.all'), ...Array.from(new Set(values))];
   };
 
   const handleFilterChange = (columnId: string, value: string) => {
+    // Gender ve handPreference için ters çeviri
+    let filterValue = value;
+    if (columnId === 'gender') {
+      if (value === t('players.male')) filterValue = 'male';
+      if (value === t('players.female')) filterValue = 'female';
+    }
+    if (columnId === 'handPreference') {
+      if (value === t('players.left')) filterValue = 'left';
+      if (value === t('players.right')) filterValue = 'right';
+      if (value === t('players.both')) filterValue = 'both';
+    }
     setColumnFilters(prev => ({
       ...prev,
-      [columnId]: value === 'All' ? null : value.trim()
+      [columnId]: filterValue === t('players.all') ? null : filterValue.trim()
     }));
     setOpenFilter(null);
   };
@@ -305,7 +324,6 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
       if (column.id === 'handPreference') {
         const isLeftSelected = player.handPreference === 'left' || player.handPreference === 'both';
         const isRightSelected = player.handPreference === 'right' || player.handPreference === 'both';
-        
         return (
           <div className="flex items-center gap-2">
             <button
@@ -325,9 +343,8 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 )}
               </div>
-              <span>Left</span>
+              <span>{t('players.left')}</span>
             </button>
-            
             <button
               onClick={() => handleHandPreferenceChange(player.id, 'right')}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all duration-200 ${
@@ -345,17 +362,20 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 )}
               </div>
-              <span>Right</span>
+              <span>{t('players.right')}</span>
             </button>
-            
-            {/* Status indicator kaldırıldı */}
           </div>
         );
       } else if (column.id === 'gender') {
-        displayValue = displayValue === 'male' ? 'Male' : 'Female';
+        displayValue = t(`players.${displayValue}`);
         className += ' cursor-pointer hover:bg-blue-100 px-2 py-1 rounded transition-colors';
       }
       
+      // HandPreference hücresinde sadece "left", "right" veya "both" yazıyorsa çevir:
+      if (column.id === 'handPreference' && typeof displayValue === 'string') {
+        displayValue = t(`players.${displayValue}`);
+      }
+
       return (
         <span className={className}>
           {displayValue}
