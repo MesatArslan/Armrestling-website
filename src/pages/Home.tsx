@@ -1,22 +1,25 @@
 
+import { useTranslation } from 'react-i18next';
+
 const Hero = () => {
+  const { t } = useTranslation();
+  
   return (
     <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 w-screen">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Welcome to the World of
-            <span className="block text-blue-600 mt-2">Arm Wrestling</span>
+            {t('home.title')}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Experience the thrill of professional arm wrestling. Join tournaments, track matches, and become part of a growing community of champions.
+            {t('home.description')}
           </p>
           <div className="flex justify-center gap-4">
             <button className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-              Join Tournament
+              {t('home.createTournament')}
             </button>
             <button className="px-8 py-3 bg-white text-blue-600 rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-              Learn More
+              {t('home.viewMatches')}
             </button>
           </div>
         </div>

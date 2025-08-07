@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { Player, WeightRange, Tournament } from '../types';
 import { MatchesStorage, type Fixture } from '../utils/matchesStorage';
 import DeleteConfirmationModal from '../components/UI/DeleteConfirmationModal';
@@ -30,6 +31,7 @@ import {
 } from '../components/double elimination';
 
 const Matches = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -708,7 +710,7 @@ const Matches = () => {
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">Matches</h1>
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('matches.title')}</h1>
               <p className="text-base text-gray-500 mt-1">Total Fixtures: {fixtures.length}</p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -720,7 +722,7 @@ const Matches = () => {
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-base font-semibold"
               >
-                Clear All Data
+                {t('matches.clearAllData')}
               </button>
             </div>
           </div>
@@ -852,13 +854,13 @@ const Matches = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No active fixtures</h3>
-              <p className="text-gray-600 mb-6">Start a tournament from the Tournaments page to create a fixture</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('matches.noActiveFixtures')}</h3>
+              <p className="text-gray-600 mb-6">{t('matches.startTournamentMessage')}</p>
               <button
                 onClick={() => navigate('/tournaments')}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
               >
-                Go to Tournaments
+                {t('matches.goToTournaments')}
               </button>
             </div>
           )}
@@ -870,10 +872,10 @@ const Matches = () => {
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, fixtureId: null, fixtureName: '' })}
         onConfirm={confirmDeleteFixture}
-        title="Delete Fixture"
-        message={`Are you sure you want to delete "${deleteModal.fixtureName}"? This action cannot be undone.`}
-        confirmText="Delete Fixture"
-        cancelText="Cancel"
+        title={t('matches.deleteFixture')}
+        message={t('matches.deleteFixtureMessage', { fixtureName: deleteModal.fixtureName })}
+        confirmText={t('matches.deleteFixture')}
+        cancelText={t('matches.cancel')}
       />
     </div>
   );

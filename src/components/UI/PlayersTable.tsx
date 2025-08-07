@@ -4,6 +4,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { v4 as uuidv4 } from 'uuid';
 import type { Player } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 interface Column {
   id: string;
@@ -48,6 +49,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   onDeletePlayer,
   className = ""
 }) => {
+  const { t } = useTranslation();
   const [editingCell, setEditingCell] = useState<{ id: string; column: string } | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const [isWeightFilterOpen, setIsWeightFilterOpen] = useState(false);
@@ -441,6 +443,8 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     }
   };
 
+  const defaultColumnIds = ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'];
+
   return (
     <div className={`overflow-x-auto mt-6 ${className}`}>
       <table className="min-w-full border-separate border-spacing-y-2">
@@ -467,7 +471,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                             <div className="flex flex-col">
                               <div className="flex items-center justify-between">
                                 <span className="text-lg font-bold text-gray-900">
-                                  {column.name}
+                                  {defaultColumnIds.includes(column.id) ? t(`players.${column.id}`) : column.name}
                                 </span>
                                 {column.id === 'weight' ? (
                                   <button
@@ -556,7 +560,9 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                     </Draggable>
                   ))}
                   {showDeleteColumn && (
-                    <th className="w-12 p-1 font-bold text-gray-900 text-lg bg-white border-b border-r border-gray-100 text-center">Sil</th>
+                    <th className="w-12 p-1 font-bold text-gray-900 text-lg bg-white border-b border-r border-gray-100 text-center">
+                      {t('players.delete')}
+                    </th>
                   )}
                   {provided.placeholder}
                 </tr>

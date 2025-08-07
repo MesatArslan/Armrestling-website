@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import TournamentCard from '../components/UI/TournamentCard';
 import { TournamentsStorage, type Tournament, type WeightRange, type PlayerFilters} from '../utils/tournamentsStorage';
@@ -14,6 +15,7 @@ interface ExtendedPlayer extends Player {
 }
 
 const Tournaments = () => {
+  const { t } = useTranslation();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [players, setPlayers] = useState<ExtendedPlayer[]>([]);
   const [selectedWeightRange, setSelectedWeightRange] = useState<string | null>(null);
@@ -466,7 +468,7 @@ const Tournaments = () => {
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">Tournaments</h1>
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('tournaments.title')}</h1>
               <p className="text-base text-gray-500 mt-1">Total Tournaments: {tournaments.length}</p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -474,7 +476,7 @@ const Tournaments = () => {
               onClick={handleClearAllTournamentData}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-base font-semibold"
             >
-              Clear All Data
+              {t('tournaments.clearAllData')}
             </button>
             <button
               onClick={() => {
@@ -490,7 +492,7 @@ const Tournaments = () => {
               }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
             >
-              Create Tournament
+              {t('tournaments.createTournament')}
             </button>
           </div>
         </div>
@@ -504,8 +506,8 @@ const Tournaments = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No tournaments yet</h3>
-                <p className="text-gray-600 mb-6">Create your first tournament to get started</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('tournaments.noTournamentsYet')}</h3>
+                <p className="text-gray-600 mb-6">{t('tournaments.createFirstTournament')}</p>
                           <button
                             onClick={() => {
                     setIsEditMode(false);
@@ -520,7 +522,7 @@ const Tournaments = () => {
                   }}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
                 >
-                  Create First Tournament
+                  {t('tournaments.createFirstTournamentButton')}
                           </button>
                         </div>
             ) : (
