@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface MatchCardProps {
   matchId: string;
@@ -34,6 +35,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
   onWinnerConfirm,
   matchTitle,
 }) => {
+  const { t } = useTranslation();
   // --- Maç Oynanıyor local state ---
   const [isPlaying, setIsPlaying] = React.useState(false);
   return (
@@ -70,12 +72,12 @@ const MatchCard: React.FC<MatchCardProps> = ({
               {isPlaying ? (
                 <>
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                  <span>Maç Aktif</span>
+                  <span>{t('matches.matchActive')}</span>
                 </>
               ) : (
                 <>
                   <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                  <span>Maç Bekliyor</span>
+                  <span>{t('matches.matchWaiting')}</span>
                 </>
               )}
             </div>

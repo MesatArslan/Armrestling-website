@@ -143,7 +143,20 @@
     "goToTournaments": "Go to Tournaments",
     "deleteFixture": "Delete Fixture",
     "deleteFixtureMessage": "Are you sure you want to delete \"{fixtureName}\"? This action cannot be undone.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "totalFixtures": "Total Fixtures",
+    "fixture": "fixture",
+    "fixtures": "fixtures",
+    "available": "available",
+    "ready": "Ready",
+    "active": "Active",
+    "players": "players",
+    "updated": "Updated",
+    "tabActive": "Active Matches",
+    "tabCompleted": "Completed Matches",
+    "tabRankings": "Rankings",
+    "matchActive": "Match Active",
+    "matchWaiting": "Match Waiting"
   },
   "common": {
     "save": "Save",

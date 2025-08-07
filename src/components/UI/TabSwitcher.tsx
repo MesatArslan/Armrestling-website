@@ -1,31 +1,35 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface TabSwitcherProps {
   activeTab: 'active' | 'completed' | 'rankings';
   onTabChange: (tab: 'active' | 'completed' | 'rankings') => void;
 }
 
-const TabSwitcher: React.FC<TabSwitcherProps> = ({ activeTab, onTabChange }) => (
-  <div className="tab-switcher">
-    <button
-      className={`tab-switcher-btn tab-switcher-btn-left ${activeTab === 'active' ? 'tab-switcher-btn-active tab-switcher-btn-active-blue' : ''}`}
-      onClick={() => onTabChange('active')}
-    >
-      Aktif Maçlar
-    </button>
-    <button
-      className={`tab-switcher-btn ${activeTab === 'completed' ? 'tab-switcher-btn-active tab-switcher-btn-active-purple' : ''}`}
-      onClick={() => onTabChange('completed')}
-    >
-      Oynanmış Maçlar
-    </button>
-    <button
-      className={`tab-switcher-btn tab-switcher-btn-right ${activeTab === 'rankings' ? 'tab-switcher-btn-active tab-switcher-btn-active-yellow' : ''}`}
-      onClick={() => onTabChange('rankings')}
-    >
-      Sıralama
-    </button>
-  </div>
-);
+const TabSwitcher: React.FC<TabSwitcherProps> = ({ activeTab, onTabChange }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="tab-switcher">
+      <button
+        className={`tab-switcher-btn tab-switcher-btn-left ${activeTab === 'active' ? 'tab-switcher-btn-active tab-switcher-btn-active-blue' : ''}`}
+        onClick={() => onTabChange('active')}
+      >
+        {t('matches.tabActive')}
+      </button>
+      <button
+        className={`tab-switcher-btn ${activeTab === 'completed' ? 'tab-switcher-btn-active tab-switcher-btn-active-purple' : ''}`}
+        onClick={() => onTabChange('completed')}
+      >
+        {t('matches.tabCompleted')}
+      </button>
+      <button
+        className={`tab-switcher-btn tab-switcher-btn-right ${activeTab === 'rankings' ? 'tab-switcher-btn-active tab-switcher-btn-active-yellow' : ''}`}
+        onClick={() => onTabChange('rankings')}
+      >
+        {t('matches.tabRankings')}
+      </button>
+    </div>
+  );
+};
 
 export default TabSwitcher; 

@@ -711,7 +711,7 @@ const Matches = () => {
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('matches.title')}</h1>
-              <p className="text-base text-gray-500 mt-1">Total Fixtures: {fixtures.length}</p>
+              <p className="text-base text-gray-500 mt-1">{t('matches.totalFixtures')}: {fixtures.length}</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <button
@@ -737,8 +737,8 @@ const Matches = () => {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Active Fixtures</h2>
-                  <p className="text-sm text-gray-500">{fixtures.length} fixture{fixtures.length !== 1 ? 's' : ''} available</p>
+                  <h2 className="text-xl font-bold text-gray-900">{t('matches.activeFixtures')}</h2>
+                  <p className="text-sm text-gray-500">{fixtures.length} {fixtures.length === 1 ? t('matches.fixture') : t('matches.fixtures')} {t('matches.available')}</p>
                 </div>
               </div>
 
@@ -769,14 +769,14 @@ const Matches = () => {
                                 ? 'bg-yellow-500'
                                 : 'bg-blue-500'
                             }`}></div>
-                          {fixture.status === 'completed' ? 'Completed' :
-                            fixture.status === 'active' ? 'In Progress' : 'Ready'}
+                          {fixture.status === 'completed' ? t('matches.completed') :
+                            fixture.status === 'active' ? t('matches.inProgress') : t('matches.ready')}
                         </div>
 
                         {activeFixture?.id === fixture.id && (
                           <div className="flex items-center gap-1">
                             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                            <span className="text-xs text-blue-600 font-medium">Active</span>
+                            <span className="text-xs text-blue-600 font-medium">{t('matches.active')}</span>
                           </div>
                         )}
                       </div>
@@ -792,7 +792,7 @@ const Matches = () => {
                           <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                           </svg>
-                          <span className="font-medium">{fixture.playerCount} players</span>
+                          <span className="font-medium">{fixture.playerCount} {t('matches.players')}</span>
                         </div>
 
                         <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -817,7 +817,7 @@ const Matches = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <span className="text-xs text-gray-500">
-                            Updated {new Date(fixture.lastUpdated).toLocaleDateString()}
+                            {t('matches.updated')} {new Date(fixture.lastUpdated).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
@@ -830,7 +830,7 @@ const Matches = () => {
                         handleFixtureClose(fixture.id, fixture.name);
                       }}
                       className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all duration-200 opacity-0 group-hover:opacity-100"
-                      title="Delete fixture"
+                      title={t('matches.deleteFixture')}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
