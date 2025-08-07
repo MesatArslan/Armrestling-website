@@ -446,11 +446,11 @@ const Tournaments = () => {
         (wr) => getFilteredPlayers(wr, currentTournamentForPDF)
       );
       
-      alert(`PDF başarıyla oluşturuldu!\nDosya boyutu: ${result.fileSize}\nToplam sayfa: ${result.totalPages}\nSayfa başına oyuncu: ${playersPerPage}`);
+      alert(t('tournamentCard.pdfSuccessMessage', { fileSize: result.fileSize, totalPages: result.totalPages, playersPerPage }));
       
     } catch (error) {
       // PDF oluşturulurken hata
-      alert('PDF oluşturulurken bir hata oluştu.');
+      alert(t('tournamentCard.pdfErrorMessage'));
     }
   };
 
@@ -469,7 +469,7 @@ const Tournaments = () => {
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('tournaments.title')}</h1>
-              <p className="text-base text-gray-500 mt-1">Total Tournaments: {tournaments.length}</p>
+              <p className="text-base text-gray-500 mt-1">{t('tournaments.totalTournaments')}: {tournaments.length}</p>
             </div>
             <div className="flex flex-wrap gap-3">
             <button
@@ -568,8 +568,8 @@ const Tournaments = () => {
         >
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">PDF Kolon Seçimi</h3>
-              <p className="text-sm text-gray-600">PDF'te görünmesini istediğiniz kolonları seçin</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('tournamentCard.pdfColumnSelection')}</h3>
+              <p className="text-sm text-gray-600">{t('tournamentCard.selectColumnsForPDF')}</p>
             </div>
             <button
               onClick={() => setIsPDFColumnModalOpen(false)}
@@ -595,7 +595,11 @@ const Tournaments = () => {
                     }}
                     className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                   />
-                  <span className="text-sm font-medium text-gray-700">{column.name}</span>
+                  <span className="text-sm font-medium text-gray-700">{
+  ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'].includes(column.id)
+    ? t(`players.${column.id}`)
+    : column.name
+}</span>
                 </label>
               ))}
             </div>
@@ -603,11 +607,11 @@ const Tournaments = () => {
 
           <div className="mb-8">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Sayfa Başına Oyuncu Sayısı
+              {t('tournamentCard.playersPerPage')}
             </label>
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Min: 1</span>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Max: 40</span>
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.min')}: 1</span>
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.max')}: 40</span>
             </div>
             <input
               type="number"
@@ -639,7 +643,7 @@ const Tournaments = () => {
             <button
               onClick={() => {
                 if (selectedPDFColumns.length === 0) {
-                  alert('En az bir kolon seçmelisiniz!');
+                  alert(t('tournamentCard.atLeastOneColumn'));
                   return;
                 }
                 setIsPDFColumnModalOpen(false);
@@ -649,7 +653,7 @@ const Tournaments = () => {
               }}
               className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
             >
-              Önizleme Aç
+              {t('tournamentCard.openPreview')}
             </button>
           </div>
         </div>
@@ -673,7 +677,7 @@ const Tournaments = () => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold text-gray-900">PDF Önizleme</h3>
+            <h3 className="text-xl font-bold text-gray-900">{t('tournamentCard.pdfPreview')}</h3>
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -682,7 +686,7 @@ const Tournaments = () => {
                 }}
                 className="px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
               >
-                PDF İndir
+                {t('tournamentCard.downloadPDF')}
               </button>
               <button
                 onClick={() => {
@@ -693,7 +697,7 @@ const Tournaments = () => {
                 }}
                 className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
               >
-                Kolon Seçimine Dön
+                {t('tournamentCard.returnToColumnSelection')}
               </button>
               <button
                 onClick={() => setIsPDFPreviewModalOpen(false)}
@@ -715,17 +719,17 @@ const Tournaments = () => {
                     disabled={currentPreviewPage === 0}
                     className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold"
                   >
-                    ← Önceki Sayfa
+                    ← {t('tournamentCard.previousPage')}
                   </button>
                   <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">
-                    Sayfa {currentPreviewPage + 1} / {previewPages.length}
+                    {t('tournamentCard.page')} {currentPreviewPage + 1} / {previewPages.length}
                   </span>
                   <button
                     onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
                     disabled={currentPreviewPage === previewPages.length - 1}
                     className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold"
                   >
-                    Sonraki Sayfa →
+                    {t('tournamentCard.nextPage')} →
                   </button>
                 </div>
               </div>
@@ -790,10 +794,10 @@ const Tournaments = () => {
               {/* Header */}
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex-shrink-0">
                 <h2 className="text-3xl font-bold text-white">
-                  {isEditMode ? 'Edit Tournament' : 'Create New Tournament'}
+                  {isEditMode ? t('tournaments.editTournament') : t('tournaments.createNewTournament')}
                 </h2>
                 <p className="text-blue-100 mt-2">
-                  {isEditMode ? 'Update your tournament settings and weight ranges' : 'Set up your tournament with custom weight ranges and filters'}
+                  {isEditMode ? t('tournaments.updateTournamentSettings') : t('tournaments.setupTournament')}
                 </p>
               </div>
               
@@ -806,17 +810,17 @@ const Tournaments = () => {
                     <div className="bg-gray-50 rounded-lg p-6">
                       <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                         <span className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">1</span>
-                        Tournament Details
+                        {t('tournaments.details')}
                       </h3>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Tournament Name *
+                          {t('tournaments.tournamentName')} *
                         </label>
                         <input
                           type="text"
                           value={newTournamentName}
                           onChange={(e) => setNewTournamentName(e.target.value)}
-                          placeholder="e.g., Youth Men's Left Arm Championship"
+                          placeholder={t('tournaments.tournamentNamePlaceholder')}
                           className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 placeholder-gray-500"
                         />
                       </div>
@@ -826,12 +830,12 @@ const Tournaments = () => {
                     <div className="bg-gray-50 rounded-lg p-6">
                       <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                         <span className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">2</span>
-                        Tournament Filters
+                        {t('tournaments.filters')}
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Gender Restriction
+                            {t('tournaments.genderRestriction')}
                           </label>
                           <select
                             value={isEditMode ? (playerFilters.gender || '') : (createTournamentGenderFilter || '')}
@@ -844,14 +848,14 @@ const Tournaments = () => {
                             }}
                             className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800"
                           >
-                            <option value="">All Genders</option>
-                            <option value="male">Male Only</option>
-                            <option value="female">Female Only</option>
+                            <option value="">{t('tournaments.allGenders')}</option>
+                            <option value="male">{t('players.maleOnly')}</option>
+                            <option value="female">{t('players.femaleOnly')}</option>
                           </select>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Hand Preference
+                            {t('tournaments.handPreference')}
                           </label>
                           <select
                             value={isEditMode ? (playerFilters.handPreference || '') : (createTournamentHandPreferenceFilter || '')}
@@ -864,9 +868,9 @@ const Tournaments = () => {
                             }}
                             className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800"
                           >
-                            <option value="">All Hand Preferences</option>
-                            <option value="left">Left Hand Only</option>
-                            <option value="right">Right Hand Only</option>
+                            <option value="">{t('tournaments.allHandPreferences')}</option>
+                            <option value="left">{t('players.leftHandOnly')}</option>
+                            <option value="right">{t('players.rightHandOnly')}</option>
                           </select>
                         </div>
                       </div>
@@ -875,13 +879,13 @@ const Tournaments = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Min Birth Year
+                            {t('tournaments.minBirthYear')}
                           </label>
                           <input
                             type="number"
                             value={createTournamentBirthYearMin || ''}
                             onChange={(e) => setCreateTournamentBirthYearMin(e.target.value ? parseInt(e.target.value) : null)}
-                            placeholder="e.g., 1990"
+                            placeholder={t('tournaments.minBirthYearPlaceholder')}
                             min="1900"
                             max="2020"
                             className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 placeholder-gray-500"
@@ -889,13 +893,13 @@ const Tournaments = () => {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Max Birth Year
+                            {t('tournaments.maxBirthYear')}
                           </label>
                           <input
                             type="number"
                             value={createTournamentBirthYearMax || ''}
                             onChange={(e) => setCreateTournamentBirthYearMax(e.target.value ? parseInt(e.target.value) : null)}
-                            placeholder="e.g., 2005"
+                            placeholder={t('tournaments.maxBirthYearPlaceholder')}
                             min="1900"
                             max="2020"
                             className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 placeholder-gray-500"
@@ -911,14 +915,14 @@ const Tournaments = () => {
                       <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-semibold text-gray-800 flex items-center">
                           <span className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">3</span>
-                          Weight Ranges ({weightRanges.length})
+                          {t('tournaments.weightRanges')} ({weightRanges.length})
                         </h3>
                         <button
                           onClick={handleAddWeightRange}
                           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
                         >
                           <span className="text-lg">+</span>
-                          Add Range
+                          {t('tournaments.addRange')}
                         </button>
                       </div>
                       
@@ -926,7 +930,7 @@ const Tournaments = () => {
                         {weightRanges.map((range, index) => (
                           <div key={range.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                             <div className="flex items-center justify-between mb-3">
-                              <span className="text-sm font-medium text-gray-600">Range #{index + 1}</span>
+                              <span className="text-sm font-medium text-gray-600">{t('tournaments.range')} #{index + 1}</span>
                               {weightRanges.length > 1 && (
                                 <button
                                   onClick={() => handleRemoveWeightRange(range.id)}
@@ -941,47 +945,47 @@ const Tournaments = () => {
                             <div className="space-y-3">
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Division Name
+                                  {t('tournaments.divisionName')}
                                 </label>
                                 <input
                                   type="text"
                                   value={range.name}
                                   onChange={(e) => handleWeightRangeChange(range.id, 'name', e.target.value)}
-                                  placeholder="e.g., Lightweight Division"
+                                  placeholder={t('tournaments.divisionNamePlaceholder')}
                                   className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 placeholder-gray-500"
                                 />
                               </div>
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <label className="block text-xs font-medium text-gray-600 mb-1">
-                                    Min Weight (kg)
+                                    {t('tournaments.minWeight')}
                                   </label>
                                   <input
                                     type="number"
                                     step="0.1"
                                     value={range.min || ''}
                                     onChange={(e) => handleWeightRangeChange(range.id, 'min', parseFloat(e.target.value) || 0)}
-                                    placeholder="40.0"
+                                    placeholder={t('tournaments.minWeightPlaceholder')}
                                     className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 placeholder-gray-500"
                                   />
                                 </div>
                                 <div>
                                   <label className="block text-xs font-medium text-gray-600 mb-1">
-                                    Max Weight (kg)
+                                    {t('tournaments.maxWeight')}
                                   </label>
                                   <input
                                     type="number"
                                     step="0.1"
                                     value={range.max || ''}
                                     onChange={(e) => handleWeightRangeChange(range.id, 'max', parseFloat(e.target.value) || 0)}
-                                    placeholder="50.0"
+                                    placeholder={t('tournaments.maxWeightPlaceholder')}
                                     className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 placeholder-gray-500"
                                   />
                                 </div>
                               </div>
                               {range.min > 0 && range.max > 0 && (
                                 <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                                  Range: {range.min.toFixed(1)} - {range.max.toFixed(1)} kg
+                                  {t('tournaments.rangeLabel', { min: range.min.toFixed(1), max: range.max.toFixed(1) })}
                                 </div>
                               )}
                             </div>
@@ -997,8 +1001,8 @@ const Tournaments = () => {
               <div className="bg-gray-50 px-8 py-6 border-t border-gray-200 flex justify-between items-center flex-shrink-0">
                 <div className="text-sm text-gray-600">
                   {newTournamentName.trim() && weightRanges.filter(r => r.name.trim() && r.min > 0 && r.max > 0).length > 0 
-                    ? (isEditMode ? "✓ Ready to save changes" : "✓ Ready to create tournament")
-                    : "Please complete all fields"
+                    ? (isEditMode ? t('tournaments.readyToSave') : t('tournaments.readyToCreate'))
+                    : t('tournaments.completeAllFields')
                   }
                 </div>
                 <div className="flex space-x-3">
@@ -1016,14 +1020,14 @@ const Tournaments = () => {
                     }}
                     className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors font-medium"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={isEditMode ? handleSaveEdit : handleCreateTournament}
                     disabled={!newTournamentName.trim() || weightRanges.filter(r => r.name.trim() && r.min > 0 && r.max > 0).length === 0}
                     className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
-                    {isEditMode ? 'Save Changes' : 'Create Tournament'}
+                    {isEditMode ? t('tournaments.saveChanges') : t('tournaments.createTournament')}
                   </button>
                 </div>
               </div>

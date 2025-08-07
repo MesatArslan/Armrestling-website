@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { useState, useEffect, useRef } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { useState} from 'react';
 import { ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PencilIcon, TrashIcon, XMarkIcon, PlayIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import PlayersTable from './PlayersTable';
 import { MatchesStorage } from '../../utils/matchesStorage';
-import { PlayersStorage, type Column } from '../../utils/playersStorage';
+import { useTranslation } from 'react-i18next';
 
 
 interface WeightRange {
@@ -70,10 +69,10 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   selectedWeightRange,
   selectedTournament,
   className = "",
-  onShowPDFPreview,
   onShowPDFColumnModal
 }) => {
-  const [filters, setFilters] = useState({
+  const { t } = useTranslation();
+  const [] = useState({
     gender: null as 'male' | 'female' | null,
     handPreference: null as 'left' | 'right' | null,
     weightMin: null as number | null,
@@ -163,12 +162,6 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     onSelectWeightRange(tournament.id, '');
   };
 
-  const handleShowPreview = () => {
-    const weightRange = tournament.weightRanges.find(wr => wr.id === selectedWeightRange);
-    if (!weightRange || !onShowPDFPreview) return;
-    
-    onShowPDFPreview(tournament, weightRange);
-  };
 
 
 
@@ -186,7 +179,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           <div>
             <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{tournament.name}</h2>
             <p className="text-sm text-gray-600 mt-1">
-              {tournament.weightRanges.length} weight category{tournament.weightRanges.length !== 1 ? 'ies' : 'y'}
+              {tournament.weightRanges.length} {tournament.weightRanges.length === 1 ? t('tournamentCard.weightCategory') : t('tournamentCard.weightCategories')}
             </p>
           </div>
         </div>
@@ -197,19 +190,19 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
               onEdit(tournament);
             }}
             className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
-            title="Edit tournament"
+            title={t('tournamentCard.editTournament')}
           >
             <PencilIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (window.confirm(`Are you sure you want to delete the tournament "${tournament.name}"? This action cannot be undone.`)) {
+              if (window.confirm(t('tournamentCard.confirmDeleteTournament', { name: tournament.name }))) {
                 onDelete(tournament.id);
               }
             }}
             className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 group"
-            title="Delete tournament"
+            title={t('tournamentCard.deleteTournament')}
           >
             <TrashIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
           </button>
@@ -248,10 +241,10 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                 <div className="flex justify-between items-center mb-6">
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900">
-                      Managing Players for {tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.name}
+                      {t('tournamentCard.managingPlayersFor', { name: tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.name })}
                     </h3>
                     <p className="text-base text-gray-600 mt-2">
-                      Weight Range: {tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.min} - {tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.max} kg
+                      {t('tournamentCard.weightRange')}: {tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.min} - {tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.max} kg
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -269,7 +262,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       }}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg shadow hover:from-purple-500 hover:to-purple-700 transition-all duration-200 text-sm font-semibold"
                     >
-                      Dışa Aktar (JSON)
+                      {t('tournamentCard.exportJSON')}
                     </button>
                     <button
                       onClick={() => {
@@ -282,12 +275,12 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       }}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
                     >
-                      PDF Oluştur
+                      {t('tournamentCard.createPDF')}
                     </button>
                     <button
                       onClick={handleClosePlayerManagement}
                       className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
-                      title="Close player management"
+                      title={t('tournamentCard.closePlayerManagement')}
                     >
                       <XMarkIcon className="w-6 h-6" />
                     </button>
@@ -297,7 +290,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                 {/* Available Players Table */}
                 <div className="mb-8">
                   <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                    Available Players ({getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length})
+                    {t('tournamentCard.availablePlayers', { count: getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length })}
                   </h4>
                   <PlayersTable
                     players={getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
@@ -324,11 +317,11 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                 {getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length > 0 && (
                   <div>
                     <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                      Excluded Players ({getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length})
+                      {t('tournamentCard.excludedPlayers', { count: getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length })}
                     </h4>
                     <div className="bg-gray-50/50 rounded-xl p-4">
                       <p className="text-sm text-gray-600 mb-4">
-                        These players are excluded from this weight range but still exist in the main players list
+                        {t('tournamentCard.excludedPlayersDescription')}
                       </p>
                       <PlayersTable
                         players={getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
@@ -383,6 +376,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
   isSelected,
   onManagePlayers
 }) => {
+  const { t } = useTranslation();
   const availablePlayers = getAvailablePlayersCount(weightRange, tournament);
   
   // Check if there's an existing fixture for this tournament and weight range
@@ -394,11 +388,11 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
     if (!existingFixture) return null;
     
     if (existingFixture.status === 'completed') {
-      return { status: 'completed', text: 'Tamamlandı', color: 'green' };
+      return { status: 'completed', text: t('tournamentCard.completed'), color: 'green' };
     } else if (existingFixture.status === 'active') {
-      return { status: 'active', text: 'Oynanıyor', color: 'blue' };
+      return { status: 'active', text: t('tournamentCard.inProgress'), color: 'blue' };
     } else if (existingFixture.status === 'paused') {
-      return { status: 'paused', text: 'Duraklatıldı', color: 'yellow' };
+      return { status: 'paused', text: t('tournamentCard.paused'), color: 'yellow' };
     }
     return null;
   };
@@ -453,7 +447,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
       {/* Player Count */}
       <div className="mb-6">
         <p className="text-sm text-gray-600">
-          <span className="font-semibold text-blue-600">{availablePlayers}</span> players available
+          <span className="font-semibold text-blue-600">{availablePlayers}</span> {t('tournamentCard.playersAvailable')}
         </p>
       </div>
 
@@ -467,7 +461,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
               : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
           }`}
         >
-          Manage Players ({availablePlayers})
+          {t('tournamentCard.managePlayers', { count: availablePlayers })}
         </button>
         
         {!existingFixture ? (
@@ -481,7 +475,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
             }`}
           >
             <PlayIcon className="w-5 h-5" />
-            Start Tournament
+            {t('tournamentCard.startTournament')}
           </button>
         ) : fixtureStatus?.status === 'completed' ? (
           <button
@@ -492,7 +486,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
             className="w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl"
           >
             <TrophyIcon className="w-5 h-5" />
-            Sonuçları Göster
+            {t('tournamentCard.showResults')}
           </button>
         ) : (
           <button
@@ -503,7 +497,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
             className="w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl"
           >
             <PlayIcon className="w-5 h-5" />
-            Devam Et
+            {t('tournamentCard.continueTournament')}
           </button>
         )}
       </div>
