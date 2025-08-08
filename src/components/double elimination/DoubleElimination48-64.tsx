@@ -868,6 +868,7 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
     return (
       <MatchCard
         matchId={match.id}
+        fixtureId={fixtureId}
         player1Name={player1Name}
         player2Name={player2Name}
         winnerId={match.winnerId}

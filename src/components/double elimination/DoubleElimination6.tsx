@@ -591,6 +591,7 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
         <MatchCard
           key={match.id}
           matchId={match.id}
+          fixtureId={fixtureId}
           player1Name={player1Name}
           player2Name={player2Name}
           winnerId={match.winnerId}
@@ -631,6 +632,7 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
       <MatchCard
         key={match.id}
         matchId={match.id}
+        fixtureId={fixtureId}
         player1Name={getPlayerName(match.player1Id || '')}
         player2Name={getPlayerName(match.player2Id || '')}
         winnerId={match.winnerId}

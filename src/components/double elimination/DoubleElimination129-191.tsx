@@ -1028,6 +1028,7 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
     return (
       <MatchCard
         matchId={match.id}
+        fixtureId={fixtureId}
         player1Name={player1Name}
         player2Name={player2Name}
         winnerId={match.winnerId}

@@ -1,9 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ROUND_DESCRIPTIONS } from '../../utils/roundDescriptions';
+import { MatchesStorage, type MatchPlayStatus } from '../../utils/matchesStorage';
 
 interface MatchCardProps {
   matchId: string;
+  fixtureId?: string;
   player1Name: string;
   player2Name: string;
   winnerId?: string;
@@ -22,6 +24,8 @@ interface MatchCardProps {
 }
 
 const MatchCard: React.FC<MatchCardProps> = ({
+  matchId,
+  fixtureId,
   player1Name,
   player2Name,
   winnerId,
@@ -37,8 +41,21 @@ const MatchCard: React.FC<MatchCardProps> = ({
   matchTitle,
 }) => {
   const { t } = useTranslation();
-  // --- Maç Oynanıyor local state ---
-  const [isPlaying, setIsPlaying] = React.useState(false);
+  // --- Per-match persisted play status ---
+  const [status, setStatus] = React.useState<MatchPlayStatus>(MatchesStorage.getMatchStatus(fixtureId || 'default', matchId));
+  const isPlaying = status === 'active';
+
+  React.useEffect(() => {
+    // Keep state in sync on mount/update
+    setStatus(MatchesStorage.getMatchStatus(fixtureId || 'default', matchId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchId, fixtureId]);
+
+  const togglePlay = () => {
+    const next: MatchPlayStatus = isPlaying ? 'waiting' : 'active';
+    setStatus(next);
+    MatchesStorage.setMatchStatus(fixtureId || 'default', matchId, next);
+  };
 
   const getLocalizedMatchTitle = (rawTitle?: string): string => {
     if (!rawTitle) return '';
@@ -89,7 +106,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
           </div>
           {/* Maç Durumu Butonu */}
           <button
-            onClick={() => setIsPlaying(p => !p)}
+            onClick={togglePlay}
             className={`ml-2 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 ${
               isPlaying 
                 ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg' 

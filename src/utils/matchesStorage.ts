@@ -69,6 +69,8 @@ export interface MatchesData {
   lastUpdated: string;
 }
 
+export type MatchPlayStatus = 'waiting' | 'active' | 'completed';
+
 export const MatchesStorage = {
   // Ana matches verisi
   saveMatchesData: (data: MatchesData) => {
@@ -346,5 +348,40 @@ export const MatchesStorage = {
       matches: [],
       activeTab: 'active'
     };
+  }
+  ,
+  // --- Per-match play status persistence ---
+  getAllMatchStatuses: (): Record<string, MatchPlayStatus> => {
+    try {
+      const raw = localStorage.getItem('arm-wrestling-match-statuses');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  },
+  getMatchStatus: (fixtureId: string, matchId: string): MatchPlayStatus => {
+    const map = MatchesStorage.getAllMatchStatuses();
+    const key = `${fixtureId}::${matchId}`;
+    return map[key] || 'waiting';
+  },
+  setMatchStatus: (fixtureId: string, matchId: string, status: MatchPlayStatus) => {
+    const map = MatchesStorage.getAllMatchStatuses();
+    const key = `${fixtureId}::${matchId}`;
+    map[key] = status;
+    try {
+      localStorage.setItem('arm-wrestling-match-statuses', JSON.stringify(map));
+    } catch (e) {
+      // silently ignore
+    }
+  },
+  clearMatchStatus: (fixtureId: string, matchId: string) => {
+    const map = MatchesStorage.getAllMatchStatuses();
+    const key = `${fixtureId}::${matchId}`;
+    if (key in map) {
+      delete map[key];
+      try {
+        localStorage.setItem('arm-wrestling-match-statuses', JSON.stringify(map));
+      } catch {}
+    }
   }
 }; 

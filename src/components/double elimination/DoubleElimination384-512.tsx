@@ -969,6 +969,7 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
     return (
       <MatchCard
         matchId={match.id}
+        fixtureId={fixtureId}
         player1Name={player1Name}
         player2Name={player2Name}
         winnerId={match.winnerId}

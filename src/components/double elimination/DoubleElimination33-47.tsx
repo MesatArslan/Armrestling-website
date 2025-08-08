@@ -892,6 +892,7 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
     return (
       <MatchCard
         matchId={match.id}
+        fixtureId={fixtureId}
         player1Name={player1Name}
         player2Name={player2Name}
         winnerId={match.winnerId}
