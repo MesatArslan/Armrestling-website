@@ -32,8 +32,6 @@ const MatchCard: React.FC<MatchCardProps> = ({
   player1Id,
   player2Id,
   bracket,
-  round,
-  matchNumber,
   isBye,
   currentSelectedWinner,
   onWinnerSelect,
@@ -94,31 +92,23 @@ const MatchCard: React.FC<MatchCardProps> = ({
           ? 'bg-gradient-to-r from-purple-500 to-indigo-500'
           : 'bg-gradient-to-r from-green-500 to-emerald-500'
       }`}>
-        <div className="flex justify-between items-center">
-          <div className="text-center w-full">
-            <div className="text-xl font-bold mb-1">{getLocalizedMatchTitle(matchTitle)}</div>
-            <div className="text-sm opacity-90">{t('matches.round')} {round} - {t('matches.match')} {matchNumber}</div>
-            {isBye && (
-              <div className="text-xs text-blue-100 bg-blue-500/30 px-2 py-1 rounded inline-block mt-2">
-                {t('matches.bye')} - {t('matches.advancesToNextRound')}
-              </div>
-            )}
-          </div>
-          {/* Maç Durumu Butonu */}
+        <div className="text-center w-full">
+          <div className="text-xl font-bold mb-2">{getLocalizedMatchTitle(matchTitle)}</div>
+          {/* Maç Durumu Butonu - başlığın altında */}
           <button
             onClick={togglePlay}
-            className={`ml-2 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 ${
+            className={`mx-auto px-3 py-2 rounded-lg text-xs font-bold transition-all duration-300 shadow-md hover:shadow-lg ${
               isPlaying 
                 ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg' 
                 : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-300 border border-gray-300'
             }`}
             type="button"
           >
-            <div className="flex items-center gap-1">
+            <div className="flex items-center justify-center gap-1">
               {isPlaying ? (
                 <>
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                  <span>{t('matches.matchActive')}</span>
+                  <span>{t('matches.matchInProgress')}</span>
                 </>
               ) : (
                 <>
@@ -128,16 +118,13 @@ const MatchCard: React.FC<MatchCardProps> = ({
               )}
             </div>
           </button>
+          {isBye && (
+            <div className="text-xs text-blue-100 bg-blue-500/30 px-2 py-1 rounded inline-block mt-2">
+              {t('matches.bye')} - {t('matches.advancesToNextRound')}
+            </div>
+          )}
         </div>
-        {/* Maç durumu etiketi */}
-        {isPlaying && (
-          <div className="mt-2 text-center">
-            <span className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg animate-pulse">
-              <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-              <span>⚡ {t('matches.matchInProgress')}</span>
-            </span>
-          </div>
-        )}
+        
       </div>
       {/* Players Section */}
       <div className="p-6">
