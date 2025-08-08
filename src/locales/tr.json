@@ -155,6 +155,9 @@
     "pdfSuccessMessage": "PDF başarıyla oluşturuldu!\nDosya boyutu: {{fileSize}}\nToplam sayfa: {{totalPages}}\nSayfa başına oyuncu: {{playersPerPage}}",
     "pdfErrorMessage": "PDF oluşturulurken bir hata oluştu."
   },
+  "pdf": {
+    "footer": "Bilek Güreşi Turnuva Yönetim Sistemi"
+  },
   "players": {
     "title": "Oyuncular",
     "addPlayer": "Oyuncu Ekle",

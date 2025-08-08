@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import i18n from '../i18n';
 
 export interface WeightRange {
   id: string;
@@ -52,6 +53,15 @@ export const generatePageContent = (
   totalPlayers: number = 0
 ) => {
   const selectedColumns = availablePDFColumns.filter(col => selectedCols.includes(col.id));
+  const t = (key: string, options?: any) => i18n.t(key, options);
+  const getLocale = () => (i18n.language && i18n.language.toLowerCase().startsWith('tr') ? 'tr-TR' : 'en-US');
+  const translateHeader = (colId: string, fallbackName: string) => {
+    const known = ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'];
+    if (known.includes(colId)) {
+      return t(`players.${colId}`);
+    }
+    return fallbackName;
+  };
 
   return `
     <div style="height: 297mm !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; !important;">
@@ -64,15 +74,15 @@ export const generatePageContent = (
 
           <div style="display: flex !important; justify-content: space-between !important; margin: 6px 0 !important; padding: 4px 0 !important; border-top: 1px solid #e5e7eb !important; border-bottom: 1px solid #e5e7eb !important;">
             <div style="text-align: center !important; flex: 1 !important;">
-              <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style="margin-top: -12px !important;">AĞIRLIK ARALIĞI</div>` : 'AĞIRLIK ARALIĞI'}</div>
+              <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${t('tournamentCard.weightRange').toUpperCase()}</div>` : t('tournamentCard.weightRange').toUpperCase()}</div>
               <div style="font-size: 11px !important; color: #111827 !important; font-weight: 600 !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${weightRange.min}-${weightRange.max} kg</div>` : `${weightRange.min}-${weightRange.max} kg`}</div>
             </div>
             <div style="text-align: center !important; flex: 1 !important; border-left: 1px solid #e5e7eb !important; border-right: 1px solid #e5e7eb !important;">
-              <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style="margin-top: -12px !important;">TOPLAM OYUNCU</div>` : 'TOPLAM OYUNCU'}</div>
+              <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style=\"margin-top: -12px !important;\">${t('players.totalPlayers').toUpperCase()}</div>` : t('players.totalPlayers').toUpperCase()}</div>
               <div style="font-size: 11px !important; color: #111827 !important; font-weight: 600 !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${totalPlayers}</div>` : totalPlayers}</div>
             </div>
             <div style="text-align: center !important; flex: 1 !important;">
-              <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style="margin-top: -12px !important;">SAYFA</div>` : 'SAYFA'}</div>
+              <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style=\"margin-top: -12px !important;\">${t('tournamentCard.page').toUpperCase()}</div>` : t('tournamentCard.page').toUpperCase()}</div>
               <div style="font-size: 11px !important; color: #111827 !important; font-weight: 600 !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${pageNum + 1}/${totalPages}</div>` : `${pageNum + 1}/${totalPages}`}</div>
             </div>
           </div>
@@ -83,9 +93,12 @@ export const generatePageContent = (
             <thead>
               <tr style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;">
                 <th style="border: 1px solid #cbd5e1 !important; padding: 6px 4px !important; text-align: center !important; font-weight: bold !important; color: #000000 !important; font-size: 10px !important; width: 35px !important;">${isForPDF ? `<div style="margin-top: -12px !important;">#</div>` : '#'}</th>
-                ${selectedColumns.map(col => `
-                  <th style="border: 1px solid #cbd5e1 !important; padding: 6px 4px !important; text-align: left !important; font-weight: bold !important; color: #000000 !important; font-size: 10px !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${col.name}</div>` : col.name}</th>
-                `).join('')}
+                ${selectedColumns.map(col => {
+                  const header = translateHeader(col.id, col.name);
+                  return `
+                  <th style="border: 1px solid #cbd5e1 !important; padding: 6px 4px !important; text-align: left !important; font-weight: bold !important; color: #000000 !important; font-size: 10px !important;">${isForPDF ? `<div style=\"margin-top: -12px !important;\">${header}</div>` : header}</th>
+                  `;
+                }).join('')}
               </tr>
             </thead>
             <tbody>
@@ -98,9 +111,9 @@ export const generatePageContent = (
                       case 'name': value = player.name || ''; break;
                       case 'surname': value = player.surname || ''; break;
                       case 'weight': value = player.weight ? `${player.weight}kg` : ''; break;
-                      case 'gender': value = player.gender === 'male' ? 'Erkek' : player.gender === 'female' ? 'Kadın' : ''; break;
-                      case 'handPreference': value = player.handPreference === 'left' ? 'Sol' : player.handPreference === 'right' ? 'Sağ' : player.handPreference === 'both' ? 'Sağ/Sol' : ''; break;
-                      case 'birthday': value = player.birthday ? new Date(player.birthday).toLocaleDateString('tr-TR') : ''; break;
+                      case 'gender': value = player.gender ? t(`players.${player.gender}`) : ''; break;
+                      case 'handPreference': value = player.handPreference ? t(`players.${player.handPreference}`) : ''; break;
+                      case 'birthday': value = player.birthday ? new Date(player.birthday).toLocaleDateString(getLocale()) : ''; break;
                       default: value = player[col.id] || '';
                     }
                     return `<td style="border: 1px solid #e2e8f0 !important; padding: 4px 3px !important; font-size: 9px !important; color: #000000 !important; font-weight: 500 !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${value}</div>` : value}</td>`;
@@ -115,7 +128,7 @@ export const generatePageContent = (
       ${pageNum === totalPages - 1 ? `
         <div style="margin-top: 10px !important; text-align: center !important; padding: 8px !important; background: #f8fafc !important; border-radius: 4px !important; border-top: 2px solid #1e40af !important;">
           <p style="margin: 0 !important; color: #374151 !important; font-size: 9px !important; font-weight: 500 !important;">
-            Arm Wrestling Turnuva Yönetim Sistemi
+            ${t('pdf.footer')}
           </p>
         </div>
       ` : ''}
@@ -256,13 +269,13 @@ export const generatePDF = async (
     const sizeInMB = (fileSize / (1024 * 1024)).toFixed(2);
     const sizeText = fileSize > 1024 * 1024 ? `${sizeInMB} MB` : `${sizeInKB} KB`;
 
-    const fileName = `turnuva_${tournament.name}_${weightRange.name}_oyuncular.pdf`;
+    const fileName = `tournament_${tournament.name}_${weightRange.name}_players.pdf`;
     pdf.save(fileName);
 
     return { fileName, fileSize: sizeText, totalPages };
 
   } catch (error) {
-    throw new Error('PDF oluşturulurken bir hata oluştu.');
+    throw new Error(i18n.t('tournamentCard.pdfErrorMessage'));
   }
 };
 

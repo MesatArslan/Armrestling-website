@@ -294,6 +294,9 @@
     "pdfSuccessMessage": "PDF created successfully!\nFile size: {{fileSize}}\nTotal pages: {{totalPages}}\nPlayers per page: {{playersPerPage}}",
     "pdfErrorMessage": "An error occurred while creating the PDF."
   },
+  "pdf": {
+    "footer": "Arm Wrestling Tournament Management System"
+  },
   "rankings": {
     "title": "Tournament Results",
     "first": "1st Place",
