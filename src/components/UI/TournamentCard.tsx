@@ -169,21 +169,21 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     <div className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 ${className}`}>
       {/* Tournament Header */}
       <div 
-        className="p-6 cursor-pointer flex justify-between items-center hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 transition-all duration-200 rounded-t-2xl"
+        className="p-4 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 transition-all duration-200 rounded-t-2xl"
         onClick={() => onToggle(tournament.id)}
       >
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-            <UserGroupIcon className="w-6 h-6 text-white" />
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+            <UserGroupIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{tournament.name}</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">{tournament.name}</h2>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
               {tournament.weightRanges.length} {tournament.weightRanges.length === 1 ? t('tournamentCard.weightCategory') : t('tournamentCard.weightCategories')}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -192,7 +192,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
             className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
             title={t('tournamentCard.editTournament')}
           >
-            <PencilIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+            <PencilIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-200" />
           </button>
           <button
             onClick={(e) => {
@@ -204,13 +204,13 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
             className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 group"
             title={t('tournamentCard.deleteTournament')}
           >
-            <TrashIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+            <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-200" />
           </button>
           <div className="text-gray-400 transition-transform duration-200">
             {tournament.isExpanded ? (
-              <ChevronDownIcon className="w-6 h-6" />
+              <ChevronDownIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             ) : (
-              <ChevronRightIcon className="w-6 h-6" />
+              <ChevronRightIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             )}
           </div>
         </div>
@@ -218,36 +218,40 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
 
       {/* Expanded Content */}
       {tournament.isExpanded && (
-        <div className="border-t border-gray-200/50 p-6 bg-gradient-to-br from-gray-50/50 to-white/50">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tournament.weightRanges.map((weightRange) => (
-              <WeightRangeCard
-                key={weightRange.id}
-                weightRange={weightRange}
-                tournament={tournament}
-                onSelectWeightRange={onSelectWeightRange}
-                onStartTournament={onStartTournament}
-                getAvailablePlayersCount={getAvailablePlayersCount}
-                isSelected={selectedWeightRange === weightRange.id && selectedTournament === tournament.id}
-                onManagePlayers={handleManagePlayers}
-              />
-            ))}
+        <div className="border-t border-gray-200/50 p-4 sm:p-6 bg-gradient-to-br from-gray-50/50 to-white/50">
+          {/* All devices: horizontal scroll list */}
+          <div className="-mx-4 px-4">
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth">
+              {tournament.weightRanges.map((weightRange) => (
+                <div key={weightRange.id} className="shrink-0 w-72 sm:w-80 lg:w-96 snap-start">
+                  <WeightRangeCard
+                    weightRange={weightRange}
+                    tournament={tournament}
+                    onSelectWeightRange={onSelectWeightRange}
+                    onStartTournament={onStartTournament}
+                    getAvailablePlayersCount={getAvailablePlayersCount}
+                    isSelected={selectedWeightRange === weightRange.id && selectedTournament === tournament.id}
+                    onManagePlayers={handleManagePlayers}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Player Management Section */}
           {isPlayerManagementOpen && selectedWeightRange && selectedTournament === tournament.id && (
-            <div className="mt-8 pt-8 border-t border-gray-200/50">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-6">
-                <div className="flex justify-between items-center mb-6">
+            <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200/50">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
                       {t('tournamentCard.managingPlayersFor', { name: tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.name })}
                     </h3>
-                    <p className="text-base text-gray-600 mt-2">
+                    <p className="text-sm sm:text-base text-gray-600 mt-2">
                       {t('tournamentCard.weightRange')}: {tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.min} - {tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.max} kg
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 sm:mt-0">
                     <button
                       onClick={() => {
                         const filteredPlayers = getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!);
@@ -260,7 +264,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                         a.click();
                         URL.revokeObjectURL(url);
                       }}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg shadow hover:from-purple-500 hover:to-purple-700 transition-all duration-200 text-sm font-semibold"
+                      className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg shadow hover:from-purple-500 hover:to-purple-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
                     >
                       {t('tournamentCard.exportJSON')}
                     </button>
@@ -273,7 +277,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                           }
                         }
                       }}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
+                      className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
                     >
                       {t('tournamentCard.createPDF')}
                     </button>
@@ -282,7 +286,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
                       title={t('tournamentCard.closePlayerManagement')}
                     >
-                      <XMarkIcon className="w-6 h-6" />
+                      <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </button>
                   </div>
                 </div>

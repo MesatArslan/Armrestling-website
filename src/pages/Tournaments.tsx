@@ -464,17 +464,17 @@ const Tournaments = () => {
     <>
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
-        <div className="backdrop-blur-md bg-white/80 rounded-2xl border border-gray-200 shadow-2xl p-6 transition-all duration-300">
+        <div className="backdrop-blur-md bg-white/80 rounded-2xl border border-gray-200 shadow-2xl p-4 sm:p-6 transition-all duration-300">
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('tournaments.title')}</h1>
               <p className="text-base text-gray-500 mt-1">{t('tournaments.totalTournaments')}: {tournaments.length}</p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               onClick={handleClearAllTournamentData}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-base font-semibold"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm sm:text-base font-semibold"
             >
               {t('tournaments.clearAllData')}
             </button>
@@ -490,7 +490,7 @@ const Tournaments = () => {
                 setCreateTournamentBirthYearMax(null);
                 setIsCreateModalOpen(true);
               }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-sm sm:text-base font-semibold"
             >
               {t('tournaments.createTournament')}
             </button>
@@ -563,12 +563,12 @@ const Tournaments = () => {
         }}
       >
         <div 
-          className="bg-white rounded-2xl shadow-2xl p-8 w-[500px] max-h-[85vh] overflow-y-auto"
+          className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md sm:max-w-lg max-h-[85vh] overflow-y-auto mx-2"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('tournamentCard.pdfColumnSelection')}</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('tournamentCard.pdfColumnSelection')}</h3>
               <p className="text-sm text-gray-600">{t('tournamentCard.selectColumnsForPDF')}</p>
             </div>
             <button
@@ -580,7 +580,7 @@ const Tournaments = () => {
           </div>
           
           <div className="mb-8">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {availablePDFColumns.map((column) => (
                 <label key={column.id} className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
                   <input
@@ -634,7 +634,7 @@ const Tournaments = () => {
                   setPlayersPerPage(33);
                 }
               }}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-lg font-semibold"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-base sm:text-lg font-semibold"
               placeholder="33"
             />
           </div>
@@ -651,7 +651,7 @@ const Tournaments = () => {
                   handleShowPDFPreview(currentTournamentForPDF, currentWeightRangeForPDF);
                 }
               }}
-              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
+              className="px-6 sm:px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm sm:text-base font-semibold"
             >
               {t('tournamentCard.openPreview')}
             </button>
@@ -673,18 +673,18 @@ const Tournaments = () => {
         }}
       >
         <div 
-          className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-5xl max-h-[95vh] overflow-y-auto"
+          className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-5xl max-h-[95vh] overflow-y-auto mx-2"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold text-gray-900">{t('tournamentCard.pdfPreview')}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('tournamentCard.pdfPreview')}</h3>
             <div className="flex gap-2">
               <button
                 onClick={() => {
                   setIsPDFPreviewModalOpen(false);
                   handleExportPDF();
                 }}
-                className="px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
+                className="px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
               >
                 {t('tournamentCard.downloadPDF')}
               </button>
@@ -695,7 +695,7 @@ const Tournaments = () => {
                     handleShowPDFColumnModal(currentTournamentForPDF, currentWeightRangeForPDF);
                   }
                 }}
-                className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+                className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
               >
                 {t('tournamentCard.returnToColumnSelection')}
               </button>
@@ -717,7 +717,7 @@ const Tournaments = () => {
                   <button
                     onClick={() => setCurrentPreviewPage(Math.max(0, currentPreviewPage - 1))}
                     disabled={currentPreviewPage === 0}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold"
+                    className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
                   >
                     ← {t('tournamentCard.previousPage')}
                   </button>
@@ -727,7 +727,7 @@ const Tournaments = () => {
                   <button
                     onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
                     disabled={currentPreviewPage === previewPages.length - 1}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold"
+                    className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
                   >
                     {t('tournamentCard.nextPage')} →
                   </button>
