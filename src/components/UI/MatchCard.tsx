@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { ROUND_DESCRIPTIONS } from '../../utils/roundDescriptions';
 
 interface MatchCardProps {
   matchId: string;
@@ -38,6 +39,34 @@ const MatchCard: React.FC<MatchCardProps> = ({
   const { t } = useTranslation();
   // --- Maç Oynanıyor local state ---
   const [isPlaying, setIsPlaying] = React.useState(false);
+
+  const getLocalizedMatchTitle = (rawTitle?: string): string => {
+    if (!rawTitle) return '';
+
+    // Strip any BYE suffix when already showing BYE badge
+    let title = isBye ? rawTitle.split(' - Bye')[0] : rawTitle;
+
+    // Extract optional " - Match N" suffix
+    const matchSuffix = /^(.*?)(?:\s*-\s*Match\s*(\d+))?$/i.exec(title);
+    let base = title;
+    let number: string | undefined;
+    if (matchSuffix) {
+      base = matchSuffix[1].trim();
+      number = matchSuffix[2];
+    }
+
+    // Try to map base to a known round key
+    const roundKey = Object.keys(ROUND_DESCRIPTIONS).find(key => {
+      const info = ROUND_DESCRIPTIONS[key];
+      return info.description === base || info.displayName === base || info.shortName === base;
+    });
+
+    const localizedBase = roundKey ? t(`rounds.${roundKey}`) : t(rawTitle, { defaultValue: rawTitle });
+    if (number) {
+      return `${localizedBase} - ${t('matches.match')} ${number}`;
+    }
+    return localizedBase;
+  };
   return (
     <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300">
       {/* Header */}
@@ -50,11 +79,11 @@ const MatchCard: React.FC<MatchCardProps> = ({
       }`}>
         <div className="flex justify-between items-center">
           <div className="text-center w-full">
-            <div className="text-xl font-bold mb-1">{matchTitle}</div>
-            <div className="text-sm opacity-90">Round {round} - Match {matchNumber}</div>
+            <div className="text-xl font-bold mb-1">{getLocalizedMatchTitle(matchTitle)}</div>
+            <div className="text-sm opacity-90">{t('matches.round')} {round} - {t('matches.match')} {matchNumber}</div>
             {isBye && (
               <div className="text-xs text-blue-100 bg-blue-500/30 px-2 py-1 rounded inline-block mt-2">
-                BYE - Advances to next round
+                {t('matches.bye')} - {t('matches.advancesToNextRound')}
               </div>
             )}
           </div>
@@ -88,7 +117,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
           <div className="mt-2 text-center">
             <span className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg animate-pulse">
               <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-              <span>⚡ MAÇ SAHADA DEVAM EDİYOR</span>
+              <span>⚡ {t('matches.matchInProgress')}</span>
             </span>
           </div>
         )}
@@ -106,19 +135,19 @@ const MatchCard: React.FC<MatchCardProps> = ({
               {winnerId === player1Id && (
                 <div className="mt-2">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-500 text-white">
-                    🏆 WINNER
+                    🏆 {t('matches.winner')}
                   </span>
                 </div>
               )}
             </div>
             <div className="flex items-center justify-center gap-2">
               <span className="text-lg font-bold text-blue-600">🅻</span>
-              <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">Sol Masa</span>
+              <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">{t('matches.leftTable')}</span>
             </div>
           </div>
           {/* VS */}
           <div className="flex items-center justify-center px-2">
-            <div className="text-2xl font-bold text-gray-400">VS</div>
+            <div className="text-2xl font-bold text-gray-400">{t('matches.vs')}</div>
           </div>
           {/* Right Player (Sağ Masa) */}
           <div 
@@ -130,14 +159,14 @@ const MatchCard: React.FC<MatchCardProps> = ({
               {winnerId === player2Id && (
                 <div className="mt-2">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-500 text-white">
-                    🏆 WINNER
+                    🏆 {t('matches.winner')}
                   </span>
                 </div>
               )}
             </div>
             <div className="flex items-center justify-center gap-2">
               <span className="text-lg font-bold text-blue-600">🆁</span>
-              <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">Sağ Masa</span>
+              <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">{t('matches.rightTable')}</span>
             </div>
           </div>
         </div>
@@ -154,7 +183,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                ✅ Kazananı Onayla
+                ✅ {t('matches.confirmWinner')}
               </button>
             </div>
           </div>
