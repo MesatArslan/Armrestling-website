@@ -61,7 +61,7 @@ const Navbar = () => {
           <Link to="/matches" onClick={() => setIsOpen(false)} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
             {t('navigation.matches')}
           </Link>
-          <div className="pt-2 border-t border-gray-100">
+          <div className="pt-2 border-t border-gray-100 flex justify-center">
             <LanguageSwitcher />
           </div>
         </div>

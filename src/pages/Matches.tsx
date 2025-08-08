@@ -748,7 +748,7 @@ const Matches = () => {
                   {fixtures.map((fixture) => (
                     <div key={fixture.id} className="shrink-0 w-72 snap-start">
                       <div
-                        className={`group relative bg-white rounded-xl border-2 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 overflow-hidden ${activeFixture?.id === fixture.id
+                        className={`group relative bg-white rounded-xl border-2 shadow-lg transition-all duration-300 hover:shadow-xl hover:border-blue-400 hover:ring-2 hover:ring-blue-200 overflow-hidden ${activeFixture?.id === fixture.id
                             ? 'border-blue-500 ring-2 ring-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50'
                             : 'border-gray-200 hover:border-gray-300'
                           }`}
