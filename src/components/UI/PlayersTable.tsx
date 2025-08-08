@@ -471,8 +471,13 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
 
   const defaultColumnIds = ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'];
 
+  const getResponsiveVisibilityClass = (_visibleIndex: number) => {
+    // Tüm cihazlarda tüm sütunlar görünsün; yatay kaydırma için dış sarmalayıcı zaten overflow-x-auto.
+    return 'table-cell';
+  };
+
   return (
-    <div className={`overflow-x-auto mt-6 ${className}`}>
+    <div className={`overflow-x-auto overflow-y-auto max-h-[70vh] mt-6 ${className}`}>
       <table className="min-w-full border-separate border-spacing-y-2">
         <thead>
           <DragDropContext onDragEnd={handleDragEnd}>
@@ -481,112 +486,119 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                 <tr
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="bg-white sticky top-0 z-10"
+                  className="bg-white"
                 >
-                  <th className="w-4 p-1 font-bold text-gray-900 text-lg bg-white border-b border-r border-gray-100 text-center">#</th>
-                  {columns.map((column, index) => (
-                    <Draggable key={column.id} draggableId={column.id} index={index}>
-                      {(provided) => (
-                        <th
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className={`p-3 ${column.visible ? 'w-48' : 'w-10'} bg-white border-b border-r border-gray-100`}
-                        >
-                          {column.visible && (
-                            <div className="flex flex-col">
-                              <div className="flex items-center justify-between">
-                                <span className="text-lg font-bold text-gray-900">
-                                  {defaultColumnIds.includes(column.id) ? t(`players.${column.id}`) : column.name}
-                                </span>
-                                {column.id === 'weight' ? (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setIsWeightFilterOpen(!isWeightFilterOpen);
-                                    }}
-                                    className={`p-1 rounded transition-colors duration-200 ${
-                                      (weightFilter.min !== null || weightFilter.max !== null) 
-                                        ? 'text-blue-600 hover:bg-blue-50' 
-                                        : 'text-gray-400 hover:bg-gray-50'
-                                    }`}
-                                  >
-                                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${
-                                      isWeightFilterOpen ? 'transform rotate-180' : ''
-                                    }`} />
-                                  </button>
-                                ) : !['name', 'surname'].includes(column.id) && (
-                                  <div className="relative" ref={filterRef}>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenFilter(openFilter === column.id ? null : column.id);
-                                      }}
-                                      className={`p-1 rounded transition-colors duration-200 ${
-                                        columnFilters[column.id] ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-400 hover:bg-gray-50'
-                                      }`}
-                                    >
-                                      <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${
-                                        openFilter === column.id ? 'transform rotate-180' : ''
-                                      }`} />
-                                    </button>
-                                    {openFilter === column.id && (
-                                      <div className="absolute right-0 mt-1 w-48 bg-blue-50/30 border border-blue-100 rounded-lg shadow-sm p-2 z-20">
-                                        <div className="max-h-48 overflow-y-auto">
-                                          {getUniqueValues(column.id).map((value) => (
-                                            <button
-                                              key={value}
-                                              onClick={() => handleFilterChange(column.id, value)}
-                                              className={`w-full text-left px-2 py-1 text-sm rounded ${
-                                                columnFilters[column.id] === value
-                                                  ? 'bg-blue-100 text-blue-600'
-                                                  : 'text-blue-500 hover:bg-blue-100/50'
-                                              }`}
-                                            >
-                                              {value}
-                                            </button>
-                                          ))}
-                                        </div>
+                  <th className="w-8 p-1 font-bold text-gray-900 text-sm sm:text-base bg-white border-b border-r border-gray-100 text-center sticky top-0 z-20">#</th>
+                  {(() => {
+                    let visibleHeaderIndex = -1;
+                    return columns.map((column, index) => {
+                      if (column.visible) visibleHeaderIndex += 1;
+                      const responsiveCls = column.visible ? getResponsiveVisibilityClass(visibleHeaderIndex) : 'hidden';
+                      return (
+                        <Draggable key={column.id} draggableId={column.id} index={index}>
+                          {(provided) => (
+                            <th
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`p-3 ${column.visible ? 'w-48' : 'w-10'} bg-white border-b border-r border-gray-100 ${responsiveCls} sticky top-0 z-20`}
+                            >
+                              {column.visible && (
+                                <div className="flex flex-col">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                                      {defaultColumnIds.includes(column.id) ? t(`players.${column.id}`) : column.name}
+                                    </span>
+                                    {column.id === 'weight' ? (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setIsWeightFilterOpen(!isWeightFilterOpen);
+                                        }}
+                                        className={`p-1 rounded transition-colors duration-200 ${
+                                          (weightFilter.min !== null || weightFilter.max !== null) 
+                                            ? 'text-blue-600 hover:bg-blue-50' 
+                                            : 'text-gray-400 hover:bg-gray-50'
+                                        }`}
+                                      >
+                                        <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${
+                                          isWeightFilterOpen ? 'transform rotate-180' : ''
+                                        }`} />
+                                      </button>
+                                    ) : !['name', 'surname'].includes(column.id) && (
+                                      <div className="relative" ref={filterRef}>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenFilter(openFilter === column.id ? null : column.id);
+                                          }}
+                                          className={`p-1 rounded transition-colors duration-200 ${
+                                            columnFilters[column.id] ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-400 hover:bg-gray-50'
+                                          }`}
+                                        >
+                                          <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${
+                                            openFilter === column.id ? 'transform rotate-180' : ''
+                                          }`} />
+                                        </button>
+                                        {openFilter === column.id && (
+                                          <div className="absolute right-0 mt-1 w-48 bg-blue-50/30 border border-blue-100 rounded-lg shadow-sm p-2 z-20">
+                                            <div className="max-h-48 overflow-y-auto">
+                                              {getUniqueValues(column.id).map((value) => (
+                                                <button
+                                                  key={value}
+                                                  onClick={() => handleFilterChange(column.id, value)}
+                                                  className={`w-full text-left px-2 py-1 text-sm rounded ${
+                                                    columnFilters[column.id] === value
+                                                      ? 'bg-blue-100 text-blue-600'
+                                                      : 'text-blue-500 hover:bg-blue-100/50'
+                                                  }`}
+                                                >
+                                                  {value}
+                                                </button>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
-                                )}
-                              </div>
-                              {column.id === 'weight' && isWeightFilterOpen && (
-                                <div className="flex items-center gap-2 mt-1.5 bg-blue-50/30 p-1.5 rounded" ref={filterRef}>
-                                  <input
-                                    type="number"
-                                    step="0.1"
-                                    value={weightFilter.min || ''}
-                                    onChange={(e) => handleWeightFilterChange('min', e.target.value)}
-                                    className="w-20 px-2 py-1 bg-white border border-gray-100 rounded text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                    placeholder="Min"
-                                  />
-                                  <span className="text-blue-500">-</span>
-                                  <input
-                                    type="number"
-                                    step="0.1"
-                                    value={weightFilter.max || ''}
-                                    onChange={(e) => handleWeightFilterChange('max', e.target.value)}
-                                    className="w-20 px-2 py-1 bg-white border border-gray-100 rounded text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                    placeholder="Max"
-                                  />
-                                  <button
-                                    onClick={handleWeightFilterClear}
-                                    className="text-xs text-blue-600 hover:text-blue-700"
-                                  >
-                                    Clear
-                                  </button>
+                                  {column.id === 'weight' && isWeightFilterOpen && (
+                                    <div className="flex items-center gap-2 mt-1.5 bg-blue-50/30 p-1.5 rounded" ref={filterRef}>
+                                      <input
+                                        type="number"
+                                        step="0.1"
+                                        value={weightFilter.min || ''}
+                                        onChange={(e) => handleWeightFilterChange('min', e.target.value)}
+                                        className="w-20 px-2 py-1 bg-white border border-gray-100 rounded text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                        placeholder="Min"
+                                      />
+                                      <span className="text-blue-500">-</span>
+                                      <input
+                                        type="number"
+                                        step="0.1"
+                                        value={weightFilter.max || ''}
+                                        onChange={(e) => handleWeightFilterChange('max', e.target.value)}
+                                        className="w-20 px-2 py-1 bg-white border border-gray-100 rounded text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                        placeholder="Max"
+                                      />
+                                      <button
+                                        onClick={handleWeightFilterClear}
+                                        className="text-xs text-blue-600 hover:text-blue-700"
+                                      >
+                                        Clear
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               )}
-                            </div>
+                            </th>
                           )}
-                        </th>
-                      )}
-                    </Draggable>
-                  ))}
+                        </Draggable>
+                      );
+                    });
+                  })()}
                   {showDeleteColumn && (
-                    <th className="w-12 p-1 font-bold text-gray-900 text-lg bg-white border-b border-r border-gray-100 text-center">
+                    <th className="w-12 p-1 font-bold text-gray-900 text-lg bg-white border-b border-r border-gray-100 text-center sticky top-0 z-20">
                       {t('players.delete')}
                     </th>
                   )}
@@ -599,18 +611,24 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
         <tbody className="bg-white/80 divide-y divide-gray-100">
           {filteredPlayers.map((player, index) => (
             <tr key={player.id} className="hover:bg-blue-50/60 transition-all duration-200 rounded-xl shadow-md">
-              <td className="w-4 px-1 py-2 text-base font-semibold text-gray-700 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">{index + 1}</td>
-              {columns.map((column) => (
-                column.visible && (
-                  <td 
-                    key={column.id} 
-                    className="w-48 px-3 py-2 whitespace-nowrap text-base border-r border-gray-100 bg-white/70"
-                    onClick={() => handleCellClick(player.id, column.id, player[column.id])}
-                  >
-                    {renderCellContent(player, column)}
-                  </td>
-                )
-              ))}
+              <td className="w-8 px-1 py-2 text-sm sm:text-base font-semibold text-gray-700 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">{index + 1}</td>
+              {(() => {
+                let visibleBodyIndex = -1;
+                return columns.map((column) => {
+                  if (!column.visible) return null;
+                  visibleBodyIndex += 1;
+                  const responsiveCls = getResponsiveVisibilityClass(visibleBodyIndex);
+                  return (
+                    <td
+                      key={column.id}
+                      className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
+                      onClick={() => handleCellClick(player.id, column.id, player[column.id])}
+                    >
+                      {renderCellContent(player, column)}
+                    </td>
+                  );
+                });
+              })()}
               {showDeleteColumn && (
                 <td className="w-12 px-2 py-2 text-center border-r border-gray-100 bg-white/70 rounded-r-xl">
                   <button
@@ -629,16 +647,25 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
           ))}
           {showAddRow && (
             <tr className="hover:bg-blue-50/60 transition-all duration-200 rounded-xl shadow">
-              <td className="w-4 px-1 py-2 text-base font-semibold text-gray-400 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">
+              <td className="w-8 px-1 py-2 text-sm sm:text-base font-semibold text-gray-400 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">
                 {filteredPlayers.length + 1}
               </td>
-              {columns.map((column) => (
-                column.visible && (
-                  <td key={column.id} className="w-48 px-3 py-2 whitespace-nowrap text-base border-r border-gray-100 bg-white/70">
-                    {renderNewPlayerInput(column)}
-                  </td>
-                )
-              ))}
+              {(() => {
+                let visibleAddRowIndex = -1;
+                return columns.map((column) => {
+                  if (!column.visible) return null;
+                  visibleAddRowIndex += 1;
+                  const responsiveCls = getResponsiveVisibilityClass(visibleAddRowIndex);
+                  return (
+                    <td
+                      key={column.id}
+                      className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
+                    >
+                      {renderNewPlayerInput(column)}
+                    </td>
+                  );
+                });
+              })()}
               {showDeleteColumn && (
                 <td className="w-12 px-2 py-2 text-center border-r border-gray-100 bg-white/70 rounded-r-xl"></td>
               )}

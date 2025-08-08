@@ -117,13 +117,13 @@ const Players = () => {
               <p className="text-base text-gray-500 mt-1">{t('players.totalPlayers')}: {players.length}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <div className="relative shadow-md rounded-lg">
+              <div className="relative shadow-md rounded-lg w-full sm:w-auto">
                 <input
                   type="text"
                   placeholder={t('players.searchPlayers')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64 px-4 py-2 pl-10 bg-white/80 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-base text-gray-700 placeholder-gray-400 transition-all duration-200 shadow-sm"
+                  className="w-full sm:w-64 px-4 py-2 pl-10 bg-white/80 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm sm:text-base text-gray-700 placeholder-gray-400 transition-all duration-200 shadow-sm"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -133,33 +133,33 @@ const Players = () => {
               </div>
               <button
                 onClick={handleAddTestPlayers}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-base font-semibold"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-sm sm:text-base font-semibold"
               >
                 <UserPlusIcon className="w-5 h-5" />
                 {t('players.addTestPlayers')}
               </button>
               <button
                 onClick={handleClearAllData}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-base font-semibold"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm sm:text-base font-semibold"
               >
                 {t('players.clearAllData')}
               </button>
               <button
                 onClick={() => setIsAddColumnModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-sm sm:text-base font-semibold"
               >
                 <PlusIcon className="w-5 h-5" />
                 {t('players.addColumn')}
               </button>
               <button
                 onClick={handleExportJSON}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg shadow hover:from-purple-500 hover:to-purple-700 transition-all duration-200 text-base font-semibold"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg shadow hover:from-purple-500 hover:to-purple-700 transition-all duration-200 text-sm sm:text-base font-semibold"
               >
                 {t('players.exportJSON')}
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-lg shadow hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200 text-base font-semibold"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-lg shadow hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200 text-sm sm:text-base font-semibold"
               >
                 {t('players.importJSON')}
               </button>
@@ -213,7 +213,7 @@ const Players = () => {
       {/* Add Column Modal */}
       {isAddColumnModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="backdrop-blur-lg bg-white/90 p-8 rounded-2xl w-96 shadow-2xl border border-gray-200">
+          <div className="backdrop-blur-lg bg-white/90 p-8 rounded-2xl w-full max-w-sm mx-4 shadow-2xl border border-gray-200">
             <h2 className="text-2xl font-bold mb-6 text-gray-900">{t('players.addNewColumn')}</h2>
             <input
               type="text"
