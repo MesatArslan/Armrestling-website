@@ -11,7 +11,28 @@
     "quickActions": "Quick Actions",
     "createTournament": "Create Tournament",
     "addPlayer": "Add Player",
-    "viewMatches": "View Matches"
+    "viewMatches": "View Matches",
+    "featuresTitle": "Why Choose Our Platform?",
+    "featuresSubtitle": "The ultimate platform for arm wrestling enthusiasts",
+    "features": {
+      "tournamentManagement": {
+        "title": "Tournament Management",
+        "description": "Organize professional armwrestling tournaments with custom weight classes and filters."
+      },
+      "playerProfiles": {
+        "title": "Player Profiles",
+        "description": "Create detailed profiles, track performance, and manage hand preference and gender."
+      },
+      "liveMatches": {
+        "title": "Live Matches",
+        "description": "Run live brackets, confirm winners, and follow real-time progress."
+      },
+      "statsAnalytics": {
+        "title": "Statistics & Analytics",
+        "description": "View results and rankings; export players and generate PDFs."
+      }
+    },
+    "clickToProceed": "Click to proceed"
   },
   "tournaments": {
     "title": "Tournaments",

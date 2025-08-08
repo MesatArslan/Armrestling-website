@@ -11,7 +11,28 @@
     "quickActions": "Hızlı İşlemler",
     "createTournament": "Turnuva Oluştur",
     "addPlayer": "Oyuncu Ekle",
-    "viewMatches": "Maçları Görüntüle"
+    "viewMatches": "Maçları Görüntüle",
+    "featuresTitle": "Neden Bu Platform?",
+    "featuresSubtitle": "Bilek güreşi tutkunları için eksiksiz bir platform",
+    "features": {
+      "tournamentManagement": {
+        "title": "Turnuva Yönetimi",
+        "description": "Özel sıklet aralıkları ve filtrelerle profesyonel turnuvalar düzenleyin."
+      },
+      "playerProfiles": {
+        "title": "Oyuncu Profilleri",
+        "description": "Detaylı profiller oluşturun, performansı takip edin, el tercihi ve cinsiyeti yönetin."
+      },
+      "liveMatches": {
+        "title": "Canlı Maçlar",
+        "description": "Canlı braketleri yönetin, kazananları onaylayın, ilerlemeyi anlık takip edin."
+      },
+      "statsAnalytics": {
+        "title": "İstatistik ve Analiz",
+        "description": "Sonuçlar ve sıralamaları görüntüleyin; oyuncuları dışa aktarın ve PDF oluşturun."
+      }
+    },
+    "clickToProceed": "Devam etmek için tıklayın"
   },
   "tournaments": {
     "title": "Turnuvalar",

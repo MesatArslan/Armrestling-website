@@ -1,26 +1,39 @@
 
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { TrophyIcon, UserIcon, PlayCircleIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 
 const Hero = () => {
   const { t } = useTranslation();
   
   return (
-    <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 w-screen">
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-20">
+    <div className="relative isolate overflow-hidden bg-gradient-to-b from-gray-50 to-white w-screen">
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-gradient-to-tr from-blue-400 via-indigo-400 to-purple-500 opacity-20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -right-24 h-72 w-72 rounded-full bg-gradient-to-tr from-fuchsia-400 via-pink-400 to-rose-500 opacity-20 blur-3xl" />
+
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-20 relative">
         <div className="text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            {t('home.title')}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">
+              {t('home.title')}
+            </span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-10">
             {t('home.description')}
           </p>
-          <div className="flex justify-center gap-4">
-            <button className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-              {t('home.createTournament')}
-            </button>
-            <button className="px-8 py-3 bg-white text-blue-600 rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-              {t('home.viewMatches')}
-            </button>
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+            <Link to="/tournaments" className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl hover:brightness-110 transition-all duration-200">
+              <TrophyIcon className="w-5 h-5" />
+              <span>{t('home.createTournament')}</span>
+            </Link>
+            <Link to="/players" className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-white text-blue-700 font-semibold border border-blue-200 shadow-lg hover:shadow-xl hover:bg-blue-50 transition-all duration-200">
+              <UserIcon className="w-5 h-5" />
+              <span>{t('home.addPlayer')}</span>
+            </Link>
+            <Link to="/matches" className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-white text-purple-700 font-semibold border border-purple-200 shadow-lg hover:shadow-xl hover:bg-purple-50 transition-all duration-200">
+              <PlayCircleIcon className="w-5 h-5" />
+              <span>{t('home.viewMatches')}</span>
+            </Link>
           </div>
         </div>
       </div>
@@ -28,48 +41,41 @@ const Hero = () => {
   );
 };
 
-const Features = () => {
-  const features = [
-    {
-      title: "Tournament Management",
-      description: "Organize and participate in professional arm wrestling tournaments with our advanced management system.",
-      icon: "🏆"
-    },
-    {
-      title: "Player Profiles",
-      description: "Create detailed profiles, track your progress, and showcase your achievements in the arm wrestling community.",
-      icon: "👤"
-    },
-    {
-      title: "Live Matches",
-      description: "Watch live matches, follow your favorite players, and stay updated with real-time results.",
-      icon: "🎥"
-    },
-    {
-      title: "Statistics & Analytics",
-      description: "Access comprehensive statistics and analytics to improve your performance and track your growth.",
-      icon: "📊"
-    }
-  ];
+// Features section removed per user request
 
+const QuickActions = () => {
+  const { t } = useTranslation();
+  const actions = [
+    { to: '/tournaments', label: t('home.createTournament'), Icon: TrophyIcon, color: 'from-blue-500 to-indigo-600' },
+    { to: '/players', label: t('home.addPlayer'), Icon: UserIcon, color: 'from-emerald-500 to-green-600' },
+    { to: '/matches', label: t('home.viewMatches'), Icon: PlayCircleIcon, color: 'from-purple-500 to-fuchsia-600' },
+  ];
   return (
-    <div className="bg-white py-20 w-screen">
+    <div className="bg-gradient-to-br from-gray-50 to-white py-12 w-screen">
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Why Choose WrestleMania Pro?
-          </h2>
-          <p className="text-xl text-gray-600">
-            The ultimate platform for arm wrestling enthusiasts
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
+            {t('home.quickActions')}
+          </h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <div key={index} className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow duration-200">
-              <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {actions.map(({ to, label, Icon, color }) => (
+            <Link
+              key={to}
+              to={to}
+              className="group relative rounded-2xl p-[1px] bg-gradient-to-br from-gray-200/80 via-gray-100/80 to-gray-200/80 hover:from-blue-200/80 hover:via-indigo-100/80 hover:to-purple-200/80 transition-all duration-300"
+            >
+              <div className="relative flex items-center gap-4 p-5 rounded-2xl bg-white/70 backdrop-blur-sm border border-white/60 shadow-sm hover:shadow-md">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center`}>
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-lg font-semibold text-gray-900 group-hover:text-gray-950">{label}</div>
+                  <div className="text-sm text-gray-500">{t('home.clickToProceed', { defaultValue: 'Click to proceed' })}</div>
+                </div>
+                <ArrowRightIcon className="w-5 h-5 text-gray-300 group-hover:text-indigo-400 transition-colors" />
+              </div>
+            </Link>
           ))}
         </div>
       </div>
@@ -81,7 +87,7 @@ const Home = () => {
   return (
     <div className="w-screen">
       <Hero />
-      <Features />
+      <QuickActions />
     </div>
   );
 };
