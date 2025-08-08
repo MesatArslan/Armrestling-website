@@ -32,7 +32,29 @@
         "description": "Sonuçlar ve sıralamaları görüntüleyin; oyuncuları dışa aktarın ve PDF oluşturun."
       }
     },
-    "clickToProceed": "Devam etmek için tıklayın"
+    "clickToProceed": "Devam etmek için tıklayın",
+    "intro": {
+      "title": "Bilek güreşi turnuvaları için hepsi bir arada platform",
+      "description": "Özel sıklet aralıklarıyla turnuvalar oluşturun, esnek filtrelerle oyuncuları yönetin, canlı maçları yürütün ve tek tıkla yerelleştirilmiş PDF’ler oluşturun.",
+      "highlights": {
+        "reliableBrackets": "Güvenilir braketler ve canlı ilerleme",
+        "localizedPDF": "Yerelleştirilmiş PDF önizleme ve dışa aktarma",
+        "flexibleFilters": "Esnek oyuncu filtreleri (cinsiyet, el tercihi, doğum yılı)"
+      }
+    },
+    "steps": {
+      "title": "Nasıl çalışır",
+      "s1": { "title": "Turnuva oluşturun", "desc": "Sıklet ve isteğe bağlı filtreleri belirleyin." },
+      "s2": { "title": "Oyuncu ekleyin", "desc": "İçe aktarın veya hızlı ekleyin, klasmanlara göre yönetin." },
+      "s3": { "title": "Maçları yürütün", "desc": "Fikstürü başlatın, kazananları onaylayın, sıralamayı görün." },
+      "s4": { "title": "Sonuçları dışa aktarın", "desc": "Yerelleştirilmiş PDF’ler oluşturun ve paylaşın." }
+    },
+    "bottomCta": {
+      "title": "Bir sonraki Bilek Güreşi etkinliğinize hazır mısınız?",
+      "description": "WrestleMania Pro ile dakikalar içinde profesyonel bir turnuva kurun.",
+      "primary": "Turnuva Oluştur",
+      "secondary": "Oyuncuları Yönet"
+    }
   },
   "tournaments": {
     "title": "Turnuvalar",

@@ -32,7 +32,53 @@
         "description": "View results and rankings; export players and generate PDFs."
       }
     },
-    "clickToProceed": "Click to proceed"
+    "clickToProceed": "Click to proceed",
+    "intro": {
+      "title": "All-in-one platform for armwrestling tournaments",
+      "description": "Create tournaments with custom weight ranges, manage players with flexible filters, run live matches, and export localized PDFs with one click.",
+      "highlights": {
+        "reliableBrackets": "Reliable brackets & live progression",
+        "localizedPDF": "Localized PDF export & preview",
+        "flexibleFilters": "Flexible player filters (gender, hand, birth year)"
+      }
+    },
+    "steps": {
+      "title": "How it works",
+      "s1": { "title": "Create a tournament", "desc": "Set divisions by weight and optional filters." },
+      "s2": { "title": "Add players", "desc": "Import or add quickly, manage by division." },
+      "s3": { "title": "Run matches", "desc": "Start fixtures, confirm winners, view ranks." },
+      "s4": { "title": "Export results", "desc": "Generate localized PDFs and share." }
+    },
+    "bottomCta": {
+      "title": "Ready to host your next Armwrestling event?",
+      "description": "Spin up a professional tournament in minutes with WrestleMania Pro.",
+      "primary": "Create a Tournament",
+      "secondary": "Manage Players"
+    }
+  },
+  "homeIntro": {
+    "intro": {
+      "title": "All-in-one platform for armwrestling tournaments",
+      "description": "Create tournaments with custom weight ranges, manage players with flexible filters, run live matches, and export localized PDFs with one click.",
+      "highlights": {
+        "reliableBrackets": "Reliable brackets & live progression",
+        "localizedPDF": "Localized PDF export & preview",
+        "flexibleFilters": "Flexible player filters (gender, hand, birth year)"
+      }
+    },
+    "steps": {
+      "title": "How it works",
+      "s1": { "title": "Create a tournament", "desc": "Set divisions by weight and optional filters." },
+      "s2": { "title": "Add players", "desc": "Import or add quickly, manage by division." },
+      "s3": { "title": "Run matches", "desc": "Start fixtures, confirm winners, view ranks." },
+      "s4": { "title": "Export results", "desc": "Generate localized PDFs and share." }
+    },
+    "bottomCta": {
+      "title": "Ready to host your next Armwrestling event?",
+      "description": "Spin up a professional tournament in minutes with WrestleMania Pro.",
+      "primary": "Create a Tournament",
+      "secondary": "Manage Players"
+    }
   },
   "tournaments": {
     "title": "Tournaments",

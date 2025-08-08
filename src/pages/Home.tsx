@@ -1,7 +1,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { TrophyIcon, UserIcon, PlayCircleIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, UserIcon, PlayCircleIcon, ArrowRightIcon, SparklesIcon, BoltIcon, CheckBadgeIcon } from '@heroicons/react/24/outline';
 
 const Hero = () => {
   const { t } = useTranslation();
@@ -83,11 +83,101 @@ const QuickActions = () => {
   );
 };
 
+const Intro = () => {
+  const { t } = useTranslation();
+  const highlights = [
+    { Icon: SparklesIcon, text: t('home.intro.highlights.reliableBrackets') },
+    { Icon: BoltIcon, text: t('home.intro.highlights.localizedPDF') },
+    { Icon: CheckBadgeIcon, text: t('home.intro.highlights.flexibleFilters') },
+  ];
+  return (
+    <section className="relative w-screen py-14 bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            {t('home.intro.title')}
+          </h2>
+          <p className="mt-4 text-lg text-gray-600">
+            {t('home.intro.description')}
+          </p>
+        </div>
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-5xl mx-auto">
+          {highlights.map(({ Icon, text }, idx) => (
+            <div key={idx} className="flex items-center gap-3 rounded-xl border border-gray-200/70 bg-white/80 backdrop-blur p-4 shadow-sm">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600">
+                <Icon className="w-5 h-5 text-white" />
+              </span>
+              <span className="text-sm font-semibold text-gray-800">{text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const Steps = () => {
+  const { t } = useTranslation();
+  const steps = [
+    { Icon: TrophyIcon, title: t('home.steps.s1.title'), desc: t('home.steps.s1.desc') },
+    { Icon: UserIcon, title: t('home.steps.s2.title'), desc: t('home.steps.s2.desc') },
+    { Icon: PlayCircleIcon, title: t('home.steps.s3.title'), desc: t('home.steps.s3.desc') },
+    { Icon: CheckBadgeIcon, title: t('home.steps.s4.title'), desc: t('home.steps.s4.desc') },
+  ];
+  return (
+    <section className="w-screen py-14 bg-white">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <h3 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-900">
+          {t('home.steps.title')}
+        </h3>
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {steps.map(({ Icon, title, desc }, idx) => (
+            <div key={idx} className="rounded-2xl p-6 border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-4">
+                <Icon className="w-6 h-6 text-white" />
+              </div>
+              <div className="font-bold text-gray-900 mb-1">{title}</div>
+              <div className="text-sm text-gray-600">{desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const BottomCTA = () => {
+  const { t } = useTranslation();
+  return (
+    <section className="w-screen py-16 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center text-white">
+          <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight">{t('home.bottomCta.title')}</h3>
+          <p className="mt-3 text-lg text-white/90">{t('home.bottomCta.description')}</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link to="/tournaments" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-blue-700 font-semibold shadow hover:shadow-lg transition">
+              <TrophyIcon className="w-5 h-5" />
+              <span>{t('home.bottomCta.primary')}</span>
+            </Link>
+            <Link to="/players" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 ring-1 ring-white/40 text-white font-semibold backdrop-blur hover:bg-white/20 transition">
+              <UserIcon className="w-5 h-5" />
+              <span>{t('home.bottomCta.secondary')}</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const Home = () => {
   return (
     <div className="w-screen">
       <Hero />
       <QuickActions />
+      <Intro />
+      <Steps />
+      <BottomCTA />
     </div>
   );
 };

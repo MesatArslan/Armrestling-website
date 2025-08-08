@@ -276,10 +276,16 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   };
 
   const filteredPlayers = players.filter(player => {
-    const matchesSearch = searchTerm === '' || 
-      Object.values(player).some(value => 
-        String(value).toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const tokens = normalizedSearch.length > 0 ? normalizedSearch.split(/\s+/).filter(Boolean) : [];
+    const nameSurnameCombined = `${(player.name || '').toString()} ${(player.surname || '').toString()}`.trim().toLowerCase();
+    const playerValuesLower = Object.values(player).map(v => String(v).toLowerCase());
+
+    const matchesSearch = tokens.length === 0
+      ? true
+      : tokens.every(token =>
+          nameSurnameCombined.includes(token) || playerValuesLower.some(val => val.includes(token))
+        );
 
     const matchesWeight = 
       (weightFilter.min === null || player.weight >= weightFilter.min) &&
