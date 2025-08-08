@@ -272,6 +272,17 @@
     "nextPage": "Next Page",
     "pdfSuccessMessage": "PDF created successfully!\nFile size: {{fileSize}}\nTotal pages: {{totalPages}}\nPlayers per page: {{playersPerPage}}",
     "pdfErrorMessage": "An error occurred while creating the PDF."
+  },
+  "rankings": {
+    "title": "Tournament Results",
+    "first": "1st Place",
+    "second": "2nd Place",
+    "third": "3rd Place",
+    "fourth": "4th Place",
+    "fifth": "5th Place",
+    "sixth": "6th Place",
+    "seventh": "7th Place",
+    "eighth": "8th Place"
   }
 }
 

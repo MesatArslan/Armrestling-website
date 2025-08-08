@@ -313,6 +313,17 @@
   "language": {
     "en": "İngilizce",
     "tr": "Türkçe"
+  },
+  "rankings": {
+    "title": "Turnuva Sonuçları",
+    "first": "1. Sıra",
+    "second": "2. Sıra",
+    "third": "3. Sıra",
+    "fourth": "4. Sıra",
+    "fifth": "5. Sıra",
+    "sixth": "6. Sıra",
+    "seventh": "7. Sıra",
+    "eighth": "8. Sıra"
   }
 }
 
