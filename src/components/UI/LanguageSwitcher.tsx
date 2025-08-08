@@ -9,30 +9,31 @@ const LanguageSwitcher: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center space-x-2">
-      <span className="text-sm text-gray-600 dark:text-gray-400">
-        {t('language.en')}:
-      </span>
-      <button
-        onClick={() => changeLanguage('en')}
-        className={`px-3 py-1 text-sm rounded-md transition-colors ${
-          i18n.language === 'en'
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-        }`}
-      >
-        EN
-      </button>
-      <button
-        onClick={() => changeLanguage('tr')}
-        className={`px-3 py-1 text-sm rounded-md transition-colors ${
-          i18n.language === 'tr'
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-        }`}
-      >
-        TR
-      </button>
+    <div className="flex items-center gap-2">
+      <div className="inline-flex p-1 rounded-full bg-gray-100 border border-gray-200 shadow-inner">
+        <button
+          onClick={() => changeLanguage('en')}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
+            i18n.language === 'en'
+              ? 'bg-white text-blue-700 shadow border border-blue-200'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+          aria-pressed={i18n.language === 'en'}
+        >
+          EN
+        </button>
+        <button
+          onClick={() => changeLanguage('tr')}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
+            i18n.language === 'tr'
+              ? 'bg-white text-blue-700 shadow border border-blue-200'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+          aria-pressed={i18n.language === 'tr'}
+        >
+          TR
+        </button>
+      </div>
     </div>
   );
 };
