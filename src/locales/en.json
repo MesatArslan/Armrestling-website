@@ -170,7 +170,18 @@
     "round": "Round",
     "match": "Match",
     "vs": "VS",
-    "bye": "BYE"
+    "bye": "BYE",
+    "loser": "Loser"
+  },
+  "completedMatches": {
+    "searchPlayersPlaceholder": "Search player name...",
+    "hideByeMatches": "Hide BYE matches",
+    "showByeMatches": "Show BYE matches",
+    "headers": {
+      "matchNo": "Match No",
+      "bracket": "Bracket",
+      "loser": "Loser"
+    }
   },
   "rounds": {
     "WB1": "Winner Bracket Round 1",

@@ -247,7 +247,18 @@
     "round": "Tur",
     "match": "Maç",
     "vs": "KARŞI",
-    "bye": "BAY"
+    "bye": "BAY",
+    "loser": "Kaybeden"
+  },
+  "completedMatches": {
+    "searchPlayersPlaceholder": "Oyuncu adı ara...",
+    "hideByeMatches": "BAY maçlarını gizle",
+    "showByeMatches": "BAY maçlarını göster",
+    "headers": {
+      "matchNo": "Maç No",
+      "bracket": "Braket",
+      "loser": "Kaybeden"
+    }
   },
   "rounds": {
     "WB1": "Kazananlar Braketi 1. Tur",

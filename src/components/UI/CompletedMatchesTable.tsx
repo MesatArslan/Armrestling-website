@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ROUND_DESCRIPTIONS } from '../../utils/roundDescriptions';
 
 interface Player {
   id: string;
@@ -26,6 +28,7 @@ interface CompletedMatchesTableProps {
 }
 
 const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,getPlayerName }) => {
+  const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
   const [showByeMatches, setShowByeMatches] = useState(true);
 
@@ -51,6 +54,27 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,g
     return completedMatches;
   }, [matches, searchText, showByeMatches, getPlayerName]);
 
+  const getLocalizedBracketLabel = (raw?: string): string => {
+    if (!raw) return '';
+    // Remove possible BYE/Bye suffix noise
+    const withoutBye = raw.replace(/\s*-\s*Bye.*/i, '').trim();
+    // Extract optional " - Match N" suffix
+    const matchSuffix = /^(.*?)(?:\s*-\s*Match\s*(\d+))?$/i.exec(withoutBye);
+    let base = withoutBye;
+    let number: string | undefined;
+    if (matchSuffix) {
+      base = matchSuffix[1].trim();
+      number = matchSuffix[2];
+    }
+    // Try exact map to round keys
+    const key = Object.keys(ROUND_DESCRIPTIONS).find(k => {
+      const info = ROUND_DESCRIPTIONS[k];
+      return info.description === base || info.displayName === base || info.shortName === base;
+    });
+    const localizedBase = key ? t(`rounds.${key}`) : t(raw, { defaultValue: raw });
+    return number ? `${localizedBase} - ${t('matches.match')} ${number}` : localizedBase;
+  };
+
   return (
     <div className="w-full mx-auto mb-6 bg-gray-50 rounded-2xl p-6">
       {/* Search and Filter Controls */}
@@ -65,7 +89,7 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,g
             </div>
             <input
               type="text"
-              placeholder="Oyuncu adı ara..."
+              placeholder={t('completedMatches.searchPlayersPlaceholder')}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
@@ -86,7 +110,7 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,g
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            {showByeMatches ? 'Bye Maçlarını Gizle' : 'Bye Maçlarını Göster'}
+            {showByeMatches ? t('completedMatches.hideByeMatches') : t('completedMatches.showByeMatches')}
           </button>
         </div>
       </div>
@@ -94,19 +118,18 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,g
       <div className="overflow-x-auto">
         {/* Header */}
         <div className="w-full flex flex-row items-center justify-between bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl px-6 py-4 mb-4 shadow-sm">
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1">Maç No</div>
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1">Bracket</div>
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-2"><span className='text-2xl font-bold drop-shadow'>🆁</span> Sağ Masa</div>
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-2"><span className='text-2xl font-bold drop-shadow'>🅻</span> Sol Masa</div>
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1"><span>🏆</span> Kazanan</div>
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1"><span>❌</span> Kaybeden</div>
+          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1">{t('completedMatches.headers.matchNo')}</div>
+          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1">{t('completedMatches.headers.bracket')}</div>
+          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-2"><span className='text-2xl font-bold drop-shadow'>🆁</span> {t('matches.rightTable')}</div>
+          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-2"><span className='text-2xl font-bold drop-shadow'>🅻</span> {t('matches.leftTable')}</div>
+          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1"><span>🏆</span> {t('matches.winner')}</div>
+          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1"><span>❌</span> {t('matches.loser')}</div>
         </div>
         {/* Rows */}
         {filteredMatches.map((m, i) => {
           const winnerId = m.winnerId!;
           const loserId = m.player1Id === winnerId ? m.player2Id : m.player1Id;
-          // Net başlık: description varsa onu, yoksa id'yi göster
-          const bracketDisplay = m.description || m.id;
+          const bracketDisplay = getLocalizedBracketLabel(m.description) || m.id;
           return (
             <div
               key={m.id}
@@ -114,11 +137,11 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,g
             >
               <div className="flex-1 font-semibold text-gray-500 text-base flex items-center gap-1">{i + 1}</div>
               <div className={`flex-1 font-semibold text-base flex items-center gap-1 ${m.bracket === 'loser' ? 'text-red-600' : m.bracket === 'placement' ? 'text-purple-600' : 'text-green-600'}`}>{bracketDisplay}</div>
-              <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player2Id) || 'BYE') : (getPlayerName(m.player2Id) || '—')}</div>
-              <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player1Id) || 'BYE') : (getPlayerName(m.player1Id) || '—')}</div>
+              <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player2Id) || t('matches.bye')) : (getPlayerName(m.player2Id) || '—')}</div>
+              <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player1Id) || t('matches.bye')) : (getPlayerName(m.player1Id) || '—')}</div>
               <div className="flex-1 flex items-center gap-2">
                 <span className="inline-flex items-center gap-1 bg-green-100 text-green-900 font-black rounded-full px-3 py-1 text-base">
-                  {m.isBye ? 'BYE' : getPlayerName(winnerId)}
+                  {m.isBye ? t('matches.bye') : getPlayerName(winnerId)}
                 </span>
               </div>
               <div className="flex-1 flex items-center gap-2">
