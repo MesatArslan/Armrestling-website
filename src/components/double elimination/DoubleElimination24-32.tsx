@@ -885,7 +885,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
               </div>
             )}
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-7xl w-full mx-auto overflow-y-auto" style={{minHeight: 200, maxHeight: '60vh'}}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 max-w-7xl w-full mx-auto">
               {activeRoundMatches.filter(m => !m.isBye && !m.winnerId).map(renderMatch)}
             </div>
           </>

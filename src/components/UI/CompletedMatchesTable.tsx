@@ -76,9 +76,9 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,g
   };
 
   return (
-    <div className="w-full mx-auto mb-6 bg-gray-50 rounded-2xl p-6">
+    <div className="w-full mx-auto mb-6 bg-transparent p-0 sm:bg-gray-50 sm:rounded-2xl sm:p-6">
       {/* Search and Filter Controls */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 px-3 sm:px-0">
         {/* Search Input */}
         <div className="flex-1">
           <div className="relative">
@@ -115,43 +115,47 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,g
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        {/* Header */}
-        <div className="w-full flex flex-row items-center justify-between bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl px-6 py-4 mb-4 shadow-sm">
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1">{t('completedMatches.headers.matchNo')}</div>
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1">{t('completedMatches.headers.bracket')}</div>
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-2"><span className='text-2xl font-bold drop-shadow'>🆁</span> {t('matches.rightTable')}</div>
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-2"><span className='text-2xl font-bold drop-shadow'>🅻</span> {t('matches.leftTable')}</div>
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1"><span>🏆</span> {t('matches.winner')}</div>
-          <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1"><span>❌</span> {t('matches.loser')}</div>
+      <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+        <div className="min-w-[980px]">
+          {/* Header (fixed) */}
+          <div className="w-full flex flex-row items-center justify-between bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl px-6 py-4 shadow-sm sticky top-0 z-10">
+            <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1">{t('completedMatches.headers.matchNo')}</div>
+            <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1">{t('completedMatches.headers.bracket')}</div>
+            <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-2"><span className='text-2xl font-bold drop-shadow'>🆁</span> {t('matches.rightTable')}</div>
+            <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-2"><span className='text-2xl font-bold drop-shadow'>🅻</span> {t('matches.leftTable')}</div>
+            <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1"><span>🏆</span> {t('matches.winner')}</div>
+            <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1"><span>❌</span> {t('matches.loser')}</div>
+          </div>
+          {/* Rows (scrollable vertically) */}
+          <div className="max-h-[60vh] overflow-y-auto mt-2 pr-1">
+            {filteredMatches.map((m, i) => {
+              const winnerId = m.winnerId!;
+              const loserId = m.player1Id === winnerId ? m.player2Id : m.player1Id;
+              const bracketDisplay = getLocalizedBracketLabel(m.description) || m.id;
+              return (
+                <div
+                  key={m.id}
+                  className="flex flex-row items-center justify-between bg-white rounded-lg shadow-md px-6 py-4 transition-all duration-200 gap-2 overflow-hidden mb-1 hover:shadow-lg"
+                >
+                  <div className="flex-1 font-semibold text-gray-500 text-base flex items-center gap-1">{i + 1}</div>
+                  <div className={`flex-1 font-semibold text-base flex items-center gap-1 ${m.bracket === 'loser' ? 'text-red-600' : m.bracket === 'placement' ? 'text-purple-600' : 'text-green-600'}`}>{bracketDisplay}</div>
+                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player2Id) || t('matches.bye')) : (getPlayerName(m.player2Id) || '—')}</div>
+                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player1Id) || t('matches.bye')) : (getPlayerName(m.player1Id) || '—')}</div>
+                  <div className="flex-1 flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 bg-green-100 text-green-900 font-black rounded-full px-3 py-1 text-base">
+                      {m.isBye ? t('matches.bye') : getPlayerName(winnerId)}
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 bg-red-100 text-red-900 font-black rounded-full px-3 py-1 text-base">
+                      {m.isBye ? '—' : getPlayerName(loserId)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        {/* Rows */}
-        {filteredMatches.map((m, i) => {
-          const winnerId = m.winnerId!;
-          const loserId = m.player1Id === winnerId ? m.player2Id : m.player1Id;
-          const bracketDisplay = getLocalizedBracketLabel(m.description) || m.id;
-          return (
-            <div
-              key={m.id}
-              className="flex flex-row items-center justify-between bg-white rounded-lg shadow-md px-6 py-4 transition-all duration-200 gap-2 overflow-hidden mb-1 hover:shadow-lg"
-            >
-              <div className="flex-1 font-semibold text-gray-500 text-base flex items-center gap-1">{i + 1}</div>
-              <div className={`flex-1 font-semibold text-base flex items-center gap-1 ${m.bracket === 'loser' ? 'text-red-600' : m.bracket === 'placement' ? 'text-purple-600' : 'text-green-600'}`}>{bracketDisplay}</div>
-              <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player2Id) || t('matches.bye')) : (getPlayerName(m.player2Id) || '—')}</div>
-              <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player1Id) || t('matches.bye')) : (getPlayerName(m.player1Id) || '—')}</div>
-              <div className="flex-1 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 bg-green-100 text-green-900 font-black rounded-full px-3 py-1 text-base">
-                  {m.isBye ? t('matches.bye') : getPlayerName(winnerId)}
-                </span>
-              </div>
-              <div className="flex-1 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 bg-red-100 text-red-900 font-black rounded-full px-3 py-1 text-base">
-                  {m.isBye ? '—' : getPlayerName(loserId)}
-                </span>
-              </div>
-            </div>
-          );
-        })}
       </div>
     </div>
   );

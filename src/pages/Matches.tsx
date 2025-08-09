@@ -714,6 +714,7 @@ const Matches = () => {
           {fixtures.length > 0 && (
             <div className="mb-8">
               <ActiveFixturesNav 
+                fixtures={fixtures}
                 onFixtureSelect={handleFixtureSelect}
                 onFixtureClose={handleFixtureClose}
                 activeFixtureId={activeFixture?.id}

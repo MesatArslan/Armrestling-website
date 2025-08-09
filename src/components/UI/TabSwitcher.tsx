@@ -11,19 +11,19 @@ const TabSwitcher: React.FC<TabSwitcherProps> = ({ activeTab, onTabChange }) => 
   return (
     <div className="tab-switcher">
       <button
-        className={`tab-switcher-btn tab-switcher-btn-left ${activeTab === 'active' ? 'tab-switcher-btn-active tab-switcher-btn-active-blue' : ''}`}
+        className={`tab-switcher-btn tab-switcher-btn-left tab-switcher-btn-blue ${activeTab === 'active' ? 'tab-switcher-btn-active tab-switcher-btn-active-blue' : ''}`}
         onClick={() => onTabChange('active')}
       >
         {t('matches.tabActive')}
       </button>
       <button
-        className={`tab-switcher-btn ${activeTab === 'completed' ? 'tab-switcher-btn-active tab-switcher-btn-active-purple' : ''}`}
+        className={`tab-switcher-btn tab-switcher-btn-purple ${activeTab === 'completed' ? 'tab-switcher-btn-active tab-switcher-btn-active-purple' : ''}`}
         onClick={() => onTabChange('completed')}
       >
         {t('matches.tabCompleted')}
       </button>
       <button
-        className={`tab-switcher-btn tab-switcher-btn-right ${activeTab === 'rankings' ? 'tab-switcher-btn-active tab-switcher-btn-active-yellow' : ''}`}
+        className={`tab-switcher-btn tab-switcher-btn-right tab-switcher-btn-yellow ${activeTab === 'rankings' ? 'tab-switcher-btn-active tab-switcher-btn-active-yellow' : ''}`}
         onClick={() => onTabChange('rankings')}
       >
         {t('matches.tabRankings')}

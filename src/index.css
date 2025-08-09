@@ -78,9 +78,11 @@ button {
 .tab-switcher-btn-right {
   border-radius: 0 0.75rem 0.75rem 0;
 }
+/* default hover (fallback) */
 .tab-switcher-btn:hover {
   background: #e0e7ff;
 }
+/* active styles */
 .tab-switcher-btn-active {
   color: #fff;
 }
@@ -92,6 +94,19 @@ button {
 }
 .tab-switcher-btn-active-yellow {
   background: #facc15;
+  color: #fff;
+}
+/* color-specific hover when not active: solid same color */
+.tab-switcher-btn-blue:not(.tab-switcher-btn-active):hover {
+  background: #1d4ed8; /* blue active */
+  color: #fff;
+}
+.tab-switcher-btn-purple:not(.tab-switcher-btn-active):hover {
+  background: #7c3aed; /* purple active */
+  color: #fff;
+}
+.tab-switcher-btn-yellow:not(.tab-switcher-btn-active):hover {
+  background: #facc15; /* yellow active */
   color: #fff;
 }
 

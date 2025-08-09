@@ -82,10 +82,21 @@ const MatchCard: React.FC<MatchCardProps> = ({
     }
     return localizedBase;
   };
+
+  // Dynamically size player name based on length to keep it visible and tidy
+  const getNameSizeClass = (name: string): string => {
+    const len = name?.length || 0;
+    if (len <= 18) return 'text-base lg:text-lg';
+    if (len <= 26) return 'text-sm lg:text-base';
+    if (len <= 34) return 'text-xs lg:text-sm';
+    if (len <= 44) return 'text-[11px] lg:text-xs';
+    return 'text-[10px] lg:text-[11px]';
+  };
+
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300">
+    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 w-full max-w-md mx-auto md:max-w-md lg:max-w-full">
       {/* Header */}
-      <div className={`text-white p-4 ${
+      <div className={`text-white p-3 md:p-3 lg:p-4 ${
         bracket === 'loser' 
           ? 'bg-gradient-to-r from-red-500 to-pink-500' 
           : bracket === 'placement'
@@ -93,11 +104,11 @@ const MatchCard: React.FC<MatchCardProps> = ({
           : 'bg-gradient-to-r from-green-500 to-emerald-500'
       }`}>
         <div className="text-center w-full">
-          <div className="text-xl font-bold mb-2">{getLocalizedMatchTitle(matchTitle)}</div>
+          <div className="text-lg md:text-xl font-bold mb-1 md:mb-2">{getLocalizedMatchTitle(matchTitle)}</div>
           {/* Maç Durumu Butonu - başlığın altında */}
           <button
             onClick={togglePlay}
-            className={`mx-auto px-3 py-2 rounded-lg text-xs font-bold transition-all duration-300 shadow-md hover:shadow-lg ${
+            className={`mx-auto px-2 py-1 md:px-2 md:py-1.5 lg:md:px-3 lg:md:py-2 rounded-lg text-xs font-bold transition-all duration-300 shadow-md hover:shadow-lg ${
               isPlaying 
                 ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg' 
                 : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-300 border border-gray-300'
@@ -119,69 +130,89 @@ const MatchCard: React.FC<MatchCardProps> = ({
             </div>
           </button>
           {isBye && (
-            <div className="text-xs text-blue-100 bg-blue-500/30 px-2 py-1 rounded inline-block mt-2">
+            <div className="text-xs text-blue-100 bg-blue-500/30 px-2 py-1 rounded inline-block mt-1 md:mt-2">
               {t('matches.bye')} - {t('matches.advancesToNextRound')}
             </div>
           )}
         </div>
-        
       </div>
+      
       {/* Players Section */}
-      <div className="p-6">
-        <div className="flex items-stretch justify-between mb-6 gap-4">
+      <div className="p-3 md:p-4 lg:p-6">
+        <div className="flex flex-col lg:flex-row items-stretch justify-between mb-4 md:mb-4 lg:mb-6 gap-2 md:gap-3 lg:md:gap-4 min-w-0">
           {/* Left Player (Sol Masa) */}
           <div 
-            className={`flex-1 text-center p-4 rounded-xl transition-all duration-200 cursor-pointer min-h-[140px] flex flex-col ${winnerId === player1Id ? 'bg-green-100 border-2 border-green-400 shadow-lg scale-105' : currentSelectedWinner === player1Id ? 'bg-green-100 border-2 border-green-400 shadow-lg scale-105' : 'bg-white border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 hover:shadow-sm'}`}
+            className={`flex-1 min-w-0 text-center p-3 md:p-3 lg:p-4 rounded-xl transition-all duration-200 cursor-pointer min-h-[100px] md:min-h-[120px] lg:min-h-[140px] flex flex-col ${
+              winnerId === player1Id 
+                ? 'bg-green-100 border-2 border-green-400 shadow-lg ring-2 ring-green-300' 
+                : currentSelectedWinner === player1Id 
+                ? 'bg-green-50 border-2 border-green-300 shadow-md ring-2 ring-green-200' 
+                : 'bg-white border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 hover:shadow-sm'
+            }`}
             onClick={() => onWinnerSelect(player1Id)}
           >
             <div className="flex-1 flex flex-col justify-center">
-              <div className="font-bold text-lg text-gray-800 mb-1 break-words">{player1Name}</div>
+              <div className={`font-bold ${getNameSizeClass(player1Name)} text-gray-800 mb-1 break-words leading-snug`}>{player1Name}</div>
               {winnerId === player1Id && (
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-500 text-white">
+                <div className="mt-1 md:mt-2">
+                  <span className="inline-flex items-center px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-bold bg-green-500 text-white">
                     🏆 {t('matches.winner')}
                   </span>
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-lg font-bold text-blue-600">🅻</span>
-              <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">{t('matches.leftTable')}</span>
+            <div className="flex items-center justify-center gap-1 md:gap-2">
+              <span className="text-base md:text-lg font-bold text-blue-600">🅻</span>
+              <span className="text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">{t('matches.leftTable')}</span>
             </div>
           </div>
-          {/* VS */}
-          <div className="flex items-center justify-center px-2">
-            <div className="text-2xl font-bold text-gray-400">{t('matches.vs')}</div>
+          
+          {/* VS - Only shown in horizontal layout */}
+          <div className="hidden lg:flex items-center justify-center px-1 md:px-2">
+            <div className="text-xl md:text-2xl font-bold text-gray-400">{t('matches.vs')}</div>
           </div>
+          
+          {/* VS - Only shown in vertical layout */}
+          <div className="lg:hidden flex items-center justify-center py-1">
+            <div className="text-xl font-bold text-gray-400">{t('matches.vs')}</div>
+          </div>
+          
           {/* Right Player (Sağ Masa) */}
           <div 
-            className={`flex-1 text-center p-4 rounded-xl transition-all duration-200 cursor-pointer min-h-[140px] flex flex-col ${winnerId === player2Id ? 'bg-green-100 border-2 border-green-400 shadow-lg scale-105' : currentSelectedWinner === player2Id ? 'bg-green-100 border-2 border-green-400 shadow-lg scale-105' : 'bg-white border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 hover:shadow-sm'}`}
+            className={`flex-1 min-w-0 text-center p-3 md:p-3 lg:p-4 rounded-xl transition-all duration-200 cursor-pointer min-h-[100px] md:min-h-[120px] lg:min-h-[140px] flex flex-col ${
+              winnerId === player2Id 
+                ? 'bg-green-100 border-2 border-green-400 shadow-lg ring-2 ring-green-300' 
+                : currentSelectedWinner === player2Id 
+                ? 'bg-green-50 border-2 border-green-300 shadow-md ring-2 ring-green-200' 
+                : 'bg-white border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 hover:shadow-sm'
+            }`}
             onClick={() => onWinnerSelect(player2Id)}
           >
             <div className="flex-1 flex flex-col justify-center">
-              <div className="font-bold text-lg text-gray-800 mb-1 break-words">{player2Name}</div>
+              <div className={`font-bold ${getNameSizeClass(player2Name)} text-gray-800 mb-1 break-words leading-snug`}>{player2Name}</div>
               {winnerId === player2Id && (
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-500 text-white">
+                <div className="mt-1 md:mt-2">
+                  <span className="inline-flex items-center px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-bold bg-green-500 text-white">
                     🏆 {t('matches.winner')}
                   </span>
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-lg font-bold text-blue-600">🆁</span>
-              <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">{t('matches.rightTable')}</span>
+            <div className="flex items-center justify-center gap-1 md:gap-2">
+              <span className="text-base md:text-lg font-bold text-blue-600">🆁</span>
+              <span className="text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">{t('matches.rightTable')}</span>
             </div>
           </div>
         </div>
+        
         {/* Action Buttons */}
         {!winnerId && player2Id && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-gray-200">
             <div className="text-center">
               <button
                 onClick={currentSelectedWinner ? onWinnerConfirm : undefined}
                 disabled={!currentSelectedWinner}
-                className={`py-3 px-6 rounded-xl text-sm font-bold transition-all duration-200 shadow-lg transform ${
+                className={`py-2 px-4 md:py-2 md:px-5 lg:md:py-3 lg:md:px-6 rounded-xl text-xs md:text-sm font-bold transition-all duration-200 shadow-lg transform ${
                   currentSelectedWinner 
                     ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-xl hover:scale-105 cursor-pointer' 
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -197,4 +228,4 @@ const MatchCard: React.FC<MatchCardProps> = ({
   );
 };
 
-export default MatchCard; 
+export default MatchCard;

@@ -836,7 +836,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 justify-items-center">
                 {activeMatches.map(renderMatch)}
               </div>
             )}
