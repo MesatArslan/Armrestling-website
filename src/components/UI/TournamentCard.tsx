@@ -157,6 +157,19 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     }
   };
 
+  const handleTournamentCardClick = () => {
+    // Turnuva kartına tıklandığında, eğer sadece bir weight range varsa onu otomatik olarak aç
+    if (tournament.weightRanges.length === 1) {
+      const singleWeightRange = tournament.weightRanges[0];
+      if (!isPlayerManagementOpen || selectedWeightRange !== singleWeightRange.id) {
+        setIsPlayerManagementOpen(true);
+        onSelectWeightRange(tournament.id, singleWeightRange.id);
+      }
+    }
+    // Turnuvayı genişlet/daralt
+    onToggle(tournament.id);
+  };
+
   const handleClosePlayerManagement = () => {
     setIsPlayerManagementOpen(false);
     onSelectWeightRange(tournament.id, '');
@@ -166,11 +179,11 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
 
 
   return (
-    <div className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 ${className}`}>
+    <div className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 min-h-[200px] ${className}`}>
       {/* Tournament Header */}
       <div 
-        className="p-4 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 transition-all duration-200 rounded-t-2xl"
-        onClick={() => onToggle(tournament.id)}
+        className="p-4 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 transition-all duration-200 rounded-t-2xl min-h-[80px]"
+        onClick={handleTournamentCardClick}
       >
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -223,7 +236,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           <div className="-mx-4 px-4">
             <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth">
               {tournament.weightRanges.map((weightRange) => (
-                <div key={weightRange.id} className="shrink-0 w-72 sm:w-80 lg:w-96 snap-start">
+                <div key={weightRange.id} className="shrink-0 w-80 lg:w-96 snap-start">
                   <WeightRangeCard
                     weightRange={weightRange}
                     tournament={tournament}
@@ -241,8 +254,8 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           {/* Player Management Section */}
           {isPlayerManagementOpen && selectedWeightRange && selectedTournament === tournament.id && (
             <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200/50">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-4 sm:p-6 min-h-[400px] flex flex-col">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 flex-shrink-0">
                   <div>
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
                       {t('tournamentCard.managingPlayersFor', { name: tournament.weightRanges.find(wr => wr.id === selectedWeightRange)?.name })}
@@ -292,34 +305,36 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                 </div>
 
                 {/* Available Players Table */}
-                <div className="mb-8">
+                <div className="mb-8 flex-1 min-h-0">
                   <h4 className="text-lg font-semibold text-gray-800 mb-4">
                     {t('tournamentCard.availablePlayers', { count: getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length })}
                   </h4>
-                  <PlayersTable
-                    players={getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
-                    onPlayersChange={() => {}} // Read-only for tournaments
-                    columns={[
-                      { id: 'name', name: 'Name', visible: true },
-                      { id: 'surname', name: 'Surname', visible: true },
-                      { id: 'weight', name: 'Weight', visible: true },
-                      { id: 'gender', name: 'Gender', visible: true },
-                      { id: 'handPreference', name: 'Hand Preference', visible: true },
-                      { id: 'birthday', name: 'Birthday', visible: true },
-                    ]}
-                    onColumnsChange={() => {}} // Read-only
-                    searchTerm=""
-                    onSearchChange={() => {}} // Read-only
-                    showAddRow={false}
-                    showDeleteColumn={true}
-                    onDeletePlayer={handleExcludePlayer}
-                    className="bg-white/50 rounded-xl"
-                  />
+                  <div className="h-64 overflow-y-auto">
+                    <PlayersTable
+                      players={getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
+                      onPlayersChange={() => {}} // Read-only for tournaments
+                      columns={[
+                        { id: 'name', name: 'Name', visible: true },
+                        { id: 'surname', name: 'Surname', visible: true },
+                        { id: 'weight', name: 'Weight', visible: true },
+                        { id: 'gender', name: 'Gender', visible: true },
+                        { id: 'handPreference', name: 'Hand Preference', visible: true },
+                        { id: 'birthday', name: 'Birthday', visible: true },
+                      ]}
+                      onColumnsChange={() => {}} // Read-only
+                      searchTerm=""
+                      onSearchChange={() => {}} // Read-only
+                      showAddRow={false}
+                      showDeleteColumn={true}
+                      onDeletePlayer={handleExcludePlayer}
+                      className="bg-white/50 rounded-xl"
+                    />
+                  </div>
                 </div>
 
                 {/* Excluded Players Table */}
                 {getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length > 0 && (
-                  <div>
+                  <div className="flex-shrink-0">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4">
                       {t('tournamentCard.excludedPlayers', { count: getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length })}
                     </h4>
@@ -327,25 +342,27 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       <p className="text-sm text-gray-600 mb-4">
                         {t('tournamentCard.excludedPlayersDescription')}
                       </p>
-                      <PlayersTable
-                        players={getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
-                        onPlayersChange={() => {}} // Read-only for tournaments
-                        columns={[
-                          { id: 'name', name: 'Name', visible: true },
-                          { id: 'surname', name: 'Surname', visible: true },
-                          { id: 'weight', name: 'Weight', visible: true },
-                          { id: 'gender', name: 'Gender', visible: true },
-                          { id: 'handPreference', name: 'Hand Preference', visible: true },
-                          { id: 'birthday', name: 'Birthday', visible: true },
-                        ]}
-                        onColumnsChange={() => {}} // Read-only
-                        searchTerm=""
-                        onSearchChange={() => {}} // Read-only
-                        showAddRow={false}
-                        showDeleteColumn={true}
-                        onDeletePlayer={handleIncludePlayer}
-                        className="opacity-60"
-                      />
+                      <div className="h-32 overflow-y-auto">
+                        <PlayersTable
+                          players={getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
+                          onPlayersChange={() => {}} // Read-only for tournaments
+                          columns={[
+                            { id: 'name', name: 'Name', visible: true },
+                            { id: 'surname', name: 'Surname', visible: true },
+                            { id: 'weight', name: 'Weight', visible: true },
+                            { id: 'gender', name: 'Gender', visible: true },
+                            { id: 'handPreference', name: 'Hand Preference', visible: true },
+                            { id: 'birthday', name: 'Birthday', visible: true },
+                          ]}
+                          onColumnsChange={() => {}} // Read-only
+                          searchTerm=""
+                          onSearchChange={() => {}} // Read-only
+                          showAddRow={false}
+                          showDeleteColumn={true}
+                          onDeletePlayer={handleIncludePlayer}
+                          className="opacity-60"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -388,32 +405,20 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
     f.tournamentId === tournament.id && f.weightRangeId === weightRange.id
   );
   
-  const getFixtureStatus = () => {
-    if (!existingFixture) return null;
-    
-    if (existingFixture.status === 'completed') {
-      return { status: 'completed', text: t('tournamentCard.completed'), color: 'green' };
-    } else if (existingFixture.status === 'active') {
-      return { status: 'active', text: t('tournamentCard.inProgress'), color: 'blue' };
-    } else if (existingFixture.status === 'paused') {
-      return { status: 'paused', text: t('tournamentCard.paused'), color: 'yellow' };
-    }
-    return null;
-  };
-  
-  const fixtureStatus = getFixtureStatus();
-  
   return (
-    <div className={`relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border-2 transition-all duration-300 hover:shadow-lg ${
-      isSelected 
-        ? 'border-blue-500 shadow-lg bg-blue-50/30' 
-        : 'border-gray-200/50 hover:border-blue-300/50'
-    }`}>
+    <div 
+      className={`relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border-2 transition-all duration-300 hover:shadow-lg cursor-pointer h-[280px] flex flex-col ${
+        isSelected 
+          ? 'border-blue-500 shadow-lg bg-blue-50/30' 
+          : 'border-gray-200/50 hover:border-blue-300/50'
+      }`}
+      onClick={() => onManagePlayers(weightRange.id)}
+    >
       {/* Weight Range Header */}
-      <div className="mb-4">
+      <div className="flex-shrink-0 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xl font-bold text-gray-900">{weightRange.name}</h3>
-          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
+          <h3 className="text-xl font-bold text-gray-900 truncate">{weightRange.name}</h3>
+          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-white text-xs font-bold">{availablePlayers}</span>
           </div>
         </div>
@@ -426,39 +431,22 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
         </div>
       </div>
 
-      {/* Fixture Status */}
-      {fixtureStatus && (
-        <div className="mb-4">
-          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${
-            fixtureStatus.color === 'green' 
-              ? 'bg-green-100 text-green-800' 
-              : fixtureStatus.color === 'blue'
-              ? 'bg-blue-100 text-blue-800'
-              : 'bg-yellow-100 text-yellow-800'
-          }`}>
-            <div className={`w-2 h-2 rounded-full ${
-              fixtureStatus.color === 'green' 
-                ? 'bg-green-500' 
-                : fixtureStatus.color === 'blue'
-                ? 'bg-blue-500'
-                : 'bg-yellow-500'
-            } ${fixtureStatus.status === 'active' ? 'animate-pulse' : ''}`}></div>
-            {fixtureStatus.text}
-          </div>
-        </div>
-      )}
+
 
       {/* Player Count */}
-      <div className="mb-6">
+      <div className="flex-shrink-0 mb-6">
         <p className="text-sm text-gray-600">
           <span className="font-semibold text-blue-600">{availablePlayers}</span> {t('tournamentCard.playersAvailable')}
         </p>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 flex-1 justify-end">
         <button
-          onClick={() => onManagePlayers(weightRange.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onManagePlayers(weightRange.id);
+          }}
           className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
             isSelected
               ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg'
@@ -470,7 +458,10 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
         
         {!existingFixture ? (
           <button
-            onClick={() => onStartTournament(tournament.id, weightRange.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onStartTournament(tournament.id, weightRange.id);
+            }}
             disabled={availablePlayers === 0}
             className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
               availablePlayers === 0
@@ -481,9 +472,10 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
             <PlayIcon className="w-5 h-5" />
             {t('tournamentCard.startTournament')}
           </button>
-        ) : fixtureStatus?.status === 'completed' ? (
+        ) : existingFixture?.status === 'completed' ? (
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               // Navigate to matches page to show results with rankings tab
               window.location.href = `/matches?tab=rankings&fixture=${existingFixture?.id}`;
             }}
@@ -494,7 +486,8 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
           </button>
         ) : (
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               // Navigate to matches page to continue tournament with active tab
               window.location.href = `/matches?tab=active&fixture=${existingFixture?.id}`;
             }}

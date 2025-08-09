@@ -498,7 +498,7 @@ const Tournaments = () => {
         </div>
         
         {/* Tournaments List */}
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-7xl mx-auto">
             {tournaments.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
