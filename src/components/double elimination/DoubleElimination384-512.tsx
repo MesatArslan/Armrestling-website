@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MatchesStorage } from '../../utils/matchesStorage';
 import type { DoubleEliminationProps } from '../../types';
 import type { Match, Ranking } from '../../types/doubleelimination';
 import MatchCard from '../UI/MatchCard';
@@ -1121,10 +1122,10 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
   
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
       <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Double Elimination Tournament (384-512 oyuncu)
+        <h2 className="text-2xl font-bold text-gray-900">
+          {fixtureId ? (MatchesStorage.getFixtureById(fixtureId)?.name || '') : ''}
         </h2>
         <div className="flex gap-4">
           <button
@@ -1161,7 +1162,7 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
       </div>
               <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
       <div className="max-w-4xl mx-auto">
-        <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">Aktif Tur: {currentRoundKey}</h3>
+        {/* Aktif Tur bilgisi kaldırıldı */}
       </div>
       {/* Otomatik Kazananları Seç Butonu */}
       {activeTab === 'active' && activeRoundMatches.filter(m => !m.isBye && !m.winnerId).length > 0 && (

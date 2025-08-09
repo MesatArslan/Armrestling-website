@@ -31,7 +31,7 @@ const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatch
   }, [winner.id, onMatchResult, onTournamentComplete, hasAutoCompleted]);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
       <h2 className="text-2xl font-bold text-center mb-6 text-blue-500">
         Single Player Tournament
       </h2>

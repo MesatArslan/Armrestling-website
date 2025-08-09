@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { MatchesStorage } from '../../utils/matchesStorage';
 import { useState } from 'react';
 import type { DoubleEliminationProps } from '../../types';
 import type { Match, Ranking } from '../../types/doubleelimination';
@@ -1091,15 +1092,17 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
   
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Double Elimination Tournament (192-256 oyuncu)
-        </h2>
-      </div>
+    <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
+      {fixtureId && (
+        <div className="mb-6 flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {MatchesStorage.getFixtureById(fixtureId)?.name || ''}
+          </h2>
+        </div>
+      )}
       <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
       <div className="max-w-4xl mx-auto">
-        <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">Aktif Tur: {currentRoundKey}</h3>
+        {/* Aktif Tur bilgisi kaldırıldı */}
       </div>
       
       {/* Control Buttons - Only show in active tab */}

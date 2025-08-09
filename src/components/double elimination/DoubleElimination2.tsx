@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { MatchesStorage } from '../../utils/matchesStorage';
 import { useState } from 'react';
 import type { DoubleEliminationProps } from '../../types';
 import type { Match } from '../../types/doubleelimination';
@@ -422,10 +423,12 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
   const completedMatches = matches.filter(match => match.winnerId);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
-        Double Elimination Tournament ({players.length} players)
-      </h2>
+    <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
+      {fixtureId && (
+        <h2 className="text-2xl font-bold text-center mb-2 text-gray-900">
+          {MatchesStorage.getFixtureById(fixtureId)?.name || ''}
+        </h2>
+      )}
       <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
       {activeTab === 'active' && (
         <div className="flex justify-center gap-4 mb-4">
