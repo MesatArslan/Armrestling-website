@@ -203,6 +203,8 @@
     "addColumn": "Sütun Ekle",
     "exportJSON": "Dışa Aktar (JSON)",
     "importJSON": "İçe Aktar (JSON)",
+      "importExcel": "Excel'den İçe Aktar",
+      "importExcelNote": "Excel başlık eşlemesi: Ad → Ad, Soyad → Soyad, Kilo → Kilo, Kol Tercihi → Kol Tercihi (sağ/sol/sağ,sol → Her İkisi), Cinsiyet → Cinsiyet, Doğum Tarihi → Doğum Tarihi. Fazladan başlıklar yeni sütun olarak eklenir.",
     "addNewColumn": "Yeni Sütun Ekle",
     "columnName": "Sütun adı",
     "totalPlayers": "Toplam Oyuncu",

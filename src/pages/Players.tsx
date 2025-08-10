@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { PlusIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import * as XLSX from 'xlsx';
 import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
@@ -18,6 +19,7 @@ const Players = () => {
   const [newColumnName, setNewColumnName] = useState('');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const excelInputRef = useRef<HTMLInputElement>(null);
 
   // Load data from localStorage on component mount
   useEffect(() => {
@@ -106,6 +108,226 @@ const Players = () => {
     reader.readAsText(file);
   };
 
+  const normalize = (text: string): string => {
+    return (text || '')
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/ı/g, 'i')
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9]+/g, '');
+  };
+
+  const parseGender = (val: any): 'male' | 'female' | undefined => {
+    const v = normalize(String(val));
+    if (!v) return undefined;
+    if (['erkek', 'male', 'm', 'e'].includes(v)) return 'male';
+    if (['kadin', 'kadın', 'female', 'f', 'k'].includes(v)) return 'female';
+    return undefined;
+  };
+
+  const parseHandPreference = (val: any): 'left' | 'right' | 'both' | undefined => {
+    const raw = (val ?? '').toString().trim().toLowerCase();
+    const v = normalize(raw);
+    if (!v) return undefined;
+    if (v.includes('sag') || v === 'right' || v === 'r') {
+      if (raw.includes('sol') || raw.includes('left')) return 'both';
+      return 'right';
+    }
+    if (v.includes('sol') || v === 'left' || v === 'l') {
+      if (raw.includes('sag') || raw.includes('right')) return 'both';
+      return 'left';
+    }
+    if (['both', 'iki', 'ikiside', 'heriki', 'herikisi'].includes(v)) return 'both';
+    if (v.includes('sag') && v.includes('sol')) return 'both';
+    return undefined;
+  };
+
+  const parseWeight = (val: any): number | undefined => {
+    if (val === undefined || val === null || val === '') return undefined;
+    const num = typeof val === 'number' ? val : parseFloat(String(val).replace(',', '.'));
+    return Number.isFinite(num) ? Number(Math.round(num * 10) / 10) : undefined;
+  };
+
+  const toISODate = (d: Date): string => d.toISOString().slice(0, 10);
+  const excelSerialToDate = (serial: number): Date => {
+    const excelEpoch = Date.UTC(1899, 11, 30); // Excel 1900 date system
+    const ms = Math.round(serial * 24 * 60 * 60 * 1000);
+    return new Date(excelEpoch + ms);
+  };
+
+  const parseBirthday = (val: any): string | undefined => {
+    if (!val && val !== 0) return undefined;
+    if (val instanceof Date && !isNaN(val.getTime())) return toISODate(val);
+    // Try excel serial number
+    if (typeof val === 'number') {
+      const jsDate = excelSerialToDate(val);
+      if (!isNaN(jsDate.getTime())) return toISODate(jsDate);
+    }
+    const s = String(val).trim();
+    // Try formats like dd.mm.yyyy, dd/mm/yyyy, yyyy-mm-dd
+    const m1 = s.match(/^([0-3]?\d)[./-]([0-1]?\d)[./-](\d{4})$/);
+    if (m1) {
+      const [_, dd, mm, yyyy] = m1;
+      const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+      if (!isNaN(d.getTime())) return toISODate(d);
+    }
+    const m2 = s.match(/^(\d{4})[./-]([0-1]?\d)[./-]([0-3]?\d)$/);
+    if (m2) {
+      const [_, yyyy, mm, dd] = m2;
+      const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+      if (!isNaN(d.getTime())) return toISODate(d);
+    }
+    // Fallback: return as-is if it looks like a date
+    return s;
+  };
+
+  const handleImportExcelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = new Uint8Array(ev.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: false, dateNF: 'yyyy-mm-dd' });
+        if (!rows || rows.length === 0) throw new Error('Boş sayfa');
+        // Detect header row between first two rows
+        const knownHeaderNorms = new Set([
+          'ad', 'soyad', 'kilo', 'koltercihi', 'cinsiyet', 'dogumtarihi', 'dogum', 'sehir',
+          // Combined name headers
+          'adsoyad', 'advesoyad', 'adivesoyadi',
+          // English fallbacks
+          'name', 'surname', 'weight', 'handpreference', 'gender', 'birthday', 'city'
+        ]);
+        const scoreRow = (cells: any[]): number => {
+          if (!cells) return 0;
+          return cells.reduce((acc, cell) => acc + (knownHeaderNorms.has(normalize(String(cell))) ? 1 : 0), 0);
+        };
+        const row0 = rows[0] || [];
+        const row1 = rows[1] || [];
+        const score0 = scoreRow(row0);
+        const score1 = scoreRow(row1);
+        const headerRowIndex = score1 > score0 ? 1 : 0;
+        const headersRaw = (rows[headerRowIndex] || []) as string[];
+        const dataRows = rows.slice(headerRowIndex + 1);
+
+        const headerToKeyMap: Record<string, string> = {};
+        const knownMap: Record<string, string> = {
+          // tr
+          ad: 'name',
+          soyad: 'surname',
+          kilo: 'weight',
+          koltercihi: 'handPreference',
+          'koltercihi(e%9fer)': 'handPreference',
+          cinsiyet: 'gender',
+          dogumtarihi: 'birthday',
+          dogum: 'birthday',
+          sehir: 'city',
+          // combined TR headers
+          adsoyad: 'fullName',
+          advesoyad: 'fullName',
+          adivesoyadi: 'fullName',
+          // en fallbacks
+          name: 'name',
+          surname: 'surname',
+          weight: 'weight',
+          handpreference: 'handPreference',
+          gender: 'gender',
+          birthday: 'birthday',
+          city: 'city',
+        };
+
+        const cleanedHeaders = headersRaw.map((h) => ({ original: String(h).trim(), norm: normalize(String(h)) }));
+
+        cleanedHeaders.forEach(({ original, norm }) => {
+          headerToKeyMap[original] = knownMap[norm] || '';
+        });
+
+        // Create columns for unknown headers
+        const currentColumnIds = new Set(columns.map((c) => c.id));
+        const currentColumnNames = new Set(columns.map((c) => c.name.trim().toLowerCase()));
+        const newColumnsToAdd: Column[] = [];
+
+        cleanedHeaders.forEach(({ original, norm }) => {
+          if (headerToKeyMap[original]) return; // already mapped to a known field
+          const newId = original.toLowerCase().trim().replace(/\s+/g, '_');
+          if (!currentColumnIds.has(newId) && !currentColumnNames.has(original.toLowerCase())) {
+            newColumnsToAdd.push({ id: newId, name: original, visible: true });
+          }
+          headerToKeyMap[original] = newId; // map unknown header to new id
+        });
+
+        if (newColumnsToAdd.length > 0) {
+          const updated = [...columns, ...newColumnsToAdd];
+          setColumns(updated);
+          PlayersStorage.saveColumns(updated);
+        }
+
+        const importedPlayers = dataRows
+          .filter((row) => row.some((cell) => String(cell).trim() !== ''))
+          .map((row) => {
+            const obj: Record<string, any> = {};
+            cleanedHeaders.forEach(({ original }, idx) => {
+              const key = headerToKeyMap[original];
+              obj[key] = row[idx];
+            });
+
+            const parsed: any = {
+              id: uuidv4(),
+              name: obj['name'] ?? '',
+              surname: obj['surname'] ?? '',
+              weight: parseWeight(obj['weight']) ?? 0,
+              gender: parseGender(obj['gender']) ?? 'male',
+              handPreference: parseHandPreference(obj['handPreference']) ?? 'right',
+              birthday: parseBirthday(obj['birthday']) ?? '',
+              city: obj['city'] ?? '',
+            };
+
+            // If a combined full name column exists, split into name and surname
+            if (obj['fullName']) {
+              const full = String(obj['fullName']).trim();
+              if (full.length > 0) {
+                const parts = full.split(/\s+/);
+                if (parts.length === 1) {
+                  if (!parsed.name) parsed.name = parts[0];
+                } else {
+                  const surname = parts.pop() as string;
+                  const name = parts.join(' ');
+                  if (!parsed.name) parsed.name = name;
+                  if (!parsed.surname) parsed.surname = surname;
+                }
+              }
+            }
+
+            // Attach extra fields
+            Object.keys(obj).forEach((k) => {
+              if (!['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday', 'city'].includes(k)) {
+                parsed[k] = obj[k];
+              }
+            });
+
+            return parsed as ExtendedPlayer;
+          });
+
+        const updatedPlayers = [...players, ...importedPlayers];
+        setPlayers(updatedPlayers);
+        alert(t('players.importSuccess'));
+      } catch (err: any) {
+        alert(t('players.importError', { error: err.message || String(err) }));
+      } finally {
+        if (e.target) e.target.value = '';
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -170,7 +392,22 @@ const Players = () => {
                 style={{ display: 'none' }}
                 onChange={handleImportJSON}
               />
+              <button
+                onClick={() => excelInputRef.current?.click()}
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-teal-400 to-teal-600 text-white rounded-lg shadow hover:from-teal-500 hover:to-teal-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+                title={t('players.importExcelNote')}
+              >
+                {t('players.importExcel')}
+              </button>
+              <input
+                ref={excelInputRef}
+                type="file"
+                accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                style={{ display: 'none' }}
+                onChange={handleImportExcelChange}
+              />
             </div>
+            <p className="mt-1 text-xs text-gray-500 italic">{t('players.importExcelNote')}</p>
           </div>
 
           {/* Players Table */}
