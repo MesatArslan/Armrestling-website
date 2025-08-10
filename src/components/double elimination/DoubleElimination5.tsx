@@ -90,6 +90,40 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
         matchNumber: 1,
         isBye: false,
         description: RoundDescriptionUtils.getDescription('WB1')
+      },
+      // Record three BYE matches so they appear in Completed Matches
+      {
+        id: 'wb1_bye_2',
+        player1Id: shuffledPlayers[2].id,
+        player2Id: '',
+        winnerId: shuffledPlayers[2].id,
+        bracket: 'winner',
+        round: 1,
+        matchNumber: 2,
+        isBye: true,
+        description: `${RoundDescriptionUtils.createMatchDescription('WB1', 2)} - Bye`
+      },
+      {
+        id: 'wb1_bye_3',
+        player1Id: shuffledPlayers[3].id,
+        player2Id: '',
+        winnerId: shuffledPlayers[3].id,
+        bracket: 'winner',
+        round: 1,
+        matchNumber: 3,
+        isBye: true,
+        description: `${RoundDescriptionUtils.createMatchDescription('WB1', 3)} - Bye`
+      },
+      {
+        id: 'wb1_bye_4',
+        player1Id: shuffledPlayers[4].id,
+        player2Id: '',
+        winnerId: shuffledPlayers[4].id,
+        bracket: 'winner',
+        round: 1,
+        matchNumber: 4,
+        isBye: true,
+        description: `${RoundDescriptionUtils.createMatchDescription('WB1', 4)} - Bye`
       }
     ];
     
@@ -450,8 +484,9 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
 
 
   const getPlayerName = (playerId: string) => {
+    if (!playerId) return '';
     const player = players.find(p => p.id === playerId);
-    return player ? `${player.name} ${player.surname}` : 'Unknown Player';
+    return player ? `${player.name} ${player.surname}` : '';
   };
 
   const undoLastMatch = () => {

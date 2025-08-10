@@ -519,15 +519,15 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
         return [];
       }
       case 'GRAND_FINAL': {
-        // Finalı LB'den gelen kazanırsa
+        // Final'ı LB'den gelen kazanırsa Grand Final oynanır.
+        // Finalde solda oynayan oyuncu Grand Final'de sağda olmalı; tarafları ters çevirerek kuruyoruz.
         const finalMatch = matchList.find(m => m.id === 'final');
         if (finalMatch && finalMatch.winnerId && finalMatch.player1Id && finalMatch.player2Id) {
-          // WB'den gelen kaybederse Grand Final
           if (finalMatch.winnerId === finalMatch.player2Id) {
             return [{
               id: 'grand_final',
-              player1Id: finalMatch.player2Id,
-              player2Id: finalMatch.player1Id,
+              player1Id: finalMatch.player2Id, // LB’den gelen Final’de sağdaydı → GF’de solda
+              player2Id: finalMatch.player1Id, // WB’den gelen Final’de soldaydı → GF’de sağda
               bracket: 'winner',
               round: 8,
               matchNumber: 1,
@@ -547,8 +547,9 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
 
   // --- UI Helpers ---
   const getPlayerName = (playerId: string) => {
+    if (!playerId) return '';
     const player = players.find(p => p.id === playerId);
-    return player ? `${player.name} ${player.surname}` : 'Unknown';
+    return player ? `${player.name} ${player.surname}` : '';
   };
 
   const undoLastMatch = () => {
@@ -667,17 +668,17 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
       }));
     };
 
-    // For grandfinal matches, swap player positions
+    // Grand final is stored with swapped sides already; render normally
     if (match.id === 'grand_final') {
       return (
         <MatchCard
           matchId={match.id}
           fixtureId={fixtureId}
-          player1Name={player2Name}
-          player2Name={player1Name}
+          player1Name={player1Name}
+          player2Name={player2Name}
           winnerId={match.winnerId}
-          player1Id={match.player2Id || ''}
-          player2Id={match.player1Id || ''}
+          player1Id={match.player1Id || ''}
+          player2Id={match.player2Id || ''}
           bracket={match.bracket as 'winner' | 'loser' | 'placement'}
           round={match.round}
           matchNumber={match.matchNumber}

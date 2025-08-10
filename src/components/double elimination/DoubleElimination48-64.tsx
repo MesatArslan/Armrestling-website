@@ -906,6 +906,8 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
 
   // --- Aktif ve tamamlanan maçları göster ---
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
+  const rankingsComputed = calculateRankings(matches);
+  const firstSecondDetermined = Boolean(rankingsComputed.first && rankingsComputed.second);
 
   return (
     <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
@@ -956,7 +958,7 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
             </div>
           </div>
           
-          {tournamentComplete ? (
+          {firstSecondDetermined ? (
             <div className="max-w-4xl mx-auto">
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 text-center shadow-lg">
                 <div className="mb-6">

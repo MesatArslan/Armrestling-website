@@ -440,15 +440,15 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players,onTou
       }
       
       case 'GrandFinal': {
-        // Finalı LB'den gelen kazanırsa
+        // Final'ı LB'den gelen kazanırsa Grand Final oynanır.
+        // Final'de solda oynayan oyuncu Grand Final'de sağda oynamalı: bunu tarafları ters çevirerek kuruyoruz.
         const finalMatch = matchList.find(m => m.id === 'final');
         if (finalMatch && finalMatch.winnerId && finalMatch.player1Id && finalMatch.player2Id) {
-          // WB'den gelen kaybederse Grand Final
           if (finalMatch.winnerId === finalMatch.player2Id) {
             return [{
               id: 'grandfinal',
-              player1Id: finalMatch.player2Id,
-              player2Id: finalMatch.player1Id,
+              player1Id: finalMatch.player2Id, // LB'den gelen, Final'de sağdaydı → GF'de solda
+              player2Id: finalMatch.player1Id, // WB'den gelen, Final'de soldaydı → GF'de sağda
               bracket: 'winner',
               round: 7,
               matchNumber: 1,
@@ -533,8 +533,9 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players,onTou
 
   // --- UI Helpers ---
   const getPlayerName = (playerId: string) => {
+    if (!playerId) return '';
     const player = players.find(p => p.id === playerId);
-    return player ? `${player.name} ${player.surname}` : 'Unknown';
+    return player ? `${player.name} ${player.surname}` : '';
   };
 
   const undoLastMatch = () => {
@@ -651,29 +652,7 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players,onTou
       }));
     };
 
-    // For grandfinal matches, swap player positions
-    if (match.id === 'grandfinal') {
-      return (
-        <MatchCard
-          matchId={match.id}
-          player1Name={player2Name}
-          player2Name={player1Name}
-          winnerId={match.winnerId}
-          player1Id={match.player2Id || ''}
-          player2Id={match.player1Id || ''}
-          bracket={match.bracket as 'winner' | 'loser' | 'placement'}
-          round={match.round}
-          matchNumber={match.matchNumber}
-          isBye={match.isBye}
-          currentSelectedWinner={currentSelectedWinner}
-          onWinnerSelect={handleWinnerSelect}
-          onWinnerConfirm={handleWinnerConfirm}
-          onSelectionCancel={handleSelectionCancel}
-          playersLength={players.length}
-          matchTitle={match.description}
-        />
-      );
-    }
+    // Grand final is stored with swapped sides already; render normally
 
     return (
       <MatchCard

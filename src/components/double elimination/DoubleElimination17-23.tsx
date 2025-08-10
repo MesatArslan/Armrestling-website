@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
+import { MatchesStorage } from '../../utils/matchesStorage';
 import type { DoubleEliminationProps } from '../../types';
 import type { Match, Ranking } from '../../types/doubleelimination';
 import MatchCard from '../UI/MatchCard';
@@ -196,8 +197,9 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
 
   // --- UI Helpers ---
   const getPlayerName = (playerId: string) => {
+    if (!playerId) return '';
     const player = players.find(p => p.id === playerId);
-    return player ? `${player.name} ${player.surname}` : 'Unknown';
+    return player ? `${player.name} ${player.surname}` : '';
   };
 
   const undoLastMatch = () => {
@@ -789,34 +791,73 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
             )}
           </div>
           
-          {/* Otomatik Kazananları Seç Butonu */}
-          {!tournamentComplete && (() => {
-            const roundMatches = activeMatches.filter(m => !m.isBye && !m.winnerId);
-            return roundMatches.length > 0;
-          })() && (
-            <div className="flex justify-center mb-4">
-              <button
-                onClick={() => {
-                  const roundMatches = activeMatches.filter(m => !m.isBye && !m.winnerId);
-                  roundMatches.forEach(match => {
-                    // Her maç için rastgele bir kazanan seç
-                    const winnerId = Math.random() < 0.5 ? match.player1Id : match.player2Id;
-                    handleMatchResult(match.id, winnerId);
-                  });
-                }}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Bu Turun Kazananlarını Otomatik Seç
-              </button>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto">
-            {activeMatches.filter(m => !m.isBye && !m.winnerId).map(renderMatch)}
-          </div>
+          {(() => {
+            const globalUnfinished = matches.filter(m => !m.isBye && !m.winnerId);
+            const roundUnfinished = activeMatches.filter(m => !m.isBye && !m.winnerId);
+            if (globalUnfinished.length === 0) {
+              // Show completion panel like DoubleElimination12-16
+              return (
+                <div className="max-w-4xl mx-auto">
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 text-center shadow-lg">
+                    <div className="mb-6">
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                        <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h2 className="text-3xl font-bold text-green-800 mb-2">🏆 Turnuva Tamamlandı!</h2>
+                      <p className="text-green-700 text-lg mb-2">
+                        {(() => {
+                          const nonByeMatches = matches.filter(m => !m.isBye);
+                          const completedCount = nonByeMatches.filter(m => m.winnerId).length;
+                          const totalMatches = nonByeMatches.length;
+                          return `${completedCount} / ${totalMatches} maç başarıyla tamamlandı.`;
+                        })()}
+                      </p>
+                      <p className="text-green-700 text-lg mb-6">Sonuçları ve sıralamaları görmek için aşağıdaki butona tıklayın.</p>
+                      <button
+                        onClick={() => TabManager.createTabChangeHandler(setActiveTab, fixtureId)('rankings')}
+                        className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg shadow-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Sıralama Sekmesine Git
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            
+            // Default: show auto-select and matches
+            return (
+              <>
+                {/* Otomatik Kazananları Seç Butonu */}
+                {!tournamentComplete && roundUnfinished.length > 0 && (
+                  <div className="flex justify-center mb-4">
+                    <button
+                      onClick={() => {
+                        roundUnfinished.forEach(match => {
+                          const winnerId = Math.random() < 0.5 ? match.player1Id : match.player2Id;
+                          handleMatchResult(match.id, winnerId);
+                        });
+                      }}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Bu Turun Kazananlarını Otomatik Seç
+                    </button>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto">
+                  {roundUnfinished.map(renderMatch)}
+                </div>
+              </>
+            );
+          })()}
         </>
       )}
       {activeTab === 'completed' && (

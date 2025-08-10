@@ -621,16 +621,16 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     }
     // Final - 1. ve 2. sıralama (sadece GrandFinal yoksa)
     if (match.id === 'final') {
-      // WB'den gelen kazanırsa turnuva biter, sıralama belli olur
-      const yariFinalMatch = matches.find(m => m.id === 'yarifinal');
-      if (yariFinalMatch && yariFinalMatch.player1Id && yariFinalMatch.player2Id) {
-        // WB'den gelen oyuncu (player1) kazanırsa turnuva biter
-        if (winnerId === yariFinalMatch.player1Id) {
+      // Final, player1 = WB kazananı; player2 = LB Final kazananı olarak kuruluyor
+      const finalMatch = matches.find(m => m.id === 'final');
+      if (finalMatch) {
+        if (winnerId === finalMatch.player1Id) {
+          // WB kazananı Final'i kazandı → turnuva biter
           updatedRankings.first = winnerId;
           updatedRankings.second = loserId;
           complete = true;
         }
-        // LB'den gelen kazanırsa GrandFinal oynanır, henüz sıralama belli değil
+        // Aksi halde LB kazananı kazandı → Grand Final oynanacak
       }
     }
     // GrandFinal - 1. ve 2. sıralama (GrandFinal bittikten sonra)
@@ -652,8 +652,9 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
 
   // --- UI Helpers ---
   const getPlayerName = (playerId: string) => {
+    if (!playerId) return '';
     const player = players.find(p => p.id === playerId);
-    return player ? `${player.name} ${player.surname}` : 'Unknown';
+    return player ? `${player.name} ${player.surname}` : '';
   };
 
   const undoLastMatch = () => {

@@ -58,7 +58,12 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
         setMatches(state.matches || []);
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
-        setCurrentRoundKey(state.currentRoundKey || 'WB1');
+        // If tournament completed, stick to last round key to avoid re-opening finals
+        if (state.tournamentComplete && state.currentRoundKey) {
+          setCurrentRoundKey(state.currentRoundKey);
+        } else {
+          setCurrentRoundKey(state.currentRoundKey || 'WB1');
+        }
         setMatchHistory(state.matchHistory || []);
         setLastCompletedMatch(null);
         return true; // State was loaded
@@ -129,6 +134,31 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
       }
     }
   }, [players]);
+
+  // Normalize persisted state on mount/update to avoid reopening Grand Final
+  React.useEffect(() => {
+    if (matches.length === 0) return;
+    const grandFinal = matches.find(m => m.id === 'grandfinal');
+    const final = matches.find(m => m.id === 'final');
+    const lbFinal = matches.find(m => m.id === 'lbfinal');
+    // If Grand Final already has a winner but flags/round not set, finalize and stick to GrandFinal
+    if (grandFinal?.winnerId && (!tournamentComplete || currentRoundKey !== 'GrandFinal')) {
+      const newRankings = calculateRankings(matches);
+      setRankings(newRankings);
+      setTournamentComplete(true);
+      setCurrentRoundKey('GrandFinal');
+      saveTournamentState(matches, newRankings, true, 'GrandFinal');
+      return;
+    }
+    // If Final has winner and Grand Final is not required, finalize and stick at Final
+    if (final?.winnerId && lbFinal?.winnerId && final.winnerId !== lbFinal.winnerId && !tournamentComplete) {
+      const newRankings = calculateRankings(matches);
+      setRankings(newRankings);
+      setTournamentComplete(true);
+      setCurrentRoundKey('Final');
+      saveTournamentState(matches, newRankings, true, 'Final');
+    }
+  }, [matches]);
 
   React.useEffect(() => {
     if (typeof resetKey !== 'undefined') {
@@ -203,20 +233,27 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
   React.useEffect(() => {
     if (matches.length === 0) return;
     const currentIdx = ROUND_ORDER.indexOf(currentRoundKey);
-    
+    // If we're at the last round or unknown, stop
     if (currentIdx === -1 || currentIdx === ROUND_ORDER.length - 1) return;
+    // Do not proceed until current round is complete
     if (!isRoundComplete(currentRoundKey, matches)) return;
-    
     const nextRoundKey = ROUND_ORDER[currentIdx + 1] as RoundKey;
-    
-    const newMatches = createNextRound();
-    
-    if (newMatches.length > 0) {
-      setMatches([...matches, ...newMatches]);
-      setCurrentRoundKey(nextRoundKey);
-      saveTournamentState([...matches, ...newMatches], rankings, tournamentComplete, nextRoundKey);
+    // Prevent re-creating Grand Final if it already exists
+    if (nextRoundKey === 'GrandFinal') {
+      const alreadyHasGrandFinal = matches.some(m => m.id === 'grandfinal');
+      if (alreadyHasGrandFinal) return;
     }
-  }, [matches]);
+    const newMatches = createNextRound();
+    if (newMatches.length > 0) {
+      // Avoid adding duplicates by id
+      const existingIds = new Set(matches.map(m => m.id));
+      const deduped = newMatches.filter(m => !existingIds.has(m.id));
+      if (deduped.length === 0) return;
+      setMatches([...matches, ...deduped]);
+      setCurrentRoundKey(nextRoundKey);
+      saveTournamentState([...matches, ...deduped], rankings, tournamentComplete, nextRoundKey);
+    }
+  }, [matches, currentRoundKey]);
 
   function createNextRound(): Match[] {
     const matchList = matches;
@@ -878,6 +915,8 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
         const newRankings = calculateRankings(updatedMatches);
         setRankings(newRankings);
         setTournamentComplete(true);
+        // Son round gösterimi GrandFinal olarak sabitlensin ki yeniden oluşturulmasın
+        setCurrentRoundKey('GrandFinal');
           
           // Call parent's tournament complete handler
           if (onTournamentComplete) {
@@ -889,7 +928,7 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
             matches: updatedMatches,
             rankings: newRankings || rankings,
             tournamentComplete: true,
-            currentRoundKey: currentRoundKey,
+            currentRoundKey: 'GrandFinal',
             matchHistory: newHistory,
             timestamp: new Date().toISOString()
           };
@@ -1018,6 +1057,8 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
 
   // --- Aktif ve tamamlanan maçları göster ---
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
+  const rankingsComputed = calculateRankings(matches);
+  const firstSecondDetermined = Boolean(rankingsComputed.first && rankingsComputed.second);
   
   return (
     <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
@@ -1068,7 +1109,7 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
             </div>
           </div>
           
-          {tournamentComplete ? (
+          {firstSecondDetermined ? (
             <div className="max-w-4xl mx-auto">
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 text-center shadow-lg">
                 <div className="mb-6">

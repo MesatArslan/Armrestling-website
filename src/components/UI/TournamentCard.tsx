@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState} from 'react';
+import { useState } from 'react';
 import { ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PencilIcon, TrashIcon, XMarkIcon, PlayIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import PlayersTable from './PlayersTable';
 import { MatchesStorage } from '../../utils/matchesStorage';
@@ -86,13 +86,13 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     return players.filter(player => {
       // Weight range filter
       const weightMatch = player.weight >= weightRange.min && player.weight <= weightRange.max;
-      
+
       // Tournament filters
       const genderMatch = !tournament.genderFilter || player.gender === tournament.genderFilter;
-      const handMatch = !tournament.handPreferenceFilter || 
-        player.handPreference === tournament.handPreferenceFilter || 
+      const handMatch = !tournament.handPreferenceFilter ||
+        player.handPreference === tournament.handPreferenceFilter ||
         player.handPreference === 'both';
-      
+
       // Birth year filters
       let birthYearMatch = true;
       if (tournament.birthYearMin || tournament.birthYearMax) {
@@ -102,10 +102,10 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           if (tournament.birthYearMax && birthYear > tournament.birthYearMax) birthYearMatch = false;
         }
       }
-      
+
       // Not excluded
       const notExcluded = !weightRange.excludedPlayerIds?.includes(player.id);
-      
+
       return weightMatch && genderMatch && handMatch && birthYearMatch && notExcluded;
     });
   };
@@ -114,10 +114,10 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     return players.filter(player => {
       const weightMatch = player.weight >= weightRange.min && player.weight <= weightRange.max;
       const genderMatch = !tournament.genderFilter || player.gender === tournament.genderFilter;
-      const handMatch = !tournament.handPreferenceFilter || 
-        player.handPreference === tournament.handPreferenceFilter || 
+      const handMatch = !tournament.handPreferenceFilter ||
+        player.handPreference === tournament.handPreferenceFilter ||
         player.handPreference === 'both';
-      
+
       let birthYearMatch = true;
       if (tournament.birthYearMin || tournament.birthYearMax) {
         const birthYear = player.birthday ? new Date(player.birthday).getFullYear() : null;
@@ -126,9 +126,9 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           if (tournament.birthYearMax && birthYear > tournament.birthYearMax) birthYearMatch = false;
         }
       }
-      
+
       const isExcluded = weightRange.excludedPlayerIds?.includes(player.id);
-      
+
       return weightMatch && genderMatch && handMatch && birthYearMatch && isExcluded;
     });
   };
@@ -181,7 +181,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   return (
     <div className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 min-h-[200px] ${className}`}>
       {/* Tournament Header */}
-      <div 
+      <div
         className="p-4 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 transition-all duration-200 rounded-t-2xl min-h-[80px]"
         onClick={handleTournamentCardClick}
       >
@@ -254,7 +254,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           {/* Player Management Section */}
           {isPlayerManagementOpen && selectedWeightRange && selectedTournament === tournament.id && (
             <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200/50">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-4 sm:p-6 min-h-[400px] flex flex-col">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-lg p-4 sm:p-6 min-h-[500px] flex flex-col">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 flex-shrink-0">
                   <div>
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -309,10 +309,10 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                   <h4 className="text-lg font-semibold text-gray-800 mb-4">
                     {t('tournamentCard.availablePlayers', { count: getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length })}
                   </h4>
-                  <div className="h-64 overflow-y-auto">
+                  <div className="h-96 overflow-y-auto">
                     <PlayersTable
                       players={getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
-                      onPlayersChange={() => {}} // Read-only for tournaments
+                      onPlayersChange={() => { }} // Read-only for tournaments
                       columns={[
                         { id: 'name', name: 'Name', visible: true },
                         { id: 'surname', name: 'Surname', visible: true },
@@ -321,9 +321,9 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                         { id: 'handPreference', name: 'Hand Preference', visible: true },
                         { id: 'birthday', name: 'Birthday', visible: true },
                       ]}
-                      onColumnsChange={() => {}} // Read-only
+                      onColumnsChange={() => { }} // Read-only
                       searchTerm=""
-                      onSearchChange={() => {}} // Read-only
+                      onSearchChange={() => { }} // Read-only
                       showAddRow={false}
                       showDeleteColumn={true}
                       onDeletePlayer={handleExcludePlayer}
@@ -345,7 +345,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       <div className="h-32 overflow-y-auto">
                         <PlayersTable
                           players={getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
-                          onPlayersChange={() => {}} // Read-only for tournaments
+                          onPlayersChange={() => { }} // Read-only for tournaments
                           columns={[
                             { id: 'name', name: 'Name', visible: true },
                             { id: 'surname', name: 'Surname', visible: true },
@@ -354,9 +354,9 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                             { id: 'handPreference', name: 'Hand Preference', visible: true },
                             { id: 'birthday', name: 'Birthday', visible: true },
                           ]}
-                          onColumnsChange={() => {}} // Read-only
+                          onColumnsChange={() => { }} // Read-only
                           searchTerm=""
-                          onSearchChange={() => {}} // Read-only
+                          onSearchChange={() => { }} // Read-only
                           showAddRow={false}
                           showDeleteColumn={true}
                           onDeletePlayer={handleIncludePlayer}
@@ -371,7 +371,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           )}
         </div>
       )}
-      
+
 
 
 
@@ -399,19 +399,18 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const availablePlayers = getAvailablePlayersCount(weightRange, tournament);
-  
+
   // Check if there's an existing fixture for this tournament and weight range
-  const existingFixture = MatchesStorage.getAllFixtures().find(f => 
+  const existingFixture = MatchesStorage.getAllFixtures().find(f =>
     f.tournamentId === tournament.id && f.weightRangeId === weightRange.id
   );
-  
+
   return (
-    <div 
-      className={`relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border-2 transition-all duration-300 hover:shadow-lg cursor-pointer h-[280px] flex flex-col ${
-        isSelected 
-          ? 'border-blue-500 shadow-lg bg-blue-50/30' 
+    <div
+      className={`relative bg-white/80 backdrop-blur-sm rounded-xl p-6 pb-8 border-2 transition-all duration-300 hover:shadow-lg cursor-pointer h-[300px] flex flex-col ${isSelected
+          ? 'border-blue-500 shadow-lg bg-blue-50/30'
           : 'border-gray-200/50 hover:border-blue-300/50'
-      }`}
+        }`}
       onClick={() => onManagePlayers(weightRange.id)}
     >
       {/* Weight Range Header */}
@@ -441,21 +440,20 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col gap-3 flex-1 justify-end">
+      <div className="flex flex-col gap-3 flex-1 justify-end mb-4">
         <button
           onClick={(e) => {
             e.stopPropagation();
             onManagePlayers(weightRange.id);
           }}
-          className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
-            isSelected
+          className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${isSelected
               ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg'
               : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
-          }`}
+            }`}
         >
           {t('tournamentCard.managePlayers', { count: availablePlayers })}
         </button>
-        
+
         {!existingFixture ? (
           <button
             onClick={(e) => {
@@ -463,11 +461,10 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
               onStartTournament(tournament.id, weightRange.id);
             }}
             disabled={availablePlayers === 0}
-            className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-              availablePlayers === 0
+            className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${availablePlayers === 0
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl'
-            }`}
+              }`}
           >
             <PlayIcon className="w-5 h-5" />
             {t('tournamentCard.startTournament')}
