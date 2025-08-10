@@ -839,8 +839,9 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
   }
 
   const getPlayerName = (playerId: string) => {
+    if (!playerId) return '';
     const player = players.find(p => p.id === playerId);
-    return player ? `${player.name} ${player.surname}` : 'Unknown Player';
+    return player ? `${player.name} ${player.surname}` : '';
   };
 
   const undoLastMatch = () => {
@@ -1095,6 +1096,8 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
 
   // --- Aktif ve tamamlanan maçları göster ---
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
+  const rankingsComputed = calculateRankings(matches);
+  const firstSecondDetermined = Boolean(rankingsComputed.first && rankingsComputed.second);
   
   return (
     <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
@@ -1140,7 +1143,7 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
         {/* Aktif Tur bilgisi kaldırıldı */}
       </div>
       {/* Otomatik Kazananları Seç Butonu */}
-      {activeTab === 'active' && !tournamentComplete && activeRoundMatches.filter(m => !m.isBye && !m.winnerId).length > 0 && (
+      {activeTab === 'active' && !firstSecondDetermined && activeRoundMatches.filter(m => !m.isBye && !m.winnerId).length > 0 && (
         <div className="flex justify-center mb-4">
           <button
             onClick={() => {
@@ -1157,7 +1160,7 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
       )}
       {activeTab === 'active' && (
         <>
-          {tournamentComplete ? (
+          {firstSecondDetermined ? (
             <div className="max-w-4xl mx-auto">
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 text-center shadow-lg">
                 <div className="mb-6">
