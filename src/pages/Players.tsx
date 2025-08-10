@@ -16,6 +16,7 @@ const Players = () => {
   const [players, setPlayers] = useState<ExtendedPlayer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddColumnModalOpen, setIsAddColumnModalOpen] = useState(false);
+  const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,6 +67,18 @@ const Players = () => {
       
       // Debug: Verify the column was saved
     }
+  };
+
+  const handleDeleteColumn = (columnId: string) => {
+    if (!columnId) return;
+    if (!window.confirm(t('players.confirmDeleteColumn') || 'Sütunu silmek istediğinize emin misiniz?')) return;
+    const updated = PlayersStorage.deleteColumn(columns, columnId);
+    setColumns(updated);
+  };
+
+  const handleToggleColumnVisibility = (columnId: string) => {
+    const updated = columns.map((c) => (c.id === columnId ? { ...c, visible: !c.visible } : c));
+    setColumns(updated);
   };
 
   const handleAddTestPlayers = () => {
@@ -374,6 +387,12 @@ const Players = () => {
                 {t('players.addColumn')}
               </button>
               <button
+                onClick={() => setIsManageColumnsOpen(true)}
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-400 to-indigo-600 text-white rounded-lg shadow hover:from-indigo-500 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+              >
+                {t('players.manageColumns')}
+              </button>
+              <button
                 onClick={handleExportJSON}
                 className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg shadow hover:from-purple-500 hover:to-purple-700 transition-all duration-200 text-sm sm:text-base font-semibold"
               >
@@ -471,6 +490,46 @@ const Players = () => {
                 className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
               >
                 {t('common.add')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Columns Modal */}
+      {isManageColumnsOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="backdrop-blur-lg bg-white/90 p-6 rounded-2xl w-full max-w-md mx-4 shadow-2xl border border-gray-200">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900">{t('players.manageColumns')}</h2>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {columns.map((col) => (
+                <div key={col.id} className="flex items-center justify-between p-2 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={col.visible}
+                      onChange={() => handleToggleColumnVisibility(col.id)}
+                    />
+                    <span className="font-medium text-gray-800">
+                      {['name','surname','weight','gender','handPreference','birthday'].includes(col.id) ? t(`players.${col.id}`) : col.name}
+                    </span>
+                    <span className="text-xs text-gray-400">({col.id})</span>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteColumn(col.id)}
+                    className="text-red-600 hover:text-red-700 px-2 py-1 text-sm"
+                  >
+                    {t('players.delete')}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => setIsManageColumnsOpen(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 text-base font-semibold rounded-lg"
+              >
+                {t('common.close')}
               </button>
             </div>
           </div>

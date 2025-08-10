@@ -532,30 +532,56 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                             e.stopPropagation();
                                             setOpenFilter(openFilter === column.id ? null : column.id);
                                           }}
-                                          className={`p-1 rounded transition-colors duration-200 ${
-                                            columnFilters[column.id] ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-400 hover:bg-gray-50'
-                                          }`}
+                                          className={`px-2 py-1 rounded-md transition-colors duration-200 border ${
+                                            columnFilters[column.id]
+                                              ? 'text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100'
+                                              : 'text-gray-500 border-gray-200 bg-white hover:bg-gray-50'
+                                          } shadow-sm`}
                                         >
                                           <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${
                                             openFilter === column.id ? 'transform rotate-180' : ''
                                           }`} />
                                         </button>
                                         {openFilter === column.id && (
-                                          <div className="absolute right-0 mt-1 w-48 bg-blue-50/30 border border-blue-100 rounded-lg shadow-sm p-2 z-20">
-                                            <div className="max-h-48 overflow-y-auto">
-                                              {getUniqueValues(column.id).map((value) => (
-                                                <button
-                                                  key={value}
-                                                  onClick={() => handleFilterChange(column.id, value)}
-                                                  className={`w-full text-left px-2 py-1 text-sm rounded ${
-                                                    columnFilters[column.id] === value
-                                                      ? 'bg-blue-100 text-blue-600'
-                                                      : 'text-blue-500 hover:bg-blue-100/50'
-                                                  }`}
-                                                >
-                                                  {value}
-                                                </button>
-                                              ))}
+                                          <div className="absolute right-0 mt-2 min-w-[12rem] bg-white rounded-xl shadow-lg ring-1 ring-black/5 z-30">
+                                            <div className="py-2 max-h-56 overflow-y-auto">
+                                              {getUniqueValues(column.id).map((value) => {
+                                                // Derive display of current filter for highlighting
+                                                let currentDisplay: string | null = null;
+                                                const stored = columnFilters[column.id];
+                                                if (stored == null) {
+                                                  currentDisplay = t('players.all');
+                                                } else if (column.id === 'gender') {
+                                                  currentDisplay = t(`players.${stored}`);
+                                                } else if (column.id === 'handPreference') {
+                                                  currentDisplay = t(`players.${stored}`);
+                                                } else {
+                                                  currentDisplay = String(stored);
+                                                }
+                                                const isSelected = currentDisplay === value;
+                                                return (
+                                                  <button
+                                                    key={value}
+                                                    onClick={() => handleFilterChange(column.id, value)}
+                                                    className={`flex items-center w-full px-3 py-2 text-sm ${
+                                                      isSelected
+                                                        ? 'bg-blue-50 text-blue-700'
+                                                        : 'text-gray-700 hover:bg-gray-50'
+                                                    }`}
+                                                  >
+                                                    <span
+                                                      className={`mr-2 inline-flex h-4 w-4 items-center justify-center rounded-full border ${
+                                                        isSelected
+                                                          ? 'border-blue-600 bg-blue-600 text-white'
+                                                          : 'border-gray-300 text-transparent'
+                                                      }`}
+                                                    >
+                                                      ✓
+                                                    </span>
+                                                    <span className="truncate">{value}</span>
+                                                  </button>
+                                                );
+                                              })}
                                             </div>
                                           </div>
                                         )}
@@ -563,30 +589,32 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                     )}
                                   </div>
                                   {column.id === 'weight' && isWeightFilterOpen && (
-                                    <div className="flex items-center gap-2 mt-1.5 bg-blue-50/30 p-1.5 rounded" ref={filterRef}>
-                                      <input
-                                        type="number"
-                                        step="0.1"
-                                        value={weightFilter.min || ''}
-                                        onChange={(e) => handleWeightFilterChange('min', e.target.value)}
-                                        className="w-20 px-2 py-1 bg-white border border-gray-100 rounded text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                        placeholder="Min"
-                                      />
-                                      <span className="text-blue-500">-</span>
-                                      <input
-                                        type="number"
-                                        step="0.1"
-                                        value={weightFilter.max || ''}
-                                        onChange={(e) => handleWeightFilterChange('max', e.target.value)}
-                                        className="w-20 px-2 py-1 bg-white border border-gray-100 rounded text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                        placeholder="Max"
-                                      />
-                                      <button
-                                        onClick={handleWeightFilterClear}
-                                        className="text-xs text-blue-600 hover:text-blue-700"
-                                      >
-                                        Clear
-                                      </button>
+                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg ring-1 ring-black/5 p-3 z-30" ref={filterRef}>
+                                      <div className="flex items-center gap-2">
+                                        <input
+                                          type="number"
+                                          step="0.1"
+                                          value={weightFilter.min || ''}
+                                          onChange={(e) => handleWeightFilterChange('min', e.target.value)}
+                                          className="w-20 px-2 py-1 bg-white border border-gray-300 rounded text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                          placeholder="Min"
+                                        />
+                                        <span className="text-gray-400">–</span>
+                                        <input
+                                          type="number"
+                                          step="0.1"
+                                          value={weightFilter.max || ''}
+                                          onChange={(e) => handleWeightFilterChange('max', e.target.value)}
+                                          className="w-20 px-2 py-1 bg-white border border-gray-300 rounded text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                          placeholder="Max"
+                                        />
+                                        <button
+                                          onClick={handleWeightFilterClear}
+                                          className="ml-auto text-xs px-2 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+                                        >
+                                          Clear
+                                        </button>
+                                      </div>
                                     </div>
                                   )}
                                 </div>

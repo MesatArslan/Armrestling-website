@@ -773,19 +773,6 @@ const Tournaments = () => {
         {isCreateModalOpen && (
       <div 
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 overflow-hidden"
-        onClick={() => {
-          setIsCreateModalOpen(false);
-          setIsEditMode(false);
-          setEditingTournamentId(null);
-          setNewTournamentName('');
-          setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
-          setCreateTournamentGenderFilter(null);
-          setCreateTournamentHandPreferenceFilter(null);
-          setCreateTournamentBirthYearMin(null);
-          setCreateTournamentBirthYearMax(null);
-          setPlayerFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
-          setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
-        }}
       >
         <div 
           className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden transform-none"

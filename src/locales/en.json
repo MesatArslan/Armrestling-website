@@ -153,6 +153,8 @@
     "addTestPlayers": "Add 5 Test Players",
     "clearAllData": "Clear All Data",
     "addColumn": "Add Column",
+      "manageColumns": "Manage Columns",
+      "confirmDeleteColumn": "Are you sure you want to delete this column?",
     "exportJSON": "Export (JSON)",
     "importJSON": "Import (JSON)",
       "importExcel": "Import from Excel",
