@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Fixture } from '../../utils/matchesStorage';
 
 interface ActiveFixturesNavProps {
@@ -9,6 +10,7 @@ interface ActiveFixturesNavProps {
 }
 
 const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtureSelect, onFixtureClose, activeFixtureId }) => {
+  const { t } = useTranslation();
   const handleFixtureClose = (fixtureId: string) => {
     const fixture = fixtures.find(f => f.id === fixtureId);
     if (fixture) {
@@ -27,8 +29,8 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
             </svg>
           </div>
         </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-3 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">No active fixtures</h3>
-        <p className="text-gray-600 text-sm">Start a tournament to create fixtures</p>
+        <h3 className="text-xl font-bold text-gray-900 mb-3 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">{t('matches.noActiveFixtures')}</h3>
+        <p className="text-gray-600 text-sm">{t('matches.startTournamentMessage')}</p>
       </div>
     );
   }
@@ -49,9 +51,9 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
         </div>
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent leading-tight">
-            Active Fixtures
+            {t('matches.activeFixtures')}
           </h2>
-          <p className="text-sm text-gray-500 font-medium">{fixtures.length} active tournament{fixtures.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm text-gray-500 font-medium">{fixtures.length} {t(fixtures.length === 1 ? 'matches.fixture' : 'matches.fixtures')} {t('matches.available')}</p>
         </div>
       </div>
 
@@ -87,7 +89,7 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
                       <div className="flex items-center gap-2 shrink-0">
                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r ${status.bg} text-white`}>
                           <span className={`w-2 h-2 rounded-full bg-white/80`}></span>
-                          {fixture.status === 'completed' ? 'Completed' : fixture.status === 'active' ? 'In Progress' : 'Ready'}
+                          {fixture.status === 'completed' ? t('matches.completed') : fixture.status === 'active' ? t('matches.inProgress') : t('matches.ready')}
                         </div>
                         <button
                           onClick={(e) => {
@@ -95,7 +97,7 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
                             handleFixtureClose(fixture.id);
                           }}
                           className="p-2 rounded-xl border border-gray-200/60 text-gray-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50 transition-colors duration-200"
-                          title="Delete fixture"
+                          title={t('matches.deleteFixture')}
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
@@ -109,7 +111,7 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
                         <svg className="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
                         </svg>
-                        {fixture.playerCount} players
+                        {fixture.playerCount} {t('matches.players')}
                       </span>
                     </div>
 
@@ -118,7 +120,7 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
                         <svg className="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
                         </svg>
-                        <span className="font-medium">Updated {new Date(fixture.lastUpdated).toLocaleDateString()}</span>
+                        <span className="font-medium">{t('matches.updated')} {new Date(fixture.lastUpdated).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
