@@ -46,12 +46,29 @@ const Players = () => {
     }
   }, [players, isInitialLoad]);
 
+  // Utility: normalize columns (dedupe by id, keep first occurrence)
+  const normalizeColumns = React.useCallback((cols: Column[]): Column[] => {
+    const seen = new Set<string>();
+    const result: Column[] = [];
+    for (const c of cols) {
+      if (seen.has(c.id)) continue;
+      seen.add(c.id);
+      result.push(c);
+    }
+    return result;
+  }, []);
+
   // Save columns to localStorage whenever columns state changes
   useEffect(() => {
     if (!isInitialLoad) {
-      PlayersStorage.saveColumns(columns);
+      const normalized = normalizeColumns(columns);
+      if (normalized.length !== columns.length) {
+        setColumns(normalized);
+        return;
+      }
+      PlayersStorage.saveColumns(normalized);
     }
-  }, [columns, isInitialLoad]);
+  }, [columns, isInitialLoad, normalizeColumns]);
 
   const handleAddColumn = () => {
     if (newColumnName.trim()) {
@@ -71,14 +88,23 @@ const Players = () => {
 
   const handleDeleteColumn = (columnId: string) => {
     if (!columnId) return;
+    // Prevent deleting core/default columns
+    if (defaultColumns.some((c) => c.id === columnId)) {
+      return;
+    }
     if (!window.confirm(t('players.confirmDeleteColumn') || 'Sütunu silmek istediğinize emin misiniz?')) return;
-    const updated = PlayersStorage.deleteColumn(columns, columnId);
-    setColumns(updated);
+    const updatedColumns = normalizeColumns(PlayersStorage.deleteColumn(columns, columnId));
+    setColumns(updatedColumns);
+    // Remove this field from all players so that table doesn't render empty cells
+    setPlayers(prev => prev.map((p) => {
+      const { [columnId]: _removed, ...rest } = p as any;
+      return rest as any;
+    }));
   };
 
   const handleToggleColumnVisibility = (columnId: string) => {
     const updated = columns.map((c) => (c.id === columnId ? { ...c, visible: !c.visible } : c));
-    setColumns(updated);
+    setColumns(normalizeColumns(updated));
   };
 
   const handleAddTestPlayers = () => {
@@ -498,36 +524,65 @@ const Players = () => {
 
       {/* Manage Columns Modal */}
       {isManageColumnsOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="backdrop-blur-lg bg-white/90 p-6 rounded-2xl w-full max-w-md mx-4 shadow-2xl border border-gray-200">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900">{t('players.manageColumns')}</h2>
-            <div className="space-y-2 max-h-80 overflow-y-auto">
-              {columns.map((col) => (
-                <div key={col.id} className="flex items-center justify-between p-2 border border-gray-200 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={col.visible}
-                      onChange={() => handleToggleColumnVisibility(col.id)}
-                    />
-                    <span className="font-medium text-gray-800">
-                      {['name','surname','weight','gender','handPreference','birthday'].includes(col.id) ? t(`players.${col.id}`) : col.name}
-                    </span>
-                    <span className="text-xs text-gray-400">({col.id})</span>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteColumn(col.id)}
-                    className="text-red-600 hover:text-red-700 px-2 py-1 text-sm"
-                  >
-                    {t('players.delete')}
-                  </button>
-                </div>
-              ))}
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="backdrop-blur-md bg-white/90 p-6 rounded-2xl w-full max-w-lg mx-4 shadow-2xl border border-gray-200">
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">{t('players.manageColumns')}</h2>
+              <p className="mt-1 text-sm text-gray-500">Görünürlüğünü yönetmek istediğin özel sütunları aç/kapat. Satıra tıklayarak da görünürlüğü değiştirebilirsin.</p>
             </div>
-            <div className="mt-4 flex justify-end gap-3">
+            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+              {columns
+                .filter((col) => !defaultColumns.some((d) => d.id === col.id))
+                .map((col) => (
+                  <div
+                    key={col.id}
+                    onClick={() => handleToggleColumnVisibility(col.id)}
+                    className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                      col.visible
+                        ? 'border-blue-200 bg-blue-50/60 hover:bg-blue-100'
+                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="font-medium text-gray-900 truncate">{col.name}</span>
+                      <span className="text-xs text-gray-400 shrink-0">({col.id})</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <label
+                        className="inline-flex items-center cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={col.visible}
+                          onChange={() => handleToggleColumnVisibility(col.id)}
+                          className="sr-only"
+                        />
+                        <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${col.visible ? 'bg-blue-600' : 'bg-gray-300'}`}>
+                          <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition ${col.visible ? 'translate-x-5' : 'translate-x-1'}`} />
+                        </div>
+                      </label>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteColumn(col.id);
+                        }}
+                        className="text-red-600 hover:text-red-700 px-2 py-1 text-sm"
+                        title={t('players.delete')}
+                      >
+                        {t('players.delete')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              {columns.filter((col) => !defaultColumns.some((d) => d.id === col.id)).length === 0 && (
+                <div className="text-sm text-gray-500 p-2">{t('players.noCustomColumns') || 'Özel sütun yok.'}</div>
+              )}
+            </div>
+            <div className="mt-5 flex justify-end gap-3">
               <button
                 onClick={() => setIsManageColumnsOpen(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 text-base font-semibold rounded-lg"
+                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-base font-semibold rounded-lg"
               >
                 {t('common.close')}
               </button>

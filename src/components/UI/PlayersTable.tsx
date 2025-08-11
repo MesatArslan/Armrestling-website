@@ -58,18 +58,29 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   const [columnFilters, setColumnFilters] = useState<ColumnFilter>({});
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
+  const weightFilterRef = useRef<HTMLDivElement>(null);
+  const [filterSearch, setFilterSearch] = useState('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [loadedCount, setLoadedCount] = useState(300);
+  const [customWeightRanges, setCustomWeightRanges] = useState<Array<{ id: string; min: number | null; max: number | null }>>([]);
+  const [newWeightRange, setNewWeightRange] = useState<{ min: string; max: string }>({ min: '', max: '' });
+  const [showAddRangeForm, setShowAddRangeForm] = useState(false);
+  const [isEditRangesMode, setIsEditRangesMode] = useState(false);
+  const [selectedRangeIds, setSelectedRangeIds] = useState<string[]>([]);
 
   // Virtualization constants
   const ROW_HEIGHT = 56; // px
   const OVERSCAN = 8; // extra rows above/below viewport
+  const MIN_VISIBLE_ROWS = 7;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const clickedInsideColumnMenu = filterRef.current && filterRef.current.contains(target);
+      const clickedInsideWeightMenu = weightFilterRef.current && weightFilterRef.current.contains(target);
+      if (!clickedInsideColumnMenu && !clickedInsideWeightMenu) {
         setOpenFilter(null);
         setIsWeightFilterOpen(false);
       }
@@ -81,6 +92,21 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     };
   }, []);
 
+  // Reset filter search text when opening/closing a column filter
+  useEffect(() => {
+    setFilterSearch('');
+  }, [openFilter]);
+
+  // Reset add/edit state when closing weight filter panel
+  useEffect(() => {
+    if (!isWeightFilterOpen) {
+      setShowAddRangeForm(false);
+      setIsEditRangesMode(false);
+      setSelectedRangeIds([]);
+      setNewWeightRange({ min: '', max: '' });
+    }
+  }, [isWeightFilterOpen]);
+
   // Measure viewport and update on resize
   useLayoutEffect(() => {
     const container = scrollContainerRef.current;
@@ -91,22 +117,52 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     return () => window.removeEventListener('resize', setSize);
   }, []);
 
+  // Persist custom weight ranges to localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('playersTable.customWeightRanges');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setCustomWeightRanges(parsed);
+      }
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem('playersTable.customWeightRanges', JSON.stringify(customWeightRanges));
+    } catch {}
+  }, [customWeightRanges]);
+
   const getUniqueValues = (columnId: string) => {
-    let values = players
-      .map(player => player[columnId])
-      .filter((value): value is string | number => value !== undefined && value !== null)
-      .map(String)
-      .map(value => value.trim())
-      .filter(value => value !== '');
+      let values = players
+        .map(player => player[columnId])
+        .filter((value): value is string | number => value !== undefined && value !== null)
+        .map(String)
+        .map(value => value.trim())
+        .filter(value => value !== '');
     // Gender için çeviri uygula
-    if (columnId === 'gender') {
-      values = values.map(value => t(`players.${value}`));
-    }
+      if (columnId === 'gender') {
+        values = values.map(value => t(`players.${value}`));
+      }
     // HandPreference için çeviri uygula
-    if (columnId === 'handPreference') {
-      values = values.map(value => t(`players.${value}`));
-    }
+      if (columnId === 'handPreference') {
+        values = values.map(value => t(`players.${value}`));
+      }
     return [t('players.all'), ...Array.from(new Set(values))];
+  };
+
+  // Build counts for values shown in the filter menu
+  const getValueCounts = (columnId: string) => {
+    const counts = new Map<string, number>();
+    for (const p of players) {
+      let raw: any = p[columnId];
+      if (raw === undefined || raw === null || String(raw).trim() === '') continue;
+      let key = String(raw).trim();
+      if (columnId === 'gender') key = t(`players.${key}`);
+      if (columnId === 'handPreference') key = t(`players.${key}`);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return counts;
   };
 
   const handleFilterChange = (columnId: string, value: string) => {
@@ -125,7 +181,6 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
       ...prev,
       [columnId]: filterValue === t('players.all') ? null : filterValue.trim()
     }));
-    setOpenFilter(null);
   };
 
   const handleDeletePlayer = useCallback((playerId: string) => {
@@ -317,7 +372,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
             nameSurnameCombined.includes(token) || playerValuesLower.some(val => val.includes(token))
           );
 
-      const matchesWeight = 
+      const matchesWeight =
         (weightFilter.min === null || player.weight >= weightFilter.min) &&
         (weightFilter.max === null || player.weight <= weightFilter.max);
 
@@ -346,6 +401,8 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   );
   const topPadding = startIndex * ROW_HEIGHT;
   const bottomPadding = Math.max(0, (totalRows - endIndex - 1) * ROW_HEIGHT);
+  const minRowsPadding = Math.max(0, (MIN_VISIBLE_ROWS - totalRows) * ROW_HEIGHT);
+  const bottomSpacerHeight = Math.max(bottomPadding, minRowsPadding);
 
   const renderCellContent = (player: ExtendedPlayer, column: Column) => {
     if (editingCell?.id === player.id && editingCell?.column === column.id) {
@@ -519,6 +576,43 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
 
   const defaultColumnIds = ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'];
 
+  const formatRangeLabel = (min: number | null, max: number | null) => {
+    if (min == null && max == null) return 'All';
+    if (min == null) return `≤ ${max}`;
+    if (max == null) return `≥ ${min}`;
+    return `${min}–${max}`;
+  };
+
+  const getCountForWeightRange = useCallback(
+    (min: number | null, max: number | null) => {
+      const normalizedSearch = (searchTerm || '').trim().toLowerCase();
+      const tokens = normalizedSearch.length > 0 ? normalizedSearch.split(/\s+/).filter(Boolean) : [];
+      let count = 0;
+      for (const player of players) {
+        const nameSurnameCombined = `${(player.name || '').toString()} ${(player.surname || '').toString()}`.trim().toLowerCase();
+        const playerValuesLower = Object.values(player).map(v => String(v).toLowerCase());
+        const matchesSearch = tokens.length === 0
+          ? true
+          : tokens.every(token => nameSurnameCombined.includes(token) || playerValuesLower.some(val => val.includes(token)));
+        if (!matchesSearch) continue;
+        const matchesColumnFilters = Object.entries(columnFilters).every(([columnId, filterValue]) => {
+          if (filterValue === null) return true;
+          return String(player[columnId]).trim() === filterValue;
+        });
+        if (!matchesColumnFilters) continue;
+        const weightOk = (min == null || player.weight >= min) && (max == null || player.weight <= max);
+        if (weightOk) count += 1;
+      }
+      return count;
+    },
+    [players, searchTerm, columnFilters]
+  );
+
+  const currentWeightMatches = useMemo(
+    () => getCountForWeightRange(weightFilter.min, weightFilter.max),
+    [getCountForWeightRange, weightFilter.min, weightFilter.max]
+  );
+
   const getResponsiveVisibilityClass = (_visibleIndex: number) => {
     // Tüm cihazlarda tüm sütunlar görünsün; yatay kaydırma için dış sarmalayıcı zaten overflow-x-auto.
     return 'table-cell';
@@ -595,9 +689,30 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                           }`} />
                                         </button>
                                         {openFilter === column.id && (
-                                          <div className="absolute right-0 mt-2 min-w-[12rem] bg-white rounded-xl shadow-lg ring-1 ring-black/5 z-30">
-                                            <div className="py-2 max-h-56 overflow-y-auto">
-                                              {getUniqueValues(column.id).map((value) => {
+                                          <div
+                                            className="absolute right-0 mt-2 min-w-[14rem] bg-white rounded-2xl shadow-xl ring-1 ring-black/5 z-30"
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                          >
+                                            <div className="p-3 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+                                              <input
+                                                autoFocus
+                                                value={filterSearch}
+                                                onChange={(e) => setFilterSearch(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                  if (e.key === 'Escape') setOpenFilter(null);
+                                                }}
+                                                placeholder="Search options..."
+                                                className="w-full px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                              />
+                                            </div>
+                                            <div className="py-2 max-h-64 overflow-y-auto">
+                                              {(() => {
+                                                const counts = getValueCounts(column.id);
+                                                const allValues = getUniqueValues(column.id);
+                                                const [allLabel, ...rest] = allValues;
+                                                const filtered = rest.filter(v => v.toLowerCase().includes(filterSearch.toLowerCase()));
+                                                const finalValues = [allLabel, ...filtered];
+                                                return finalValues.map((value) => {
                                                 // Derive display of current filter for highlighting
                                                 let currentDisplay: string | null = null;
                                                 const stored = columnFilters[column.id];
@@ -611,16 +726,18 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                                   currentDisplay = String(stored);
                                                 }
                                                 const isSelected = currentDisplay === value;
+                                                  const count = value === allLabel ? players.length : (counts.get(value) || 0);
                                                 return (
                                                   <button
                                                     key={value}
                                                     onClick={() => handleFilterChange(column.id, value)}
-                                                    className={`flex items-center w-full px-3 py-2 text-sm ${
+                                                      className={`flex items-center justify-between w-full px-3 py-2 text-sm ${
                                                       isSelected
                                                         ? 'bg-blue-50 text-blue-700'
                                                         : 'text-gray-700 hover:bg-gray-50'
                                                     }`}
                                                   >
+                                                      <span className="flex items-center min-w-0">
                                                     <span
                                                       className={`mr-2 inline-flex h-4 w-4 items-center justify-center rounded-full border ${
                                                         isSelected
@@ -631,9 +748,32 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                                       ✓
                                                     </span>
                                                     <span className="truncate">{value}</span>
+                                                      </span>
+                                                      <span className="ml-3 inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">{count}</span>
                                                   </button>
                                                 );
-                                              })}
+                                                });
+                                              })()}
+                                            </div>
+                                            <div className="p-2 border-t border-gray-100 flex gap-2 justify-end bg-white rounded-b-2xl">
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setColumnFilters(prev => ({ ...prev, [column.id]: null }));
+                                                }}
+                                                className="px-3 py-1.5 text-xs rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
+                                              >
+                                                Clear
+                                              </button>
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setOpenFilter(null);
+                                                }}
+                                                className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                                              >
+                                                Done
+                                              </button>
                                             </div>
                                           </div>
                                         )}
@@ -641,30 +781,176 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                     )}
                                   </div>
                                   {column.id === 'weight' && isWeightFilterOpen && (
-                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg ring-1 ring-black/5 p-3 z-30" ref={filterRef}>
-                                      <div className="flex items-center gap-2">
+                                    <div
+                                      ref={weightFilterRef}
+                                      onMouseDown={(e) => e.stopPropagation()}
+                                      className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl ring-1 ring-black/5 z-30"
+                                    >
+                                      <div className="p-3">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <div className="text-sm font-semibold text-gray-800">Weight range</div>
+                                          <div className="text-xs text-gray-600">
+                                            {currentWeightMatches} matches
+                                          </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">Min</label>
+                                            <div className="relative">
                                         <input
                                           type="number"
                                           step="0.1"
                                           value={weightFilter.min || ''}
                                           onChange={(e) => handleWeightFilterChange('min', e.target.value)}
-                                          className="w-20 px-2 py-1 bg-white border border-gray-300 rounded text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                          placeholder="Min"
-                                        />
-                                        <span className="text-gray-400">–</span>
+                                                onKeyDown={(e) => { if (e.key === 'Enter') setIsWeightFilterOpen(false); }}
+                                                placeholder="e.g. 70"
+                                                className="w-full pl-3 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                              />
+                                              <span className="absolute inset-y-0 right-2 flex items-center text-xs text-gray-400">kg</span>
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">Max</label>
+                                            <div className="relative">
                                         <input
                                           type="number"
                                           step="0.1"
                                           value={weightFilter.max || ''}
                                           onChange={(e) => handleWeightFilterChange('max', e.target.value)}
-                                          className="w-20 px-2 py-1 bg-white border border-gray-300 rounded text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                          placeholder="Max"
-                                        />
+                                                onKeyDown={(e) => { if (e.key === 'Enter') setIsWeightFilterOpen(false); }}
+                                                placeholder="e.g. 90"
+                                                className="w-full pl-3 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                              />
+                                              <span className="absolute inset-y-0 right-2 flex items-center text-xs text-gray-400">kg</span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="mt-3">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <div className="text-xs text-gray-500">Quick ranges</div>
+                                            <div className="flex items-center gap-2">
+                                              <button
+                                                onClick={() => {
+                                                  setShowAddRangeForm(prev => !prev);
+                                                  setIsEditRangesMode(false);
+                                                  setSelectedRangeIds([]);
+                                                }}
+                                                className="px-2 py-1 text-[11px] rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                                                title="Add range"
+                                              >
+                                                ＋
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  setIsEditRangesMode(prev => !prev);
+                                                  setShowAddRangeForm(false);
+                                                  setNewWeightRange({ min: '', max: '' });
+                                                }}
+                                                className={`px-2 py-1 text-[11px] rounded-md border ${isEditRangesMode ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
+                                                title="Edit ranges"
+                                              >
+                                                Edit
+                                              </button>
+                                            </div>
+                                          </div>
+                                          <div className="flex flex-wrap gap-2 mb-3">
+                                            {customWeightRanges.map((r) => {
+                                              const isSelected = selectedRangeIds.includes(r.id);
+                                              return (
+                                                <button
+                                                  key={r.id}
+                                                  onClick={() => {
+                                                    if (isEditRangesMode) {
+                                                      setSelectedRangeIds(prev => (
+                                                        prev.includes(r.id)
+                                                          ? prev.filter(id => id !== r.id)
+                                                          : [...prev, r.id]
+                                                      ));
+                                                    } else {
+                                                      setWeightFilter({ min: r.min, max: r.max });
+                                                    }
+                                                  }}
+                                                  className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full border ${isSelected ? 'border-red-300 bg-red-50 text-red-700' : 'border-amber-300 bg-amber-50 text-amber-800'} ${isEditRangesMode ? 'cursor-pointer' : ''}`}
+                                                  title={isEditRangesMode ? 'Select to delete' : 'Apply'}
+                                                >
+                                                  {formatRangeLabel(r.min, r.max)}
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                          {isEditRangesMode && (
+                                            <div className="mt-2 flex justify-end">
+                                              <button
+                                                disabled={selectedRangeIds.length === 0}
+                                                onClick={() => {
+                                                  if (selectedRangeIds.length === 0) return;
+                                                  setCustomWeightRanges(prev => prev.filter(r => !selectedRangeIds.includes(r.id)));
+                                                  setSelectedRangeIds([]);
+                                                }}
+                                                className={`px-3 py-1.5 text-xs rounded-md ${selectedRangeIds.length === 0 ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700'}`}
+                                              >
+                                                Delete selected
+                                              </button>
+                                            </div>
+                                          )}
+
+                                          {showAddRangeForm && (
+                                            <div className="mt-3 grid grid-cols-5 items-end gap-2">
+                                              <div className="col-span-2">
+                                                <label className="block text-xs text-gray-500 mb-1">Min</label>
+                                                <input
+                                                  value={newWeightRange.min}
+                                                  onChange={(e) => setNewWeightRange(s => ({ ...s, min: e.target.value }))}
+                                                  placeholder="min"
+                                                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                                />
+                                              </div>
+                                              <div className="text-center pb-2">–</div>
+                                              <div className="col-span-2">
+                                                <label className="block text-xs text-gray-500 mb-1">Max</label>
+                                                <input
+                                                  value={newWeightRange.max}
+                                                  onChange={(e) => setNewWeightRange(s => ({ ...s, max: e.target.value }))}
+                                                  placeholder="max"
+                                                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                                />
+                                              </div>
+                                              <button
+                                                onClick={() => {
+                                                  const min = newWeightRange.min.trim() === '' ? null : Number(newWeightRange.min);
+                                                  const max = newWeightRange.max.trim() === '' ? null : Number(newWeightRange.max);
+                                                  if ((min != null && Number.isNaN(min)) || (max != null && Number.isNaN(max))) return;
+                                                  const id = `${min ?? 'null'}_${max ?? 'null'}_${Date.now()}`;
+                                                  setCustomWeightRanges(prev => [...prev, { id, min, max }]);
+                                                  setNewWeightRange({ min: '', max: '' });
+                                                  setShowAddRangeForm(false);
+                                                }}
+                                                className="col-span-5 mt-2 px-3 py-1.5 text-xs rounded-md border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                              >
+                                                Add range
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="px-3 pb-3 pt-2 border-t border-gray-100 flex gap-2 justify-end">
                                         <button
-                                          onClick={handleWeightFilterClear}
-                                          className="ml-auto text-xs px-2 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleWeightFilterClear();
+                                          }}
+                                          className="px-3 py-1.5 text-xs rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
                                         >
                                           Clear
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsWeightFilterOpen(false);
+                                          }}
+                                          className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                                        >
+                                          Done
                                         </button>
                                       </div>
                                     </div>
@@ -704,45 +990,45 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
             return (
               <tr key={player.id} className="hover:bg-blue-50/60 transition-all duration-200 rounded-xl shadow-md" style={{ height: ROW_HEIGHT }}>
                 <td className="w-8 px-1 py-2 text-sm sm:text-base font-semibold text-gray-700 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">{globalIndex + 1}</td>
-                {(() => {
-                  let visibleBodyIndex = -1;
-                  return columns.map((column) => {
-                    if (!column.visible) return null;
-                    visibleBodyIndex += 1;
-                    const responsiveCls = getResponsiveVisibilityClass(visibleBodyIndex);
-                    return (
-                      <td
-                        key={column.id}
-                        className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
-                        onClick={() => handleCellClick(player.id, column.id, player[column.id])}
-                      >
-                        {renderCellContent(player, column)}
-                      </td>
-                    );
-                  });
-                })()}
-                {showDeleteColumn && (
-                  <td className="w-12 px-2 py-2 text-center border-r border-gray-100 bg-white/70 rounded-r-xl">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeletePlayer(player.id);
-                      }}
-                      className="w-7 h-7 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors duration-200"
-                      title="Delete player"
+              {(() => {
+                let visibleBodyIndex = -1;
+                return columns.map((column) => {
+                  if (!column.visible) return null;
+                  visibleBodyIndex += 1;
+                  const responsiveCls = getResponsiveVisibilityClass(visibleBodyIndex);
+                  return (
+                    <td
+                      key={column.id}
+                      className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
+                      onClick={() => handleCellClick(player.id, column.id, player[column.id])}
                     >
-                      ×
-                    </button>
-                  </td>
-                )}
-              </tr>
+                      {renderCellContent(player, column)}
+                    </td>
+                  );
+                });
+              })()}
+              {showDeleteColumn && (
+                <td className="w-12 px-2 py-2 text-center border-r border-gray-100 bg-white/70 rounded-r-xl">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeletePlayer(player.id);
+                    }}
+                    className="w-7 h-7 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors duration-200"
+                    title="Delete player"
+                  >
+                    ×
+                  </button>
+                </td>
+              )}
+            </tr>
             );
           })}
 
-          {bottomPadding > 0 && (
+          {bottomSpacerHeight > 0 && (
             <tr aria-hidden="true">
               <td
-                style={{ height: bottomPadding }}
+                style={{ height: bottomSpacerHeight }}
                 className="p-0"
                 colSpan={1 + visibleColumns.length + (showDeleteColumn ? 1 : 0)}
               />
