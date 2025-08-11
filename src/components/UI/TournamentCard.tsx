@@ -192,7 +192,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">{tournament.name}</h2>
             <p className="text-xs sm:text-sm text-gray-600 mt-1">
-              {tournament.weightRanges.length} {tournament.weightRanges.length === 1 ? t('tournamentCard.weightCategory') : t('tournamentCard.weightCategories')}
+              {tournament.weightRanges.length} {t('matches.fixtures')}
             </p>
           </div>
         </div>
@@ -317,7 +317,6 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                         { id: 'name', name: 'Name', visible: true },
                         { id: 'surname', name: 'Surname', visible: true },
                         { id: 'weight', name: 'Weight', visible: true },
-                        { id: 'gender', name: 'Gender', visible: true },
                         { id: 'handPreference', name: 'Hand Preference', visible: true },
                         { id: 'birthday', name: 'Birthday', visible: true },
                       ]}
@@ -328,6 +327,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       showDeleteColumn={true}
                       onDeletePlayer={handleExcludePlayer}
                       className="bg-white/50 rounded-xl"
+                      showFilters={false}
                     />
                   </div>
                 </div>
@@ -350,7 +350,6 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                             { id: 'name', name: 'Name', visible: true },
                             { id: 'surname', name: 'Surname', visible: true },
                             { id: 'weight', name: 'Weight', visible: true },
-                            { id: 'gender', name: 'Gender', visible: true },
                             { id: 'handPreference', name: 'Hand Preference', visible: true },
                             { id: 'birthday', name: 'Birthday', visible: true },
                           ]}
@@ -361,6 +360,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                           showDeleteColumn={true}
                           onDeletePlayer={handleIncludePlayer}
                           className="opacity-60"
+                          showFilters={false}
                         />
                       </div>
                     </div>

@@ -36,6 +36,7 @@ interface PlayersTableProps {
   showDeleteColumn?: boolean;
   onDeletePlayer?: (playerId: string) => void;
   className?: string;
+  showFilters?: boolean;
 }
 
 const PlayersTable: React.FC<PlayersTableProps> = ({
@@ -47,7 +48,8 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   showAddRow = true,
   showDeleteColumn = true,
   onDeletePlayer,
-  className = ""
+  className = "",
+  showFilters = true
 }) => {
   const { t } = useTranslation();
   const [editingCell, setEditingCell] = useState<{ id: string; column: string } | null>(null);
@@ -655,7 +657,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                     <span className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
                                       {defaultColumnIds.includes(column.id) ? t(`players.${column.id}`) : column.name}
                                     </span>
-                                    {column.id === 'weight' ? (
+                                     {showFilters && column.id === 'weight' ? (
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -671,7 +673,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                           isWeightFilterOpen ? 'transform rotate-180' : ''
                                         }`} />
                                       </button>
-                                    ) : !['name', 'surname'].includes(column.id) && (
+                                     ) : showFilters && !['name', 'surname'].includes(column.id) && (
                                       <div className="relative" ref={filterRef}>
                                         <button
                                           onClick={(e) => {
