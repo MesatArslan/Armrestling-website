@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect, useDeferredValue } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { v4 as uuidv4 } from 'uuid';
@@ -58,6 +58,14 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   const [columnFilters, setColumnFilters] = useState<ColumnFilter>({});
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [loadedCount, setLoadedCount] = useState(300);
+
+  // Virtualization constants
+  const ROW_HEIGHT = 56; // px
+  const OVERSCAN = 8; // extra rows above/below viewport
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -71,6 +79,16 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
+  }, []);
+
+  // Measure viewport and update on resize
+  useLayoutEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const setSize = () => setViewportHeight(container.clientHeight);
+    setSize();
+    window.addEventListener('resize', setSize);
+    return () => window.removeEventListener('resize', setSize);
   }, []);
 
   const getUniqueValues = (columnId: string) => {
@@ -110,7 +128,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     setOpenFilter(null);
   };
 
-  const handleDeletePlayer = (playerId: string) => {
+  const handleDeletePlayer = useCallback((playerId: string) => {
     if (onDeletePlayer) {
       onDeletePlayer(playerId);
     } else {
@@ -118,7 +136,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
         onPlayersChange(players.filter(player => player.id !== playerId));
       }
     }
-  };
+  }, [onDeletePlayer, onPlayersChange, players]);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -130,7 +148,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     onColumnsChange(items);
   };
 
-  const handleCellClick = (playerId: string, columnId: string, value: any) => {
+  const handleCellClick = useCallback((playerId: string, columnId: string, value: any) => {
     if (columnId === 'gender') {
       const newGender = value === 'male' ? 'female' : 'male';
       onPlayersChange(players.map(player => 
@@ -147,9 +165,9 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     
     setEditingCell({ id: playerId, column: columnId });
     setEditingValue(value ? String(value) : '');
-  };
+  }, [onPlayersChange, players]);
 
-  const handleHandPreferenceChange = (playerId: string, hand: 'left' | 'right') => {
+  const handleHandPreferenceChange = useCallback((playerId: string, hand: 'left' | 'right') => {
     onPlayersChange(players.map(player => {
       if (player.id === playerId) {
         const currentPreference = player.handPreference;
@@ -177,7 +195,17 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
       }
       return player;
     }));
-  };
+  }, [onPlayersChange, players]);
+
+  // Scroll handler with infinite loading
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    setScrollTop(target.scrollTop);
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - ROW_HEIGHT * 2;
+    if (nearBottom) {
+      setLoadedCount(prev => Math.min(prev + 200, Number.MAX_SAFE_INTEGER));
+    }
+  }, []);
 
   const handleCellEdit = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setEditingValue(e.target.value);
@@ -275,29 +303,49 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     }));
   };
 
-  const filteredPlayers = players.filter(player => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const filteredPlayers = useMemo(() => {
+    const normalizedSearch = deferredSearchTerm.trim().toLowerCase();
     const tokens = normalizedSearch.length > 0 ? normalizedSearch.split(/\s+/).filter(Boolean) : [];
-    const nameSurnameCombined = `${(player.name || '').toString()} ${(player.surname || '').toString()}`.trim().toLowerCase();
-    const playerValuesLower = Object.values(player).map(v => String(v).toLowerCase());
+    return players.filter(player => {
+      const nameSurnameCombined = `${(player.name || '').toString()} ${(player.surname || '').toString()}`.trim().toLowerCase();
+      const playerValuesLower = Object.values(player).map(v => String(v).toLowerCase());
 
-    const matchesSearch = tokens.length === 0
-      ? true
-      : tokens.every(token =>
-          nameSurnameCombined.includes(token) || playerValuesLower.some(val => val.includes(token))
-        );
+      const matchesSearch = tokens.length === 0
+        ? true
+        : tokens.every(token =>
+            nameSurnameCombined.includes(token) || playerValuesLower.some(val => val.includes(token))
+          );
 
-    const matchesWeight = 
-      (weightFilter.min === null || player.weight >= weightFilter.min) &&
-      (weightFilter.max === null || player.weight <= weightFilter.max);
+      const matchesWeight = 
+        (weightFilter.min === null || player.weight >= weightFilter.min) &&
+        (weightFilter.max === null || player.weight <= weightFilter.max);
 
-    const matchesColumnFilters = Object.entries(columnFilters).every(([columnId, filterValue]) => {
-      if (filterValue === null) return true;
-      return String(player[columnId]).trim() === filterValue;
+      const matchesColumnFilters = Object.entries(columnFilters).every(([columnId, filterValue]) => {
+        if (filterValue === null) return true;
+        return String(player[columnId]).trim() === filterValue;
+      });
+
+      return matchesSearch && matchesWeight && matchesColumnFilters;
     });
+  }, [players, deferredSearchTerm, weightFilter.min, weightFilter.max, columnFilters]);
 
-    return matchesSearch && matchesWeight && matchesColumnFilters;
-  });
+  const displayedPlayers = useMemo(() => filteredPlayers.slice(0, loadedCount), [filteredPlayers, loadedCount]);
+
+  // Visible columns memoized
+  const visibleColumns = useMemo(() => columns.filter(c => c.visible), [columns]);
+
+  // Virtual window over displayed players
+  const totalRows = displayedPlayers.length;
+  const estimatedVisibleCount = Math.ceil((viewportHeight || 1) / ROW_HEIGHT) + OVERSCAN * 2;
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
+  const endIndex = Math.min(totalRows - 1, startIndex + estimatedVisibleCount - 1);
+  const virtualPlayers = useMemo(
+    () => displayedPlayers.slice(startIndex, endIndex + 1),
+    [displayedPlayers, startIndex, endIndex]
+  );
+  const topPadding = startIndex * ROW_HEIGHT;
+  const bottomPadding = Math.max(0, (totalRows - endIndex - 1) * ROW_HEIGHT);
 
   const renderCellContent = (player: ExtendedPlayer, column: Column) => {
     if (editingCell?.id === player.id && editingCell?.column === column.id) {
@@ -477,7 +525,11 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   };
 
   return (
-    <div className={`overflow-x-auto overflow-y-auto max-h-[70vh] mt-6 ${className}`}>
+    <div
+      ref={scrollContainerRef}
+      onScroll={handleScroll}
+      className={`overflow-x-auto overflow-y-auto max-h-[70vh] mt-6 ${className}`}
+    >
       <table className="min-w-full border-separate border-spacing-y-2">
         <thead>
           <DragDropContext onDragEnd={handleDragEnd}>
@@ -637,42 +689,65 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
           </DragDropContext>
         </thead>
         <tbody className="bg-white/80 divide-y divide-gray-100">
-          {filteredPlayers.map((player, index) => (
-            <tr key={player.id} className="hover:bg-blue-50/60 transition-all duration-200 rounded-xl shadow-md">
-              <td className="w-8 px-1 py-2 text-sm sm:text-base font-semibold text-gray-700 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">{index + 1}</td>
-              {(() => {
-                let visibleBodyIndex = -1;
-                return columns.map((column) => {
-                  if (!column.visible) return null;
-                  visibleBodyIndex += 1;
-                  const responsiveCls = getResponsiveVisibilityClass(visibleBodyIndex);
-                  return (
-                    <td
-                      key={column.id}
-                      className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
-                      onClick={() => handleCellClick(player.id, column.id, player[column.id])}
-                    >
-                      {renderCellContent(player, column)}
-                    </td>
-                  );
-                });
-              })()}
-              {showDeleteColumn && (
-                <td className="w-12 px-2 py-2 text-center border-r border-gray-100 bg-white/70 rounded-r-xl">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeletePlayer(player.id);
-                    }}
-                    className="w-7 h-7 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors duration-200"
-                    title="Delete player"
-                  >
-                    ×
-                  </button>
-                </td>
-              )}
+          {topPadding > 0 && (
+            <tr aria-hidden="true">
+              <td
+                style={{ height: topPadding }}
+                className="p-0"
+                colSpan={1 + visibleColumns.length + (showDeleteColumn ? 1 : 0)}
+              />
             </tr>
-          ))}
+          )}
+
+          {virtualPlayers.map((player, i) => {
+            const globalIndex = startIndex + i;
+            return (
+              <tr key={player.id} className="hover:bg-blue-50/60 transition-all duration-200 rounded-xl shadow-md" style={{ height: ROW_HEIGHT }}>
+                <td className="w-8 px-1 py-2 text-sm sm:text-base font-semibold text-gray-700 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">{globalIndex + 1}</td>
+                {(() => {
+                  let visibleBodyIndex = -1;
+                  return columns.map((column) => {
+                    if (!column.visible) return null;
+                    visibleBodyIndex += 1;
+                    const responsiveCls = getResponsiveVisibilityClass(visibleBodyIndex);
+                    return (
+                      <td
+                        key={column.id}
+                        className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
+                        onClick={() => handleCellClick(player.id, column.id, player[column.id])}
+                      >
+                        {renderCellContent(player, column)}
+                      </td>
+                    );
+                  });
+                })()}
+                {showDeleteColumn && (
+                  <td className="w-12 px-2 py-2 text-center border-r border-gray-100 bg-white/70 rounded-r-xl">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePlayer(player.id);
+                      }}
+                      className="w-7 h-7 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors duration-200"
+                      title="Delete player"
+                    >
+                      ×
+                    </button>
+                  </td>
+                )}
+              </tr>
+            );
+          })}
+
+          {bottomPadding > 0 && (
+            <tr aria-hidden="true">
+              <td
+                style={{ height: bottomPadding }}
+                className="p-0"
+                colSpan={1 + visibleColumns.length + (showDeleteColumn ? 1 : 0)}
+              />
+            </tr>
+          )}
           {showAddRow && (
             <tr className="hover:bg-blue-50/60 transition-all duration-200 rounded-xl shadow">
               <td className="w-8 px-1 py-2 text-sm sm:text-base font-semibold text-gray-400 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">
