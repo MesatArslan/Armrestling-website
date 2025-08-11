@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Players from './pages/Players';
 import Tournaments from './pages/Tournaments';
 import Matches from './pages/Matches';
+import Scoring from './pages/Scoring';
 import './i18n';
 import Navbar from './components/UI/Navbar';
 
@@ -26,6 +27,7 @@ const App = () => {
           <Route path="/players" element={<Players />} />
           <Route path="/tournaments" element={<Tournaments />} />
           <Route path="/matches" element={<Matches />} />
+          <Route path="/scoring" element={<Scoring />} />
         </Route>
       </Routes>
     </Router>

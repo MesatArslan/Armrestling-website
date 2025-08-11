@@ -43,7 +43,7 @@ export const generatePageContent = (
   tournament: Tournament,
   weightRange: WeightRange,
   selectedCols: string[],
-  playersPerPageCount: number,
+  _playersPerPageCount: number,
   pageNum: number,
   pagePlayers: ExtendedPlayer[],
   startIndex: number,

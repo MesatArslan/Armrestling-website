@@ -29,6 +29,9 @@ const Navbar = () => {
             <Link to="/matches" className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
               {t('navigation.matches')}
             </Link>
+            <Link to="/scoring" className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
+              Puanlama
+            </Link>
             <LanguageSwitcher />
           </div>
 
@@ -60,6 +63,9 @@ const Navbar = () => {
           </Link>
           <Link to="/matches" onClick={() => setIsOpen(false)} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
             {t('navigation.matches')}
+          </Link>
+          <Link to="/scoring" onClick={() => setIsOpen(false)} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+            Puanlama
           </Link>
           <div className="pt-2 border-t border-gray-100 flex justify-center">
             <LanguageSwitcher />
