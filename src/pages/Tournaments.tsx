@@ -7,7 +7,7 @@ import type { Player } from '../types';
 import TournamentCard from '../components/UI/TournamentCard';
 import { TournamentsStorage, type Tournament, type WeightRange, type PlayerFilters} from '../utils/tournamentsStorage';
 import { PlayersStorage, type Column } from '../utils/playersStorage';
-import { openPreviewModal, generatePDF } from '../utils/pdfGenerator';
+import { openPreviewModal, generatePDF, generateCombinedPreviewPages, generateCombinedTournamentPDF } from '../utils/pdfGenerator';
 
 // Tournaments sayfası için Player interface'ini genişletiyoruz
 interface ExtendedPlayer extends Player {
@@ -59,10 +59,13 @@ const Tournaments = () => {
   const [currentTournamentForPDF, setCurrentTournamentForPDF] = useState<Tournament | null>(null);
   const [currentWeightRangeForPDF, setCurrentWeightRangeForPDF] = useState<WeightRange | null>(null);
   const [isPDFColumnModalOpen, setIsPDFColumnModalOpen] = useState(false);
+  const [isBulkPDFModalOpen, setIsBulkPDFModalOpen] = useState(false);
+  const [selectedBulkRanges, setSelectedBulkRanges] = useState<Record<string, boolean>>({});
+  const [isBulkPreviewMode, setIsBulkPreviewMode] = useState<boolean>(false);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (isCreateModalOpen || isPDFPreviewModalOpen || isPDFColumnModalOpen) {
+    if (isCreateModalOpen || isPDFPreviewModalOpen || isPDFColumnModalOpen || isBulkPDFModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -71,7 +74,7 @@ const Tournaments = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isCreateModalOpen, isPDFPreviewModalOpen, isPDFColumnModalOpen]);
+  }, [isCreateModalOpen, isPDFPreviewModalOpen, isPDFColumnModalOpen, isBulkPDFModalOpen]);
 
   // Load all data from localStorage
   useEffect(() => {
@@ -472,6 +475,7 @@ const Tournaments = () => {
               <p className="text-base text-gray-500 mt-1">{t('tournaments.totalTournaments')}: {tournaments.length}</p>
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
+              
             <button
               onClick={handleClearAllTournamentData}
                 className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm sm:text-base font-semibold"
@@ -543,6 +547,14 @@ const Tournaments = () => {
                   selectedTournament={selectedTournament}
                   onShowPDFPreview={handleShowPDFPreview}
                   onShowPDFColumnModal={handleShowPDFColumnModal}
+                  onOpenBulkPDF={(t) => {
+                    const defaults: Record<string, boolean> = {};
+                    t.weightRanges.forEach(wr => { defaults[wr.id] = true; });
+                    setSelectedBulkRanges(defaults);
+                    setIsBulkPDFModalOpen(true);
+                    setCurrentTournamentForPDF(t);
+                    setIsBulkPreviewMode(false);
+                  }}
                 />
               ))
             )}
@@ -553,6 +565,119 @@ const Tournaments = () => {
     </div>
 
     {/* PDF Column Selection Modal - Moved outside main content */}
+    {isBulkPDFModalOpen && currentTournamentForPDF && (
+      <div 
+        className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9998] overflow-hidden"
+        onClick={() => setIsBulkPDFModalOpen(false)}
+      >
+        <div 
+          className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-3xl max-h-[85vh] overflow-y-auto mx-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('tournamentCard.pdfPreview')}</h3>
+              <p className="text-sm text-gray-600">{currentTournamentForPDF.name} — Fikstürleri seçin, kolonları belirleyin.</p>
+            </div>
+            <button
+              onClick={() => setIsBulkPDFModalOpen(false)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Select fixtures */}
+          <div className="mb-6">
+            <h4 className="text-sm font-semibold text-gray-800 mb-2">Fikstür Seçimi</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {currentTournamentForPDF.weightRanges.map(wr => (
+                <label key={wr.id} className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition">
+                  <input
+                    type="checkbox"
+                    checked={!!selectedBulkRanges[wr.id]}
+                    onChange={(e) => setSelectedBulkRanges(prev => ({ ...prev, [wr.id]: e.target.checked }))}
+                  />
+                  <span className="text-sm text-gray-800 truncate">{wr.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Select columns */}
+          <div className="mb-6">
+            <h4 className="text-sm font-semibold text-gray-800 mb-2">PDF Kolonları</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {availablePDFColumns.map((column) => (
+                <label key={column.id} className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
+                  <input
+                    type="checkbox"
+                    checked={selectedPDFColumns.includes(column.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedPDFColumns([...selectedPDFColumns, column.id]);
+                      } else {
+                        setSelectedPDFColumns(selectedPDFColumns.filter(id => id !== column.id));
+                      }
+                    }}
+                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <span className="text-sm font-medium text-gray-700">{
+                    ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'].includes(column.id)
+                      ? t(`players.${column.id}`)
+                      : column.name
+                  }</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setIsBulkPDFModalOpen(false)}
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm font-semibold rounded-lg"
+            >
+              {t('common.close')}
+            </button>
+            <button
+              onClick={() => {
+                const selectedRanges = currentTournamentForPDF!.weightRanges.filter(wr => selectedBulkRanges[wr.id]);
+                if (selectedRanges.length === 0) return;
+                const pages = generateCombinedPreviewPages(
+                  currentTournamentForPDF!,
+                  selectedRanges,
+                  selectedPDFColumns,
+                  playersPerPage,
+                  availablePDFColumns,
+                  (wr) => {
+                    return players.filter((player) => {
+                      if (wr.excludedPlayerIds?.includes(player.id)) return false;
+                      const matchesWeight = Number(player.weight || 0) >= wr.min && Number(player.weight || 0) <= wr.max;
+                      const matchesTournamentGender = !currentTournamentForPDF?.genderFilter || player.gender === currentTournamentForPDF?.genderFilter;
+                      const matchesTournamentHand = !currentTournamentForPDF?.handPreferenceFilter || player.handPreference === currentTournamentForPDF?.handPreferenceFilter || player.handPreference === 'both';
+                      let matchesBirthYear = true;
+                      if ((currentTournamentForPDF?.birthYearMin || currentTournamentForPDF?.birthYearMax) && player.birthday) {
+                        const y = new Date(player.birthday).getFullYear();
+                        matchesBirthYear = (!currentTournamentForPDF?.birthYearMin || y >= currentTournamentForPDF?.birthYearMin) && (!currentTournamentForPDF?.birthYearMax || y <= currentTournamentForPDF?.birthYearMax);
+                      }
+                      return matchesWeight && matchesTournamentGender && matchesTournamentHand && matchesBirthYear;
+                    });
+                  }
+                );
+                setPreviewPages(pages);
+                setCurrentPreviewPage(0);
+                setIsBulkPreviewMode(true);
+                setIsBulkPDFModalOpen(false);
+                setIsPDFPreviewModalOpen(true);
+              }}
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+            >
+              {t('tournamentCard.openPreview')}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     {isPDFColumnModalOpen && (
       <div 
         className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9998] overflow-hidden"
@@ -680,9 +805,41 @@ const Tournaments = () => {
             <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('tournamentCard.pdfPreview')}</h3>
             <div className="flex gap-2">
               <button
-                onClick={() => {
+                onClick={async () => {
                   setIsPDFPreviewModalOpen(false);
-                  handleExportPDF();
+                  if (isBulkPreviewMode && currentTournamentForPDF) {
+                    const selectedRanges = currentTournamentForPDF.weightRanges.filter(wr => selectedBulkRanges[wr.id]);
+                    if (selectedRanges.length === 0) return;
+                    try {
+                      const result = await generateCombinedTournamentPDF(
+                        currentTournamentForPDF,
+                        selectedRanges,
+                        selectedPDFColumns,
+                        playersPerPage,
+                        availablePDFColumns,
+                        (wr) => {
+                          return players.filter((player) => {
+                            if (wr.excludedPlayerIds?.includes(player.id)) return false;
+                            const matchesWeight = Number(player.weight || 0) >= wr.min && Number(player.weight || 0) <= wr.max;
+                            const matchesTournamentGender = !currentTournamentForPDF?.genderFilter || player.gender === currentTournamentForPDF?.genderFilter;
+                            const matchesTournamentHand = !currentTournamentForPDF?.handPreferenceFilter || player.handPreference === currentTournamentForPDF?.handPreferenceFilter || player.handPreference === 'both';
+                            let matchesBirthYear = true;
+                            if ((currentTournamentForPDF?.birthYearMin || currentTournamentForPDF?.birthYearMax) && player.birthday) {
+                              const y = new Date(player.birthday).getFullYear();
+                              matchesBirthYear = (!currentTournamentForPDF?.birthYearMin || y >= currentTournamentForPDF?.birthYearMin) && (!currentTournamentForPDF?.birthYearMax || y <= currentTournamentForPDF?.birthYearMax);
+                            }
+                            return matchesWeight && matchesTournamentGender && matchesTournamentHand && matchesBirthYear;
+                          });
+                        }
+                      );
+                      alert(t('tournamentCard.pdfSuccessMessage', { fileSize: result.fileSize, totalPages: result.totalPages, playersPerPage }));
+                    } catch (error) {
+                      alert(t('tournamentCard.pdfErrorMessage'));
+                    }
+                    setIsBulkPreviewMode(false);
+                  } else {
+                    handleExportPDF();
+                  }
                 }}
                 className="px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
               >
@@ -691,7 +848,9 @@ const Tournaments = () => {
               <button
                 onClick={() => {
                   setIsPDFPreviewModalOpen(false);
-                  if (currentTournamentForPDF && currentWeightRangeForPDF) {
+                  if (isBulkPreviewMode) {
+                    setIsBulkPDFModalOpen(true);
+                  } else if (currentTournamentForPDF && currentWeightRangeForPDF) {
                     handleShowPDFColumnModal(currentTournamentForPDF, currentWeightRangeForPDF);
                   }
                 }}

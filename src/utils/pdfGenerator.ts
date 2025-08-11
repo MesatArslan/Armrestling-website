@@ -53,7 +53,7 @@ export const generatePageContent = (
   totalPlayers: number = 0
 ) => {
   const selectedColumns = availablePDFColumns.filter(col => selectedCols.includes(col.id));
-  const t = (key: string, options?: any) => i18n.t(key, options);
+  const t = (key: string, options?: any) => String(i18n.t(key, options));
   const getLocale = () => (i18n.language && i18n.language.toLowerCase().startsWith('tr') ? 'tr-TR' : 'en-US');
   const translateHeader = (colId: string, fallbackName: string) => {
     const known = ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'];
@@ -74,15 +74,15 @@ export const generatePageContent = (
 
           <div style="display: flex !important; justify-content: space-between !important; margin: 6px 0 !important; padding: 4px 0 !important; border-top: 1px solid #e5e7eb !important; border-bottom: 1px solid #e5e7eb !important;">
             <div style="text-align: center !important; flex: 1 !important;">
-              <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${t('tournamentCard.weightRange').toUpperCase()}</div>` : t('tournamentCard.weightRange').toUpperCase()}</div>
+               <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${String(t('tournamentCard.weightRange')).toUpperCase()}</div>` : String(t('tournamentCard.weightRange')).toUpperCase()}</div>
               <div style="font-size: 11px !important; color: #111827 !important; font-weight: 600 !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${weightRange.min}-${weightRange.max} kg</div>` : `${weightRange.min}-${weightRange.max} kg`}</div>
             </div>
             <div style="text-align: center !important; flex: 1 !important; border-left: 1px solid #e5e7eb !important; border-right: 1px solid #e5e7eb !important;">
-              <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style=\"margin-top: -12px !important;\">${t('players.totalPlayers').toUpperCase()}</div>` : t('players.totalPlayers').toUpperCase()}</div>
+               <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style=\"margin-top: -12px !important;\">${String(t('players.totalPlayers')).toUpperCase()}</div>` : String(t('players.totalPlayers')).toUpperCase()}</div>
               <div style="font-size: 11px !important; color: #111827 !important; font-weight: 600 !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${totalPlayers}</div>` : totalPlayers}</div>
             </div>
             <div style="text-align: center !important; flex: 1 !important;">
-              <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style=\"margin-top: -12px !important;\">${t('tournamentCard.page').toUpperCase()}</div>` : t('tournamentCard.page').toUpperCase()}</div>
+               <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: 2px !important;">${isForPDF ? `<div style=\"margin-top: -12px !important;\">${String(t('tournamentCard.page')).toUpperCase()}</div>` : String(t('tournamentCard.page')).toUpperCase()}</div>
               <div style="font-size: 11px !important; color: #111827 !important; font-weight: 600 !important;">${isForPDF ? `<div style="margin-top: -12px !important;">${pageNum + 1}/${totalPages}</div>` : `${pageNum + 1}/${totalPages}`}</div>
             </div>
           </div>
@@ -111,8 +111,8 @@ export const generatePageContent = (
                       case 'name': value = player.name || ''; break;
                       case 'surname': value = player.surname || ''; break;
                       case 'weight': value = player.weight ? `${player.weight}kg` : ''; break;
-                      case 'gender': value = player.gender ? t(`players.${player.gender}`) : ''; break;
-                      case 'handPreference': value = player.handPreference ? t(`players.${player.handPreference}`) : ''; break;
+                       case 'gender': value = player.gender ? String(t(`players.${player.gender}`)) : ''; break;
+                       case 'handPreference': value = player.handPreference ? String(t(`players.${player.handPreference}`)) : ''; break;
                       case 'birthday': value = player.birthday ? new Date(player.birthday).toLocaleDateString(getLocale()) : ''; break;
                       default: value = player[col.id] || '';
                     }
@@ -277,6 +277,151 @@ export const generatePDF = async (
   } catch (error) {
     throw new Error(i18n.t('tournamentCard.pdfErrorMessage'));
   }
+};
+
+export const generateCombinedTournamentPDF = async (
+  tournament: Tournament,
+  rangesToInclude: WeightRange[],
+  selectedPDFColumns: string[],
+  playersPerPage: number,
+  availablePDFColumns: Column[],
+  getFilteredPlayersForRange: (weightRange: WeightRange) => ExtendedPlayer[]
+): Promise<{ fileName: string; fileSize: string; totalPages: number }> => {
+  const maxPlayersPerPage = Math.min(playersPerPage, 40);
+  try {
+    await document.fonts.ready;
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    let globalPageIndex = 0;
+
+    for (let rIndex = 0; rIndex < rangesToInclude.length; rIndex++) {
+      const weightRange = rangesToInclude[rIndex];
+      const filteredPlayers = getFilteredPlayersForRange(weightRange);
+      const totalPagesForRange = Math.ceil(filteredPlayers.length / maxPlayersPerPage) || 1;
+
+      for (let pageNum = 0; pageNum < totalPagesForRange; pageNum++) {
+        const startIndex = pageNum * maxPlayersPerPage;
+        const endIndex = Math.min(startIndex + maxPlayersPerPage, filteredPlayers.length);
+        const pagePlayers = filteredPlayers.slice(startIndex, endIndex);
+
+        const previewDiv = document.createElement('div');
+        previewDiv.style.position = 'absolute';
+        previewDiv.style.left = '-9999px';
+        previewDiv.style.width = '210mm';
+        previewDiv.style.height = '297mm';
+        previewDiv.style.padding = '10mm 15mm 15mm 15mm';
+        previewDiv.style.boxSizing = 'border-box';
+        previewDiv.style.fontFamily = 'Arial, sans-serif';
+        previewDiv.style.fontSize = '12px';
+        previewDiv.style.lineHeight = '2.7';
+        previewDiv.style.color = '#000000';
+        previewDiv.style.backgroundColor = '#ffffff';
+        previewDiv.style.overflow = 'hidden';
+        previewDiv.style.margin = '-40px 0 0 0';
+
+        const pageContent = generatePageContent(
+          tournament,
+          weightRange,
+          selectedPDFColumns,
+          maxPlayersPerPage,
+          pageNum,
+          pagePlayers,
+          startIndex,
+          totalPagesForRange,
+          availablePDFColumns,
+          true,
+          filteredPlayers.length
+        );
+
+        previewDiv.innerHTML = pageContent;
+        document.body.appendChild(previewDiv);
+
+        await Promise.all(
+          Array.from(previewDiv.querySelectorAll('img')).map((img) => {
+            if (!img.complete) {
+              return new Promise((resolve, reject) => {
+                img.onload = resolve as any;
+                img.onerror = reject as any;
+              });
+            }
+            return Promise.resolve();
+          })
+        );
+
+        const options = {
+          scale: 4,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          letterRendering: true,
+          backgroundColor: '#ffffff',
+          width: previewDiv.offsetWidth,
+          height: previewDiv.offsetHeight,
+          windowWidth: previewDiv.scrollWidth,
+          windowHeight: previewDiv.scrollHeight,
+        } as const;
+
+        const canvas = await html2canvas(previewDiv, options as any);
+        document.body.removeChild(previewDiv);
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        const imgWidth = 210;
+        const imgHeight = 297;
+
+        if (globalPageIndex > 0) {
+          pdf.addPage();
+        }
+        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+        globalPageIndex += 1;
+      }
+    }
+
+    const pdfBlob = pdf.output('blob');
+    const fileSize = pdfBlob.size;
+    const sizeInKB = (fileSize / 1024).toFixed(1);
+    const sizeInMB = (fileSize / (1024 * 1024)).toFixed(2);
+    const sizeText = fileSize > 1024 * 1024 ? `${sizeInMB} MB` : `${sizeInKB} KB`;
+    const fileName = `tournament_${tournament.name}_selected_fixtures.pdf`;
+    pdf.save(fileName);
+    return { fileName, fileSize: sizeText, totalPages: globalPageIndex };
+  } catch (error) {
+    throw new Error(i18n.t('tournamentCard.pdfErrorMessage'));
+  }
+};
+
+export const generateCombinedPreviewPages = (
+  tournament: Tournament,
+  rangesToInclude: WeightRange[],
+  selectedCols: string[],
+  playersPerPageCount: number,
+  availablePDFColumns: Column[],
+  getFilteredPlayersForRange: (weightRange: WeightRange) => ExtendedPlayer[]
+) => {
+  const pages: string[] = [];
+  rangesToInclude.forEach((wr) => {
+    const filteredPlayers = getFilteredPlayersForRange(wr);
+    const totalPagesForRange = Math.ceil(filteredPlayers.length / Math.min(playersPerPageCount, 40)) || 1;
+    for (let pageNum = 0; pageNum < totalPagesForRange; pageNum++) {
+      const startIndex = pageNum * Math.min(playersPerPageCount, 40);
+      const endIndex = Math.min(startIndex + Math.min(playersPerPageCount, 40), filteredPlayers.length);
+      const pagePlayers = filteredPlayers.slice(startIndex, endIndex);
+      const pageContent = generatePageContent(
+        tournament,
+        wr,
+        selectedCols,
+        Math.min(playersPerPageCount, 40),
+        pageNum,
+        pagePlayers,
+        startIndex,
+        totalPagesForRange,
+        availablePDFColumns,
+        false,
+        filteredPlayers.length
+      );
+      pages.push(pageContent);
+    }
+  });
+  return pages;
 };
 
 export const openPreviewModal = (

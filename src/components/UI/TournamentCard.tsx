@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PencilIcon, TrashIcon, XMarkIcon, PlayIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import PlayersTable from './PlayersTable';
 import { MatchesStorage } from '../../utils/matchesStorage';
+// Bulk PDF modal is handled at page-level; card only triggers open
 import { useTranslation } from 'react-i18next';
+//
 
 
 interface WeightRange {
@@ -53,6 +55,7 @@ interface TournamentCardProps {
   className?: string;
   onShowPDFPreview?: (tournament: Tournament, weightRange: WeightRange) => void;
   onShowPDFColumnModal?: (tournament: Tournament, weightRange: WeightRange) => void;
+  onOpenBulkPDF?: (tournament: Tournament) => void;
 }
 
 const TournamentCard: React.FC<TournamentCardProps> = ({
@@ -69,7 +72,8 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   selectedWeightRange,
   selectedTournament,
   className = "",
-  onShowPDFColumnModal
+  onShowPDFColumnModal,
+  onOpenBulkPDF
 }) => {
   const { t } = useTranslation();
   const [] = useState({
@@ -79,6 +83,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     weightMax: null as number | null,
   });
   const [isPlayerManagementOpen, setIsPlayerManagementOpen] = useState(false);
+  // Bulk PDF state handled by parent
 
 
 
@@ -197,6 +202,16 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenBulkPDF && onOpenBulkPDF(tournament);
+            }}
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+            title={t('tournamentCard.downloadPDF')}
+          >
+            {t('tournamentCard.downloadPDF')}
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -371,6 +386,8 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           )}
         </div>
       )}
+
+      {/* Bulk PDF modal is rendered at page-level */}
 
 
 
