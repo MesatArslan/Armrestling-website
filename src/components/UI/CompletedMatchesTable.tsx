@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useLayoutEffect, useCallback, useDeferredValue } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ROUND_DESCRIPTIONS } from '../../utils/roundDescriptions';
 
@@ -27,10 +27,35 @@ interface CompletedMatchesTableProps {
   getPlayerName: (playerId: string) => string;
 }
 
-const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,getPlayerName }) => {
+const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches, players, getPlayerName }) => {
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
   const [showByeMatches, setShowByeMatches] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const deferredSearchText = useDeferredValue(searchText);
+
+  // Virtualization constants
+  const ROW_HEIGHT = 64; // px
+  const OVERSCAN = 8; // extra rows above/below viewport
+
+  // Fast player name lookup map to avoid O(n) find per access
+  const playerNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of players) {
+      map.set(p.id, `${p.name} ${p.surname}`.trim());
+    }
+    return map;
+  }, [players]);
+
+  const fastGetName = useCallback(
+    (playerId: string) => {
+      if (!playerId) return '';
+      return playerNameMap.get(playerId) || getPlayerName(playerId) || '';
+    },
+    [playerNameMap, getPlayerName]
+  );
 
   // Filter matches based on search and bye visibility
   const filteredMatches = useMemo(() => {
@@ -42,17 +67,45 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,g
     }
     
     // Filter by search text
-    if (searchText.trim()) {
-      const searchLower = searchText.toLowerCase().trim();
+    if (deferredSearchText.trim()) {
+      const searchLower = deferredSearchText.toLowerCase().trim();
       completedMatches = completedMatches.filter(match => {
-        const player1Name = getPlayerName(match.player1Id).toLowerCase();
-        const player2Name = getPlayerName(match.player2Id).toLowerCase();
+        const player1Name = fastGetName(match.player1Id).toLowerCase();
+        const player2Name = fastGetName(match.player2Id).toLowerCase();
         return player1Name.includes(searchLower) || player2Name.includes(searchLower);
       });
     }
     
     return completedMatches;
-  }, [matches, searchText, showByeMatches, getPlayerName]);
+  }, [matches, deferredSearchText, showByeMatches, fastGetName]);
+
+  // Measure viewport and update on resize
+  useLayoutEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const setSize = () => setViewportHeight(container.clientHeight);
+    setSize();
+    window.addEventListener('resize', setSize);
+    return () => window.removeEventListener('resize', setSize);
+  }, []);
+
+  // Scroll handler to update virtual window
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    setScrollTop(target.scrollTop);
+  }, []);
+
+  // Compute virtual window over filteredMatches
+  const totalRows = filteredMatches.length;
+  const estimatedVisibleCount = Math.ceil((viewportHeight || 1) / ROW_HEIGHT) + OVERSCAN * 2;
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
+  const endIndex = Math.min(totalRows - 1, startIndex + estimatedVisibleCount - 1);
+  const virtualMatches = useMemo(
+    () => filteredMatches.slice(startIndex, endIndex + 1),
+    [filteredMatches, startIndex, endIndex]
+  );
+  const topPadding = startIndex * ROW_HEIGHT;
+  const bottomPadding = Math.max(0, (totalRows - endIndex - 1) * ROW_HEIGHT);
 
   const getLocalizedBracketLabel = (raw?: string): string => {
     if (!raw) return '';
@@ -127,8 +180,16 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,g
             <div className="flex-1 font-bold text-gray-900 text-base flex items-center gap-1"><span>❌</span> {t('matches.loser')}</div>
           </div>
           {/* Rows (scrollable vertically) */}
-          <div className="max-h-[60vh] overflow-y-auto mt-2 pr-1">
-            {filteredMatches.map((m, i) => {
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="max-h-[60vh] overflow-y-auto mt-2 pr-1"
+          >
+            {topPadding > 0 && (
+              <div aria-hidden="true" style={{ height: topPadding }} />
+            )}
+            {virtualMatches.map((m, i) => {
+              const globalIndex = startIndex + i;
               const winnerId = m.winnerId!;
               const loserId = m.player1Id === winnerId ? m.player2Id : m.player1Id;
               const bracketDisplay = getLocalizedBracketLabel(m.description) || m.id;
@@ -136,24 +197,28 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches,g
                 <div
                   key={m.id}
                   className="flex flex-row items-center justify-between bg-white rounded-lg shadow-md px-6 py-4 transition-all duration-200 gap-2 overflow-hidden mb-1 hover:shadow-lg"
+                  style={{ height: ROW_HEIGHT }}
                 >
-                  <div className="flex-1 font-semibold text-gray-500 text-base flex items-center gap-1">{i + 1}</div>
+                  <div className="flex-1 font-semibold text-gray-500 text-base flex items-center gap-1">{globalIndex + 1}</div>
                   <div className={`flex-1 font-semibold text-base flex items-center gap-1 ${m.bracket === 'loser' ? 'text-red-600' : m.bracket === 'placement' ? 'text-purple-600' : 'text-green-600'}`}>{bracketDisplay}</div>
-                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player2Id) || t('matches.bye')) : (getPlayerName(m.player2Id) || '—')}</div>
-                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player1Id) || t('matches.bye')) : (getPlayerName(m.player1Id) || '—')}</div>
+                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (fastGetName(m.player2Id) || t('matches.bye')) : (fastGetName(m.player2Id) || '—')}</div>
+                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (fastGetName(m.player1Id) || t('matches.bye')) : (fastGetName(m.player1Id) || '—')}</div>
                   <div className="flex-1 flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 bg-green-100 text-green-900 font-black rounded-full px-3 py-1 text-base">
-                      {m.isBye ? t('matches.bye') : getPlayerName(winnerId)}
+                      {m.isBye ? t('matches.bye') : fastGetName(winnerId)}
                     </span>
                   </div>
                   <div className="flex-1 flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 bg-red-100 text-red-900 font-black rounded-full px-3 py-1 text-base">
-                      {m.isBye ? '—' : getPlayerName(loserId)}
+                      {m.isBye ? '—' : fastGetName(loserId)}
                     </span>
                   </div>
                 </div>
               );
             })}
+            {bottomPadding > 0 && (
+              <div aria-hidden="true" style={{ height: bottomPadding }} />
+            )}
           </div>
         </div>
       </div>
