@@ -1,6 +1,7 @@
 import { StorageEngine } from './StorageEngine';
 import { MATCHES } from './keys';
 import { FixtureSchema, type Fixture, safeParseOrDefault } from './schemas';
+import DoubleEliminationRepository from './DoubleEliminationRepository';
 
 export type MatchPlayStatus = 'waiting' | 'active' | 'completed';
 
@@ -46,6 +47,7 @@ export class MatchesRepository {
     const next = this.getIndex().filter((x) => x !== id);
     this.setIndex(next);
     // statuses and other feature-specific keys cleaned by their own repos
+    try { new DoubleEliminationRepository().clearState(id); } catch {}
   }
 
   // Per-fixture match statuses

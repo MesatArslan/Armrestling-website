@@ -14,6 +14,15 @@ export class DoubleEliminationRepository<TState = any> {
 
   clearState(fixtureId: string): void {
     this.store.remove(DOUBLE_ELIMINATION.STATE(fixtureId));
+    // Also clear any legacy keys like 'double-elimination-fixture-<fixtureId>'
+    try {
+      const prefix = `${this['store']['prefix']}/${this['store']['version']}/`;
+      const legacyKey = `double-elimination-fixture-${fixtureId}`;
+      // Remove raw legacy key if exists
+      window.localStorage.removeItem(legacyKey);
+      // Remove namespaced legacy key if exists
+      window.localStorage.removeItem(`${prefix}${legacyKey}`);
+    } catch {}
   }
 }
 
