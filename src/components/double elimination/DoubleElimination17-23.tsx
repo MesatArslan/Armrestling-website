@@ -42,8 +42,8 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
   );
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [, setLastCompletedMatch] = useState<Match | null>(null);
+  // matchHistory removed from persistence; keep only in-memory if needed
   const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
-  const [, setIsUndoing] = useState(false);
 
   // Save tournament state using utility
   const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean, roundKey: RoundKey) => {
@@ -52,7 +52,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
       rankings: rankingsState,
       tournamentComplete: completeState,
       currentRoundKey: roundKey,
-      matchHistory: matchHistory,
+      // Do not persist matchHistory
       timestamp: new Date().toISOString()
     };
     const playerIds = players.map(p => p.id).sort().join('-');
@@ -69,7 +69,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
         setCurrentRoundKey(state.currentRoundKey || 'WB_R1');
-        setMatchHistory(state.matchHistory || []);
+        // Do not restore matchHistory
         setLastCompletedMatch(null);
         return true; // State was loaded
       }
@@ -202,81 +202,12 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
     return player ? `${player.name} ${player.surname}` : '';
   };
 
+  // Undo feature removed from persistence path
   const undoLastMatch = () => {
-    if (matchHistory.length > 0) {
-      setIsUndoing(true);
-      
-      const previousMatches = matchHistory[matchHistory.length - 1];
-      const currentState = matches;
-      
-      // Find which match was undone by comparing current and previous states
-      const undoneMatch = currentState.find(match => 
-        match.winnerId && !previousMatches.find(pm => pm.id === match.id)?.winnerId
-      );
-      
-      setMatches(previousMatches);
-      setMatchHistory(prev => prev.slice(0, -1));
-      
-      // Reset tournament completion if we're going back
-      if (tournamentComplete) {
-        setTournamentComplete(false);
-      }
-      
-      // Remove rankings that were affected by the undone match
-      let updatedRankings = { ...rankings };
-      
-      if (undoneMatch) {
-        const matchId = undoneMatch.id;
-        
-        // Remove rankings based on the undone match
-        if (matchId === 'final') {
-          delete updatedRankings.first;
-          delete updatedRankings.second;
-        }
-        if (matchId === 'grand_final') {
-          delete updatedRankings.first;
-          delete updatedRankings.second;
-        }
-        if (matchId === 'lb_final') {
-          delete updatedRankings.third;
-          delete updatedRankings.fourth;
-        }
-        if (matchId === 'fifth_sixth') {
-          delete updatedRankings.fifth;
-          delete updatedRankings.sixth;
-        }
-        if (matchId === 'seventh_eighth') {
-          delete updatedRankings.seventh;
-          delete updatedRankings.eighth;
-        }
-      }
-      
-      setRankings(updatedRankings);
-      
-      // Update currentRoundKey based on the last match in previous state
-      if (previousMatches.length > 0) {
-        const lastMatch = previousMatches[previousMatches.length - 1];
-        const roundKey = getMatchRoundKey(lastMatch);
-        setCurrentRoundKey(roundKey);
-      }
-      
-      // Clear selectedWinner for matches that no longer exist in previous state
-      setSelectedWinner(prev => {
-        const newSelectedWinner = { ...prev };
-        Object.keys(newSelectedWinner).forEach(matchId => {
-          if (!previousMatches.find(m => m.id === matchId)) {
-            delete newSelectedWinner[matchId];
-          }
-        });
-        return newSelectedWinner;
-      });
-      
-      // Save the reverted state
-      saveTournamentState(previousMatches, updatedRankings, false, currentRoundKey);
-      
-      // Reset isUndoing after a short delay
-      setTimeout(() => setIsUndoing(false), 100);
-    }
+    if (matchHistory.length === 0) return;
+    const previousMatches = matchHistory[matchHistory.length - 1];
+    setMatches(previousMatches);
+    setMatchHistory(prev => prev.slice(0, -1));
   };
   const getPlayerDetails = (playerId: string) => {
     return players.find(p => p.id === playerId);

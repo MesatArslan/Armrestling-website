@@ -26,6 +26,7 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
     TabManager.getInitialTab(fixtureId)
   );
   const [selectedWinner, setSelectedWinner] = useState<{[matchId: string]: string | null}>({});
+  // matchHistory retained only in memory; not persisted
   const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
   const [currentRoundKey, setCurrentRoundKey] = useState<RoundKey>('WB1');
   const [isUndoing, setIsUndoing] = useState(false);
@@ -40,7 +41,7 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
       rankings: rankingsState,
       tournamentComplete: completeState,
       currentRoundKey: roundKey,
-      matchHistory: matchHistory,
+      // Do not persist matchHistory
       timestamp: new Date().toISOString()
     };
     const playerIds = players.map(p => p.id).sort().join('-');
@@ -57,7 +58,7 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
         setCurrentRoundKey(state.currentRoundKey || 'WB1');
-        setMatchHistory(state.matchHistory || []);
+         // Do not restore matchHistory
         return true;
       }
     } catch (error) {

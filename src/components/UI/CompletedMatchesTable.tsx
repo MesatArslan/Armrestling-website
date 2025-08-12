@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useLayoutEffect, useCallback, useDeferredValue } from 'react';
+import React, { useState, useMemo, useRef, useLayoutEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ROUND_DESCRIPTIONS } from '../../utils/roundDescriptions';
 
@@ -27,35 +27,17 @@ interface CompletedMatchesTableProps {
   getPlayerName: (playerId: string) => string;
 }
 
-const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches, players, getPlayerName }) => {
+const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches, getPlayerName }) => {
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState('');
   const [showByeMatches, setShowByeMatches] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
-  const deferredSearchText = useDeferredValue(searchText);
 
   // Virtualization constants
   const ROW_HEIGHT = 64; // px
   const OVERSCAN = 8; // extra rows above/below viewport
-
-  // Fast player name lookup map to avoid O(n) find per access
-  const playerNameMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const p of players) {
-      map.set(p.id, `${p.name} ${p.surname}`.trim());
-    }
-    return map;
-  }, [players]);
-
-  const fastGetName = useCallback(
-    (playerId: string) => {
-      if (!playerId) return '';
-      return playerNameMap.get(playerId) || getPlayerName(playerId) || '';
-    },
-    [playerNameMap, getPlayerName]
-  );
 
   // Filter matches based on search and bye visibility
   const filteredMatches = useMemo(() => {
@@ -67,17 +49,17 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches, 
     }
     
     // Filter by search text
-    if (deferredSearchText.trim()) {
-      const searchLower = deferredSearchText.toLowerCase().trim();
+    if (searchText.trim()) {
+      const searchLower = searchText.toLowerCase().trim();
       completedMatches = completedMatches.filter(match => {
-        const player1Name = fastGetName(match.player1Id).toLowerCase();
-        const player2Name = fastGetName(match.player2Id).toLowerCase();
+        const player1Name = getPlayerName(match.player1Id).toLowerCase();
+        const player2Name = getPlayerName(match.player2Id).toLowerCase();
         return player1Name.includes(searchLower) || player2Name.includes(searchLower);
       });
     }
     
     return completedMatches;
-  }, [matches, deferredSearchText, showByeMatches, fastGetName]);
+  }, [matches, searchText, showByeMatches, getPlayerName]);
 
   // Measure viewport and update on resize
   useLayoutEffect(() => {
@@ -201,16 +183,16 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches, 
                 >
                   <div className="flex-1 font-semibold text-gray-500 text-base flex items-center gap-1">{globalIndex + 1}</div>
                   <div className={`flex-1 font-semibold text-base flex items-center gap-1 ${m.bracket === 'loser' ? 'text-red-600' : m.bracket === 'placement' ? 'text-purple-600' : 'text-green-600'}`}>{bracketDisplay}</div>
-                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (fastGetName(m.player2Id) || t('matches.bye')) : (fastGetName(m.player2Id) || '—')}</div>
-                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (fastGetName(m.player1Id) || t('matches.bye')) : (fastGetName(m.player1Id) || '—')}</div>
+                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player2Id) || t('matches.bye')) : (getPlayerName(m.player2Id) || '—')}</div>
+                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player1Id) || t('matches.bye')) : (getPlayerName(m.player1Id) || '—')}</div>
                   <div className="flex-1 flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 bg-green-100 text-green-900 font-black rounded-full px-3 py-1 text-base">
-                      {m.isBye ? t('matches.bye') : fastGetName(winnerId)}
+                      {m.isBye ? t('matches.bye') : getPlayerName(winnerId)}
                     </span>
                   </div>
                   <div className="flex-1 flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 bg-red-100 text-red-900 font-black rounded-full px-3 py-1 text-base">
-                      {m.isBye ? '—' : fastGetName(loserId)}
+                      {m.isBye ? '—' : getPlayerName(loserId)}
                     </span>
                   </div>
                 </div>

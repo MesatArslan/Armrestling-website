@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PencilIcon, TrashIcon, XMarkIcon, PlayIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import PlayersTable from './PlayersTable';
@@ -76,6 +77,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   onOpenBulkPDF
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [] = useState({
     gender: null as 'male' | 'female' | null,
     handPreference: null as 'left' | 'right' | null,
@@ -415,6 +417,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
   onManagePlayers
 }) => {
   const { t } = useTranslation();
+  const nav = useNavigate();
   const availablePlayers = getAvailablePlayersCount(weightRange, tournament);
 
   // Check if there's an existing fixture for this tournament and weight range
@@ -491,7 +494,9 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
             onClick={(e) => {
               e.stopPropagation();
               // Navigate to matches page to show results with rankings tab
-              window.location.href = `/matches?tab=rankings&fixture=${existingFixture?.id}`;
+          if (existingFixture?.id) {
+            nav({ pathname: '/matches', search: `?tab=rankings&fixture=${existingFixture.id}` });
+          }
             }}
             className="w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl"
           >
@@ -503,7 +508,9 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
             onClick={(e) => {
               e.stopPropagation();
               // Navigate to matches page to continue tournament with active tab
-              window.location.href = `/matches?tab=active&fixture=${existingFixture?.id}`;
+          if (existingFixture?.id) {
+            nav({ pathname: '/matches', search: `?tab=active&fixture=${existingFixture.id}` });
+          }
             }}
             className="w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl"
           >

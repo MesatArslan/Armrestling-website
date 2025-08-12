@@ -40,7 +40,7 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
       rankings: rankingsState,
       tournamentComplete: completeState,
       currentRoundKey: roundKey,
-      matchHistory: matchHistory,
+      // Do not persist matchHistory
       timestamp: new Date().toISOString()
     };
     const playerIds = players.map(p => p.id).sort().join('-');
@@ -57,7 +57,7 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
         setCurrentRoundKey(state.currentRoundKey || 'WB1');
-        setMatchHistory(state.matchHistory || []);
+        // Do not restore matchHistory
         return true;
       }
     } catch (error) {

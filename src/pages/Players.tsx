@@ -7,44 +7,38 @@ import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import PlayersTable from '../components/UI/PlayersTable';
 import { PlayersStorage, type Column, type ExtendedPlayer, defaultColumns } from '../utils/playersStorage';
+import { usePlayers } from '../hooks/usePlayers';
 import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.js`;
 
 const Players = () => {
   const { t } = useTranslation();
-  const [columns, setColumns] = useState<Column[]>(defaultColumns);
-  const [players, setPlayers] = useState<ExtendedPlayer[]>([]);
+  const { players, columns, isLoading, savePlayers, saveColumns, clearPlayers, clearColumns } = usePlayers();
+  const [playersState, setPlayersState] = useState<ExtendedPlayer[]>([]);
+  const [columnsState, setColumnsState] = useState<Column[]>(defaultColumns);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddColumnModalOpen, setIsAddColumnModalOpen] = useState(false);
   const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
 
-  // Load data from localStorage on component mount
-  useEffect(() => {
-    
-    // Load players using utility
-    const loadedPlayers = PlayersStorage.getPlayers();
-    setPlayers(loadedPlayers);
-    
-    // Load columns using utility
-    const loadedColumns = PlayersStorage.getColumns();
-    setColumns(loadedColumns);
-    
-    // Mark initial loading as complete after a short delay
-    setTimeout(() => {
-      setIsInitialLoad(false);
-    }, 100);
-  }, []);
+  const stableEqual = (a: any, b: any) => {
+    try { return JSON.stringify(a) === JSON.stringify(b); } catch { return false; }
+  };
 
-  // Save players to localStorage whenever players state changes
+  // Sync local UI state with storage-backed hook
   useEffect(() => {
-    if (!isInitialLoad) {
-      PlayersStorage.savePlayers(players);
+    if (isLoading) return;
+    // Only update from repo when repo values truly changed
+    if (!stableEqual(playersState, players)) {
+      setPlayersState(players as ExtendedPlayer[]);
     }
-  }, [players, isInitialLoad]);
+    if (!stableEqual(columnsState, columns)) {
+      setColumnsState(columns);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [players, columns, isLoading]);
 
   // Utility: normalize columns (dedupe by id, keep first occurrence)
   const normalizeColumns = React.useCallback((cols: Column[]): Column[] => {
@@ -58,17 +52,18 @@ const Players = () => {
     return result;
   }, []);
 
-  // Save columns to localStorage whenever columns state changes
+  // Normalize and persist columns when changed via UI
   useEffect(() => {
-    if (!isInitialLoad) {
-      const normalized = normalizeColumns(columns);
-      if (normalized.length !== columns.length) {
-        setColumns(normalized);
-        return;
-      }
-      PlayersStorage.saveColumns(normalized);
+    const normalized = normalizeColumns(columnsState);
+    if (!stableEqual(normalized, columnsState)) {
+      setColumnsState(normalized);
+      return;
     }
-  }, [columns, isInitialLoad, normalizeColumns]);
+    // Avoid unnecessary writes/bounces with repo state
+    if (!stableEqual(normalized, columns)) {
+      saveColumns(normalized);
+    }
+  }, [columnsState, columns, normalizeColumns, saveColumns]);
 
   const handleAddColumn = () => {
     if (newColumnName.trim()) {
@@ -77,8 +72,8 @@ const Players = () => {
         name: newColumnName.trim(),
         visible: true,
       };
-      const updatedColumns = PlayersStorage.addColumn(columns, newColumn);
-      setColumns(updatedColumns);
+      const updatedColumns = PlayersStorage.addColumn(columnsState, newColumn);
+      setColumnsState(updatedColumns);
       setNewColumnName('');
       setIsAddColumnModalOpen(false);
       
@@ -93,38 +88,44 @@ const Players = () => {
       return;
     }
     if (!window.confirm(t('players.confirmDeleteColumn') || 'Sütunu silmek istediğinize emin misiniz?')) return;
-    const updatedColumns = normalizeColumns(PlayersStorage.deleteColumn(columns, columnId));
-    setColumns(updatedColumns);
+    const updatedColumns = normalizeColumns(PlayersStorage.deleteColumn(columnsState, columnId));
+    setColumnsState(updatedColumns);
     // Remove this field from all players so that table doesn't render empty cells
-    setPlayers(prev => prev.map((p) => {
+    setPlayersState(prev => prev.map((p) => {
       const { [columnId]: _removed, ...rest } = p as any;
       return rest as any;
     }));
+    // Persist updated players without the removed field
+    setTimeout(() => {
+      savePlayers((playersState as unknown as Player[]).map(p => ({ ...p })));
+    });
   };
 
   const handleToggleColumnVisibility = (columnId: string) => {
-    const updated = columns.map((c) => (c.id === columnId ? { ...c, visible: !c.visible } : c));
-    setColumns(normalizeColumns(updated));
+    const updated = columnsState.map((c) => (c.id === columnId ? { ...c, visible: !c.visible } : c));
+    setColumnsState(normalizeColumns(updated));
   };
 
   const handleAddTestPlayers = () => {
     const testPlayers = PlayersStorage.createTestPlayers();
-    const updatedPlayers = [...players, ...testPlayers];
-    setPlayers(updatedPlayers);
+    const updatedPlayers = [...playersState, ...testPlayers];
+    setPlayersState(updatedPlayers);
+    savePlayers(updatedPlayers as unknown as Player[]);
   };
 
   const handleClearAllData = () => {
     if (window.confirm(t('players.clearAllDataConfirm'))) {
-      PlayersStorage.clearAllPlayersData();
-      setPlayers([]);
-      setColumns(defaultColumns);
+      try { clearPlayers(); } catch {}
+      try { clearColumns(); } catch {}
+      setPlayersState([]);
+      setColumnsState(defaultColumns);
       setSearchTerm('');
     }
   };
 
   // JSON Export
   const handleExportJSON = () => {
-    PlayersStorage.exportPlayersToJSON(players);
+    PlayersStorage.exportPlayersToJSON(playersState);
   };
 
   // JSON Import
@@ -135,8 +136,9 @@ const Players = () => {
     reader.onload = (ev) => {
       try {
         const jsonData = ev.target?.result as string;
-        const mergedPlayers = PlayersStorage.importPlayersFromJSON(jsonData, players);
-        setPlayers(mergedPlayers);
+        const mergedPlayers = PlayersStorage.importPlayersFromJSON(jsonData, playersState);
+        setPlayersState(mergedPlayers);
+        savePlayers(mergedPlayers as unknown as Player[]);
         alert(t('players.importSuccess'));
       } catch (err: any) {
         alert(t('players.importError', { error: err.message }));
@@ -294,7 +296,7 @@ const Players = () => {
         const currentColumnNames = new Set(columns.map((c) => c.name.trim().toLowerCase()));
         const newColumnsToAdd: Column[] = [];
 
-        cleanedHeaders.forEach(({ original, norm }) => {
+        cleanedHeaders.forEach(({ original }) => {
           if (headerToKeyMap[original]) return; // already mapped to a known field
           const newId = original.toLowerCase().trim().replace(/\s+/g, '_');
           if (!currentColumnIds.has(newId) && !currentColumnNames.has(original.toLowerCase())) {
@@ -304,9 +306,9 @@ const Players = () => {
         });
 
         if (newColumnsToAdd.length > 0) {
-          const updated = [...columns, ...newColumnsToAdd];
-          setColumns(updated);
-          PlayersStorage.saveColumns(updated);
+          const updated = [...columnsState, ...newColumnsToAdd];
+          setColumnsState(updated);
+          saveColumns(updated);
         }
 
         const importedPlayers = dataRows
@@ -355,8 +357,9 @@ const Players = () => {
             return parsed as ExtendedPlayer;
           });
 
-        const updatedPlayers = [...players, ...importedPlayers];
-        setPlayers(updatedPlayers);
+        const updatedPlayers = [...playersState, ...importedPlayers];
+        setPlayersState(updatedPlayers);
+        savePlayers(updatedPlayers as unknown as Player[]);
         alert(t('players.importSuccess'));
       } catch (err: any) {
         alert(t('players.importError', { error: err.message || String(err) }));
@@ -457,10 +460,13 @@ const Players = () => {
 
           {/* Players Table */}
           <PlayersTable
-            players={players}
-            onPlayersChange={setPlayers}
-            columns={columns}
-            onColumnsChange={setColumns}
+            players={playersState}
+            onPlayersChange={(next) => {
+              setPlayersState(next as ExtendedPlayer[]);
+              savePlayers(next as unknown as Player[]);
+            }}
+            columns={columnsState}
+            onColumnsChange={(next) => setColumnsState(next)}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             showAddRow={true}
@@ -482,7 +488,9 @@ const Players = () => {
                 birthday: '',
                 city: '',
               };
-              setPlayers([...players, newPlayer]);
+              const next = [...playersState, newPlayer];
+              setPlayersState(next);
+              savePlayers(next as unknown as Player[]);
             }}
             className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-full hover:from-blue-500 hover:to-blue-700 transition-all duration-200 shadow-lg font-bold text-2xl"
             title={t('players.addRow')}

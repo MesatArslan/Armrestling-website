@@ -235,29 +235,69 @@ export const TournamentResultsStorage = {
 
 // Double elimination tournament state management
 export const DoubleEliminationStorage = {
-  // Get double elimination state
+  // Get double elimination state (matchHistory is intentionally NOT restored)
   getDoubleEliminationState: (playerCount: number, playerIds: string, fixtureId?: string): any => {
     try {
-      // Use fixture ID if provided, otherwise fall back to old format for backward compatibility
-      const key = fixtureId 
-        ? `${STORAGE_KEYS.DOUBLE_ELIMINATION}-fixture-${fixtureId}` 
+      const key = fixtureId
+        ? `${STORAGE_KEYS.DOUBLE_ELIMINATION}-fixture-${fixtureId}`
         : `${STORAGE_KEYS.DOUBLE_ELIMINATION}-${playerCount}-${playerIds}`;
-      const state = localStorage.getItem(key);
-      return state ? JSON.parse(state) : null;
-    } catch (error) {
-      // Error loading double elimination state
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        // Strip any persisted matchHistory for good
+        if ('matchHistory' in parsed) delete parsed.matchHistory;
+      }
+      return parsed;
+    } catch {
       return null;
     }
   },
 
-  // Save double elimination state
+  // Save double elimination state (matchHistory is NOT persisted)
   saveDoubleEliminationState: (playerCount: number, playerIds: string, state: any, fixtureId?: string): void => {
     try {
-      // Use fixture ID if provided, otherwise fall back to old format for backward compatibility
-      const key = fixtureId 
-        ? `${STORAGE_KEYS.DOUBLE_ELIMINATION}-fixture-${fixtureId}` 
+      const deepEqual = (a: any, b: any) => {
+        try { return JSON.stringify(a) === JSON.stringify(b); } catch { return false; }
+      };
+      // Remove volatile fields and drop history for comparison/storage
+      const buildComparable = (s: any) => {
+        const { timestamp: _ts, ...rest } = s || {};
+        // Ensure matchHistory is not part of persisted state
+        if ('matchHistory' in rest) delete (rest as any).matchHistory;
+        return rest;
+      };
+
+      const newComparable = buildComparable({ ...(state || {}) });
+
+      // Read existing and compare (ignoring timestamp and with compressed history)
+      const key = fixtureId
+        ? `${STORAGE_KEYS.DOUBLE_ELIMINATION}-fixture-${fixtureId}`
         : `${STORAGE_KEYS.DOUBLE_ELIMINATION}-${playerCount}-${playerIds}`;
-      localStorage.setItem(key, JSON.stringify(state));
+
+      const existingRaw = localStorage.getItem(key);
+      if (existingRaw) {
+        try {
+          const existingParsed = JSON.parse(existingRaw);
+          const existingComparable = buildComparable(existingParsed);
+          if (deepEqual(existingComparable, newComparable)) {
+            return; // No-op if state hasn't meaningfully changed
+          }
+        } catch {}
+      }
+
+      // Write normalized state (keep timestamp only if provided)
+      const toSave: any = {
+        ...newComparable,
+      };
+      if (state && state.timestamp) toSave.timestamp = state.timestamp;
+      localStorage.setItem(key, JSON.stringify(toSave));
+
+      // Optional: clean legacy key to avoid confusion
+      if (fixtureId) {
+        const legacyKey = `${STORAGE_KEYS.DOUBLE_ELIMINATION}-${playerCount}-${playerIds}`;
+        try { localStorage.removeItem(legacyKey); } catch {}
+      }
     } catch (error) {
       // Error saving double elimination state
     }
@@ -266,10 +306,16 @@ export const DoubleEliminationStorage = {
   // Clear double elimination state
   clearDoubleEliminationState: (playerCount: number, playerIds: string, fixtureId?: string): void => {
     // Use fixture ID if provided, otherwise fall back to old format for backward compatibility
-    const key = fixtureId 
-      ? `${STORAGE_KEYS.DOUBLE_ELIMINATION}-fixture-${fixtureId}` 
-      : `${STORAGE_KEYS.DOUBLE_ELIMINATION}-${playerCount}-${playerIds}`;
-    localStorage.removeItem(key);
+    if (fixtureId) {
+      const fixtureKey = `${STORAGE_KEYS.DOUBLE_ELIMINATION}-fixture-${fixtureId}`;
+      localStorage.removeItem(fixtureKey);
+      // Also clear legacy
+      const legacyKey = `${STORAGE_KEYS.DOUBLE_ELIMINATION}-${playerCount}-${playerIds}`;
+      try { localStorage.removeItem(legacyKey); } catch {}
+    } else {
+      const key = `${STORAGE_KEYS.DOUBLE_ELIMINATION}-${playerCount}-${playerIds}`;
+      localStorage.removeItem(key);
+    }
   },
 
   // Clear all double elimination states for a specific player combination

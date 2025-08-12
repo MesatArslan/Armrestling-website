@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { Player, WeightRange, Tournament } from '../types';
-import { MatchesStorage, type Fixture } from '../utils/matchesStorage';
+import type { Player as UIPlayer } from '../types';
+import type { Fixture as RepoFixture, Tournament, WeightRange } from '../storage/schemas';
 import DeleteConfirmationModal from '../components/UI/DeleteConfirmationModal';
+import { PlayersStorage } from '../utils/playersStorage';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import ActiveFixturesNav from '../components/UI/ActiveFixturesNav';
+import { useMatches } from '../hooks/useMatches';
+import { MatchesStorage } from '../utils/matchesStorage';
 
 // Import all double elimination components
 import {
@@ -36,10 +39,11 @@ const Matches = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [fixtures, setFixtures] = useState<Fixture[]>([]);
-  const [activeFixture, setActiveFixture] = useState<Fixture | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const processedSearchRef = useRef<string | null>(null);
+  const [players, setPlayers] = useState<UIPlayer[]>([]);
+  const { fixtureIds, fixtures: fixturesMap, activeFixtureId, isLoading, upsertFixture, removeFixture, setActiveFixtureId } = useMatches();
+  const fixtures: RepoFixture[] = fixtureIds.map(id => fixturesMap[id]).filter(Boolean) as RepoFixture[];
+  const activeFixture: RepoFixture | null = activeFixtureId ? (fixturesMap[activeFixtureId] as RepoFixture) : null;
   const [desiredTab, setDesiredTab] = useState<'active' | 'completed' | 'rankings' | null>(null);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
@@ -52,78 +56,45 @@ const Matches = () => {
   });
 
   // Use ref to track current fixtures to avoid dependency issues
-  const fixturesRef = useRef<Fixture[]>([]);
+  const fixturesRef = useRef<RepoFixture[]>([]);
   fixturesRef.current = fixtures;
 
-  // Load data on component mount
+  // Load players on mount
   useEffect(() => {
-    // Load players from localStorage
-    const savedPlayers = localStorage.getItem('arm-wrestling-players');
-    if (savedPlayers) {
-      try {
-        const parsedPlayers = JSON.parse(savedPlayers);
-        setPlayers(parsedPlayers);
-      } catch (error) {
-        // Error loading players from localStorage
-      }
-    }
-
-    // Load fixtures from matches storage
-    const matchesData = MatchesStorage.getMatchesData();
-    setFixtures(matchesData.fixtures);
-
-    // Set active fixture if exists
-    if (matchesData.activeFixtureId) {
-      const active = matchesData.fixtures.find(f => f.id === matchesData.activeFixtureId);
-      setActiveFixture(active || null);
-    }
-
-    setIsLoading(false);
+    try {
+      const loadedPlayers = PlayersStorage.getPlayers();
+      setPlayers(loadedPlayers);
+    } catch {}
   }, []);
 
-  // Handle URL parameters for fixture selection and tab switching
+  // Handle URL parameters for fixture selection and tab switching (process once per search change)
   useEffect(() => {
-    if (!isLoading && fixtures.length > 0) {
-      const tab = searchParams.get('tab') as 'active' | 'completed' | 'rankings' | null;
-      const fixtureId = searchParams.get('fixture');
+    if (isLoading || fixtures.length === 0) return;
+    const currentSearch = location.search || '';
+    if (!currentSearch || processedSearchRef.current === currentSearch) return;
 
-      if (tab) {
-        setDesiredTab(tab);
-      }
+    const tab = searchParams.get('tab') as 'active' | 'completed' | 'rankings' | null;
+    const fixtureId = searchParams.get('fixture');
 
-      if (fixtureId) {
-        const targetFixture = fixtures.find(f => f.id === fixtureId);
-        if (targetFixture) {
-          setActiveFixture(targetFixture);
-          MatchesStorage.setActiveFixture(fixtureId);
-        }
-      }
+    if (tab) setDesiredTab(tab);
+    if (fixtureId) setActiveFixtureId(fixtureId);
 
-      // Clear URL parameters after processing
-      if (tab || fixtureId) {
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
-      }
-    }
-  }, [isLoading, fixtures, searchParams]);
+    processedSearchRef.current = currentSearch;
+    // Clear URL parameters via router to prevent re-processing
+    navigate({ pathname: location.pathname }, { replace: true });
+  }, [isLoading, fixtures.length, location.search]);
 
   // Save fixtures whenever they change
   useEffect(() => {
     if (!isLoading) {
-      // Her fixture'ın en güncel tab'ını localStorage'dan oku
-      const updatedFixtures = fixtures.map(fixture => ({
-        ...fixture,
-        activeTab: MatchesStorage.getFixtureActiveTab(fixture.id)
-      }));
-
-      const matchesData = {
-        fixtures: updatedFixtures,
-        activeFixtureId: activeFixture?.id,
-        lastUpdated: new Date().toISOString()
-      };
-      MatchesStorage.saveMatchesData(matchesData);
+      // Read saved tab state from repo and persist
+      fixtures.forEach(fixture => {
+        const current = fixturesMap[fixture.id];
+        const activeTab = current?.activeTab;
+        if (activeTab && fixture.activeTab !== activeTab) upsertFixture({ ...fixture, activeTab } as RepoFixture);
+      });
     }
-  }, [fixtures, activeFixture, isLoading]);
+  }, [fixtures, activeFixture, isLoading, upsertFixture]);
 
   // Handle tournament start from Tournaments page
   useEffect(() => {
@@ -140,11 +111,9 @@ const Matches = () => {
       );
 
       if (existingFixture) {
-        // If fixture already exists, just set it as active
-        setActiveFixture(existingFixture);
-        MatchesStorage.setActiveFixture(existingFixture.id);
+        setActiveFixtureId(existingFixture.id);
         // Clear location state to prevent duplicate creation on page refresh
-        window.history.replaceState({}, document.title);
+        navigate({ pathname: location.pathname }, { replace: true, state: null });
         return;
       }
 
@@ -170,29 +139,39 @@ const Matches = () => {
       });
 
       if (eligiblePlayers.length > 0) {
-        const newFixture = MatchesStorage.createNewFixture(state.tournament, state.weightRange, eligiblePlayers);
-        // Yeni fixture'ın activeTab'ını localStorage'dan oku
-        const fixtureWithActiveTab = {
-          ...newFixture,
-          activeTab: MatchesStorage.getFixtureActiveTab(newFixture.id)
+        const existingForTournament = fixtures.filter(f => f.tournamentId === state.tournament.id);
+        const fixtureNumber = existingForTournament.length + 1;
+        const weightRangeName = state.weightRange.name || `${state.weightRange.min}-${state.weightRange.max} kg`;
+        const now = new Date().toISOString();
+        const newFixture: RepoFixture = {
+          id: `${state.tournament.id}-${state.weightRange.id}-${fixtureNumber}`,
+          name: `${state.tournament.name} - ${weightRangeName}`,
+          tournamentId: state.tournament.id,
+          tournamentName: state.tournament.name,
+          weightRangeId: state.weightRange.id,
+          weightRangeName,
+          weightRange: { min: state.weightRange.min, max: state.weightRange.max },
+          players: eligiblePlayers.map(p => ({ id: p.id, name: p.name, surname: p.surname, weight: p.weight, gender: p.gender, handPreference: p.handPreference, birthday: p.birthday, city: p.city })),
+          playerCount: eligiblePlayers.length,
+          status: 'active',
+          createdAt: now,
+          lastUpdated: now,
+          results: [],
+          playerWins: {},
+          matches: [],
+          activeTab: 'active',
         };
-        setFixtures(prev => [...prev, fixtureWithActiveTab]);
-        setActiveFixture(fixtureWithActiveTab);
-        MatchesStorage.setActiveFixture(newFixture.id);
+        upsertFixture(newFixture);
+        setActiveFixtureId(newFixture.id);
         // Clear location state to prevent duplicate creation on page refresh
-        window.history.replaceState({}, document.title);
+        navigate({ pathname: location.pathname }, { replace: true, state: null });
       }
     }
-  }, [location.state, players]);
+  }, [location.state, players, upsertFixture, setActiveFixtureId, navigate, location.pathname]);
 
   const handleFixtureSelect = (fixtureId: string) => {
-    const fixture = fixtures.find(f => f.id === fixtureId);
-    if (fixture) {
-      setActiveFixture(fixture);
-      MatchesStorage.setActiveFixture(fixtureId);
-      // Clear desired tab when switching fixtures to use saved tab state
-      setDesiredTab(null);
-    }
+    setActiveFixtureId(fixtureId);
+    setDesiredTab(null);
   };
 
   const handleFixtureClose = (fixtureId: string, fixtureName: string) => {
@@ -206,17 +185,10 @@ const Matches = () => {
   const confirmDeleteFixture = () => {
     if (!deleteModal.fixtureId) return;
 
-    // Remove from localStorage
-    MatchesStorage.deleteFixture(deleteModal.fixtureId);
-
-    // Remove from state
-    setFixtures(prev => prev.filter(f => f.id !== deleteModal.fixtureId));
+    removeFixture(deleteModal.fixtureId);
 
     // If this was the active fixture, clear it
-    if (activeFixture?.id === deleteModal.fixtureId) {
-      setActiveFixture(null);
-      MatchesStorage.setActiveFixture(null);
-    }
+    if (activeFixture?.id === deleteModal.fixtureId) setActiveFixtureId(null);
   };
 
   const handleMatchResult = (type: string, winnerId: string, loserId?: string) => {
@@ -231,28 +203,18 @@ const Matches = () => {
       type
     };
 
-    MatchesStorage.addMatchResult(activeFixture.id, result);
-
-    // Update fixture in state
-    setFixtures(prev => prev.map(f =>
-      f.id === activeFixture.id
-        ? { 
-            ...f, 
-            results: [...f.results, result], 
-            lastUpdated: new Date().toISOString(),
-            activeTab: MatchesStorage.getFixtureActiveTab(f.id) // activeTab'ı localStorage'dan oku
-          }
-        : f
-    ));
+    const next = {
+      ...activeFixture,
+      results: [...activeFixture.results, result],
+      lastUpdated: new Date().toISOString(),
+      activeTab: MatchesStorage.getFixtureActiveTab(activeFixture.id),
+    } as RepoFixture;
+    upsertFixture(next);
   };
 
   const handleTournamentComplete = (rankings: { first?: string; second?: string; third?: string }) => {
     if (!activeFixture) return;
 
-    // Save rankings to localStorage
-    MatchesStorage.completeFixtureWithRankings(activeFixture.id, rankings);
-
-    // Update fixture with completed status and rankings
     const updatedFixture = {
       ...activeFixture,
       status: 'completed' as const,
@@ -260,15 +222,9 @@ const Matches = () => {
       completedAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
       activeTab: MatchesStorage.getFixtureActiveTab(activeFixture.id) // activeTab'ı localStorage'dan oku
-    };
+    } as RepoFixture;
 
-    // Update in state
-    setFixtures(prev => prev.map(f =>
-      f.id === activeFixture.id ? updatedFixture : f
-    ));
-
-    // Update active fixture
-    setActiveFixture(updatedFixture);
+    upsertFixture(updatedFixture);
   };
 
 
@@ -284,8 +240,19 @@ const Matches = () => {
     } else {
     }
 
+    const uiPlayers: UIPlayer[] = activeFixture.players.map(p => ({
+      id: p.id,
+      name: p.name ?? '',
+      surname: p.surname ?? '',
+      weight: p.weight ?? 0,
+      gender: (p.gender as any) ?? 'male',
+      handPreference: (p.handPreference as any) ?? 'right',
+      birthday: p.birthday,
+      city: p.city,
+    }));
+
     const props = {
-      players: activeFixture.players,
+      players: uiPlayers,
       onMatchResult: handleMatchResult,
       onTournamentComplete: handleTournamentComplete,
       fixtureId: activeFixture.id
@@ -714,7 +681,7 @@ const Matches = () => {
           {fixtures.length > 0 && (
             <div className="mb-8">
               <ActiveFixturesNav 
-                fixtures={fixtures}
+                fixtures={fixtures as unknown as any[]}
                 onFixtureSelect={handleFixtureSelect}
                 onFixtureClose={handleFixtureClose}
                 activeFixtureId={activeFixture?.id}

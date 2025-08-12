@@ -22,12 +22,12 @@ const App = () => {
   return (
     <Router basename={import.meta.env.BASE_URL}>
       <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/players" element={<Players />} />
-          <Route path="/tournaments" element={<Tournaments />} />
-          <Route path="/matches" element={<Matches />} />
-          <Route path="/scoring" element={<Scoring />} />
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="players" element={<Players />} />
+          <Route path="tournaments" element={<Tournaments />} />
+          <Route path="matches" element={<Matches />} />
+          <Route path="scoring" element={<Scoring />} />
         </Route>
       </Routes>
     </Router>

@@ -2,6 +2,7 @@
 // Bu dosya matches ile ilgili tüm localStorage işlemlerini merkezi olarak yönetir
 
 import { TournamentResultsStorage } from './localStorage';
+import MatchesRepo, { type MatchPlayStatus as RepoMatchStatus } from '../storage/MatchesRepository';
 
 export interface Fixture {
   id: string;
@@ -75,7 +76,13 @@ export const MatchesStorage = {
   // Ana matches verisi
   saveMatchesData: (data: MatchesData) => {
     try {
-      localStorage.setItem('arm-wrestling-matches', JSON.stringify(data));
+      // Yeni sistem: per-fixture kayıt ve active id
+      const repo = new MatchesRepo();
+      const index = data.fixtures.map(f => f.id);
+      repo.setIndex(index);
+      repo.setActiveFixtureId(data.activeFixtureId || null);
+      data.fixtures.forEach(f => repo.upsertFixture(f as any));
+      // Legacy anahtara yazmayı durdurduk
     } catch (error) {
       // Error saving matches data to localStorage
     }
@@ -83,9 +90,25 @@ export const MatchesStorage = {
 
   getMatchesData: (): MatchesData => {
     try {
+      const repo = new MatchesRepo();
+      const ids = repo.getIndex();
+      const fixtures = ids.map(id => repo.getFixture(id)).filter(Boolean) as Fixture[];
+      const activeFixtureId = repo.getActiveFixtureId() || undefined;
+      if (fixtures.length > 0) {
+        const lastUpdated = fixtures.reduce((acc, f) => (acc > f.lastUpdated ? acc : f.lastUpdated), fixtures[0].lastUpdated);
+        return { fixtures, activeFixtureId, lastUpdated };
+      }
+      // Legacy fallback + migrate forward
       const saved = localStorage.getItem('arm-wrestling-matches');
-      const result = saved ? JSON.parse(saved) : { fixtures: [], lastUpdated: new Date().toISOString() };
-      return result;
+      const legacy: MatchesData = saved ? JSON.parse(saved) : { fixtures: [], lastUpdated: new Date().toISOString() };
+      if (legacy.fixtures.length > 0) {
+        try {
+          repo.setIndex(legacy.fixtures.map(f => f.id));
+          repo.setActiveFixtureId(legacy.activeFixtureId || null);
+          legacy.fixtures.forEach(f => repo.upsertFixture(f as any));
+        } catch {}
+      }
+      return legacy;
     } catch (error) {
       // Error loading matches data from localStorage
       return { fixtures: [], lastUpdated: new Date().toISOString() };
@@ -97,6 +120,12 @@ export const MatchesStorage = {
     const data = MatchesStorage.getMatchesData();
     data.fixtures.push(fixture);
     data.lastUpdated = new Date().toISOString();
+    // Yeni sistem
+    try {
+      const repo = new MatchesRepo();
+      repo.upsertFixture(fixture as any);
+      repo.setIndex(data.fixtures.map(f => f.id));
+    } catch {}
     MatchesStorage.saveMatchesData(data);
   },
 
@@ -105,8 +134,10 @@ export const MatchesStorage = {
     const data = MatchesStorage.getMatchesData();
     const index = data.fixtures.findIndex(f => f.id === fixtureId);
     if (index !== -1) {
-      data.fixtures[index] = { ...data.fixtures[index], ...updatedFixture, lastUpdated: new Date().toISOString() };
+      const merged = { ...data.fixtures[index], ...updatedFixture, lastUpdated: new Date().toISOString() } as Fixture;
+      data.fixtures[index] = merged;
       data.lastUpdated = new Date().toISOString();
+      try { new MatchesRepo().upsertFixture(merged as any); } catch {}
       MatchesStorage.saveMatchesData(data);
     }
   },
@@ -115,9 +146,16 @@ export const MatchesStorage = {
   deleteFixture: (fixtureId: string) => {
     const data = MatchesStorage.getMatchesData();
     const fixtureToDelete = data.fixtures.find(f => f.id === fixtureId);
-    
     data.fixtures = data.fixtures.filter(f => f.id !== fixtureId);
     data.lastUpdated = new Date().toISOString();
+    try {
+      const repo = new MatchesRepo();
+      repo.removeFixture(fixtureId);
+      repo.setIndex(data.fixtures.map(f => f.id));
+      // Clear per-fixture statuses in the new repository
+      try { repo.setStatuses(fixtureId, {} as Record<string, RepoMatchStatus>); } catch {}
+      if (data.activeFixtureId === fixtureId) repo.setActiveFixtureId(null);
+    } catch {}
     MatchesStorage.saveMatchesData(data);
     
     // Clear double elimination tournament state for this fixture
@@ -132,6 +170,24 @@ export const MatchesStorage = {
     } catch (error) {
       // Error clearing double elimination state
     }
+
+    // Clear legacy per-match statuses map entries for this fixture
+    try {
+      const raw = localStorage.getItem('arm-wrestling-match-statuses');
+      if (raw) {
+        const map = JSON.parse(raw) as Record<string, MatchPlayStatus>;
+        let changed = false;
+        Object.keys(map).forEach((k) => {
+          if (k.startsWith(`${fixtureId}::`)) {
+            delete map[k];
+            changed = true;
+          }
+        });
+        if (changed) {
+          localStorage.setItem('arm-wrestling-match-statuses', JSON.stringify(map));
+        }
+      }
+    } catch {}
     
     // Clear tournament results if fixture exists
     if (fixtureToDelete) {
@@ -148,6 +204,7 @@ export const MatchesStorage = {
     const data = MatchesStorage.getMatchesData();
     data.activeFixtureId = fixtureId || undefined;
     data.lastUpdated = new Date().toISOString();
+    try { new MatchesRepo().setActiveFixtureId(fixtureId); } catch {}
     MatchesStorage.saveMatchesData(data);
   },
 
@@ -180,6 +237,7 @@ export const MatchesStorage = {
       fixture.results.push(result);
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
+      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
       MatchesStorage.saveMatchesData(data);
     }
   },
@@ -198,9 +256,9 @@ export const MatchesStorage = {
       if (state.rankings) fixture.rankings = state.rankings;
       if (state.tournamentComplete !== undefined) fixture.tournamentComplete = state.tournamentComplete;
       if (state.playerWins) fixture.playerWins = state.playerWins;
-      
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
+      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
       MatchesStorage.saveMatchesData(data);
     }
   },
@@ -215,6 +273,7 @@ export const MatchesStorage = {
       fixture.completedAt = new Date().toISOString();
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
+      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
       MatchesStorage.saveMatchesData(data);
     }
   },
@@ -227,12 +286,17 @@ export const MatchesStorage = {
       fixture.activeTab = activeTab;
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
+      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
       MatchesStorage.saveMatchesData(data);
     }
   },
 
   // Fixture'ın aktif tab'ını al
   getFixtureActiveTab: (fixtureId: string): 'active' | 'completed' | 'rankings' => {
+    try {
+      const fixture = new MatchesRepo().getFixture(fixtureId) as any;
+      if (fixture && fixture.activeTab) return fixture.activeTab;
+    } catch {}
     const data = MatchesStorage.getMatchesData();
     const fixture = data.fixtures.find(f => f.id === fixtureId);
     return fixture?.activeTab || 'active';
@@ -261,6 +325,7 @@ export const MatchesStorage = {
       fixture.completedAt = new Date().toISOString();
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
+      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
       MatchesStorage.saveMatchesData(data);
     }
   },
@@ -273,6 +338,7 @@ export const MatchesStorage = {
       fixture.status = 'paused';
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
+      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
       MatchesStorage.saveMatchesData(data);
     }
   },
@@ -285,12 +351,22 @@ export const MatchesStorage = {
       fixture.status = 'active';
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
+      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
       MatchesStorage.saveMatchesData(data);
     }
   },
 
   // Tüm matches verilerini temizle
   clearAllMatchesData: () => {
+    try {
+      const repo = new MatchesRepo();
+      const ids = repo.getIndex();
+      ids.forEach(id => {
+        try { repo.removeFixture(id); } catch {}
+      });
+      repo.setIndex([]);
+      repo.setActiveFixtureId(null);
+    } catch {}
     localStorage.removeItem('arm-wrestling-matches');
   },
 
@@ -352,6 +428,7 @@ export const MatchesStorage = {
   ,
   // --- Per-match play status persistence ---
   getAllMatchStatuses: (): Record<string, MatchPlayStatus> => {
+    // Not used in new per-fixture model; keep legacy for compatibility
     try {
       const raw = localStorage.getItem('arm-wrestling-match-statuses');
       return raw ? JSON.parse(raw) : {};
@@ -360,28 +437,34 @@ export const MatchesStorage = {
     }
   },
   getMatchStatus: (fixtureId: string, matchId: string): MatchPlayStatus => {
-    const map = MatchesStorage.getAllMatchStatuses();
-    const key = `${fixtureId}::${matchId}`;
-    return map[key] || 'waiting';
+    try {
+      const repo = new MatchesRepo();
+      const map = repo.getStatuses(fixtureId) as Record<string, RepoMatchStatus>;
+      return (map[matchId] as MatchPlayStatus) || 'waiting';
+    } catch {
+      const map = MatchesStorage.getAllMatchStatuses();
+      const key = `${fixtureId}::${matchId}`;
+      return map[key] || 'waiting';
+    }
   },
   setMatchStatus: (fixtureId: string, matchId: string, status: MatchPlayStatus) => {
+    try {
+      const repo = new MatchesRepo();
+      repo.setStatus(fixtureId, matchId, status as RepoMatchStatus);
+    } catch {}
+    // legacy path
     const map = MatchesStorage.getAllMatchStatuses();
     const key = `${fixtureId}::${matchId}`;
     map[key] = status;
-    try {
-      localStorage.setItem('arm-wrestling-match-statuses', JSON.stringify(map));
-    } catch (e) {
-      // silently ignore
-    }
+    try { localStorage.setItem('arm-wrestling-match-statuses', JSON.stringify(map)); } catch {}
   },
   clearMatchStatus: (fixtureId: string, matchId: string) => {
+    try { new MatchesRepo().clearStatus(fixtureId, matchId); } catch {}
     const map = MatchesStorage.getAllMatchStatuses();
     const key = `${fixtureId}::${matchId}`;
     if (key in map) {
       delete map[key];
-      try {
-        localStorage.setItem('arm-wrestling-match-statuses', JSON.stringify(map));
-      } catch {}
+      try { localStorage.setItem('arm-wrestling-match-statuses', JSON.stringify(map)); } catch {}
     }
   }
 }; 

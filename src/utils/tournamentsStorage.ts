@@ -33,11 +33,15 @@ export interface CurrentTournamentState {
   timestamp: string;
 }
 
+import { TournamentsRepository } from '../storage/TournamentsRepository';
+
 export const TournamentsStorage = {
   // Tournaments listesi
   saveTournaments: (tournaments: Tournament[]) => {
     try {
-      localStorage.setItem('arm-wrestling-tournaments', JSON.stringify(tournaments));
+      const repo = new TournamentsRepository();
+      repo.saveAll(tournaments);
+      // legacy anahtara yazımı durdurduk (çift yazımı engelle)
     } catch (error) {
       // Error saving tournaments to localStorage
     }
@@ -45,8 +49,15 @@ export const TournamentsStorage = {
 
   getTournaments: (): Tournament[] => {
     try {
+      const repo = new TournamentsRepository();
+      const fromRepo = repo.getAll();
+      if (fromRepo && fromRepo.length > 0) return fromRepo as Tournament[];
       const saved = localStorage.getItem('arm-wrestling-tournaments');
-      return saved ? JSON.parse(saved) : [];
+      const legacy = saved ? JSON.parse(saved) : [];
+      if (legacy.length > 0) {
+        try { repo.saveAll(legacy); } catch {}
+      }
+      return legacy;
     } catch (error) {
       // Error loading tournaments from localStorage
       return [];
@@ -54,17 +65,16 @@ export const TournamentsStorage = {
   },
 
   clearTournaments: () => {
+    try { new TournamentsRepository().clear(); } catch {}
     localStorage.removeItem('arm-wrestling-tournaments');
   },
 
   // Seçili tournament
   saveSelectedTournament: (tournamentId: string | null) => {
     try {
-      if (tournamentId) {
-        localStorage.setItem('selected-tournament', tournamentId);
-      } else {
-        localStorage.removeItem('selected-tournament');
-      }
+      const repo = new TournamentsRepository();
+      repo.setSelectedTournament(tournamentId);
+      // legacy anahtar yazımı durduruldu
     } catch (error) {
       // Error saving selected tournament to localStorage
     }
@@ -72,6 +82,9 @@ export const TournamentsStorage = {
 
   getSelectedTournament: (): string | null => {
     try {
+      const repo = new TournamentsRepository();
+      const fromRepo = repo.getSelectedTournament();
+      if (fromRepo) return fromRepo;
       return localStorage.getItem('selected-tournament');
     } catch (error) {
       // Error loading selected tournament from localStorage
@@ -86,11 +99,9 @@ export const TournamentsStorage = {
   // Seçili weight range
   saveSelectedWeightRange: (weightRangeId: string | null) => {
     try {
-      if (weightRangeId) {
-        localStorage.setItem('selected-weight-range', weightRangeId);
-      } else {
-        localStorage.removeItem('selected-weight-range');
-      }
+      const repo = new TournamentsRepository();
+      repo.setSelectedWeightRange(weightRangeId);
+      // legacy anahtar yazımı durduruldu
     } catch (error) {
       // Error saving selected weight range to localStorage
     }
@@ -98,6 +109,9 @@ export const TournamentsStorage = {
 
   getSelectedWeightRange: (): string | null => {
     try {
+      const repo = new TournamentsRepository();
+      const fromRepo = repo.getSelectedWeightRange();
+      if (fromRepo) return fromRepo;
       return localStorage.getItem('selected-weight-range');
     } catch (error) {
       // Error loading selected weight range from localStorage
@@ -112,7 +126,9 @@ export const TournamentsStorage = {
   // Player filters
   savePlayerFilters: (filters: PlayerFilters) => {
     try {
-      localStorage.setItem('tournament-player-filters', JSON.stringify(filters));
+      const repo = new TournamentsRepository();
+      repo.savePlayerFilters(filters);
+      // legacy anahtara yazma durduruldu
     } catch (error) {
       // Error saving player filters to localStorage
     }
@@ -120,6 +136,9 @@ export const TournamentsStorage = {
 
   getPlayerFilters: (): PlayerFilters => {
     try {
+      const repo = new TournamentsRepository();
+      const fromRepo = repo.getPlayerFilters();
+      if (fromRepo) return fromRepo;
       const saved = localStorage.getItem('tournament-player-filters');
       return saved ? JSON.parse(saved) : {
         gender: null,
@@ -139,6 +158,7 @@ export const TournamentsStorage = {
   },
 
   clearPlayerFilters: () => {
+    try { new TournamentsRepository().clearPlayerFilters(); } catch {}
     localStorage.removeItem('tournament-player-filters');
   },
 
@@ -167,6 +187,13 @@ export const TournamentsStorage = {
 
   // Tüm tournament verilerini temizle
   clearAllTournamentData: () => {
+    try {
+      const repo = new TournamentsRepository();
+      repo.clear();
+      repo.setSelectedTournament(null);
+      repo.setSelectedWeightRange(null);
+      repo.clearPlayerFilters();
+    } catch {}
     localStorage.removeItem('arm-wrestling-tournaments');
     localStorage.removeItem('selected-tournament');
     localStorage.removeItem('selected-weight-range');

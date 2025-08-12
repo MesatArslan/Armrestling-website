@@ -3,6 +3,7 @@
 
 import type { Player } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { PlayersRepository } from '../storage/PlayersRepository';
 
 export interface Column {
   id: string;
@@ -23,17 +24,22 @@ export const defaultColumns: Column[] = [
   { id: 'birthday', name: 'Birthday', visible: true },
 ];
 
-// Check if localStorage is available
-const isLocalStorageAvailable = () => {
-  try {
-    const test = '__localStorage_test__';
-    localStorage.setItem(test, test);
-    localStorage.removeItem(test);
-    return true;
-  } catch (e) {
-    return false;
-  }
-};
+// Check if localStorage is available (cached)
+const isLocalStorageAvailable = (() => {
+  let cached: boolean | null = null;
+  return () => {
+    if (cached !== null) return cached;
+    try {
+      const test = '__localStorage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      cached = true;
+    } catch (e) {
+      cached = false;
+    }
+    return cached;
+  };
+})();
 
 export const PlayersStorage = {
   // Players listesi
@@ -43,8 +49,11 @@ export const PlayersStorage = {
     }
     
     try {
-      const jsonString = JSON.stringify(players);
-      localStorage.setItem('arm-wrestling-players', jsonString);
+      // Yeni sistem: repository'ye yaz
+      const repo = new PlayersRepository();
+      // ExtendedPlayer -> Player superset olduğundan direkt yazıyoruz
+      repo.saveAll(players as unknown as Player[]);
+      // Legacy anahtara artık yazmıyoruz (çift yazımı engelle)
       
       // Verify the save
     } catch (error) {
@@ -58,9 +67,19 @@ export const PlayersStorage = {
     }
     
     try {
+      // Önce yeni sistemden oku
+      const repo = new PlayersRepository();
+      const fromRepo = repo.getAll();
+      if (fromRepo && fromRepo.length > 0) {
+        return fromRepo as unknown as ExtendedPlayer[];
+      }
+      // Eski sistemden oku (geri uyum) ve yeni sisteme senk et
       const saved = localStorage.getItem('arm-wrestling-players');
-      const result = saved ? JSON.parse(saved) : [];
-      return result;
+      const legacy = saved ? JSON.parse(saved) : [];
+      if (Array.isArray(legacy) && legacy.length > 0) {
+        try { repo.saveAll(legacy as unknown as Player[]); } catch {}
+      }
+      return legacy;
     } catch (error) {
       // Error loading players from localStorage
       return [];
@@ -71,34 +90,53 @@ export const PlayersStorage = {
     if (!isLocalStorageAvailable()) {
       return;
     }
+    try {
+      const repo = new PlayersRepository();
+      repo.clear();
+    } catch {}
     localStorage.removeItem('arm-wrestling-players');
   },
 
   // Columns listesi
   saveColumns: (columns: Column[]) => {
     try {
-      localStorage.setItem('arm-wrestling-columns', JSON.stringify(columns));
+      const repo = new PlayersRepository();
+      repo.saveColumns(columns);
+      // legacy anahtara yazmayı durdurduk
     } catch (error) {
-      // Error saving columns to localStorage
+      // Error saving columns to storage
     }
   },
 
   getColumns: (): Column[] => {
     try {
+      const repo = new PlayersRepository();
+      const fromRepo = repo.getColumns<Column>();
+      if (fromRepo && fromRepo.length > 0) return fromRepo;
       const saved = localStorage.getItem('arm-wrestling-columns');
-      return saved ? JSON.parse(saved) : defaultColumns;
+      const legacy = saved ? JSON.parse(saved) : defaultColumns;
+      if (legacy && legacy.length > 0) {
+        try { repo.saveColumns(legacy); } catch {}
+      }
+      return legacy;
     } catch (error) {
-      // Error loading columns from localStorage
+      // Error loading columns
       return defaultColumns;
     }
   },
 
   clearColumns: () => {
+    try { new PlayersRepository().clearColumns(); } catch {}
     localStorage.removeItem('arm-wrestling-columns');
   },
 
   // Tüm players verilerini temizle
   clearAllPlayersData: () => {
+    try {
+      const repo = new PlayersRepository();
+      repo.clear();
+      repo.clearColumns();
+    } catch {}
     localStorage.removeItem('arm-wrestling-players');
     localStorage.removeItem('arm-wrestling-columns');
   },

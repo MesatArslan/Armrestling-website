@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import TournamentCard from '../components/UI/TournamentCard';
-import { TournamentsStorage, type Tournament, type WeightRange, type PlayerFilters} from '../utils/tournamentsStorage';
-import { PlayersStorage, type Column } from '../utils/playersStorage';
+import type { Tournament as StorageTournament, WeightRange } from '../storage/schemas';
+import { type Column } from '../utils/playersStorage';
 import { openPreviewModal, generatePDF, generateCombinedPreviewPages, generateCombinedTournamentPDF } from '../utils/pdfGenerator';
+import { useTournaments } from '../hooks/useTournaments';
+import { usePlayers } from '../hooks/usePlayers';
+
+type UITournament = Omit<StorageTournament, 'isExpanded'> & { isExpanded: boolean };
 
 // Tournaments sayfası için Player interface'ini genişletiyoruz
 interface ExtendedPlayer extends Player {
@@ -16,10 +20,12 @@ interface ExtendedPlayer extends Player {
 
 const Tournaments = () => {
   const { t } = useTranslation();
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const { tournaments: repoTournaments, selectedTournamentId, selectedWeightRangeId, playerFilters: repoFilters, isLoading, saveTournaments, setSelectedTournament, setSelectedWeightRange, savePlayerFilters, clearAllTournamentData } = useTournaments();
+  const { players: repoPlayers, columns: playerColumns } = usePlayers();
+  const [tournaments, setTournaments] = useState<UITournament[]>([]);
   const [players, setPlayers] = useState<ExtendedPlayer[]>([]);
-  const [selectedWeightRange, setSelectedWeightRange] = useState<string | null>(null);
-  const [selectedTournament, setSelectedTournament] = useState<string | null>(null);
+  const [selectedWeightRange, setSelectedWeightRangeLocal] = useState<string | null>(null);
+  const [selectedTournament, setSelectedTournamentLocal] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingTournamentId, setEditingTournamentId] = useState<string | null>(null);
@@ -27,20 +33,19 @@ const Tournaments = () => {
   const [weightRanges, setWeightRanges] = useState<WeightRange[]>([
     { id: uuidv4(), name: '', min: 0, max: 0 }
   ]);
-  const [playerFilters, setPlayerFilters] = useState<PlayerFilters>({
+  const [playerFilters, setPlayerFilters] = useState<import('../hooks/useTournaments').PlayerFilters>({
     gender: null,
     handPreference: null,
     weightMin: null,
     weightMax: null,
   });
-  const [, setAppliedFilters] = useState<PlayerFilters>({
+  const [, setAppliedFilters] = useState<import('../hooks/useTournaments').PlayerFilters>({
     gender: null,
     handPreference: null,
     weightMin: null,
     weightMax: null,
   });
   const [, setShowFilteredPlayers] = useState(false);
-  const [isLoadingFromStorage, setIsLoadingFromStorage] = useState(true);
   const [createTournamentGenderFilter, setCreateTournamentGenderFilter] = useState<'male' | 'female' | null>(null);
   const [createTournamentHandPreferenceFilter, setCreateTournamentHandPreferenceFilter] = useState<'left' | 'right' | null>(null);
   const [createTournamentBirthYearMin, setCreateTournamentBirthYearMin] = useState<number | null>(null);
@@ -56,12 +61,67 @@ const Tournaments = () => {
   ]);
   const [availablePDFColumns, setAvailablePDFColumns] = useState<Column[]>([]);
   const [playersPerPage, setPlayersPerPage] = useState<number>(33);
-  const [currentTournamentForPDF, setCurrentTournamentForPDF] = useState<Tournament | null>(null);
+  const [currentTournamentForPDF, setCurrentTournamentForPDF] = useState<UITournament | null>(null);
   const [currentWeightRangeForPDF, setCurrentWeightRangeForPDF] = useState<WeightRange | null>(null);
   const [isPDFColumnModalOpen, setIsPDFColumnModalOpen] = useState(false);
   const [isBulkPDFModalOpen, setIsBulkPDFModalOpen] = useState(false);
   const [selectedBulkRanges, setSelectedBulkRanges] = useState<Record<string, boolean>>({});
   const [isBulkPreviewMode, setIsBulkPreviewMode] = useState<boolean>(false);
+
+  // Toggle to disable all background sync effects (diagnostic/safe mode)
+  const NO_BACKGROUND_SYNC = true;
+  const [hasInitialSync, setHasInitialSync] = useState(false);
+
+  // Helpers: stable deep equal (sorts object keys to avoid stringify order issues)
+  const normalizeForCompare = (val: any): any => {
+    if (Array.isArray(val)) return val.map(normalizeForCompare);
+    if (val && typeof val === 'object') {
+      const keys = Object.keys(val).sort();
+      const out: Record<string, any> = {};
+      for (const k of keys) out[k] = normalizeForCompare(val[k]);
+      return out;
+    }
+    return val;
+  };
+  const deepEqual = (a: any, b: any) => {
+    try { return JSON.stringify(normalizeForCompare(a)) === JSON.stringify(normalizeForCompare(b)); } catch { return false; }
+  };
+
+  // Normalize tournaments for compare/save: drop UI fields and empty arrays
+  const canonicalizeTournaments = (arr: any[]): any[] => {
+    return (arr || []).map((t: any) => {
+      const { isExpanded, ...rest } = t || {};
+      return {
+        ...rest,
+        weightRanges: (rest.weightRanges || []).map((wr: any) => {
+          const { excludedPlayerIds, ...wrRest } = wr || {};
+          // Treat empty/undefined excludedPlayerIds the same: omit
+          if (!excludedPlayerIds || (Array.isArray(excludedPlayerIds) && excludedPlayerIds.length === 0)) {
+            return { ...wrRest };
+          }
+          return { ...wrRest, excludedPlayerIds: [...excludedPlayerIds] };
+        })
+      };
+    });
+  };
+
+  // One-shot initial sync on page entry to show saved data
+  useEffect(() => {
+    if (isLoading || hasInitialSync) return;
+    // players
+    setPlayers(repoPlayers as any);
+    // tournaments (attach UI-only flag)
+    const uiTournaments = (repoTournaments as StorageTournament[]).map(t => ({ ...t, isExpanded: Boolean((t as any).isExpanded) }));
+    setTournaments(uiTournaments);
+    // selection ids
+    setSelectedTournamentLocal(selectedTournamentId || null);
+    setSelectedWeightRangeLocal(selectedWeightRangeId || null);
+    // filters (UI only)
+    setPlayerFilters(repoFilters as any);
+    setAppliedFilters(repoFilters as any);
+    setShowFilteredPlayers(true);
+    setHasInitialSync(true);
+  }, [isLoading]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -76,85 +136,90 @@ const Tournaments = () => {
     };
   }, [isCreateModalOpen, isPDFPreviewModalOpen, isPDFColumnModalOpen, isBulkPDFModalOpen]);
 
-  // Load all data from localStorage
+  // Sync from repositories (guarded by stable snapshot to prevent loops)
+  const lastRepoSnapshotRef = React.useRef<{
+    players: string;
+    tournaments: string;
+    selectedTournamentId: string | null;
+    selectedWeightRangeId: string | null;
+    filters: string;
+  }>({ players: '', tournaments: '', selectedTournamentId: null, selectedWeightRangeId: null, filters: '' });
+
   useEffect(() => {
-    setIsLoadingFromStorage(true);
-    
-    // Load players
-    const savedPlayers = localStorage.getItem('arm-wrestling-players');
-    if (savedPlayers) {
-      try {
-        const parsedPlayers = JSON.parse(savedPlayers);
-        setPlayers(parsedPlayers);
-      } catch (error) {
-        // Error loading players from localStorage
-      }
+    if (NO_BACKGROUND_SYNC) return;
+    if (isLoading) return;
+
+    const playersSnap = JSON.stringify(normalizeForCompare(repoPlayers));
+    const tournamentsSnap = JSON.stringify(normalizeForCompare(canonicalizeTournaments(repoTournaments as any)));
+    const filtersSnap = JSON.stringify(normalizeForCompare(repoFilters));
+    const sameSnapshot =
+      lastRepoSnapshotRef.current.players === playersSnap &&
+      lastRepoSnapshotRef.current.tournaments === tournamentsSnap &&
+      lastRepoSnapshotRef.current.selectedTournamentId === (selectedTournamentId || null) &&
+      lastRepoSnapshotRef.current.selectedWeightRangeId === (selectedWeightRangeId || null) &&
+      lastRepoSnapshotRef.current.filters === filtersSnap;
+
+    if (sameSnapshot) return;
+
+    // Update local states from repo
+    if (!deepEqual(players, repoPlayers)) setPlayers(repoPlayers as any);
+
+    const uiTournaments = (repoTournaments as StorageTournament[]).map(t => ({ ...t, isExpanded: Boolean((t as any).isExpanded) }));
+    if (!deepEqual(canonicalizeTournaments(tournaments), canonicalizeTournaments(uiTournaments))) {
+      setTournaments(uiTournaments);
     }
 
-    // Load tournaments using utility
-    const loadedTournaments = TournamentsStorage.getTournaments();
-    setTournaments(loadedTournaments);
+    const selTid = selectedTournamentId || null;
+    if (selectedTournament !== selTid) setSelectedTournamentLocal(selTid);
 
-    // Load selected tournament and weight range using utility
-    const savedSelectedTournament = TournamentsStorage.getSelectedTournament();
-    const savedSelectedWeightRange = TournamentsStorage.getSelectedWeightRange();
-    
-    if (savedSelectedTournament) {
-      setSelectedTournament(savedSelectedTournament);
-    }
-    
-    if (savedSelectedWeightRange) {
-      setSelectedWeightRange(savedSelectedWeightRange);
-    }
+    const selWrid = selectedWeightRangeId || null;
+    if (selectedWeightRange !== selWrid) setSelectedWeightRangeLocal(selWrid);
 
-    // Load filters using utility
-    const loadedFilters = TournamentsStorage.getPlayerFilters();
-    setPlayerFilters(loadedFilters);
-    setAppliedFilters(loadedFilters);
-    setShowFilteredPlayers(true);
+    if (!deepEqual(playerFilters, repoFilters)) setPlayerFilters(repoFilters as any);
 
-    // Mark loading as complete after a short delay to ensure all state is set
-    setTimeout(() => setIsLoadingFromStorage(false), 100);
-  }, []);
+    // Save snapshot
+    lastRepoSnapshotRef.current = {
+      players: playersSnap,
+      tournaments: tournamentsSnap,
+      selectedTournamentId: selTid,
+      selectedWeightRangeId: selWrid,
+      filters: filtersSnap,
+    };
+  }, [isLoading, repoPlayers, repoTournaments, selectedTournamentId, selectedWeightRangeId, repoFilters]);
 
-  // Load PDF columns from PlayersStorage
+  // Load PDF columns from Players hook
   useEffect(() => {
-    const columns = PlayersStorage.getColumns();
-    setAvailablePDFColumns(columns);
-    // Set default selected columns to visible ones
+    if (NO_BACKGROUND_SYNC) return;
+    const columns = playerColumns;
+    if (!deepEqual(availablePDFColumns, columns)) {
+      setAvailablePDFColumns(columns);
+    }
     const visibleColumnIds = columns.filter(col => col.visible).map(col => col.id);
-    setSelectedPDFColumns(visibleColumnIds);
-  }, []);
-
-  // Save tournaments to localStorage whenever they change (except during initial load)
-  useEffect(() => {
-    if (!isLoadingFromStorage) {
-      TournamentsStorage.saveTournaments(tournaments);
+    if (!deepEqual(selectedPDFColumns, visibleColumnIds)) {
+      setSelectedPDFColumns(visibleColumnIds);
     }
-  }, [tournaments, isLoadingFromStorage]);
+  }, [playerColumns]);
 
-  // Save selected tournament to localStorage
-  useEffect(() => {
-    if (!isLoadingFromStorage) {
-      TournamentsStorage.saveSelectedTournament(selectedTournament);
-    }
-  }, [selectedTournament, isLoadingFromStorage]);
+  // NOTE: We avoid persisting here to prevent loops. We already call saveTournaments
+  // from explicit user actions (create/edit/delete/include/exclude).
 
-  // Save selected weight range to localStorage
-  useEffect(() => {
-    if (!isLoadingFromStorage) {
-      TournamentsStorage.saveSelectedWeightRange(selectedWeightRange);
-    }
-  }, [selectedWeightRange, isLoadingFromStorage]);
+  // Persist selection only on explicit UI actions (see handleSelectWeightRange)
 
-  // Save filters to localStorage whenever they change (except during initial load)
+  // Persist filters only when they actually differ from repo
   useEffect(() => {
-    if (!isLoadingFromStorage) {
-      TournamentsStorage.savePlayerFilters(playerFilters);
-      setAppliedFilters(playerFilters);
-      setShowFilteredPlayers(true);
+    if (NO_BACKGROUND_SYNC) return;
+    if (isLoading) return;
+    if (!deepEqual(playerFilters, repoFilters)) {
+      savePlayerFilters(playerFilters as any);
     }
-  }, [playerFilters, isLoadingFromStorage]);
+  }, [playerFilters, repoFilters, isLoading]);
+
+  // Derive UI-only flags from filters (not persisted)
+  useEffect(() => {
+    if (NO_BACKGROUND_SYNC) return;
+    setAppliedFilters(playerFilters);
+    setShowFilteredPlayers(true);
+  }, [playerFilters.gender, playerFilters.handPreference, playerFilters.weightMin, playerFilters.weightMax]);
 
   const toggleTournament = (tournamentId: string) => {
     setTournaments(tournaments.map(tournament => 
@@ -169,8 +234,11 @@ const Tournaments = () => {
     const weightRange = tournament?.weightRanges.find(wr => wr.id === weightRangeId);
     
     if (weightRange) {
-      setSelectedTournament(tournamentId);
-      setSelectedWeightRange(weightRangeId);
+      setSelectedTournamentLocal(tournamentId);
+      setSelectedWeightRangeLocal(weightRangeId);
+      // Persist selection on explicit action
+      try { setSelectedTournament(tournamentId); } catch {}
+      try { setSelectedWeightRange(weightRangeId); } catch {}
       
       // Set weight filter to the weight range and apply it immediately
       const newFilters = {
@@ -219,7 +287,7 @@ const Tournaments = () => {
 
     if (validRanges.length === 0) return;
 
-    const newTournament: Tournament = {
+    const newTournament: UITournament = {
       id: uuidv4(),
       name: newTournamentName.trim(),
       weightRanges: validRanges.map(range => ({
@@ -233,9 +301,9 @@ const Tournaments = () => {
       birthYearMax: createTournamentBirthYearMax,
     };
 
-    const updatedTournaments = [...tournaments, newTournament];
+    const updatedTournaments: UITournament[] = [...tournaments, newTournament];
     setTournaments(updatedTournaments);
-    TournamentsStorage.saveTournaments(updatedTournaments);
+    saveTournaments(updatedTournaments as any);
     setNewTournamentName('');
     setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
     setCreateTournamentGenderFilter(null);
@@ -245,7 +313,7 @@ const Tournaments = () => {
     setIsCreateModalOpen(false);
   };
 
-  const handleEditTournament = (tournament: Tournament) => {
+  const handleEditTournament = (tournament: UITournament) => {
     setIsEditMode(true);
     setEditingTournamentId(tournament.id);
     setNewTournamentName(tournament.name);
@@ -271,8 +339,9 @@ const Tournaments = () => {
   };
 
   const handleDeleteTournament = (tournamentId: string) => {
-    const updatedTournaments = TournamentsStorage.deleteTournament(tournaments, tournamentId);
+    const updatedTournaments = tournaments.filter(t => t.id !== tournamentId);
     setTournaments(updatedTournaments);
+    saveTournaments(updatedTournaments as any);
   };
 
   const handleSaveEdit = () => {
@@ -285,25 +354,29 @@ const Tournaments = () => {
 
     if (validRanges.length === 0) return;
 
-    const updatedTournament: Tournament = {
-      ...tournaments.find(t => t.id === editingTournamentId)!,
+    const base = tournaments.find(t => t.id === editingTournamentId)!;
+    const updatedTournament: UITournament = {
+      ...base,
       name: newTournamentName.trim(),
       weightRanges: validRanges.map(range => {
         // Find existing weight range to preserve excludedPlayerIds
-        const existingRange = tournaments.find(t => t.id === editingTournamentId)!.weightRanges.find(wr => wr.id === range.id);
+        const existingRange = base.weightRanges.find(wr => wr.id === range.id);
         return {
           ...range,
           excludedPlayerIds: existingRange?.excludedPlayerIds || []
         };
       }),
+      isExpanded: Boolean(base.isExpanded),
       genderFilter: playerFilters.gender,
       handPreferenceFilter: playerFilters.handPreference,
       birthYearMin: createTournamentBirthYearMin,
       birthYearMax: createTournamentBirthYearMax,
     };
     
-    const updatedTournaments = TournamentsStorage.updateTournament(tournaments, updatedTournament);
+    const updatedTournaments = tournaments.map(t => t.id === updatedTournament.id ? updatedTournament : t);
     setTournaments(updatedTournaments);
+    // Persist edits immediately
+    try { saveTournaments(updatedTournaments as any); } catch {}
 
     // Reset form
     setNewTournamentName('');
@@ -320,7 +393,7 @@ const Tournaments = () => {
   };
 
 
-  const getAvailablePlayersCount = (weightRange: WeightRange, tournament?: Tournament) => {
+  const getAvailablePlayersCount = (weightRange: WeightRange, tournament?: UITournament) => {
     return players.filter(player => {
       // Exclude players that are specifically excluded from this weight range
       if (weightRange.excludedPlayerIds?.includes(player.id)) {
@@ -347,27 +420,37 @@ const Tournaments = () => {
   };
 
   const handleExcludePlayer = (tournamentId: string, weightRangeId: string, playerId: string) => {
-    const updatedTournaments = TournamentsStorage.excludePlayerFromWeightRange(tournaments, tournamentId, weightRangeId, playerId);
-    setTournaments(updatedTournaments);
+    const updated = tournaments.map(t => t.id === tournamentId ? ({
+      ...t,
+      weightRanges: t.weightRanges.map(wr => wr.id === weightRangeId ? {
+        ...wr,
+        excludedPlayerIds: [...(wr.excludedPlayerIds || []), playerId]
+      } : wr)
+    } as UITournament) : t);
+    setTournaments(updated);
+    saveTournaments(updated as any);
   };
 
   const handleIncludePlayer = (tournamentId: string, weightRangeId: string, playerId: string) => {
-    const updatedTournaments = TournamentsStorage.includePlayerInWeightRange(tournaments, tournamentId, weightRangeId, playerId);
-    setTournaments(updatedTournaments);
+    const updated = tournaments.map(t => t.id === tournamentId ? ({
+      ...t,
+      weightRanges: t.weightRanges.map(wr => wr.id === weightRangeId ? {
+        ...wr,
+        excludedPlayerIds: (wr.excludedPlayerIds || []).filter(id => id !== playerId)
+      } : wr)
+    } as UITournament) : t);
+    setTournaments(updated);
+    saveTournaments(updated as any);
   };
 
   
 
   const handleClearAllTournamentData = () => {
     if (window.confirm('Are you sure you want to clear all tournament data? This will remove all tournaments, selections, and filters.')) {
-      // Clear all tournament-related localStorage using utility
-      TournamentsStorage.clearAllTournamentData();
-      
-      // Reset all state to defaults
+      clearAllTournamentData();
       setTournaments([]);
-      
-      setSelectedTournament(null);
-      setSelectedWeightRange(null);
+      setSelectedTournamentLocal(null);
+      setSelectedWeightRangeLocal(null);
       setPlayerFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
       setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
       setShowFilteredPlayers(false);
@@ -390,7 +473,7 @@ const Tournaments = () => {
   };
 
   // PDF Preview Modal Functions
-  const getFilteredPlayers = (weightRange: WeightRange, tournament: Tournament) => {
+  const getFilteredPlayers = (weightRange: WeightRange, tournament: UITournament) => {
     return players.filter(player => {
       // Weight range filter
       const weightMatch = player.weight >= weightRange.min && player.weight <= weightRange.max;
@@ -418,7 +501,7 @@ const Tournaments = () => {
     });
   };
 
-  const handleShowPDFPreview = (tournament: Tournament, weightRange: WeightRange) => {
+  const handleShowPDFPreview = (tournament: UITournament, weightRange: WeightRange) => {
     setCurrentTournamentForPDF(tournament);
     setCurrentWeightRangeForPDF(weightRange);
     
@@ -457,7 +540,7 @@ const Tournaments = () => {
     }
   };
 
-  const handleShowPDFColumnModal = (tournament: Tournament, weightRange: WeightRange) => {
+  const handleShowPDFColumnModal = (tournament: UITournament, weightRange: WeightRange) => {
     setCurrentTournamentForPDF(tournament);
     setCurrentWeightRangeForPDF(weightRange);
     setIsPDFColumnModalOpen(true);
