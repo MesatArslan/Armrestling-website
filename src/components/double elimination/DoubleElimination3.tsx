@@ -26,21 +26,21 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
     TabManager.getInitialTab(fixtureId)
   );
   const [selectedWinner, setSelectedWinner] = useState<{[matchId: string]: string | null}>({});
-  // matchHistory retained only in memory; not persisted
-  const [matchHistory, setMatchHistory] = useState<Match[][]>([]);
+  // Tamamlanan maçların sıralı yığını (en sondaki, en son tamamlanan)
+  const [completedOrder, setCompletedOrder] = useState<string[]>([]);
   const [currentRoundKey, setCurrentRoundKey] = useState<RoundKey>('WB1');
-  const [isUndoing, setIsUndoing] = useState(false);
 
   // Handle tab change and save to storage
   const handleTabChange = TabManager.createTabChangeHandler(setActiveTab, fixtureId);
 
   // Save tournament state using utility
-  const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean, roundKey: RoundKey) => {
+  const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean, roundKey: RoundKey, orderState: string[]) => {
     const state = {
       matches: matchesState,
       rankings: rankingsState,
       tournamentComplete: completeState,
       currentRoundKey: roundKey,
+      completedOrder: orderState,
       // Do not persist matchHistory
       timestamp: new Date().toISOString()
     };
@@ -54,11 +54,22 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
       const playerIds = players.map(p => p.id).sort().join('-');
       const state = DoubleEliminationStorage.getDoubleEliminationState(3, playerIds, fixtureId);
       if (state) {
-        setMatches(state.matches || []);
+        const loadedMatches = state.matches || [];
+        setMatches(loadedMatches);
         setRankings(state.rankings || {});
         setTournamentComplete(state.tournamentComplete || false);
         setCurrentRoundKey(state.currentRoundKey || 'WB1');
-         // Do not restore matchHistory
+        // completedOrder varsa kullan, yoksa matches'tan türet
+        const derivedOrder: string[] = (() => {
+          const order: string[] = [];
+          const idOrder = ['wb1', 'wb2', 'lb1', 'final', 'grandfinal'];
+          for (const id of idOrder) {
+            const m = loadedMatches.find((mm: Match) => mm.id === id);
+            if (m?.winnerId) order.push(id);
+          }
+          return order;
+        })();
+        setCompletedOrder(state.completedOrder || derivedOrder);
         return true;
       }
     } catch (error) {
@@ -99,11 +110,11 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
     setRankings({});
     setTournamentComplete(false);
     setCurrentRoundKey('WB1');
-    setMatchHistory([]);
+    setCompletedOrder([]);
     setSelectedWinner({});
     
     // Save initial state
-    saveTournamentState(newMatches, {}, false, 'WB1');
+    saveTournamentState(newMatches, {}, false, 'WB1', []);
   };
 
   // Check if a round is complete
@@ -124,23 +135,7 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
     }
   };
 
-  // Get the round key for a match
-  function getMatchRoundKey(match: Match): RoundKey {
-    switch (match.id) {
-      case 'wb1':
-        return 'WB1';
-      case 'wb2':
-        return 'WB2';
-      case 'lb1':
-        return 'LB1';
-      case 'final':
-        return 'Final';
-      case 'grandfinal':
-        return 'GrandFinal';
-      default:
-        return 'WB1';
-    }
-  }
+  // getMatchRoundKey kaldırıldı; tek-adım geri alma mantığı sabit anahtarlar kullanır
 
   // Create next round matches
   function createNextRound(roundKey: RoundKey, matchList: Match[]): Match[] {
@@ -231,11 +226,6 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
   }
 
   const handleMatchResult = (matchId: string, winnerId: string) => {
-    // Save current state to history before updating (only if not undoing)
-    if (!isUndoing) {
-      setMatchHistory(prev => [...prev, [...matches]]);
-    }
-    
     const updatedMatches = matches.map(match => 
       match.id === matchId ? { ...match, winnerId } : match
     );
@@ -293,25 +283,27 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
       finalTournamentComplete = true;
     }
     
+    // Tamamlanan sırayı güncelle
+    const newCompletedOrder = completedOrder.includes(matchId)
+      ? completedOrder
+      : [...completedOrder, matchId];
     // Her durumda mevcut ranking'i güncelle (3. sıra için)
     if (!finalTournamentComplete) {
       setRankings(finalRankings);
-      saveTournamentState(finalMatches, finalRankings, false, nextRoundKey);
+      saveTournamentState(finalMatches, finalRankings, false, nextRoundKey, newCompletedOrder);
     }
 
     setMatches(finalMatches);
     setRankings(finalRankings);
     setTournamentComplete(finalTournamentComplete);
     setCurrentRoundKey(nextRoundKey);
-    
-    // Update match history before saving
-    const updatedMatchHistory = isUndoing ? matchHistory : [...matchHistory, [...matches]];
+    setCompletedOrder(newCompletedOrder);
     const state = {
       matches: finalMatches,
       rankings: finalRankings,
       tournamentComplete: finalTournamentComplete,
       currentRoundKey: nextRoundKey,
-      matchHistory: updatedMatchHistory,
+      completedOrder: newCompletedOrder,
       timestamp: new Date().toISOString()
     };
     const playerIds = players.map(p => p.id).sort().join('-');
@@ -352,7 +344,7 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
       clearTournamentState();
       initializeTournament();
       setSelectedWinner({});
-      setMatchHistory([]);
+      setCompletedOrder([]);
     }
   };
 
@@ -362,82 +354,107 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
   };
 
   const undoLastMatch = () => {
-    if (matchHistory.length > 0) {
-      setIsUndoing(true);
-      
-      const previousMatches = matchHistory[matchHistory.length - 1];
-      const currentState = matches;
-      
-      // Find which match was undone by comparing current and previous states
-      const undoneMatch = currentState.find(match => 
-        match.winnerId && !previousMatches.find(pm => pm.id === match.id)?.winnerId
-      );
-      
-      setMatches(previousMatches);
-      setMatchHistory(prev => prev.slice(0, -1));
-      
-      // Reset tournament completion if we're going back
-      if (tournamentComplete) {
-        setTournamentComplete(false);
+    // Stack mevcutsa onu, yoksa matches'tan türet
+    const stack = completedOrder.length > 0 ? completedOrder : (() => {
+      const order: string[] = [];
+      const idOrder = ['wb1', 'wb2', 'lb1', 'final', 'grandfinal'];
+      for (const id of idOrder) {
+        const m = matches.find(mm => mm.id === id);
+        if (m?.winnerId) order.push(id);
       }
-      
-      // Remove rankings that were affected by the undone match
-      let updatedRankings = { ...rankings };
-      
-      if (undoneMatch) {
-        const matchId = undoneMatch.id;
-        
-        // Remove rankings based on the undone match
-        if (matchId === 'final') {
-          delete updatedRankings.first;
-          delete updatedRankings.second;
-        } else if (matchId === 'grandfinal') {
-          delete updatedRankings.first;
-          delete updatedRankings.second;
-        } else if (matchId === 'lb1') {
-          delete updatedRankings.third;
+      return order;
+    })();
+    if (stack.length === 0) return;
+
+    const lastId = stack[stack.length - 1];
+    const newCompletedOrder = stack.slice(0, -1);
+
+    let updatedMatches = [...matches];
+    let updatedRankings: typeof rankings = { ...rankings };
+    let newTournamentComplete = false;
+    let newCurrentRoundKey: RoundKey = currentRoundKey;
+
+    switch (lastId) {
+      case 'grandfinal': {
+        updatedMatches = updatedMatches.map(m => m.id === 'grandfinal' ? { ...m, winnerId: undefined } : m);
+        // GrandFinal geri alındı: 1. ve 2. belirsiz, 3. (LB1 loser) korunur
+        delete (updatedRankings as any).first;
+        delete (updatedRankings as any).second;
+        newTournamentComplete = false;
+        newCurrentRoundKey = 'GrandFinal';
+        break;
+      }
+      case 'final': {
+        // Final geri alındı: sonucunu temizle, varsa oynanmamış grandfinal'ı kaldır
+        updatedMatches = updatedMatches.map(m => m.id === 'final' ? { ...m, winnerId: undefined } : m);
+        const gf = updatedMatches.find(m => m.id === 'grandfinal');
+        if (gf && !gf.winnerId) {
+          updatedMatches = updatedMatches.filter(m => m.id !== 'grandfinal');
         }
+        // Final sıralamasını temizle (1-2), 3 korunur
+        delete (updatedRankings as any).first;
+        delete (updatedRankings as any).second;
+        newTournamentComplete = false;
+        newCurrentRoundKey = 'Final';
+        break;
       }
-      
-      setRankings(updatedRankings);
-      
-      // Update current round key based on the last match
-      const lastMatch = previousMatches[previousMatches.length - 1];
-      if (lastMatch) {
-        const matchRoundKey = getMatchRoundKey(lastMatch);
-        setCurrentRoundKey(matchRoundKey);
+      case 'lb1': {
+        updatedMatches = updatedMatches.map(m => m.id === 'lb1' ? { ...m, winnerId: undefined } : m);
+        // Final ve GrandFinal'ı kaldır
+        updatedMatches = updatedMatches.filter(m => m.id !== 'final' && m.id !== 'grandfinal');
+        // 3.lük temizlenir
+        delete (updatedRankings as any).third;
+        newTournamentComplete = false;
+        newCurrentRoundKey = 'LB1';
+        break;
       }
-      
-      // Clear any selected winners for matches that no longer exist
-      const previousMatchIds = previousMatches.map(m => m.id);
-      setSelectedWinner(prev => {
-        const newSelected = { ...prev };
-        Object.keys(newSelected).forEach(matchId => {
-          if (!previousMatchIds.includes(matchId)) {
-            delete newSelected[matchId];
-          }
-        });
-        return newSelected;
-      });
-      
-      // Save the reverted state with updated match history
-      const updatedMatchHistory = matchHistory.slice(0, -1);
-      const state = {
-        matches: previousMatches,
-        rankings: updatedRankings,
-        tournamentComplete: false,
-        currentRoundKey: getMatchRoundKey(previousMatches[previousMatches.length - 1] || previousMatches[0]),
-        matchHistory: updatedMatchHistory,
-        timestamp: new Date().toISOString()
-      };
-      const playerIds = players.map(p => p.id).sort().join('-');
-      DoubleEliminationStorage.saveDoubleEliminationState(3, playerIds, state, fixtureId);
-      
-      // Reset the undoing flag after a short delay
-      setTimeout(() => {
-        setIsUndoing(false);
-      }, 100);
+      case 'wb2': {
+        updatedMatches = updatedMatches.map(m => m.id === 'wb2' ? { ...m, winnerId: undefined } : m);
+        // LB1, Final ve GrandFinal'ı kaldır
+        updatedMatches = updatedMatches.filter(m => m.id !== 'lb1' && m.id !== 'final' && m.id !== 'grandfinal');
+        // 3.lük de etkilenir, temizle
+        delete (updatedRankings as any).third;
+        newTournamentComplete = false;
+        newCurrentRoundKey = 'WB2';
+        break;
+      }
+      case 'wb1': {
+        updatedMatches = updatedMatches.map(m => m.id === 'wb1' ? { ...m, winnerId: undefined } : m);
+        // Türetilen tüm maçları kaldır
+        updatedMatches = updatedMatches.filter(m => !['wb2', 'lb1', 'final', 'grandfinal'].includes(m.id));
+        // Sıralamaları temizle
+        updatedRankings = {};
+        newTournamentComplete = false;
+        newCurrentRoundKey = 'WB1';
+        break;
+      }
     }
+
+    // Seçilmiş kazananları var olmayan maçlardan temizle ve geri alınan maç için sıfırla
+    const remainingIds = new Set(updatedMatches.map(m => m.id));
+    const prunedSelected: {[matchId: string]: string | null} = {};
+    Object.entries(selectedWinner).forEach(([k, v]) => {
+      if (remainingIds.has(k)) prunedSelected[k] = v;
+    });
+    if (remainingIds.has(lastId)) prunedSelected[lastId] = null;
+
+    setMatches(updatedMatches);
+    setRankings(updatedRankings);
+    setTournamentComplete(newTournamentComplete);
+    setCurrentRoundKey(newCurrentRoundKey);
+    setSelectedWinner(prunedSelected);
+    setCompletedOrder(newCompletedOrder);
+
+    const state = {
+      matches: updatedMatches,
+      rankings: updatedRankings,
+      tournamentComplete: newTournamentComplete,
+      currentRoundKey: newCurrentRoundKey,
+      completedOrder: newCompletedOrder,
+      timestamp: new Date().toISOString()
+    };
+    const playerIds = players.map(p => p.id).sort().join('-');
+    DoubleEliminationStorage.saveDoubleEliminationState(3, playerIds, state, fixtureId);
   };
 
   const renderMatch = (match: Match) => {
@@ -542,7 +559,7 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
             </svg>
             Turnuvayı Sıfırla
           </button>
-          {matchHistory.length > 0 && (
+          {completedOrder.length > 0 && (
             <button
               onClick={undoLastMatch}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"

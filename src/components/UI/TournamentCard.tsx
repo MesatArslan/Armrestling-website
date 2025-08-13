@@ -359,7 +359,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       <p className="text-sm text-gray-600 mb-4">
                         {t('tournamentCard.excludedPlayersDescription')}
                       </p>
-                      <div className="h-32 overflow-y-auto">
+                      <div className="h-64 overflow-y-auto">
                         <PlayersTable
                           players={getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
                           onPlayersChange={() => { }} // Read-only for tournaments

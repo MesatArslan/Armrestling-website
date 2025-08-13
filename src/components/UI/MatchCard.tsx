@@ -209,8 +209,18 @@ const MatchCard: React.FC<MatchCardProps> = ({
         {!winnerId && player2Id && (
           <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-gray-200">
             <div className="text-center">
+              {/** Confirm handler clears persisted match status after confirmation */}
+              {(() => {
+                const handleConfirmClick = () => {
+                  if (!currentSelectedWinner) return;
+                  onWinnerConfirm();
+                  if (fixtureId) {
+                    try { MatchesStorage.clearMatchStatus(fixtureId, matchId); } catch {}
+                  }
+                };
+                return (
               <button
-                onClick={currentSelectedWinner ? onWinnerConfirm : undefined}
+                onClick={currentSelectedWinner ? handleConfirmClick : undefined}
                 disabled={!currentSelectedWinner}
                 className={`py-2 px-4 md:py-2 md:px-5 lg:md:py-3 lg:md:px-6 rounded-xl text-xs md:text-sm font-bold transition-all duration-200 shadow-lg transform ${
                   currentSelectedWinner 
@@ -220,6 +230,8 @@ const MatchCard: React.FC<MatchCardProps> = ({
               >
                 ✅ {t('matches.confirmWinner')}
               </button>
+                );
+              })()}
             </div>
           </div>
         )}
