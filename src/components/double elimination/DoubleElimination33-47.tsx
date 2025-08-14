@@ -696,20 +696,20 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
       );
     let updatedRankings = { ...rankings };
     let complete = tournamentComplete;
-      const finalMatch = updatedMatches.find(m => m.id === 'final');
-      const grandFinalMatch = updatedMatches.find(m => m.id === 'grandfinal');
+    const finalMatch = updatedMatches.find(m => m.id === 'final');
+    const grandFinalMatch = updatedMatches.find(m => m.id === 'grandfinal');
       
-      if (finalMatch?.winnerId) {
-        const lbfinalWinner = updatedMatches.find(m => m.id === 'lbfinal')?.winnerId;
-        const finalWinner = finalMatch.winnerId;
-      if (!(lbfinalWinner && finalWinner === lbfinalWinner)) {
+      if (grandFinalMatch?.winnerId) {
         updatedRankings = calculateRankings(updatedMatches);
         complete = true;
+      } else if (finalMatch?.winnerId) {
+        const lbfinalWinner = updatedMatches.find(m => m.id === 'lbfinal')?.winnerId;
+        const finalWinner = finalMatch.winnerId;
+        if (!(lbfinalWinner && finalWinner === lbfinalWinner)) {
+          updatedRankings = calculateRankings(updatedMatches);
+          complete = true;
         }
-      } else if (grandFinalMatch?.winnerId) {
-      updatedRankings = calculateRankings(updatedMatches);
-      complete = true;
-    }
+      }
 
     setMatches(updatedMatches);
     setRankings(updatedRankings);

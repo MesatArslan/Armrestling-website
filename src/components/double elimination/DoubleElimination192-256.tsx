@@ -991,16 +991,16 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
 
     const finalMatch = updatedMatches.find(m => m.id === 'final');
     const grandFinalMatch = updatedMatches.find(m => m.id === 'grandfinal');
-    if (finalMatch?.winnerId) {
+    if (grandFinalMatch?.winnerId) {
+      updatedRankings = calculateRankings(updatedMatches);
+      complete = true;
+    } else if (finalMatch?.winnerId) {
       const lbfinalWinner = updatedMatches.find(m => m.id === 'lbfinal')?.winnerId;
       const finalWinner = finalMatch.winnerId;
       if (!(lbfinalWinner && finalWinner === lbfinalWinner)) {
         updatedRankings = calculateRankings(updatedMatches);
         complete = true;
       }
-    } else if (grandFinalMatch?.winnerId) {
-      updatedRankings = calculateRankings(updatedMatches);
-      complete = true;
     } else {
       updatedRankings = calculateRankings(updatedMatches);
     }

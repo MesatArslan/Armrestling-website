@@ -178,7 +178,7 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
       const recalculatedRankings = calculateRankings(matches);
       if (JSON.stringify(recalculatedRankings) !== JSON.stringify(rankings)) {
         setRankings(recalculatedRankings);
-        saveTournamentState(matches, recalculatedRankings, tournamentComplete, currentRoundKey);
+        saveTournamentState(matches, recalculatedRankings, tournamentComplete, currentRoundKey, completedOrder);
       }
     }
   }, [matches, tournamentComplete, currentRoundKey]);
@@ -971,17 +971,17 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
     let complete = tournamentComplete;
       const finalMatch = updatedMatches.find(m => m.id === 'final');
       const grandFinalMatch = updatedMatches.find(m => m.id === 'grandfinal');
-      if (finalMatch?.winnerId) {
-        const lbfinalWinner = updatedMatches.find(m => m.id === 'lbfinal')?.winnerId;
-        const finalWinner = finalMatch.winnerId;
-      if (!(lbfinalWinner && finalWinner === lbfinalWinner)) {
+      if (grandFinalMatch?.winnerId) {
         updatedRankings = calculateRankings(updatedMatches);
         complete = true;
+      } else if (finalMatch?.winnerId) {
+        const lbfinalWinner = updatedMatches.find(m => m.id === 'lbfinal')?.winnerId;
+        const finalWinner = finalMatch.winnerId;
+        if (!(lbfinalWinner && finalWinner === lbfinalWinner)) {
+          updatedRankings = calculateRankings(updatedMatches);
+          complete = true;
         }
-      } else if (grandFinalMatch?.winnerId) {
-      updatedRankings = calculateRankings(updatedMatches);
-      complete = true;
-    }
+      }
     setMatches(updatedMatches);
     setRankings(updatedRankings);
     setTournamentComplete(complete);
@@ -1126,8 +1126,7 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
                     clearTournamentState();
                     initializeTournament();
                     setSelectedWinner({});
-                    setMatchHistory([]);
-                    setLastCompletedMatch(null);
+                    // Legacy state resets removed (no match history tracking here)
                   }
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
