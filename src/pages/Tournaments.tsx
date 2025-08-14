@@ -67,6 +67,7 @@ const Tournaments = () => {
   const [isBulkPDFModalOpen, setIsBulkPDFModalOpen] = useState(false);
   const [selectedBulkRanges, setSelectedBulkRanges] = useState<Record<string, boolean>>({});
   const [isBulkPreviewMode, setIsBulkPreviewMode] = useState<boolean>(false);
+  const [bulkPlayersPerPage, setBulkPlayersPerPage] = useState<number>(33);
 
   // Toggle to disable all background sync effects (diagnostic/safe mode)
   const NO_BACKGROUND_SYNC = true;
@@ -737,6 +738,35 @@ const Tournaments = () => {
             </div>
           </div>
 
+          {/* Players per page for bulk generation */}
+          <div className="mb-6">
+            <h4 className="text-sm font-semibold text-gray-800 mb-2">{t('tournamentCard.playersPerPage')}</h4>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.min')}: 1</span>
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.max')}: 40</span>
+            </div>
+            <input
+              type="number"
+              min={1}
+              max={40}
+              value={bulkPlayersPerPage || ''}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === '') {
+                  setBulkPlayersPerPage(0);
+                } else {
+                  const n = parseInt(v);
+                  if (n >= 1 && n <= 40) setBulkPlayersPerPage(n);
+                }
+              }}
+              onBlur={(e) => {
+                if (!e.target.value || parseInt(e.target.value) < 1) setBulkPlayersPerPage(33);
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-base sm:text-lg font-semibold"
+              placeholder="33"
+            />
+          </div>
+
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setIsBulkPDFModalOpen(false)}
@@ -752,7 +782,7 @@ const Tournaments = () => {
                   currentTournamentForPDF!,
                   selectedRanges,
                   selectedPDFColumns,
-                  playersPerPage,
+                  bulkPlayersPerPage,
                   availablePDFColumns,
                   (wr) => {
                     return players.filter((player) => {
@@ -920,7 +950,7 @@ const Tournaments = () => {
                         currentTournamentForPDF,
                         selectedRanges,
                         selectedPDFColumns,
-                        playersPerPage,
+                        bulkPlayersPerPage,
                         availablePDFColumns,
                         (wr) => {
                           return players.filter((player) => {
@@ -937,7 +967,7 @@ const Tournaments = () => {
                           });
                         }
                       );
-                      alert(t('tournamentCard.pdfSuccessMessage', { fileSize: result.fileSize, totalPages: result.totalPages, playersPerPage }));
+                      alert(t('tournamentCard.pdfSuccessMessage', { fileSize: result.fileSize, totalPages: result.totalPages, playersPerPage: bulkPlayersPerPage }));
                     } catch (error) {
                       alert(t('tournamentCard.pdfErrorMessage'));
                     }

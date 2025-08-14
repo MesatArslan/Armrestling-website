@@ -443,7 +443,7 @@ export const generateCombinedPreviewPages = (
         availablePDFColumns,
         filteredPlayers.length
       );
-      pages.push(pageContent);
+      pages.push(`<div class="a4-page">${pageContent}</div>`);
     }
   });
   return pages;
