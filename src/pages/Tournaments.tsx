@@ -543,6 +543,17 @@ const Tournaments = () => {
   const handleShowPDFColumnModal = (tournament: UITournament, weightRange: WeightRange) => {
     setCurrentTournamentForPDF(tournament);
     setCurrentWeightRangeForPDF(weightRange);
+    // Initialize available/selected columns from Players repo when opening the modal
+    try {
+      const cols = Array.isArray(playerColumns) && playerColumns.length > 0 ? playerColumns : availablePDFColumns;
+      if (cols && cols.length > 0) {
+        if (!deepEqual(availablePDFColumns, cols)) setAvailablePDFColumns(cols);
+        const visibleIds = cols.filter((c) => c.visible).map((c) => c.id);
+        if (visibleIds.length > 0 && !deepEqual(selectedPDFColumns, visibleIds)) {
+          setSelectedPDFColumns(visibleIds);
+        }
+      }
+    } catch {}
     setIsPDFColumnModalOpen(true);
   };
 
@@ -634,6 +645,17 @@ const Tournaments = () => {
                     const defaults: Record<string, boolean> = {};
                     t.weightRanges.forEach(wr => { defaults[wr.id] = true; });
                     setSelectedBulkRanges(defaults);
+                    // Initialize available/selected columns before opening bulk modal
+                    try {
+                      const cols = Array.isArray(playerColumns) && playerColumns.length > 0 ? playerColumns : availablePDFColumns;
+                      if (cols && cols.length > 0) {
+                        if (!deepEqual(availablePDFColumns, cols)) setAvailablePDFColumns(cols);
+                        const visibleIds = cols.filter((c) => c.visible).map((c) => c.id);
+                        if (visibleIds.length > 0 && !deepEqual(selectedPDFColumns, visibleIds)) {
+                          setSelectedPDFColumns(visibleIds);
+                        }
+                      }
+                    } catch {}
                     setIsBulkPDFModalOpen(true);
                     setCurrentTournamentForPDF(t);
                     setIsBulkPreviewMode(false);
@@ -978,27 +1000,7 @@ const Tournaments = () => {
             )}
             
             <div className="flex justify-center">
-              <div 
-                className="preview-content"
-                style={{
-                  width: '210mm',
-                  height: 'auto',
-                  minHeight: '297mm',
-                  padding: '10mm 15mm 15mm 15mm',
-                  boxSizing: 'border-box',
-                  fontFamily: 'Arial, sans-serif',
-                  fontSize: '12px',
-                  lineHeight: '1.6',
-                  color: '#000000',
-                  backgroundColor: '#ffffff',
-                  overflow: 'visible',
-                  border: '1px solid #ccc',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                  position: 'relative',
-                  transform: 'translateY(-35px)'
-                }}
-                dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }}
-              />
+              <div dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }} />
             </div>
           </div>
           

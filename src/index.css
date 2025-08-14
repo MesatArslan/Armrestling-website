@@ -142,3 +142,41 @@ button {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* A4 sabit sayfa boyutu ve yazdırma ile uyumlu önizleme */
+.a4-page {
+  width: 210mm;
+  height: 297mm;
+  padding: 10mm 15mm 15mm 15mm;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #000000;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  line-height: 2.7;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+/* Ekran önizlemesi için A4 çerçevesi (isteğe bağlı) */
+.a4-preview-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f3f4f6;
+}
+
+@media print {
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    background: #ffffff !important;
+  }
+  .a4-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    page-break-after: always;
+  }
+}
