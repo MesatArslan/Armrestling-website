@@ -6,11 +6,13 @@ import Matches from './pages/Matches';
 import Scoring from './pages/Scoring';
 import './i18n';
 import Navbar from './components/UI/Navbar';
+import ScrollToTop from './components/UI/ScrollToTop';
 
 const Layout = () => {
   return (
     <div className="min-h-screen bg-gray-50 w-screen">
       <Navbar />
+      <ScrollToTop />
       <main className="w-screen pt-16">
         <Outlet />
       </main>
