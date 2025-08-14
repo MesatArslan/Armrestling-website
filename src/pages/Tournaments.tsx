@@ -68,6 +68,9 @@ const Tournaments = () => {
   const [selectedBulkRanges, setSelectedBulkRanges] = useState<Record<string, boolean>>({});
   const [isBulkPreviewMode, setIsBulkPreviewMode] = useState<boolean>(false);
   const [bulkPlayersPerPage, setBulkPlayersPerPage] = useState<number>(33);
+  const [pdfProgress, setPdfProgress] = useState<number>(0);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const hideProgressTimer = React.useRef<number | null>(null);
 
   // Toggle to disable all background sync effects (diagnostic/safe mode)
   const NO_BACKGROUND_SYNC = true;
@@ -524,20 +527,32 @@ const Tournaments = () => {
     if (!currentTournamentForPDF || !currentWeightRangeForPDF) return;
 
     try {
-      const result = await generatePDF(
+      setIsExporting(true);
+      setPdfProgress(0);
+      await generatePDF(
         currentTournamentForPDF,
         currentWeightRangeForPDF,
         selectedPDFColumns,
         playersPerPage,
         availablePDFColumns,
-        (wr) => getFilteredPlayers(wr, currentTournamentForPDF)
+        (wr) => getFilteredPlayers(wr, currentTournamentForPDF),
+        (p) => setPdfProgress(p)
       );
-      
-      alert(t('tournamentCard.pdfSuccessMessage', { fileSize: result.fileSize, totalPages: result.totalPages, playersPerPage }));
       
     } catch (error) {
       // PDF oluşturulurken hata
-      alert(t('tournamentCard.pdfErrorMessage'));
+    } finally {
+      // Hold 100% for a brief moment to give a nice finish
+      if (pdfProgress < 100) {
+        setPdfProgress(100);
+      }
+      if (hideProgressTimer.current) {
+        window.clearTimeout(hideProgressTimer.current);
+      }
+      hideProgressTimer.current = window.setTimeout(() => {
+        setIsExporting(false);
+        setPdfProgress(0);
+      }, 800);
     }
   };
 
@@ -670,6 +685,25 @@ const Tournaments = () => {
       </div>
     </div>
 
+    {/* Top-right export progress indicator */}
+    {isExporting && (
+      <div className="fixed top-4 right-4 z-[10000] transition-opacity duration-300">
+        <div className="bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-xl px-4 py-3 flex items-center gap-3 min-w-[220px]">
+          <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <div className="flex-1">
+            <div className="text-sm font-semibold text-gray-800">{t('tournamentCard.downloadPDF')}</div>
+            <div className="mt-1 w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-600" style={{ width: `${pdfProgress}%` }} />
+            </div>
+          </div>
+          <div className="text-xs font-semibold text-gray-700 w-10 text-right">{pdfProgress}%</div>
+        </div>
+      </div>
+    )}
+
     {/* PDF Column Selection Modal - Moved outside main content */}
     {isBulkPDFModalOpen && currentTournamentForPDF && (
       <div 
@@ -774,7 +808,7 @@ const Tournaments = () => {
             >
               {t('common.close')}
             </button>
-            <button
+              <button
               onClick={() => {
                 const selectedRanges = currentTournamentForPDF!.weightRanges.filter(wr => selectedBulkRanges[wr.id]);
                 if (selectedRanges.length === 0) return;
@@ -946,7 +980,9 @@ const Tournaments = () => {
                     const selectedRanges = currentTournamentForPDF.weightRanges.filter(wr => selectedBulkRanges[wr.id]);
                     if (selectedRanges.length === 0) return;
                     try {
-                      const result = await generateCombinedTournamentPDF(
+                      setIsExporting(true);
+                      setPdfProgress(0);
+                      await generateCombinedTournamentPDF(
                         currentTournamentForPDF,
                         selectedRanges,
                         selectedPDFColumns,
@@ -965,15 +1001,21 @@ const Tournaments = () => {
                             }
                             return matchesWeight && matchesTournamentGender && matchesTournamentHand && matchesBirthYear;
                           });
-                        }
+                        },
+                        (p) => setPdfProgress(p)
                       );
-                      alert(t('tournamentCard.pdfSuccessMessage', { fileSize: result.fileSize, totalPages: result.totalPages, playersPerPage: bulkPlayersPerPage }));
                     } catch (error) {
-                      alert(t('tournamentCard.pdfErrorMessage'));
+                    } finally {
+                      if (pdfProgress < 100) setPdfProgress(100);
+                      if (hideProgressTimer.current) window.clearTimeout(hideProgressTimer.current);
+                      hideProgressTimer.current = window.setTimeout(() => {
+                        setIsExporting(false);
+                        setPdfProgress(0);
+                      }, 800);
                     }
                     setIsBulkPreviewMode(false);
                   } else {
-                    handleExportPDF();
+                    await handleExportPDF();
                   }
                 }}
                 className="px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold"

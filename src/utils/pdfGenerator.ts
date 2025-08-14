@@ -216,7 +216,8 @@ export const generatePDF = async (
   selectedPDFColumns: string[],
   playersPerPage: number,
   availablePDFColumns: Column[],
-  getFilteredPlayers: (weightRange: WeightRange) => ExtendedPlayer[]
+  getFilteredPlayers: (weightRange: WeightRange) => ExtendedPlayer[],
+  onProgress?: (percent: number) => void
 ): Promise<{ fileName: string; fileSize: string; totalPages: number }> => {
   // Maksimum 40 oyuncu sınırı
   const safePlayersPerPage = Math.max(1, playersPerPage || 0);
@@ -230,6 +231,7 @@ export const generatePDF = async (
 
     const pdf = new jsPDF('p', 'mm', 'a4');
 
+    if (onProgress) onProgress(0);
     for (let pageNum = 0; pageNum < totalPages; pageNum++) {
       const startIndex = pageNum * maxPlayersPerPage;
       const endIndex = Math.min(startIndex + maxPlayersPerPage, filteredPlayers.length);
@@ -291,6 +293,11 @@ export const generatePDF = async (
         pdf.addPage();
       }
       pdf.addImage(imgData, 'JPEG', 0, -yOffsetMm, imgWidth, imgHeight);
+
+      if (onProgress) {
+        const percent = Math.min(100, Math.round(((pageNum + 1) / totalPages) * 100));
+        onProgress(percent);
+      }
     }
 
     const pdfBlob = pdf.output('blob');
@@ -303,6 +310,7 @@ export const generatePDF = async (
     const fileName = `tournament_${sanitize(tournament.name)}_${sanitize(weightRange.name)}_players.pdf`;
     savePdfFile(pdf as any, fileName, pdfBlob);
 
+    if (onProgress) onProgress(100);
     return { fileName, fileSize: sizeText, totalPages };
 
   } catch (error) {
@@ -316,7 +324,8 @@ export const generateCombinedTournamentPDF = async (
   selectedPDFColumns: string[],
   playersPerPage: number,
   availablePDFColumns: Column[],
-  getFilteredPlayersForRange: (weightRange: WeightRange) => ExtendedPlayer[]
+  getFilteredPlayersForRange: (weightRange: WeightRange) => ExtendedPlayer[],
+  onProgress?: (percent: number) => void
 ): Promise<{ fileName: string; fileSize: string; totalPages: number }> => {
   const safePlayersPerPage = Math.max(1, playersPerPage || 0);
   const maxPlayersPerPage = Math.min(safePlayersPerPage, 40);
@@ -325,10 +334,16 @@ export const generateCombinedTournamentPDF = async (
 
     const pdf = new jsPDF('p', 'mm', 'a4');
     let globalPageIndex = 0;
+    // Precompute players and total pages for accurate progress
+    const perRangePlayers = rangesToInclude.map((wr) => getFilteredPlayersForRange(wr));
+    const totalPagesOverall = perRangePlayers
+      .map((list) => Math.ceil(list.length / maxPlayersPerPage) || 1)
+      .reduce((a, b) => a + b, 0);
+    if (onProgress) onProgress(0);
 
     for (let rIndex = 0; rIndex < rangesToInclude.length; rIndex++) {
       const weightRange = rangesToInclude[rIndex];
-      const filteredPlayers = getFilteredPlayersForRange(weightRange);
+      const filteredPlayers = perRangePlayers[rIndex];
       const totalPagesForRange = Math.ceil(filteredPlayers.length / maxPlayersPerPage) || 1;
 
       for (let pageNum = 0; pageNum < totalPagesForRange; pageNum++) {
@@ -397,6 +412,11 @@ export const generateCombinedTournamentPDF = async (
         }
         pdf.addImage(imgData, 'JPEG', 0, -yOffsetMm, imgWidth, imgHeight);
         globalPageIndex += 1;
+
+        if (onProgress) {
+          const percent = Math.min(100, Math.round((globalPageIndex / Math.max(1, totalPagesOverall)) * 100));
+          onProgress(percent);
+        }
       }
     }
 
@@ -408,6 +428,7 @@ export const generateCombinedTournamentPDF = async (
     const sanitize = (s: string) => s.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
     const fileName = `tournament_${sanitize(tournament.name)}_selected_fixtures.pdf`;
     savePdfFile(pdf as any, fileName, pdfBlob);
+    if (onProgress) onProgress(100);
     return { fileName, fileSize: sizeText, totalPages: globalPageIndex };
   } catch (error) {
     throw new Error(i18n.t('tournamentCard.pdfErrorMessage'));
