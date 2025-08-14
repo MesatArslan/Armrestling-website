@@ -34,19 +34,6 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
   const [completedOrder, setCompletedOrder] = useState<string[]>([]);
 
   // Save tournament state using utility
-  const saveTournamentState = (matchesState: Match[], rankingsState: any, completeState: boolean, roundKey: RoundKey, orderState: string[]) => {
-    const state = {
-      matches: matchesState,
-      rankings: rankingsState,
-      tournamentComplete: completeState,
-      currentRoundKey: roundKey,
-      completedOrder: orderState,
-      // Do not persist matchHistory
-      timestamp: new Date().toISOString()
-    };
-    const playerIds = players.map(p => p.id).sort().join('-');
-    DoubleEliminationStorage.saveDoubleEliminationState(6, playerIds, state, fixtureId);
-  };
 
   // Load tournament state using utility
   const loadTournamentState = () => {
@@ -507,6 +494,14 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
       initializeTournament();
     }
   }, []);
+
+  // Persist interim rankings to fixture storage
+  React.useEffect(() => {
+    if (!fixtureId) return;
+    try {
+      MatchesStorage.updateTournamentState(fixtureId, { rankings });
+    } catch {}
+  }, [fixtureId, rankings]);
 
   const getPlayerName = (playerId: string) => {
     if (!playerId) return '';

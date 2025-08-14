@@ -1,6 +1,10 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import i18n from '../i18n';
+import type { Fixture as RepoFixture } from '../storage/schemas';
+import { ROUND_DESCRIPTIONS } from './roundDescriptions';
+import MatchesRepository from '../storage/MatchesRepository';
+import DoubleEliminationRepository from '../storage/DoubleEliminationRepository';
 
 export interface WeightRange {
   id: string;
@@ -494,3 +498,366 @@ export const openPreviewModal = (
     currentPage: 0
   };
 }; 
+
+// ===== Matches (Fixture) PDF generation =====
+
+type FixtureLike = Pick<RepoFixture, 'id' | 'name' | 'tournamentName' | 'weightRangeName' | 'players' | 'matches' | 'rankings'>;
+interface MatchLike {
+  id: string;
+  player1Id: string;
+  player2Id: string;
+  winnerId?: string;
+  bracket: 'winner' | 'loser' | 'placement';
+  round: number;
+  matchNumber: number;
+  isBye: boolean;
+  description?: string;
+}
+
+const getPlayerNameFromFixture = (fixture: FixtureLike, playerId?: string) => {
+  if (!playerId) return '';
+  const p = fixture.players.find(pp => pp.id === playerId);
+  const full = [p?.name, p?.surname].filter(Boolean).join(' ');
+  return full || (p ? String(p.id) : '');
+};
+
+const getFreshFixture = (fixtureId: string): any | null => {
+  try {
+    const repo = new MatchesRepository();
+    return repo.getFixture(fixtureId);
+  } catch {
+    return null;
+  }
+};
+
+const getDEState = (fixtureId: string): any | null => {
+  try {
+    const deRepo = new DoubleEliminationRepository<any>();
+    const state = deRepo.getState(fixtureId);
+    if (state) return state;
+  } catch {}
+  try {
+    const legacy = window.localStorage.getItem(`double-elimination-fixture-${fixtureId}`);
+    return legacy ? JSON.parse(legacy) : null;
+  } catch {
+    return null;
+  }
+};
+
+const mergeFixtureWithDEState = (fixture: any): any => {
+  const state = getDEState(fixture.id);
+  if (!state) return fixture;
+  const merged = { ...fixture } as any;
+  if (Array.isArray(state.matches) && state.matches.length > 0) merged.matches = state.matches;
+  if (state.rankings && typeof state.rankings === 'object') merged.rankings = state.rankings;
+  return merged;
+};
+
+const buildFixtureHeader = (fixture: FixtureLike, pageNum: number, totalPages: number, isForPDF: boolean) => {
+  const t = (key: string, options?: any) => String(i18n.t(key, options));
+  const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-5px) !important;">${content}</div>` : content);
+  return `
+    <div style="text-align: center !important; margin-bottom: 10px !important; border-bottom: 1px solid #1e40af !important; padding-bottom: 4px !important;">
+      <div style="background: linear-gradient(135deg, #1e40af, #3b82f6) !important; color: white !important; padding: 10px 10px !important; border-radius: 6px !important; margin-bottom: 8px !important;">
+        <h1 style="font-size: 20px !important; font-weight: bold !important; color: #ffffff !important;">${wrap(String(fixture.tournamentName || ''))}</h1>
+        <div style="font-size: 12px !important; font-weight: 500 !important; opacity: 0.9 !important;">${wrap(String(fixture.weightRangeName || ''))}</div>
+      </div>
+      <div style="display:flex !important; justify-content: center !important; gap: 24px !important;">
+        <div style="font-size: 10px !important; color: #111827 !important; font-weight: 600 !important;">${wrap(`${t('tournamentCard.page')} ${pageNum + 1}/${totalPages}`)}</div>
+      </div>
+    </div>
+  `;
+};
+
+const buildRankingsSection = (fixture: FixtureLike, isForPDF: boolean) => {
+  const t = (key: string) => String(i18n.t(key));
+  const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-3px) !important;">${content}</div>` : content);
+  const entries: Array<{ key: keyof NonNullable<FixtureLike['rankings']> | 'fifth' | 'sixth' | 'seventh' | 'eighth'; label: string; icon: string }> = [
+    { key: 'first', label: t('rankings.first'), icon: '🥇' },
+    { key: 'second', label: t('rankings.second'), icon: '🥈' },
+    { key: 'third', label: t('rankings.third'), icon: '🥉' },
+    { key: 'fourth', label: t('rankings.fourth'), icon: '🏅' },
+    { key: 'fifth', label: t('rankings.fifth'), icon: '🎖️' },
+    { key: 'sixth', label: t('rankings.sixth'), icon: '6️⃣' },
+    { key: 'seventh', label: t('rankings.seventh'), icon: '7️⃣' },
+    { key: 'eighth', label: t('rankings.eighth'), icon: '8️⃣' },
+  ];
+  const playersLen = Array.isArray((fixture as any).players) ? (fixture as any).players.length : 0;
+  const maxPlaces = Math.max(0, Math.min(playersLen, entries.length));
+  const rows = entries.slice(0, maxPlaces).map(({ key, label, icon }) => {
+    const playerId = (fixture as any).rankings?.[key as any];
+    const playerName = getPlayerNameFromFixture(fixture, playerId);
+    return `
+      <tr>
+        <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important;\">${wrap(`${icon} ${label}`)}</td>
+        <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight:600 !important;\">${wrap(playerName || '—')}</td>
+      </tr>
+    `;
+  }).join('');
+  return `
+    <div style="margin-bottom: 10px !important;">
+      <h3 style="font-size: 14px !important; font-weight: bold !important; color: #111827 !important; margin-bottom: 6px !important;">${wrap(String(i18n.t('rankings.title')))}</h3>
+      <table style="width:100% !important; border-collapse: collapse !important;">
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+};
+
+const getLocalizedBracketLabel = (raw?: string): string => {
+  if (!raw) return '';
+  const withoutBye = raw.replace(/\s*-\s*Bye.*/i, '').trim();
+  const matchSuffix = /^(.*?)(?:\s*-\s*Match\s*(\d+))?$/i.exec(withoutBye);
+  let base = withoutBye;
+  let number: string | undefined;
+  if (matchSuffix) {
+    base = matchSuffix[1].trim();
+    number = matchSuffix[2];
+  }
+  const key = Object.keys(ROUND_DESCRIPTIONS).find(k => {
+    const info = (ROUND_DESCRIPTIONS as any)[k];
+    return info && (info.description === base || info.displayName === base || info.shortName === base);
+  });
+  const localizedBase = key ? String(i18n.t(`rounds.${key}`)) : String(i18n.t(base, { defaultValue: base }));
+  return number ? `${localizedBase} - ${i18n.t('matches.match')} ${number}` : localizedBase;
+};
+
+const buildCompletedMatchesTable = (fixture: FixtureLike, matches: MatchLike[], startIndex: number, endIndex: number, isForPDF: boolean) => {
+  const t = (key: string) => String(i18n.t(key));
+  const wrap = (content: string) => (isForPDF ? `<div style=\"display:inline-block !important; transform: translateY(-3px) !important;\">${content}</div>` : content);
+  const header = `
+    <thead>
+      <tr style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;">
+        <th style="border:1px solid #cbd5e1 !important; padding:6px 4px !important; font-size:10px !important;">${wrap(t('completedMatches.headers.matchNo'))}</th>
+        <th style="border:1px solid #cbd5e1 !important; padding:6px 4px !important; font-size:10px !important;">${wrap(t('completedMatches.headers.bracket'))}</th>
+        <th style="border:1px solid #cbd5e1 !important; padding:6px 4px !important; font-size:10px !important;">${wrap(t('matches.rightTable'))}</th>
+        <th style="border:1px solid #cbd5e1 !important; padding:6px 4px !important; font-size:10px !important;">${wrap(t('matches.leftTable'))}</th>
+        <th style="border:1px solid #cbd5e1 !important; padding:6px 4px !important; font-size:10px !important;">${wrap(t('matches.winner'))}</th>
+        <th style="border:1px solid #cbd5e1 !important; padding:6px 4px !important; font-size:10px !important;">${wrap(t('matches.loser'))}</th>
+      </tr>
+    </thead>
+  `;
+  const bodyRows = matches.slice(startIndex, endIndex).map((m, idx) => {
+    const globalIndex = startIndex + idx + 1;
+    const winnerId = m.winnerId;
+    const loserId = m.player1Id === winnerId ? m.player2Id : m.player1Id;
+    // Map left/right columns using tablePosition when available
+    let leftId: string | undefined;
+    let rightId: string | undefined;
+    const tablePos = (m as any).tablePosition as Record<string, 'left' | 'right'> | undefined;
+    if (tablePos && typeof tablePos === 'object') {
+      for (const pid of Object.keys(tablePos)) {
+        if (tablePos[pid] === 'left') leftId = pid;
+        if (tablePos[pid] === 'right') rightId = pid;
+      }
+    }
+    if (!leftId) leftId = m.player1Id;
+    if (!rightId) rightId = m.player2Id;
+    // For BYE matches: left table shows BYE, right shows actual player name, winner shows player's name, loser shows BYE
+    const rightPlayer = m.isBye ? (getPlayerNameFromFixture(fixture, winnerId) || t('matches.bye')) : (getPlayerNameFromFixture(fixture, rightId) || '—');
+    const leftPlayer = m.isBye ? t('matches.bye') : (getPlayerNameFromFixture(fixture, leftId) || '—');
+    const winner = m.isBye ? (getPlayerNameFromFixture(fixture, winnerId) || t('matches.bye')) : getPlayerNameFromFixture(fixture, winnerId);
+    const loser = m.isBye ? t('matches.bye') : getPlayerNameFromFixture(fixture, loserId);
+    let bracketDisplay = '';
+    if (m.description && m.description.toLowerCase() !== 'result') {
+      bracketDisplay = getLocalizedBracketLabel(m.description);
+    }
+    if (!bracketDisplay) {
+      if (m.bracket === 'winner' && m.round) {
+        const key = `WB${m.round}`;
+        bracketDisplay = ROUND_DESCRIPTIONS[key] ? `${String(i18n.t(`rounds.${key}`))} - ${t('matches.match')} ${m.matchNumber}` : `${t('matches.match')} ${m.matchNumber}`;
+      } else if (m.bracket === 'loser' && m.round) {
+        const key = `LB${m.round}`;
+        bracketDisplay = ROUND_DESCRIPTIONS[key] ? `${String(i18n.t(`rounds.${key}`))} - ${t('matches.match')} ${m.matchNumber}` : `${t('matches.match')} ${m.matchNumber}`;
+      } else {
+        bracketDisplay = m.description && m.description !== 'Result' ? m.description : `${t('matches.match')} ${m.matchNumber}`;
+      }
+    }
+    return `
+      <tr style="background-color: ${globalIndex % 2 === 0 ? '#ffffff' : '#f8fafc'} !important;">
+        <td style="border:1px solid #e2e8f0 !important; padding:4px 4px !important; font-size:9px !important; text-align:center !important;">${wrap(String(globalIndex))}</td>
+        <td style="border:1px solid #e2e8f0 !important; padding:4px 4px !important; font-size:9px !important;">${wrap(String(bracketDisplay))}</td>
+        <td style="border:1px solid #e2e8f0 !important; padding:4px 4px !important; font-size:9px !important;">${wrap(String(rightPlayer))}</td>
+        <td style="border:1px solid #e2e8f0 !important; padding:4px 4px !important; font-size:9px !important;">${wrap(String(leftPlayer))}</td>
+        <td style="border:1px solid #e2e8f0 !important; padding:4px 4px !important; font-size:9px !important; font-weight:600 !important; color:#065f46 !important;">${wrap(String(winner))}</td>
+        <td style="border:1px solid #e2e8f0 !important; padding:4px 4px !important; font-size:9px !important; font-weight:600 !important; color:#7f1d1d !important;">${wrap(String(loser))}</td>
+      </tr>
+    `;
+  }).join('');
+  return `
+    <div style="background: white !important; border-radius: 6px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important; overflow: hidden !important;">
+      <table style="width:100% !important; border-collapse: collapse !important;">
+        ${header}
+        <tbody>
+          ${bodyRows}
+        </tbody>
+      </table>
+    </div>
+  `;
+};
+
+const getCompletedMatchesForFixture = (fixture: any): MatchLike[] => {
+  const withWinners = (fixture.matches || []).filter((m: any) => m && m.winnerId) as unknown as MatchLike[];
+  if (withWinners.length > 0) return withWinners;
+  // Fallback to results if matches lack winner info
+  const results = Array.isArray(fixture.results) ? fixture.results : [];
+  return results.map((r: any, idx: number) => {
+    // Try to recover player1/player2 from existing matches by id
+    const original = (fixture.matches || []).find((m: any) => m && (m.id === r.matchId || m.matchId === r.matchId));
+    const p1 = original?.player1Id || r.winnerId;
+    const p2 = original?.player2Id || r.loserId || '';
+    const desc = original?.description || 'Result';
+    const round = original?.round || 0;
+    const matchNumber = original?.matchNumber || (idx + 1);
+    const bracket = original?.bracket || 'placement';
+    const isBye = original?.isBye || false;
+    const tablePosition = original?.tablePosition;
+    return {
+      id: r.matchId || `result-${idx}`,
+      player1Id: p1,
+      player2Id: p2,
+      winnerId: r.winnerId,
+      bracket,
+      round,
+      matchNumber,
+      isBye,
+      description: desc,
+      ...(tablePosition ? { tablePosition } : {}),
+    } as unknown as MatchLike;
+  });
+};
+
+export const generateFixturePreviewPages = (
+  fixture: FixtureLike,
+  includeRankings: boolean,
+  includeCompletedMatches: boolean,
+  rowsPerPage: number = 18
+) => {
+  const fresh = mergeFixtureWithDEState(getFreshFixture(fixture.id) || fixture);
+  const completed = includeCompletedMatches ? getCompletedMatchesForFixture(fresh) : [];
+  const totalRows = completed.length;
+  
+  // Dynamic per-page sizing when showing 8 placements: first page 16, subsequent pages 25
+  // Determine if 8 placements are being shown (based on players count, not only stored rankings)
+  const playersLen = Array.isArray((fresh as any).players) ? (fresh as any).players.length : 0;
+  const hasEightPlacements = includeRankings && playersLen >= 4;
+
+  const pages: string[] = [];
+
+  if (hasEightPlacements) {
+    const firstPageRows = 16;
+    const subsequentPageRows = 25;
+    const totalPages = (() => {
+      if (totalRows === 0) return 1; // show rankings on first page
+      const remainingAfterFirst = Math.max(0, totalRows - firstPageRows);
+      const extraPages = remainingAfterFirst > 0 ? Math.ceil(remainingAfterFirst / subsequentPageRows) : 0;
+      return 1 + extraPages;
+    })();
+
+    for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+      const startIndex = pageNum === 0 ? 0 : Math.min(firstPageRows + (pageNum - 1) * subsequentPageRows, totalRows);
+      const perPage = pageNum === 0 ? firstPageRows : subsequentPageRows;
+      const endIndex = Math.min(startIndex + perPage, totalRows);
+      let content = '';
+      content += buildFixtureHeader(fresh, pageNum, totalPages, false);
+      if (pageNum === 0 && includeRankings) {
+        content += buildRankingsSection(fresh, false);
+      }
+      if (includeCompletedMatches && totalRows > 0) {
+        content += buildCompletedMatchesTable(fresh, completed as any, startIndex, endIndex, false);
+      }
+      if (pageNum === totalPages - 1) {
+        content += `
+          <div style="margin-top: 10px !important; text-align: center !important; padding: 8px !important; background: #f8fafc !important; border-radius: 4px !important; border-top: 2px solid #1e40af !important;">
+            <p style="margin: 0 !important; color: #374151 !important; font-size: 9px !important; font-weight: 500 !important;">${String(i18n.t('pdf.footer'))}</p>
+          </div>
+        `;
+      }
+      pages.push(`<div class="a4-page">${content}</div>`);
+    }
+  } else {
+    // Default fixed rows per page
+    const effectiveRowsPerPage = Math.max(1, rowsPerPage);
+    const totalPages = Math.max(1, Math.ceil(totalRows / effectiveRowsPerPage) || (includeRankings ? 1 : 0));
+    for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+      const startIndex = pageNum * effectiveRowsPerPage;
+      const endIndex = Math.min(startIndex + effectiveRowsPerPage, totalRows);
+      let content = '';
+      content += buildFixtureHeader(fresh, pageNum, totalPages, false);
+      if (pageNum === 0 && includeRankings) {
+        content += buildRankingsSection(fresh, false);
+      }
+      if (includeCompletedMatches) {
+        content += buildCompletedMatchesTable(fresh, completed as any, startIndex, endIndex, false);
+      }
+      if (pageNum === totalPages - 1) {
+        content += `
+          <div style="margin-top: 10px !important; text-align: center !important; padding: 8px !important; background: #f8fafc !important; border-radius: 4px !important; border-top: 2px solid #1e40af !important;">
+            <p style="margin: 0 !important; color: #374151 !important; font-size: 9px !important; font-weight: 500 !important;">${String(i18n.t('pdf.footer'))}</p>
+          </div>
+        `;
+      }
+      pages.push(`<div class="a4-page">${content}</div>`);
+    }
+  }
+
+  return pages;
+};
+
+export const openFixturePreviewModal = (
+  fixture: FixtureLike,
+  includeRankings: boolean,
+  includeCompletedMatches: boolean,
+  rowsPerPage: number = 18
+) => {
+  const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, rowsPerPage);
+  return { pages, currentPage: 0 };
+};
+
+export const generateFixturePDF = async (
+  fixture: FixtureLike,
+  includeRankings: boolean,
+  includeCompletedMatches: boolean,
+  rowsPerPage: number = 18,
+  onProgress?: (percent: number) => void
+): Promise<{ fileName: string; fileSize: string; totalPages: number }> => {
+  try {
+    await document.fonts.ready;
+    const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, rowsPerPage);
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    if (onProgress) onProgress(0);
+    for (let i = 0; i < pages.length; i++) {
+      const previewDiv = document.createElement('div');
+      previewDiv.style.position = 'absolute';
+      previewDiv.style.left = '-9999px';
+      previewDiv.className = 'a4-page';
+      // Ensure consistent baseline alignment via PDF mode renders
+      previewDiv.innerHTML = pages[i].replace(/<div class=\"a4-page\">|<\/div>$/g, '');
+      document.body.appendChild(previewDiv);
+      // Render
+      const options = { scale: 4, logging: false, useCORS: true, allowTaint: true, letterRendering: true, backgroundColor: '#ffffff', width: previewDiv.offsetWidth, height: previewDiv.offsetHeight, windowWidth: previewDiv.scrollWidth, windowHeight: previewDiv.scrollHeight } as const;
+      const canvas = await html2canvas(previewDiv, options as any);
+      document.body.removeChild(previewDiv);
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      const imgWidth = 210;
+      const mmPerPx = imgWidth / canvas.width;
+      const yOffsetMm = 5 * mmPerPx;
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, -yOffsetMm, imgWidth, 297);
+      if (onProgress) onProgress(Math.min(100, Math.round(((i + 1) / Math.max(1, pages.length)) * 100)));
+    }
+    const pdfBlob = pdf.output('blob');
+    const sizeInKB = (pdfBlob.size / 1024).toFixed(1);
+    const sizeInMB = (pdfBlob.size / (1024 * 1024)).toFixed(2);
+    const sizeText = pdfBlob.size > 1024 * 1024 ? `${sizeInMB} MB` : `${sizeInKB} KB`;
+    const sanitize = (s: string) => s.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
+    const fileName = `fixture_${sanitize(fixture.tournamentName || '')}_${sanitize(fixture.weightRangeName || '')}_results.pdf`;
+    savePdfFile(pdf as any, fileName, pdfBlob);
+    if (onProgress) onProgress(100);
+    return { fileName, fileSize: sizeText, totalPages: pages.length };
+  } catch (error) {
+    throw new Error(i18n.t('tournamentCard.pdfErrorMessage'));
+  }
+};

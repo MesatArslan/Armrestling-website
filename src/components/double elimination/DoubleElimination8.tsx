@@ -516,6 +516,14 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
     }
   }, [matches, currentRoundKey, rankings, tournamentComplete]);
 
+  // Persist interim rankings to fixture storage
+  useEffect(() => {
+    if (!fixtureId) return;
+    try {
+      MatchesStorage.updateTournamentState(fixtureId, { rankings });
+    } catch {}
+  }, [fixtureId, rankings]);
+
   const handleMatchResult = (matchId: string, winnerId: string) => {
     const updatedMatches = matches.map(match => 
       match.id === matchId ? { ...match, winnerId } : match

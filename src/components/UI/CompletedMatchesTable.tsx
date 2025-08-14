@@ -170,7 +170,7 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches, 
             {topPadding > 0 && (
               <div aria-hidden="true" style={{ height: topPadding }} />
             )}
-            {virtualMatches.map((m, i) => {
+              {virtualMatches.map((m, i) => {
               const globalIndex = startIndex + i;
               const winnerId = m.winnerId!;
               const loserId = m.player1Id === winnerId ? m.player2Id : m.player1Id;
@@ -183,16 +183,16 @@ const CompletedMatchesTable: React.FC<CompletedMatchesTableProps> = ({ matches, 
                 >
                   <div className="flex-1 font-semibold text-gray-500 text-base flex items-center gap-1">{globalIndex + 1}</div>
                   <div className={`flex-1 font-semibold text-base flex items-center gap-1 ${m.bracket === 'loser' ? 'text-red-600' : m.bracket === 'placement' ? 'text-purple-600' : 'text-green-600'}`}>{bracketDisplay}</div>
-                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player2Id) || t('matches.bye')) : (getPlayerName(m.player2Id) || '—')}</div>
-                  <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(m.player1Id) || t('matches.bye')) : (getPlayerName(m.player1Id) || '—')}</div>
+                      <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? (getPlayerName(winnerId) || t('matches.bye')) : (getPlayerName(m.player2Id) || '—')}</div>
+                      <div className="flex-1 text-gray-800 text-base flex items-center gap-1">{m.isBye ? t('matches.bye') : (getPlayerName(m.player1Id) || '—')}</div>
                   <div className="flex-1 flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 bg-green-100 text-green-900 font-black rounded-full px-3 py-1 text-base">
-                      {m.isBye ? t('matches.bye') : getPlayerName(winnerId)}
+                          {m.isBye ? (getPlayerName(winnerId) || t('matches.bye')) : getPlayerName(winnerId)}
                     </span>
                   </div>
                   <div className="flex-1 flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 bg-red-100 text-red-900 font-black rounded-full px-3 py-1 text-base">
-                      {m.isBye ? '—' : getPlayerName(loserId)}
+                          {m.isBye ? t('matches.bye') : getPlayerName(loserId)}
                     </span>
                   </div>
                 </div>

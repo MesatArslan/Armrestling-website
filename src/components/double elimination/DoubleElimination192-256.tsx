@@ -192,6 +192,15 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
     }
   }, [matches, tournamentComplete, currentRoundKey]);
 
+  // Persist interim rankings to fixture storage for broader consumption (PDF, scoring, etc.)
+  React.useEffect(() => {
+    if (!fixtureId) return;
+    try {
+      const latest = calculateRankings(matchesRef.current || matches);
+      MatchesStorage.updateTournamentState(fixtureId, { rankings: latest });
+    } catch {}
+  }, [fixtureId, rankings, matches]);
+
   // Auto-select control
   const stopAutoSelecting = () => {
     if (intervalRef.current !== null) {

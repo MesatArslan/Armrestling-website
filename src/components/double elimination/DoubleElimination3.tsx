@@ -339,6 +339,14 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
     }
   }, []);
 
+  // Persist interim rankings to fixture storage
+  React.useEffect(() => {
+    if (!fixtureId) return;
+    try {
+      MatchesStorage.updateTournamentState(fixtureId, { rankings });
+    } catch {}
+  }, [fixtureId, rankings]);
+
   const resetTournament = () => {
     if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
       clearTournamentState();

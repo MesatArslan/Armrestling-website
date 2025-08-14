@@ -321,6 +321,14 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
     // eslint-disable-next-line
   }, [matches, tournamentComplete]);
 
+  // Persist interim rankings to fixture storage
+  useEffect(() => {
+    if (!fixtureId) return;
+    try {
+      MatchesStorage.updateTournamentState(fixtureId, { rankings });
+    } catch {}
+  }, [fixtureId, rankings]);
+
   // --- UI ---
   const getPlayerName = (playerId: string) => {
     const player = players.find(p => p.id === playerId);

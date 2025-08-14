@@ -184,6 +184,14 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     }
   }, [matches, tournamentComplete, currentRoundKey]);
 
+  // Persist interim rankings to fixture storage
+  React.useEffect(() => {
+    if (!fixtureId) return;
+    try {
+      MatchesStorage.updateTournamentState(fixtureId, { rankings });
+    } catch {}
+  }, [fixtureId, rankings]);
+
   // --- Round Completion Check ---
   const isRoundComplete = (roundKey: RoundKey, matchList: Match[]): boolean => {
     const roundMatches = matchList.filter(m => getMatchRoundKey(m) === roundKey);
@@ -224,7 +232,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     if (newMatches.length > 0) {
       setMatches([...matches, ...newMatches]);
       setCurrentRoundKey(nextRoundKey);
-      saveTournamentState([...matches, ...newMatches], rankings, tournamentComplete, nextRoundKey);
+      saveTournamentState([...matches, ...newMatches], rankings, tournamentComplete, nextRoundKey, completedOrder);
     }
     // eslint-disable-next-line
   }, [matches, currentRoundKey]);

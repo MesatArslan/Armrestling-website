@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import type { Player as UIPlayer } from '../types';
 import type { Fixture as RepoFixture, Tournament, WeightRange } from '../storage/schemas';
 import DeleteConfirmationModal from '../components/UI/DeleteConfirmationModal';
@@ -9,6 +10,7 @@ import LoadingSpinner from '../components/UI/LoadingSpinner';
 import ActiveFixturesNav from '../components/UI/ActiveFixturesNav';
 import { useMatches } from '../hooks/useMatches';
 import { MatchesStorage } from '../utils/matchesStorage';
+import { openFixturePreviewModal, generateFixturePDF } from '../utils/pdfGenerator';
 
 // Import all double elimination components
 import {
@@ -54,6 +56,18 @@ const Matches = () => {
     fixtureId: null,
     fixtureName: ''
   });
+
+  // PDF modal states for Matches page
+  const [isMatchPDFModalOpen, setIsMatchPDFModalOpen] = useState(false);
+  const [includeRankingsForPDF, setIncludeRankingsForPDF] = useState<boolean>(true);
+  const [includeCompletedForPDF, setIncludeCompletedForPDF] = useState<boolean>(true);
+  const [rowsPerPageForPDF] = useState<number>(18);
+  const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
+  const [previewPages, setPreviewPages] = useState<string[]>([]);
+  const [currentPreviewPage, setCurrentPreviewPage] = useState<number>(0);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [pdfProgress, setPdfProgress] = useState<number>(0);
+  const hideProgressTimer = useRef<number | null>(null);
 
   // Use ref to track current fixtures to avoid dependency issues
   const fixturesRef = useRef<RepoFixture[]>([]);
@@ -686,6 +700,16 @@ const Matches = () => {
                 onFixtureClose={handleFixtureClose}
                 activeFixtureId={activeFixture?.id}
               />
+              {activeFixture && (
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() => setIsMatchPDFModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+                  >
+                    {t('tournamentCard.createPDF')}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -715,6 +739,202 @@ const Matches = () => {
           )}
         </div>
       </div>
+
+      {/* Matches PDF Create Modal */}
+      {isMatchPDFModalOpen && activeFixture && (
+        <div
+          className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9998] overflow-hidden"
+          onClick={() => setIsMatchPDFModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md sm:max-w-lg max-h-[85vh] overflow-y-auto mx-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('tournamentCard.pdfColumnSelection')}</h3>
+                <p className="text-sm text-gray-600">{activeFixture.name}</p>
+              </div>
+              <button
+                onClick={() => setIsMatchPDFModalOpen(false)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
+                <input
+                  type="checkbox"
+                  checked={includeRankingsForPDF}
+                  onChange={(e) => setIncludeRankingsForPDF(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <span className="text-sm font-medium text-gray-700">{t('matches.tabRankings')}</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
+                <input
+                  type="checkbox"
+                  checked={includeCompletedForPDF}
+                  onChange={(e) => setIncludeCompletedForPDF(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <span className="text-sm font-medium text-gray-700">{t('matches.tabCompleted')}</span>
+              </label>
+
+              {/* Removed players-per-page control per request */}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsMatchPDFModalOpen(false)}
+                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm font-semibold rounded-lg"
+              >
+                {t('common.close')}
+              </button>
+              <button
+                onClick={() => {
+                  const { pages, currentPage } = openFixturePreviewModal(
+                    activeFixture,
+                    includeRankingsForPDF,
+                    includeCompletedForPDF,
+                    rowsPerPageForPDF
+                  );
+                  setPreviewPages(pages);
+                  setCurrentPreviewPage(currentPage);
+                  setIsMatchPDFModalOpen(false);
+                  setIsPDFPreviewModalOpen(true);
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+              >
+                {t('tournamentCard.openPreview')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Preview Modal for Matches */}
+      {isPDFPreviewModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[9999] overflow-hidden"
+          onClick={() => {
+            setIsPDFPreviewModalOpen(false);
+            setPreviewPages([]);
+            setCurrentPreviewPage(0);
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-5xl max-h-[95vh] overflow-y-auto mx-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('tournamentCard.pdfPreview')}</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    setIsPDFPreviewModalOpen(false);
+                    if (!activeFixture) return;
+                    try {
+                      setIsExporting(true);
+                      setPdfProgress(0);
+                      await generateFixturePDF(
+                        activeFixture,
+                        includeRankingsForPDF,
+                        includeCompletedForPDF,
+                        rowsPerPageForPDF,
+                        (p) => setPdfProgress(p)
+                      );
+                    } catch (e) {
+                    } finally {
+                      if (pdfProgress < 100) setPdfProgress(100);
+                      if (hideProgressTimer.current) window.clearTimeout(hideProgressTimer.current);
+                      hideProgressTimer.current = window.setTimeout(() => {
+                        setIsExporting(false);
+                        setPdfProgress(0);
+                      }, 800);
+                    }
+                  }}
+                  className="px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
+                >
+                  {t('tournamentCard.downloadPDF')}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsPDFPreviewModalOpen(false);
+                    setIsMatchPDFModalOpen(true);
+                  }}
+                  className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
+                >
+                  {t('tournamentCard.returnToColumnSelection')}
+                </button>
+                <button
+                  onClick={() => setIsPDFPreviewModalOpen(false)}
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-8 rounded-xl border-2 border-dashed border-gray-300">
+              {previewPages.length > 1 && (
+                <div className="sticky top-0 z-10 bg-white border-b border-gray-200 py-3 mb-4 rounded-t-lg">
+                  <div className="flex justify-center items-center gap-4">
+                    <button
+                      onClick={() => setCurrentPreviewPage(Math.max(0, currentPreviewPage - 1))}
+                      disabled={currentPreviewPage === 0}
+                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
+                    >
+                      ← {t('tournamentCard.previousPage')}
+                    </button>
+                    <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">
+                      {t('tournamentCard.page')} {currentPreviewPage + 1} / {previewPages.length}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
+                      disabled={currentPreviewPage === previewPages.length - 1}
+                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
+                    >
+                      {t('tournamentCard.nextPage')} →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-center">
+                <div dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }} />
+              </div>
+            </div>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Bu, PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki "PDF İndir" butonunu kullanabilirsiniz.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isExporting && (
+        <div className="fixed top-4 right-4 z-[10000] transition-opacity duration-300">
+          <div className="bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-xl px-4 py-3 flex items-center gap-3 min-w-[220px]">
+            <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-gray-800">{t('tournamentCard.downloadPDF')}</div>
+              <div className="mt-1 w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-600" style={{ width: `${pdfProgress}%` }} />
+              </div>
+            </div>
+            <div className="text-xs font-semibold text-gray-700 w-10 text-right">{pdfProgress}%</div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal

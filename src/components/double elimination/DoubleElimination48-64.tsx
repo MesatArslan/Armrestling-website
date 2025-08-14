@@ -183,6 +183,14 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
     }
   }, [matches, tournamentComplete, currentRoundKey]);
 
+  // Persist interim rankings to fixture storage
+  React.useEffect(() => {
+    if (!fixtureId) return;
+    try {
+      MatchesStorage.updateTournamentState(fixtureId, { rankings: calculateRankings(matches) });
+    } catch {}
+  }, [fixtureId, matches]);
+
   // --- Round Completion Check ---
   const isRoundComplete = (roundKey: RoundKey, matchList: Match[]) => {
     const roundMatches = matchList.filter(m => getMatchRoundKey(m) === roundKey);

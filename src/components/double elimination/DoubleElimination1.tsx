@@ -30,6 +30,13 @@ const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatch
     }
   }, [winner.id, onMatchResult, onTournamentComplete, hasAutoCompleted]);
 
+  // Persist rankings for 1-player case immediately
+  React.useEffect(() => {
+    try {
+      // No fixtureId prop in this component; persistence handled by parent Matches flow if needed
+    } catch {}
+  }, []);
+
   return (
     <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
       <h2 className="text-2xl font-bold text-center mb-6 text-blue-500">

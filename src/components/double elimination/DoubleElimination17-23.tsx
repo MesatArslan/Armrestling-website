@@ -212,6 +212,14 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
     }
   }, [matches, currentRoundKey]);
 
+  // Persist interim rankings to fixture storage
+  React.useEffect(() => {
+    if (!fixtureId) return;
+    try {
+      MatchesStorage.updateTournamentState(fixtureId, { rankings });
+    } catch {}
+  }, [fixtureId, rankings]);
+
   // --- UI Helpers ---
   const getPlayerName = (playerId: string) => {
     if (!playerId) return '';
