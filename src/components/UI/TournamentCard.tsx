@@ -77,7 +77,6 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   onOpenBulkPDF
 }) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [] = useState({
     gender: null as 'male' | 'female' | null,
     handPreference: null as 'left' | 'right' | null,
@@ -186,7 +185,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
 
 
   return (
-    <div className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 min-h-[200px] ${className}`}>
+    <div className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 min-h-[100px] ${className}`}>
       {/* Tournament Header */}
       <div
         className="p-4 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 transition-all duration-200 rounded-t-2xl min-h-[80px]"

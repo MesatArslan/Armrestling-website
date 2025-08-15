@@ -26,7 +26,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
   const [currentRoundKey, setCurrentRoundKey] = useState<RoundKey>('WB1');
-  const [, setIsUndoing] = useState(false);
+  const [] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'rankings'>(
     TabManager.getInitialTab(fixtureId)
   );

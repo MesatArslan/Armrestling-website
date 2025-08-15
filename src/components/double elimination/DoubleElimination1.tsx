@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useState } from 'react';
 import type { DoubleEliminationProps } from '../../types';
 import { generateFixturePDF } from '../../utils/pdfGenerator';
-import { XMarkIcon } from '@heroicons/react/24/outline';
 
 const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete}) => {
   if (players.length !== 1) {
