@@ -243,7 +243,7 @@ const Scoring: React.FC = () => {
                             const val = e.target.value === '' ? 0 : parseInt(e.target.value || '0', 10);
                             setConfig(prev => ({ ...prev, points: { ...prev.points, [key]: Number.isFinite(val) ? val : 0 } }));
                           }}
-                          className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center font-semibold"
+                          className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center font-semibold bg-white text-gray-900"
                           min="0"
                         />
                         <span className="text-sm text-gray-500 font-medium">puan</span>
@@ -303,7 +303,7 @@ const Scoring: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setConfig(prev => ({ ...prev, selectedTournamentIds: [] }))}
-                    className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-60 transition-all duration-200 font-medium"
+                    className="px-4 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition-all duration-200 font-medium"
                     disabled={!anySelected}
                   >
                     Temizle
