@@ -816,6 +816,188 @@ export const openFixturePreviewModal = (
   return { pages, currentPage: 0 };
 };
 
+// ===== Scoring PDF generation =====
+
+interface ScoringData {
+  group: string;
+  total: number;
+}
+
+interface ScoringConfig {
+  points: Record<string, number>;
+  groupBy: string;
+  selectedTournamentIds: string[];
+}
+
+export const generateScoringPreviewContent = (
+  aggregatedScores: ScoringData[],
+  config: ScoringConfig,
+  groupFieldName: string,
+  isForPDF: boolean = false
+): string[] => {
+  const t = (key: string, options?: any) => String(i18n.t(key, options));
+  const getLocale = () => (i18n.language && i18n.language.toLowerCase().startsWith('tr') ? 'tr-TR' : 'en-US');
+  
+  // Helper function to wrap text for PDF (moves text slightly upward)
+  const wrapForPDF = (content: string) => {
+    if (!isForPDF) return content;
+    return `<div style="display: inline-block !important; transform: translateY(-5px) !important;">${content}</div>`;
+  };
+  
+  // Calculate how many scores fit per page (approximately 15-20 per page)
+  const scoresPerPage = 18;
+  const totalPages = Math.ceil(aggregatedScores.length / scoresPerPage);
+  
+  const pages: string[] = [];
+  
+  for (let pageNum = 0; pageNum < totalPages; pageNum++) {
+    const startIndex = pageNum * scoresPerPage;
+    const endIndex = Math.min(startIndex + scoresPerPage, aggregatedScores.length);
+    const pageScores = aggregatedScores.slice(startIndex, endIndex);
+    
+    const pageContent = `
+      <div style="height: 297mm !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important;">
+        <div>
+          <div style="text-align: center !important; margin-bottom: 10px !important; border-bottom: 1px solid #1e40af !important; padding-bottom: 4px !important;">
+            <div style="background: linear-gradient(135deg, #1e40af, #3b82f6) !important; color: white !important; padding: 10px 10px !important; border-radius: 6px !important; margin-bottom: 8px !important;">
+              <h1 style="font-size: 20px !important; font-weight: bold !important; color: #ffffff !important;">${wrapForPDF('Puanlama Sistemi')}</h1>
+              <h2 style="font-size: 14px !important; margin-top: 4px !important; font-weight: 600 !important; color: #ffffff !important;">${wrapForPDF('Toplam Puanlar')}</h2>
+            </div>
+            
+            <div style="display: flex !important; justify-content: space-between !important; margin: 6px 0 !important; padding: 4px 0 !important; border-top: 1px solid #e5e7eb !important; border-bottom: 1px solid #e5e7eb !important;">
+              <div style="text-align: center !important; flex: 1 !important;">
+                <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: -8px !important;">${wrapForPDF('SIRALAMA KRİTERİ')}</div>
+                <div style="font-size: 11px !important; color: #111827 !important; font-weight: 600 !important;">${wrapForPDF(groupFieldName)}</div>
+              </div>
+              <div style="text-align: center !important; flex: 1 !important; border-left: 1px solid #e5e7eb !important; border-right: 1px solid #e5e7eb !important;">
+                <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: -8px !important;">${wrapForPDF('TOPLAM KAYIT')}</div>
+                <div style="font-size: 11px !important; color: #111827 !important; font-weight: 600 !important;">${wrapForPDF(String(aggregatedScores.length))}</div>
+              </div>
+              <div style="text-align: center !important; flex: 1 !important;">
+                <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 500 !important; margin-bottom: -8px !important;">${wrapForPDF('SAYFA')}</div>
+                <div style="font-size: 11px !important; color: #111827 !important; font-weight: 600 !important;">${wrapForPDF(`${pageNum + 1}/${totalPages}`)}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="background: white !important; border-radius: 6px !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; overflow: hidden !important; flex: 1 !important;">
+            <table style="width: 100% !important; border-collapse: collapse !important; margin: 0 !important;">
+              <thead>
+                <tr style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;">
+                  <th style="border: 1px solid #cbd5e1 !important; padding: 6px 4px !important; text-align: center !important; font-weight: bold !important; color: #000000 !important; font-size: 10px !important; line-height: 1.3 !important; width: 35px !important; white-space: nowrap !important; height: 16px !important;">${wrapForPDF('#')}</th>
+                  <th style="border: 1px solid #cbd5e1 !important; padding: 6px 4px !important; text-align: left !important; font-weight: bold !important; color: #000000 !important; font-size: 10px !important; line-height: 1.3 !important; white-space: nowrap !important; height: 16px !important;">${wrapForPDF(groupFieldName)}</th>
+                  <th style="border: 1px solid #cbd5e1 !important; padding: 6px 4px !important; text-align: center !important; font-weight: bold !important; color: #000000 !important; font-size: 10px !important; line-height: 1.3 !important; white-space: nowrap !important; height: 16px !important;">${wrapForPDF('Toplam Puan')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pageScores.map((score, index) => `
+                  <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'} !important;">
+                    <td style="border: 1px solid #e2e8f0 !important; padding: 4px 4px !important; font-size: 9px !important; line-height: 1.3 !important; color: #000000 !important; font-weight: 500 !important; text-align: center !important; white-space: nowrap !important; height: 14px !important;">${wrapForPDF(String(startIndex + index + 1))}</td>
+                    <td style="border: 1px solid #e2e8f0 !important; padding: 4px 3px !important; font-size: 9px !important; line-height: 1.3 !important; color: #000000 !important; font-weight: 500 !important; white-space: nowrap !important; height: 14px !important; overflow: hidden !important; text-overflow: ellipsis !important;">${wrapForPDF(score.group)}</td>
+                    <td style="border: 1px solid #e2e8f0 !important; padding: 4px 3px !important; font-size: 9px !important; line-height: 1.3 !important; color: #000000 !important; font-weight: 500 !important; white-space: nowrap !important; height: 14px !important; text-align: center !important; font-weight: 600 !important;">${wrapForPDF(String(score.total))}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        ${pageNum === totalPages - 1 ? `
+          <div style="margin-top: 10px !important; text-align: center !important; padding: 8px !important; background: #f8fafc !important; border-radius: 4px !important; border-top: 2px solid #1e40af !important;">
+            <p style="margin: 0 !important; color: #374151 !important; font-size: 9px !important; font-weight: 500 !important;">
+              ${wrapForPDF(String(i18n.t('pdf.footer')))}
+            </p>
+          </div>
+        ` : ''}
+      </div>
+    `;
+    
+    pages.push(`<div class="a4-page">${pageContent}</div>`);
+  }
+  
+  return pages;
+};
+
+export const openScoringPreviewModal = (
+  aggregatedScores: ScoringData[],
+  config: ScoringConfig,
+  groupFieldName: string
+) => {
+  const pages = generateScoringPreviewContent(aggregatedScores, config, groupFieldName, false);
+  return { pages, currentPage: 0 };
+};
+
+export const generateScoringPDF = async (
+  aggregatedScores: ScoringData[],
+  config: ScoringConfig,
+  groupFieldName: string,
+  onProgress?: (percent: number) => void
+): Promise<{ fileName: string; fileSize: string; totalPages: number }> => {
+  try {
+    await document.fonts.ready;
+    const pages = generateScoringPreviewContent(aggregatedScores, config, groupFieldName, true);
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    if (onProgress) onProgress(0);
+    
+    for (let i = 0; i < pages.length; i++) {
+      const previewDiv = document.createElement('div');
+      previewDiv.style.position = 'absolute';
+      previewDiv.style.left = '-9999px';
+      previewDiv.className = 'a4-page';
+      
+      // Remove the a4-page wrapper div
+      previewDiv.innerHTML = pages[i].replace(/<div class=\"a4-page\">|<\/div>$/g, '');
+      document.body.appendChild(previewDiv);
+      
+      // Render
+      const options = { 
+        scale: 4, 
+        logging: false, 
+        useCORS: true, 
+        allowTaint: true, 
+        letterRendering: true, 
+        backgroundColor: '#ffffff', 
+        width: previewDiv.offsetWidth, 
+        height: previewDiv.offsetHeight, 
+        windowWidth: previewDiv.scrollWidth, 
+        windowHeight: previewDiv.scrollHeight 
+      } as const;
+      
+      const canvas = await html2canvas(previewDiv, options as any);
+      document.body.removeChild(previewDiv);
+      
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      const imgWidth = 210;
+      const mmPerPx = imgWidth / canvas.width;
+      const yOffsetMm = 5 * mmPerPx;
+      
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, -yOffsetMm, imgWidth, 297);
+      
+      if (onProgress) {
+        onProgress(Math.min(100, Math.round(((i + 1) / Math.max(1, pages.length)) * 100)));
+      }
+    }
+    
+    const pdfBlob = pdf.output('blob');
+    const sizeInKB = (pdfBlob.size / 1024).toFixed(1);
+    const sizeInMB = (pdfBlob.size / (1024 * 1024)).toFixed(2);
+    const sizeText = pdfBlob.size > 1024 * 1024 ? `${sizeInMB} MB` : `${sizeInKB} KB`;
+    
+    const sanitize = (s: string) => s.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
+    const fileName = `scoring_${sanitize(groupFieldName)}_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    savePdfFile(pdf as any, fileName, pdfBlob);
+    
+    if (onProgress) onProgress(100);
+    return { fileName, fileSize: sizeText, totalPages: pages.length };
+    
+  } catch (error) {
+    throw new Error(i18n.t('scoring.pdfErrorMessage'));
+  }
+};
+
 export const generateFixturePDF = async (
   fixture: FixtureLike,
   includeRankings: boolean,

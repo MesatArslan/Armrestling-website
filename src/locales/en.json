@@ -357,6 +357,17 @@
     "sixth": "6th Place",
     "seventh": "7th Place",
     "eighth": "8th Place"
+  },
+  "scoring": {
+    "createPDF": "Create PDF",
+    "pdfPreview": "Scoring PDF Preview",
+    "downloadPDF": "Download PDF",
+    "previousPage": "Previous Page",
+    "nextPage": "Next Page",
+    "page": "Page",
+    "pdfSuccessMessage": "PDF created successfully!\nFile size: {{fileSize}}\nTotal pages: {{totalPages}}",
+    "pdfErrorMessage": "An error occurred while creating the PDF.",
+    "previewDescription": "This is a preview of how your scoring PDF will look. You can use the \"Download PDF\" button above to download the PDF."
   }
 }
 

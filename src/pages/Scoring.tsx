@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TrophyIcon, Cog6ToothIcon, ChartBarIcon, CheckCircleIcon, ClockIcon, StarIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, Cog6ToothIcon, ChartBarIcon, CheckCircleIcon, ClockIcon, StarIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { Player } from '../types';
 import { PlayersStorage, type Column as PlayersColumn } from '../utils/playersStorage';
 import { TournamentsStorage, type Tournament as StoredTournament } from '../utils/tournamentsStorage';
 import { MatchesStorage, type Fixture } from '../utils/matchesStorage';
+import { openScoringPreviewModal, generateScoringPDF } from '../utils/pdfGenerator';
 
 type PlacementKey = 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'seventh' | 'eighth';
 
@@ -52,6 +53,13 @@ const Scoring: React.FC = () => {
     groupBy: 'city',
     selectedTournamentIds: [],
   });
+
+  // PDF Preview Modal States
+  const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
+  const [previewPages, setPreviewPages] = useState<string[]>([]);
+  const [currentPreviewPage, setCurrentPreviewPage] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
 
   // Load initial data
   useEffect(() => {
@@ -197,6 +205,48 @@ const Scoring: React.FC = () => {
       case 6: return 'from-green-400 to-green-600';
       case 7: return 'from-red-400 to-red-600';
       default: return 'from-gray-400 to-gray-600';
+    }
+  };
+
+  // PDF Functions
+  const handleShowPDFPreview = () => {
+    if (aggregatedScores.length === 0) return;
+    
+    const groupFieldName = availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy;
+    const { pages } = openScoringPreviewModal(aggregatedScores, config, groupFieldName);
+    
+    setPreviewPages(pages);
+    setCurrentPreviewPage(0);
+    setIsPDFPreviewModalOpen(true);
+  };
+
+  const handleExportPDF = async () => {
+    if (aggregatedScores.length === 0) return;
+    
+    try {
+      setIsExporting(true);
+      setPdfProgress(0);
+      
+      const groupFieldName = availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy;
+      
+      await generateScoringPDF(
+        aggregatedScores,
+        config,
+        groupFieldName,
+        (p) => setPdfProgress(p)
+      );
+      
+      // Show success message
+      alert(t('scoring.pdfSuccessMessage', {
+        fileSize: 'PDF',
+        totalPages: Math.ceil(aggregatedScores.length / 18)
+      }));
+      
+    } catch (error) {
+      alert(t('scoring.pdfErrorMessage'));
+    } finally {
+      setIsExporting(false);
+      setPdfProgress(0);
     }
   };
 
@@ -349,10 +399,18 @@ const Scoring: React.FC = () => {
                   <ChartBarIcon className="w-5 h-5 text-white" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-900">Toplam Puanlar</h2>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-3">
                   <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                     {config.groupBy}
                   </span>
+                  <button
+                    onClick={handleShowPDFPreview}
+                    disabled={aggregatedScores.length === 0}
+                    className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm flex items-center gap-2"
+                  >
+                    <ChartBarIcon className="w-4 h-4" />
+                    {t('scoring.createPDF')}
+                  </button>
                 </div>
               </div>
 
@@ -479,6 +537,86 @@ const Scoring: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* PDF Preview Modal */}
+      {isPDFPreviewModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[9999] overflow-hidden"
+          onClick={() => {
+            setIsPDFPreviewModalOpen(false);
+            setPreviewPages([]);
+            setCurrentPreviewPage(0);
+          }}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-5xl max-h-[95vh] overflow-y-auto mx-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('scoring.pdfPreview')}</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleExportPDF}
+                  disabled={isExporting}
+                  className="px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isExporting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      {pdfProgress}%
+                    </div>
+                  ) : (
+                    t('scoring.downloadPDF')
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsPDFPreviewModalOpen(false)}
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 p-8 rounded-xl border-2 border-dashed border-gray-300">
+              {/* Page Navigation */}
+              {previewPages.length > 1 && (
+                <div className="sticky top-0 z-10 bg-white border-b border-gray-200 py-3 mb-4 rounded-t-lg">
+                  <div className="flex justify-center items-center gap-4">
+                    <button
+                      onClick={() => setCurrentPreviewPage(Math.max(0, currentPreviewPage - 1))}
+                      disabled={currentPreviewPage === 0}
+                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
+                    >
+                      ← {t('scoring.previousPage')}
+                    </button>
+                    <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-full">
+                      {t('scoring.page')} {currentPreviewPage + 1} / {previewPages.length}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
+                      disabled={currentPreviewPage === previewPages.length - 1}
+                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
+                    >
+                      {t('scoring.nextPage')} →
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-center">
+                <div dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }} />
+              </div>
+            </div>
+            
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                {t('scoring.previewDescription')}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

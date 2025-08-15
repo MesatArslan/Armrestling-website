@@ -374,6 +374,17 @@
     "sixth": "6. Sıra",
     "seventh": "7. Sıra",
     "eighth": "8. Sıra"
+  },
+  "scoring": {
+    "createPDF": "PDF Oluştur",
+    "pdfPreview": "Puanlama PDF Önizleme",
+    "downloadPDF": "PDF İndir",
+    "previousPage": "Önceki Sayfa",
+    "nextPage": "Sonraki Sayfa",
+    "page": "Sayfa",
+    "pdfSuccessMessage": "PDF başarıyla oluşturuldu!\nDosya boyutu: {{fileSize}}\nToplam sayfa: {{totalPages}}",
+    "pdfErrorMessage": "PDF oluşturulurken bir hata oluştu.",
+    "previewDescription": "Bu, puanlama PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki \"PDF İndir\" butonunu kullanabilirsiniz."
   }
 }
 
