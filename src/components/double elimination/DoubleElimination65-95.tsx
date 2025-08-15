@@ -160,7 +160,7 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
       setRankings(newRankings);
       setTournamentComplete(true);
       setCurrentRoundKey('GrandFinal');
-      saveTournamentState(matches, newRankings, true, 'GrandFinal');
+      saveTournamentState(matches, newRankings, true, 'GrandFinal', completedOrder);
       return;
     }
     // If Final has winner and Grand Final is not required, finalize and stick at Final
@@ -169,7 +169,7 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
       setRankings(newRankings);
       setTournamentComplete(true);
       setCurrentRoundKey('Final');
-      saveTournamentState(matches, newRankings, true, 'Final');
+      saveTournamentState(matches, newRankings, true, 'Final', completedOrder);
     }
   }, [matches]);
 

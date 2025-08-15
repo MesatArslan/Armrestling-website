@@ -1052,7 +1052,7 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
       const currentRankingsStr = JSON.stringify({});
       const newRankingsStr = JSON.stringify(recalculatedRankings);
       if (currentRankingsStr !== newRankingsStr) {
-        saveTournamentState(matches, recalculatedRankings, tournamentComplete, currentRoundKey);
+        saveTournamentState(matches, recalculatedRankings, tournamentComplete, currentRoundKey, completedOrder);
       }
     }
   }, [matches, tournamentComplete, currentRoundKey]);

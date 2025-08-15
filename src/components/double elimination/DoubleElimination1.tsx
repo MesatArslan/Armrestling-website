@@ -1,5 +1,8 @@
 import * as React from 'react';
+import { useState } from 'react';
 import type { DoubleEliminationProps } from '../../types';
+import { generateFixturePDF } from '../../utils/pdfGenerator';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
 const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete}) => {
   if (players.length !== 1) {
@@ -13,6 +16,10 @@ const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatch
   const winner = players[0];
 
   const [hasAutoCompleted, setHasAutoCompleted] = React.useState(false);
+  
+  // PDF functionality states
+  const [isExporting, setIsExporting] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
 
   React.useEffect(() => {
     if (!hasAutoCompleted) {
@@ -36,6 +43,44 @@ const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatch
       // No fixtureId prop in this component; persistence handled by parent Matches flow if needed
     } catch {}
   }, []);
+
+  // PDF generation function for single player tournament
+  const handleGeneratePDF = async () => {
+    try {
+      setIsExporting(true);
+      setPdfProgress(0);
+      
+      // Create a mock fixture object for PDF generation
+      const mockFixture = {
+        id: 'single-player-tournament',
+        name: 'Single Player Tournament',
+        tournamentName: 'Single Player Tournament',
+        weightRangeName: `${winner.weight} kg`,
+        players: [winner],
+        matches: [],
+        rankings: {
+          first: winner.id
+        }
+      };
+      
+      await generateFixturePDF(
+        mockFixture,
+        true, // includeRankings
+        false, // includeCompletedMatches (none for single player)
+        18, // rowsPerPage
+        (p) => setPdfProgress(p)
+      );
+      
+      // Show success message
+      alert('PDF başarıyla oluşturuldu!');
+      
+    } catch (error) {
+      alert('PDF oluşturulurken bir hata oluştu.');
+    } finally {
+      setIsExporting(false);
+      setPdfProgress(0);
+    }
+  };
 
   return (
     <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
@@ -66,6 +111,26 @@ const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatch
             </div>
             <div className="mt-4 text-sm text-gray-500">
               Automatic winner by default
+            </div>
+            
+            {/* PDF Download Button */}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleGeneratePDF}
+                disabled={isExporting}
+                className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold flex items-center justify-center gap-2"
+              >
+                {isExporting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    PDF Oluşturuluyor... {pdfProgress}%
+                  </>
+                ) : (
+                  <>
+                    📄 PDF İndir
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
