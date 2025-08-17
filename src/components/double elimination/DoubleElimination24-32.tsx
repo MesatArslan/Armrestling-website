@@ -237,18 +237,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     }
   }, [matches, currentRoundKey]);
 
-  // Persist interim rankings to fixture storage
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      // For 24-32 we keep rankings state updated in handlers; fall back to recompute
-      const compute = () => {
-        const r: any = rankings && Object.keys(rankings).length > 0 ? rankings : {};
-        return r;
-      };
-      MatchesStorage.updateTournamentState(fixtureId, { rankings: compute() });
-    } catch {}
-  }, [fixtureId, rankings]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   // --- Next Round Match Creation Logic ---
   function createNextRound(): Match[] {

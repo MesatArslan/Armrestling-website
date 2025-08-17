@@ -1112,13 +1112,7 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
   const rankingsComputed = calculateRankings(matches);
   const firstSecondDetermined = Boolean(rankingsComputed.first && rankingsComputed.second);
-  // Persist interim rankings to fixture storage
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      MatchesStorage.updateTournamentState(fixtureId, { rankings: calculateRankings(matches) });
-    } catch {}
-  }, [fixtureId, matches]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   return (
     <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">

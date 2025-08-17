@@ -501,7 +501,7 @@ export const openPreviewModal = (
 
 // ===== Matches (Fixture) PDF generation =====
 
-type FixtureLike = Pick<Fixture, 'id' | 'name' | 'tournamentName' | 'weightRangeName' | 'players' | 'rankings'>;
+type FixtureLike = Pick<Fixture, 'id' | 'name' | 'tournamentName' | 'weightRangeName' | 'players'>;
 interface MatchLike {
   id: string;
   player1Id: string;
@@ -568,10 +568,10 @@ const buildFixtureHeader = (fixture: FixtureLike, pageNum: number, totalPages: n
   `;
 };
 
-const buildRankingsSection = (fixture: FixtureLike, isForPDF: boolean) => {
+const buildRankingsSection = (fixture: any, isForPDF: boolean) => {
   const t = (key: string) => String(i18n.t(key));
   const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-3px) !important;">${content}</div>` : content);
-  const entries: Array<{ key: keyof NonNullable<FixtureLike['rankings']> | 'fifth' | 'sixth' | 'seventh' | 'eighth'; label: string; icon: string }> = [
+  const entries: Array<{ key: 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'seventh' | 'eighth'; label: string; icon: string }> = [
     { key: 'first', label: t('rankings.first'), icon: '🥇' },
     { key: 'second', label: t('rankings.second'), icon: '🥈' },
     { key: 'third', label: t('rankings.third'), icon: '🥉' },

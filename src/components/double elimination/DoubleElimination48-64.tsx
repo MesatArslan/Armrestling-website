@@ -183,13 +183,7 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
     }
   }, [matches, tournamentComplete, currentRoundKey]);
 
-  // Persist interim rankings to fixture storage
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      MatchesStorage.updateTournamentState(fixtureId, { rankings: calculateRankings(matches) });
-    } catch {}
-  }, [fixtureId, matches]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   // --- Round Completion Check ---
   const isRoundComplete = (roundKey: RoundKey, matchList: Match[]) => {

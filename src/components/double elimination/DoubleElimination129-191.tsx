@@ -191,15 +191,7 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
     }
   }, [matches, tournamentComplete, currentRoundKey]);
 
-  // Persist interim rankings to fixture storage for broader consumption (e.g., PDFs, scoring)
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      // Ensure we persist the latest computed rankings
-      const latest = calculateRankings(matchesRef.current);
-      MatchesStorage.updateTournamentState(fixtureId, { rankings: latest });
-    } catch {}
-  }, [fixtureId, rankings]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   // Start/Stop auto selecting helpers
   const stopAutoSelecting = () => {

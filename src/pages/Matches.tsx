@@ -214,13 +214,13 @@ const Matches = () => {
     upsertFixture(next);
   };
 
-  const handleTournamentComplete = (rankings: { first?: string; second?: string; third?: string }) => {
+  const handleTournamentComplete = () => {
     if (!activeFixture) return;
 
     const updatedFixture = {
       ...activeFixture,
       status: 'completed' as const,
-      rankings,
+      // Rankings are already saved in double elimination storage, no need to duplicate here
       completedAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
       activeTab: MatchesStorage.getFixtureActiveTab(activeFixture.id) // activeTab'ı localStorage'dan oku

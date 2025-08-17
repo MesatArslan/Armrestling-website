@@ -203,13 +203,7 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players,onTou
     }
   }, [matches, currentRoundKey]);
 
-  // Persist interim rankings to fixture storage
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      MatchesStorage.updateTournamentState(fixtureId, { rankings });
-    } catch {}
-  }, [fixtureId, rankings]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
     
   // --- Next Round Match Creation Logic ---
   function createNextRound(roundKey: RoundKey, matchList: Match[]): Match[] {

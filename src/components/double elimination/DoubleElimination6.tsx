@@ -495,13 +495,7 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
     }
   }, []);
 
-  // Persist interim rankings to fixture storage
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      MatchesStorage.updateTournamentState(fixtureId, { rankings });
-    } catch {}
-  }, [fixtureId, rankings]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   const getPlayerName = (playerId: string) => {
     if (!playerId) return '';

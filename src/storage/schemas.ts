@@ -32,12 +32,7 @@ export const TournamentSchema = z.object({
 
 
 
-export const RankingsSchema = z.object({
-  first: z.string().optional(),
-  second: z.string().optional(),
-  third: z.string().optional(),
-  fourth: z.string().optional(),
-});
+// Rankings are now stored in double elimination storage, not in main fixture data
 
 export const FixtureSchema = z.object({
   id: z.string(),
@@ -53,7 +48,7 @@ export const FixtureSchema = z.object({
   createdAt: z.string(),
   lastUpdated: z.string(),
   completedAt: z.string().optional(),
-  rankings: RankingsSchema.optional(),
+  // Rankings are now stored in double elimination storage, not in main fixture data
   tournamentComplete: z.boolean().optional(),
   activeTab: z.enum(['active', 'completed', 'rankings']).optional(),
 });
