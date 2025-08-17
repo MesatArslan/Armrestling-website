@@ -170,8 +170,6 @@ const Matches = () => {
           status: 'active' as const,
           createdAt: now,
           lastUpdated: now,
-          results: [],
-          playerWins: {},
           activeTab: 'active' as const,
         };
         upsertFixture(newFixture);
@@ -204,21 +202,12 @@ const Matches = () => {
     if (activeFixture?.id === deleteModal.fixtureId) setActiveFixtureId(null);
   };
 
-  const handleMatchResult = (type: string, winnerId: string, loserId?: string) => {
+  const handleMatchResult = () => {
     if (!activeFixture) return;
 
-    // Add match result to fixture
-    const result = {
-      matchId: `match-${Date.now()}`,
-      winnerId,
-      loserId,
-      timestamp: new Date().toISOString(),
-      type
-    };
-
+    // Update fixture timestamp only
     const next = {
       ...activeFixture,
-      results: [...activeFixture.results, result],
       lastUpdated: new Date().toISOString(),
       activeTab: MatchesStorage.getFixtureActiveTab(activeFixture.id),
     };

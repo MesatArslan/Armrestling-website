@@ -21,14 +21,12 @@ export interface Fixture {
   createdAt: string;
   lastUpdated: string;
   completedAt?: string;
-  results: MatchResult[];
   rankings?: {
     first?: string;
     second?: string;
     third?: string;
   };
   tournamentComplete: boolean;
-  playerWins: {[playerId: string]: number};
   activeTab?: 'active' | 'completed' | 'rankings'; // Track which tab is active for this fixture
 }
 
@@ -45,13 +43,7 @@ export interface Player {
 
 
 
-export interface MatchResult {
-  matchId: string;
-  winnerId: string;
-  loserId?: string;
-  timestamp: string;
-  type: string;
-}
+
 
 export interface MatchesData {
   fixtures: Fixture[];
@@ -218,31 +210,18 @@ export const MatchesStorage = {
     return data.fixtures.find(f => f.id === fixtureId) || null;
   },
 
-  // Maç sonucu ekle
-  addMatchResult: (fixtureId: string, result: MatchResult) => {
-    const data = MatchesStorage.getMatchesData();
-    const fixture = data.fixtures.find(f => f.id === fixtureId);
-    if (fixture) {
-      fixture.results.push(result);
-      fixture.lastUpdated = new Date().toISOString();
-      data.lastUpdated = new Date().toISOString();
-      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
-      MatchesStorage.saveMatchesData(data);
-    }
-  },
+
 
   // Turnuva durumunu güncelle
   updateTournamentState: (fixtureId: string, state: {
     rankings?: { first?: string; second?: string; third?: string };
     tournamentComplete?: boolean;
-    playerWins?: {[playerId: string]: number};
   }) => {
     const data = MatchesStorage.getMatchesData();
     const fixture = data.fixtures.find(f => f.id === fixtureId);
     if (fixture) {
       if (state.rankings) fixture.rankings = state.rankings;
       if (state.tournamentComplete !== undefined) fixture.tournamentComplete = state.tournamentComplete;
-      if (state.playerWins) fixture.playerWins = state.playerWins;
       fixture.lastUpdated = new Date().toISOString();
       data.lastUpdated = new Date().toISOString();
       try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
@@ -372,9 +351,8 @@ export const MatchesStorage = {
       status: 'active',
       createdAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
-      results: [],
+      rankings: undefined,
       tournamentComplete: false,
-      playerWins: {},
       activeTab: 'active'
     };
   },
@@ -404,9 +382,8 @@ export const MatchesStorage = {
       status: 'active',
       createdAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
-      results: [],
+      rankings: undefined,
       tournamentComplete: false,
-      playerWins: {},
       activeTab: 'active'
     };
   }

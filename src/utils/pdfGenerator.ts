@@ -698,28 +698,8 @@ const buildCompletedMatchesTable = (fixture: FixtureLike, matches: MatchLike[], 
 };
 
 const getCompletedMatchesForFixture = (fixture: any): MatchLike[] => {
-  // Fallback to results if matches lack winner info
-  const results = Array.isArray(fixture.results) ? fixture.results : [];
-  return results.map((r: any, idx: number) => {
-    const p1 = r.winnerId;
-    const p2 = r.loserId || '';
-    const desc = 'Result';
-    const round = 0;
-    const matchNumber = idx + 1;
-    const bracket = 'placement';
-    const isBye = false;
-    return {
-      id: r.matchId || `result-${idx}`,
-      player1Id: p1,
-      player2Id: p2,
-      winnerId: r.winnerId,
-      bracket,
-      round,
-      matchNumber,
-      isBye,
-      description: desc,
-    } as unknown as MatchLike;
-  });
+  // No results array anymore, return empty array
+  return [];
 };
 
 export const generateFixturePreviewPages = (

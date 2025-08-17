@@ -53,16 +53,8 @@ export const FixtureSchema = z.object({
   createdAt: z.string(),
   lastUpdated: z.string(),
   completedAt: z.string().optional(),
-  results: z.array(z.object({
-    matchId: z.string(),
-    winnerId: z.string(),
-    loserId: z.string().optional(),
-    timestamp: z.string(),
-    type: z.string(),
-  })),
   rankings: RankingsSchema.optional(),
   tournamentComplete: z.boolean().optional(),
-  playerWins: z.record(z.number()),
   activeTab: z.enum(['active', 'completed', 'rankings']).optional(),
 });
 
