@@ -361,6 +361,10 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
     return player ? `${player.name} ${player.surname}` : 'Unknown Player';
   };
 
+  const getPlayer = (playerId: string) => {
+    return players.find(p => p.id === playerId);
+  };
+
   const undoLastMatch = () => {
     // Stack mevcutsa onu, yoksa matches'tan türet
     const stack = completedOrder.length > 0 ? completedOrder : (() => {
@@ -480,6 +484,8 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
           winnerId={match.winnerId}
           player1Id={match.player2Id || ''}
           player2Id={match.player1Id || ''}
+          player1={getPlayer(match.player2Id || '')}
+          player2={getPlayer(match.player1Id || '')}
           bracket={match.bracket as 'winner' | 'loser' | 'placement'}
           round={match.round}
           matchNumber={match.matchNumber}
@@ -531,6 +537,8 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
+        player1={getPlayer(match.player1Id || '')}
+        player2={getPlayer(match.player2Id || '')}
         bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}

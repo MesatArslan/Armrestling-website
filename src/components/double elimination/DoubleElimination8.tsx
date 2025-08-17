@@ -586,6 +586,10 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
     return player ? `${player.name} ${player.surname}` : 'Unknown';
   };
 
+  const getPlayer = (playerId: string) => {
+    return players.find(p => p.id === playerId);
+  };
+
   const getMatchRoundKey = (match: Match): RoundKey => {
     if (match.id.startsWith('wb1')) return 'WB1';
     if (match.id.startsWith('lb1')) return 'LB1';
@@ -786,6 +790,8 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
           winnerId={match.winnerId}
           player1Id={match.player2Id || ''}
           player2Id={match.player1Id || ''}
+          player1={getPlayer(match.player2Id || '')}
+          player2={getPlayer(match.player1Id || '')}
           bracket={match.bracket as 'winner' | 'loser' | 'placement'}
           round={match.round}
           matchNumber={match.matchNumber}
@@ -839,6 +845,8 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
+        player1={getPlayer(match.player1Id || '')}
+        player2={getPlayer(match.player2Id || '')}
         bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}

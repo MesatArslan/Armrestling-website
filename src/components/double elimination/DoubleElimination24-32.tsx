@@ -688,6 +688,11 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     return player ? `${player.name} ${player.surname}` : '';
   };
 
+  const getPlayer = (playerId: string) => {
+    if (!playerId) return undefined;
+    return players.find(p => p.id === playerId);
+  };
+
   const undoLastMatch = () => {
     // Stack mevcutsa onu, yoksa maçlardan round ve numaraya göre türet
     const stack = completedOrder.length > 0 ? completedOrder : [...matches]
@@ -926,6 +931,8 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
+        player1={getPlayer(match.player1Id || '')}
+        player2={getPlayer(match.player2Id || '')}
         bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}

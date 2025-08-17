@@ -2,6 +2,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ROUND_DESCRIPTIONS } from '../../utils/roundDescriptions';
 import { MatchesStorage, type MatchPlayStatus } from '../../utils/matchesStorage';
+import PlayerInfoModal from './PlayerInfoModal';
+import type { Player } from '../../types';
 
 interface MatchCardProps {
   matchId: string;
@@ -11,6 +13,8 @@ interface MatchCardProps {
   winnerId?: string;
   player1Id: string;
   player2Id: string;
+  player1?: Player;
+  player2?: Player;
   bracket: 'winner' | 'loser' | 'placement';
   round: number;
   matchNumber: number;
@@ -31,6 +35,8 @@ const MatchCard: React.FC<MatchCardProps> = ({
   winnerId,
   player1Id,
   player2Id,
+  player1,
+  player2,
   bracket,
   isBye,
   currentSelectedWinner,
@@ -42,6 +48,23 @@ const MatchCard: React.FC<MatchCardProps> = ({
   // --- Per-match persisted play status ---
   const [status, setStatus] = React.useState<MatchPlayStatus>(MatchesStorage.getMatchStatus(fixtureId || 'default', matchId));
   const isPlaying = status === 'active';
+  
+  // Player info modal state
+  const [selectedPlayer, setSelectedPlayer] = React.useState<Player | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [triggerElement, setTriggerElement] = React.useState<HTMLElement | null>(null);
+
+  const openPlayerInfo = (player: Player, element: HTMLElement) => {
+    setSelectedPlayer(player);
+    setTriggerElement(element);
+    setIsModalOpen(true);
+  };
+
+  const closePlayerInfo = () => {
+    setIsModalOpen(false);
+    setSelectedPlayer(null);
+    setTriggerElement(null);
+  };
 
   React.useEffect(() => {
     // Keep state in sync on mount/update
@@ -142,7 +165,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
         <div className="flex flex-col lg:flex-row items-stretch justify-between mb-4 md:mb-4 lg:mb-6 gap-2 md:gap-3 lg:md:gap-4 min-w-0">
           {/* Left Player (Sol Masa) */}
           <div 
-            className={`flex-1 min-w-0 text-center p-3 md:p-3 lg:p-4 rounded-xl transition-all duration-200 cursor-pointer min-h-[100px] md:min-h-[120px] lg:min-h-[140px] flex flex-col ${
+            className={`flex-1 min-w-0 text-center p-3 md:p-3 lg:p-4 rounded-xl transition-all duration-200 cursor-pointer min-h-[100px] md:min-h-[120px] lg:min-h-[140px] flex flex-col relative ${
               winnerId === player1Id 
                 ? 'bg-green-100 border-2 border-green-400 shadow-lg ring-2 ring-green-300' 
                 : currentSelectedWinner === player1Id 
@@ -151,6 +174,20 @@ const MatchCard: React.FC<MatchCardProps> = ({
             }`}
             onClick={() => onWinnerSelect(player1Id)}
           >
+            {/* Information Button */}
+            {player1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openPlayerInfo(player1, e.currentTarget);
+                }}
+                className="absolute top-2 right-2 w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 shadow-md hover:shadow-lg z-10"
+                title={t('players.viewPlayerInfo')}
+              >
+                i
+              </button>
+            )}
+            
             <div className="flex-1 flex flex-col justify-center">
               <div className={`font-bold ${getNameSizeClass(player1Name)} text-gray-800 mb-1 break-words leading-snug`}>{player1Name}</div>
               {winnerId === player1Id && (
@@ -179,7 +216,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
           
           {/* Right Player (Sağ Masa) */}
           <div 
-            className={`flex-1 min-w-0 text-center p-3 md:p-3 lg:p-4 rounded-xl transition-all duration-200 cursor-pointer min-h-[100px] md:min-h-[120px] lg:min-h-[140px] flex flex-col ${
+            className={`flex-1 min-w-0 text-center p-3 md:p-3 lg:p-4 rounded-xl transition-all duration-200 cursor-pointer min-h-[100px] md:min-h-[120px] lg:min-h-[140px] flex flex-col relative ${
               winnerId === player2Id 
                 ? 'bg-green-100 border-2 border-green-400 shadow-lg ring-2 ring-green-300' 
                 : currentSelectedWinner === player2Id 
@@ -188,6 +225,20 @@ const MatchCard: React.FC<MatchCardProps> = ({
             }`}
             onClick={() => onWinnerSelect(player2Id)}
           >
+            {/* Information Button */}
+            {player2 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openPlayerInfo(player2, e.currentTarget);
+                }}
+                className="absolute top-2 right-2 w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 shadow-md hover:shadow-lg z-10"
+                title={t('players.viewPlayerInfo')}
+              >
+                i
+              </button>
+            )}
+            
             <div className="flex-1 flex flex-col justify-center">
               <div className={`font-bold ${getNameSizeClass(player2Name)} text-gray-800 mb-1 break-words leading-snug`}>{player2Name}</div>
               {winnerId === player2Id && (
@@ -236,6 +287,14 @@ const MatchCard: React.FC<MatchCardProps> = ({
           </div>
         )}
       </div>
+      
+      {/* Player Info Modal */}
+      <PlayerInfoModal
+        player={selectedPlayer}
+        isOpen={isModalOpen}
+        onClose={closePlayerInfo}
+        triggerElement={triggerElement}
+      />
     </div>
   );
 };

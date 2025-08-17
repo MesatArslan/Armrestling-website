@@ -874,6 +874,10 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
     return player ? `${player.name} ${player.surname}` : 'Unknown Player';
   };
 
+  const getPlayer = (playerId: string) => {
+    return players.find(p => p.id === playerId);
+  };
+
   const undoLastMatch = () => {
     if (autoSelectingRef.current) {
       stopAutoSelecting();
@@ -1097,6 +1101,8 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
+        player1={getPlayer(match.player1Id || '')}
+        player2={getPlayer(match.player2Id || '')}
         bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}

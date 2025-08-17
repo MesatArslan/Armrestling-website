@@ -5,6 +5,24 @@
 @tailwind utilities;
 /* stylelint-enable at-rule-no-unknown */
 
+/* Custom animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tooltip styles */
+.tooltip-container {
+  pointer-events: auto;
+  z-index: 9999;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

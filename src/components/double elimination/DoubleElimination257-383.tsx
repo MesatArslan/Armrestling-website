@@ -909,6 +909,11 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
     return player ? `${player.name} ${player.surname}` : '';
   };
 
+  const getPlayer = (playerId: string) => {
+    if (!playerId) return undefined;
+    return players.find(p => p.id === playerId);
+  };
+
   const undoLastMatch = () => {
     const stack = completedOrder.length > 0 ? completedOrder : [...matches]
       .filter(m => m.winnerId && !m.isBye)
@@ -1136,6 +1141,8 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
+        player1={getPlayer(match.player1Id || '')}
+        player2={getPlayer(match.player2Id || '')}
         bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}
