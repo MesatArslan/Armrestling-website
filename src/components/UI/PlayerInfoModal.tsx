@@ -20,7 +20,7 @@ const PlayerInfoModal: React.FC<PlayerInfoModalProps> = ({ player, isOpen, onClo
       
       // Position tooltip below the button, centered on the button
       const top = rect.bottom + 8; // 8px below the button
-      const left = rect.left + (rect.width / 2) - 140; // Center tooltip on button (280px width / 2)
+      const left = rect.left + (rect.width / 2) - 180; // Center tooltip on button (360px width / 2)
       
       tooltip.style.top = `${top}px`;
       tooltip.style.left = `${left}px`;
@@ -66,20 +66,78 @@ const PlayerInfoModal: React.FC<PlayerInfoModalProps> = ({ player, isOpen, onClo
     return null;
   }
 
-  // No arrow needed since tooltip is positioned next to the button
+  // Helper function to format birthday
+  const formatBirthday = (birthday?: string) => {
+    if (!birthday) return null;
+    try {
+      const date = new Date(birthday);
+      return date.toLocaleDateString('tr-TR', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch {
+      return birthday;
+    }
+  };
+
+  // Helper function to get field icon
+  const getFieldIcon = (field: string) => {
+    switch (field) {
+      case 'name': return '👤';
+      case 'surname': return '📝';
+      case 'weight': return '⚖️';
+      case 'gender': return player.gender === 'male' ? '👨' : '👩';
+      case 'handPreference': 
+        return player.handPreference === 'left' ? '🤚' : 
+               player.handPreference === 'right' ? '✋' : '🤲';
+      case 'birthday': return '🎂';
+      case 'city': return '🏙️';
+      default: return 'ℹ️';
+    }
+  };
+
+  // Helper function to get field label
+  const getFieldLabel = (field: string) => {
+    switch (field) {
+      case 'name': return t('players.name');
+      case 'surname': return t('players.surname');
+      case 'weight': return t('players.weight');
+      case 'gender': return t('players.gender');
+      case 'handPreference': return t('players.handPreference');
+      case 'birthday': return t('players.birthday');
+      case 'city': return t('players.city');
+      default: return field;
+    }
+  };
+
+  // Helper function to get field value
+  const getFieldValue = (field: string) => {
+    switch (field) {
+      case 'name': return player.name;
+      case 'surname': return player.surname;
+      case 'weight': return player.weight ? `${player.weight} kg` : null;
+      case 'gender': return player.gender ? t(`players.${player.gender}`) : null;
+      case 'handPreference': return player.handPreference ? t(`players.${player.handPreference}`) : null;
+      case 'birthday': return formatBirthday(player.birthday);
+      case 'city': return player.city;
+      default: return (player as any)[field];
+    }
+  };
+
+  // Define all fields to display
+  const displayFields = ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday', 'city'];
 
   return (
     <div 
       ref={tooltipRef}
-      className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-100 max-w-[280px] w-[280px] p-4"
+      className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-100 max-w-[360px] w-[360px] p-4"
       style={{ 
         top: '0px', 
         left: '0px',
         animation: 'fadeIn 0.2s ease-out'
       }}
     >
-      {/* No arrow needed - tooltip is positioned next to the button */}
-      
       {/* Header with player name */}
       <div className="border-b border-gray-100 pb-3 mb-3">
         <div className="flex items-center gap-3">
@@ -99,62 +157,28 @@ const PlayerInfoModal: React.FC<PlayerInfoModalProps> = ({ player, isOpen, onClo
         </div>
       </div>
       
-      {/* Player details */}
+      {/* Player details - show all available fields */}
       <div className="space-y-3">
-        {/* Weight */}
-        {player.weight && (
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-              <span className="text-gray-600 text-sm">⚖️</span>
-            </div>
-            <div className="flex-1">
-              <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-                {t('players.weight')}
+        {displayFields.map((field) => {
+          const value = getFieldValue(field);
+          if (value === null || value === undefined || value === '') return null;
+          
+          return (
+            <div key={field} className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                <span className="text-gray-600 text-sm">{getFieldIcon(field)}</span>
               </div>
-              <div className="text-sm font-semibold text-gray-900">
-                {player.weight} kg
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Gender */}
-        {player.gender && (
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-              <span className="text-gray-600 text-sm">
-                {player.gender === 'male' ? '👨' : '👩'}
-              </span>
-            </div>
-            <div className="flex-1">
-              <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-                {t('players.gender')}
-              </div>
-              <div className="text-sm font-semibold text-gray-900">
-                {t(`players.${player.gender}`)}
+              <div className="flex-1">
+                <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                  {getFieldLabel(field)}
+                </div>
+                <div className="text-sm font-semibold text-gray-900">
+                  {value}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Hand Preference */}
-        {player.handPreference && (
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-              <span className="text-gray-600 text-sm">
-                {player.handPreference === 'left' ? '🤚' : player.handPreference === 'right' ? '✋' : '🤲'}
-              </span>
-            </div>
-            <div className="flex-1">
-              <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-                {t('players.handPreference')}
-              </div>
-              <div className="text-sm font-semibold text-gray-900">
-                {t(`players.${player.handPreference}`)}
-              </div>
-            </div>
-          </div>
-        )}
+          );
+        })}
       </div>
     </div>
   );

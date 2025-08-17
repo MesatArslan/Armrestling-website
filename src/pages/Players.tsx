@@ -59,11 +59,9 @@ const Players = () => {
       setColumnsState(normalized);
       return;
     }
-    // Avoid unnecessary writes/bounces with repo state
-    if (!stableEqual(normalized, columns)) {
-      saveColumns(normalized);
-    }
-  }, [columnsState, columns, normalizeColumns, saveColumns]);
+    // Note: We no longer auto-save here to prevent infinite loops
+    // saveColumns is now called explicitly in handler functions
+  }, [columnsState, normalizeColumns]);
 
   const handleAddColumn = () => {
     if (newColumnName.trim()) {
@@ -77,7 +75,8 @@ const Players = () => {
       setNewColumnName('');
       setIsAddColumnModalOpen(false);
       
-      // Debug: Verify the column was saved
+      // Save the updated columns to the repository so they persist
+      saveColumns(updatedColumns);
     }
   };
 
@@ -90,6 +89,10 @@ const Players = () => {
     if (!window.confirm(t('players.confirmDeleteColumn') || 'Sütunu silmek istediğinize emin misiniz?')) return;
     const updatedColumns = normalizeColumns(PlayersStorage.deleteColumn(columnsState, columnId));
     setColumnsState(updatedColumns);
+    
+    // Save the updated columns to the repository so column deletion persists
+    saveColumns(updatedColumns);
+    
     // Remove this field from all players so that table doesn't render empty cells
     setPlayersState(prev => prev.map((p) => {
       const { [columnId]: _removed, ...rest } = p as any;
@@ -103,7 +106,11 @@ const Players = () => {
 
   const handleToggleColumnVisibility = (columnId: string) => {
     const updated = columnsState.map((c) => (c.id === columnId ? { ...c, visible: !c.visible } : c));
-    setColumnsState(normalizeColumns(updated));
+    const normalized = normalizeColumns(updated);
+    setColumnsState(normalized);
+    
+    // Save the updated columns to the repository so visibility changes persist
+    saveColumns(normalized);
   };
 
   const handleAddTestPlayers = () => {

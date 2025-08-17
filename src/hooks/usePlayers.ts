@@ -17,7 +17,8 @@ export function usePlayers() {
     try {
       const players = playersRepo.getAll();
       const columns = playersRepo.getColumns<Column>();
-      setState({ players, columns: columns?.length ? columns : defaultColumns, isLoading: false });
+      // Only use defaultColumns if columns is null/undefined, not if it's an empty array
+      setState({ players, columns: columns || defaultColumns, isLoading: false });
     } catch {
       setState({ players: [], columns: defaultColumns, isLoading: false });
     }
