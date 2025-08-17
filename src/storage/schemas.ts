@@ -30,19 +30,7 @@ export const TournamentSchema = z.object({
   birthYearMax: z.number().nullable().optional(),
 });
 
-export const MatchSchema = z.object({
-  timestamp: z.number().optional(),
-  id: z.string(),
-  player1Id: z.string(),
-  player2Id: z.string(),
-  winnerId: z.string().optional(),
-  bracket: z.enum(['winner', 'loser', 'placement']),
-  round: z.number(),
-  matchNumber: z.number(),
-  isBye: z.boolean(),
-  description: z.string().optional(),
-  tablePosition: z.record(z.enum(['left', 'right'])).optional(),
-});
+
 
 export const RankingsSchema = z.object({
   first: z.string().optional(),
@@ -75,7 +63,6 @@ export const FixtureSchema = z.object({
   rankings: RankingsSchema.optional(),
   tournamentComplete: z.boolean().optional(),
   playerWins: z.record(z.number()),
-  matches: z.array(MatchSchema),
   activeTab: z.enum(['active', 'completed', 'rankings']).optional(),
 });
 

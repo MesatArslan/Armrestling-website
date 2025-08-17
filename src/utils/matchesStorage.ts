@@ -29,7 +29,6 @@ export interface Fixture {
   };
   tournamentComplete: boolean;
   playerWins: {[playerId: string]: number};
-  matches: Match[];
   activeTab?: 'active' | 'completed' | 'rankings'; // Track which tab is active for this fixture
 }
 
@@ -44,17 +43,7 @@ export interface Player {
   city?: string;
 }
 
-export interface Match {
-  id: string;
-  player1Id?: string;
-  player2Id?: string;
-  winnerId?: string;
-  bracket: 'winner' | 'loser';
-  round: number;
-  matchNumber: number;
-  isBye: boolean;
-  isCompleted: boolean;
-}
+
 
 export interface MatchResult {
   matchId: string;
@@ -244,7 +233,6 @@ export const MatchesStorage = {
 
   // Turnuva durumunu güncelle
   updateTournamentState: (fixtureId: string, state: {
-    matches?: Match[];
     rankings?: { first?: string; second?: string; third?: string };
     tournamentComplete?: boolean;
     playerWins?: {[playerId: string]: number};
@@ -252,7 +240,6 @@ export const MatchesStorage = {
     const data = MatchesStorage.getMatchesData();
     const fixture = data.fixtures.find(f => f.id === fixtureId);
     if (fixture) {
-      if (state.matches) fixture.matches = state.matches;
       if (state.rankings) fixture.rankings = state.rankings;
       if (state.tournamentComplete !== undefined) fixture.tournamentComplete = state.tournamentComplete;
       if (state.playerWins) fixture.playerWins = state.playerWins;
@@ -388,7 +375,6 @@ export const MatchesStorage = {
       results: [],
       tournamentComplete: false,
       playerWins: {},
-      matches: [],
       activeTab: 'active'
     };
   },
@@ -421,7 +407,6 @@ export const MatchesStorage = {
       results: [],
       tournamentComplete: false,
       playerWins: {},
-      matches: [],
       activeTab: 'active'
     };
   }

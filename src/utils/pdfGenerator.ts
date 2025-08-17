@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import i18n from '../i18n';
-import type { Fixture as RepoFixture } from '../storage/schemas';
+import type { Fixture } from '../storage/schemas';
 import { ROUND_DESCRIPTIONS } from './roundDescriptions';
 import MatchesRepository from '../storage/MatchesRepository';
 import DoubleEliminationRepository from '../storage/DoubleEliminationRepository';
@@ -501,7 +501,7 @@ export const openPreviewModal = (
 
 // ===== Matches (Fixture) PDF generation =====
 
-type FixtureLike = Pick<RepoFixture, 'id' | 'name' | 'tournamentName' | 'weightRangeName' | 'players' | 'matches' | 'rankings'>;
+type FixtureLike = Pick<Fixture, 'id' | 'name' | 'tournamentName' | 'weightRangeName' | 'players' | 'rankings'>;
 interface MatchLike {
   id: string;
   player1Id: string;
@@ -548,7 +548,6 @@ const mergeFixtureWithDEState = (fixture: any): any => {
   const state = getDEState(fixture.id);
   if (!state) return fixture;
   const merged = { ...fixture } as any;
-  if (Array.isArray(state.matches) && state.matches.length > 0) merged.matches = state.matches;
   if (state.rankings && typeof state.rankings === 'object') merged.rankings = state.rankings;
   return merged;
 };
@@ -699,21 +698,16 @@ const buildCompletedMatchesTable = (fixture: FixtureLike, matches: MatchLike[], 
 };
 
 const getCompletedMatchesForFixture = (fixture: any): MatchLike[] => {
-  const withWinners = (fixture.matches || []).filter((m: any) => m && m.winnerId) as unknown as MatchLike[];
-  if (withWinners.length > 0) return withWinners;
   // Fallback to results if matches lack winner info
   const results = Array.isArray(fixture.results) ? fixture.results : [];
   return results.map((r: any, idx: number) => {
-    // Try to recover player1/player2 from existing matches by id
-    const original = (fixture.matches || []).find((m: any) => m && (m.id === r.matchId || m.matchId === r.matchId));
-    const p1 = original?.player1Id || r.winnerId;
-    const p2 = original?.player2Id || r.loserId || '';
-    const desc = original?.description || 'Result';
-    const round = original?.round || 0;
-    const matchNumber = original?.matchNumber || (idx + 1);
-    const bracket = original?.bracket || 'placement';
-    const isBye = original?.isBye || false;
-    const tablePosition = original?.tablePosition;
+    const p1 = r.winnerId;
+    const p2 = r.loserId || '';
+    const desc = 'Result';
+    const round = 0;
+    const matchNumber = idx + 1;
+    const bracket = 'placement';
+    const isBye = false;
     return {
       id: r.matchId || `result-${idx}`,
       player1Id: p1,
@@ -724,7 +718,6 @@ const getCompletedMatchesForFixture = (fixture: any): MatchLike[] => {
       matchNumber,
       isBye,
       description: desc,
-      ...(tablePosition ? { tablePosition } : {}),
     } as unknown as MatchLike;
   });
 };
