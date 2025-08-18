@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import type { DoubleEliminationProps } from '../../types';
 import { generateFixturePDF } from '../../utils/pdfGenerator';
+import MatchCounter from '../UI/MatchCounter';
 
 const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete}) => {
   if (players.length !== 1) {
@@ -86,6 +87,15 @@ const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatch
       <h2 className="text-2xl font-bold text-center mb-6 text-blue-500">
         Single Player Tournament
       </h2>
+      
+      {/* Match Counter */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <MatchCounter 
+          playerCount={players.length}
+          completedMatches={0}
+          hasGrandFinal={false}
+        />
+      </div>
       
       <div className="max-w-md mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 border-2 border-green-300">

@@ -7,6 +7,7 @@ import MatchCard from '../UI/MatchCard';
 import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
+import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
@@ -439,6 +440,16 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
         </h2>
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
+      
+      {/* Match Counter */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <MatchCounter 
+          playerCount={players.length}
+          completedMatches={matches.filter(m => m.winnerId).length}
+          hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+        />
+      </div>
+      
       {activeTab === 'active' && (
         <div className="flex justify-center gap-4 mb-4">
           {matchHistory.length > 0 && (

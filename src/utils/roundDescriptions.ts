@@ -258,5 +258,92 @@ export const RoundDescriptionUtils = {
   // Check if a round key is valid
   isValidRoundKey: (key: string): boolean => {
     return key in ROUND_DESCRIPTIONS;
+  },
+
+  // Calculate total matches for double elimination tournament
+  calculateTotalMatches: (playerCount: number): number => {
+    if (playerCount <= 0) return 0;
+    if (playerCount === 1) return 0; // Single player, no matches needed
+    
+    // For 2-7 players, use predefined counts
+    if (playerCount <= 7) {
+      const matchCounts = {
+        2: 1,   // 2 players: 1 final match
+        3: 3,   // 3 players: 3 matches (WB1, WB2, Final)
+        4: 5,   // 4 players: 5 matches (WB1, WB2, LB1, Final, GrandFinal)
+        5: 7,   // 5 players: 7 matches
+        6: 9,   // 6 players: 9 matches
+        7: 11   // 7 players: 11 matches
+      };
+      return matchCounts[playerCount as keyof typeof matchCounts];
+    }
+    
+    // For 8+ players, use the formula:
+    // (playerCount - 1) * 2 + 2 placement matches
+    // Grand final is NOT included in base calculation - it's added separately when played
+    const eliminationMatches = (playerCount - 1) * 2;
+    const placementMatches = 2; // 7th/8th and 5th/6th place matches
+    
+    return eliminationMatches + placementMatches;
+  },
+
+  // Check if grand final match exists in current matches
+  hasGrandFinalMatch: (matches: any[]): boolean => {
+    return matches.some(match => 
+      match.id?.toLowerCase().includes('grandfinal') || 
+      match.description?.toLowerCase().includes('grand final') ||
+      match.round === 'GrandFinal'
+    );
+  },
+
+  // Calculate total matches including grand final (when it's actually played)
+  calculateTotalMatchesWithGrandFinal: (playerCount: number, hasGrandFinal: boolean = false): number => {
+    const baseMatches = RoundDescriptionUtils.calculateTotalMatches(playerCount);
+    return hasGrandFinal ? baseMatches + 1 : baseMatches;
+  },
+
+  // Check if grand final will be played based on tournament structure
+  willGrandFinalBePlayed: (playerCount: number): boolean => {
+    if (playerCount <= 7) return false; // No grand final for small tournaments
+    
+    // For 8+ players, grand final is typically played
+    // This could be enhanced to check actual tournament progression
+    return true;
+  },
+
+  // Determine if grand final will be played based on tournament structure and current state
+  determineGrandFinalStatus: (playerCount: number, currentMatches: any[] = []): boolean => {
+    if (playerCount <= 7) return false;
+    
+    // For 8+ players, check if the tournament structure supports grand final
+    // This is a simplified check - in reality, it depends on bracket progression
+    
+    // If we have winner bracket and loser bracket structure, grand final is likely
+    if (playerCount >= 8) {
+      // Check if there are winner bracket and loser bracket matches
+      const hasWinnerBracket = currentMatches.some(m => m.bracket === 'winner');
+      const hasLoserBracket = currentMatches.some(m => m.bracket === 'loser');
+      
+      // If both brackets exist, grand final is possible
+      if (hasWinnerBracket && hasLoserBracket) {
+        return true;
+      }
+      
+      // Default assumption for 8+ players
+      return true;
+    }
+    
+    return false;
+  },
+
+  // Calculate remaining matches based on completed matches
+  calculateRemainingMatches: (totalMatches: number, completedMatches: number): number => {
+    return Math.max(0, totalMatches - completedMatches);
+  },
+
+  // Get match progress percentage
+  getMatchProgress: (totalMatches: number, completedMatches: number): number => {
+    if (totalMatches === 0) return 100;
+    return Math.round((completedMatches / totalMatches) * 100);
   }
 }; 

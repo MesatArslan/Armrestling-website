@@ -7,6 +7,7 @@ import MatchCard from '../UI/MatchCard';
 import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
+import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
@@ -822,6 +823,8 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players,onTou
         </h2>
       )}
               <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
+              
+              
       {activeTab === 'active' && (
         <div className="text-center mb-6">
           <div className="flex justify-center gap-4">
@@ -934,18 +937,27 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players,onTou
         </>
       )}
       {activeTab === 'completed' && (
-        <CompletedMatchesTable
-          matches={
-            [...matches].sort((a, b) => {
-              const roundA = ROUND_ORDER.indexOf(getMatchRoundKey(a));
-              const roundB = ROUND_ORDER.indexOf(getMatchRoundKey(b));
-              if (roundA !== roundB) return roundA - roundB;
-              return (a.round - b.round) || (a.matchNumber - b.matchNumber);
-            })
-          }
-          players={players}
-          getPlayerName={getPlayerName}
-        />
+        <>
+          <div className="max-w-4xl mx-auto mb-6">
+            <MatchCounter 
+              playerCount={players.length}
+              completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
+              hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+            />
+          </div>
+          <CompletedMatchesTable
+            matches={
+              [...matches].sort((a, b) => {
+                const roundA = ROUND_ORDER.indexOf(getMatchRoundKey(a));
+                const roundB = ROUND_ORDER.indexOf(getMatchRoundKey(b));
+                if (roundA !== roundB) return roundA - roundB;
+                return (a.round - b.round) || (a.matchNumber - b.matchNumber);
+              })
+            }
+            players={players}
+            getPlayerName={getPlayerName}
+          />
+        </>
       )}
       {activeTab === 'rankings' && (
         <RankingsTable rankings={rankings} players={players} getPlayerName={getPlayerName} />

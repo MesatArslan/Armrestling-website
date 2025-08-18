@@ -7,6 +7,7 @@ import MatchCard from '../UI/MatchCard';
 import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
+import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
@@ -558,6 +559,7 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
         </h2>
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
+
       {activeTab === 'active' && (
         <div className="flex justify-center gap-4 mb-4">
           <button
@@ -626,11 +628,20 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
         </div>
       )}
       {activeTab === 'completed' && (
-        <CompletedMatchesTable
-          matches={completedMatches}
-          players={players}
-          getPlayerName={getPlayerName}
-        />
+        <>
+          <div className="max-w-4xl mx-auto mb-6">
+            <MatchCounter 
+              playerCount={players.length}
+              completedMatches={completedMatches.length}
+              hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+            />
+          </div>
+          <CompletedMatchesTable
+            matches={completedMatches}
+            players={players}
+            getPlayerName={getPlayerName}
+          />
+        </>
       )}
       {activeTab === 'rankings' && (
         <RankingsTable

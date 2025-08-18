@@ -7,6 +7,7 @@ import MatchCard from '../UI/MatchCard';
 import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
+import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
@@ -1122,6 +1123,7 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
         </h2>
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
+
       <div className="max-w-4xl mx-auto">
         {/* Aktif Tur bilgisi kaldırıldı */}
       </div>
@@ -1222,7 +1224,16 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
         </>
       )}
       {activeTab === 'completed' && (
-        <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+        <>
+          <div className="max-w-4xl mx-auto mb-6">
+            <MatchCounter 
+              playerCount={players.length}
+              completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
+              hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+            />
+          </div>
+          <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+        </>
       )}
             {activeTab === 'rankings' && (
         <RankingsTable rankings={calculateRankings(matches)} players={players} getPlayerName={getPlayerName} />

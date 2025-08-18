@@ -69,7 +69,7 @@ const RankingsTable: React.FC<RankingsTableProps> = ({ rankings, players, player
               <div className="flex-1">
                 <div className={`font-bold text-lg ${place.text}`}>{place.label}</div>
                 <div className="text-gray-700">
-                  {player ? player.name : '—'}
+                  {player ? `${(player.name || '').trim()} ${(player.surname || '').trim()}`.trim() || player.name || '—' : '—'}
                 </div>
               </div>
               
