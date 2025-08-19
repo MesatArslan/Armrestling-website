@@ -21,7 +21,7 @@ interface DoubleElimination192_256Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, fixtureId }) => {
+const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -1018,6 +1018,12 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
       : [...prevOrder, matchId];
     setCompletedOrder(newCompletedOrder);
     saveTournamentState(updatedMatches, updatedRankings, complete, currentRoundKeyRef.current, newCompletedOrder);
+    
+    // Update opponents after match
+    if (matchRefObj && onUpdateOpponents) {
+      onUpdateOpponents(matchRefObj.player1Id, matchRefObj.player2Id, matchRefObj.description || 'Unknown Match', winnerId);
+    }
+    
     if (complete && onTournamentComplete) {
       onTournamentComplete(updatedRankings);
     }

@@ -14,7 +14,7 @@ import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
 const ROUND_ORDER = ['Semifinal', 'Final', 'GrandFinal'] as const;
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, fixtureId }) => {
+const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{
     first?: string;
@@ -253,6 +253,11 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
     // Call parent's match result handler
     if (onMatchResult) {
       onMatchResult(matchId, winnerId);
+    }
+    
+    // Update opponents after match
+    if (onUpdateOpponents) {
+      onUpdateOpponents(currentMatch.player1Id, currentMatch.player2Id, currentMatch.description || 'Unknown Match', winnerId);
     }
     
     // Call parent's tournament complete handler

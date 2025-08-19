@@ -17,7 +17,7 @@ const ROUND_ORDER = [
 
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, fixtureId }) => {
+const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{
     first?: string;
@@ -521,6 +521,11 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     // Call onMatchResult callback
     if (onMatchResult) {
       onMatchResult(matchId, winnerId, loserId);
+    }
+
+    // Update opponents after match
+    if (onUpdateOpponents) {
+      onUpdateOpponents(currentMatch.player1Id, currentMatch.player2Id, currentMatch.description || 'Unknown Match', winnerId);
     }
 
     // Call onTournamentComplete callback

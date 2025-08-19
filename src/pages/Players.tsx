@@ -27,6 +27,19 @@ const Players = () => {
     try { return JSON.stringify(a) === JSON.stringify(b); } catch { return false; }
   };
 
+  // Centralized normalized setter to avoid effect ping-pong and persist changes once
+  const setColumnsNormalized = (next: Column[] | ((prev: Column[]) => Column[])) => {
+    setColumnsState((prev) => {
+      const computed = typeof next === 'function' ? (next as (p: Column[]) => Column[])(prev) : next;
+      const normalized = normalizeColumns(computed);
+      if (!stableEqual(prev, normalized)) {
+        saveColumns(normalized);
+        return normalized;
+      }
+      return prev;
+    });
+  };
+
   // Sync local UI state with storage-backed hook
   useEffect(() => {
     if (isLoading) return;
@@ -52,18 +65,7 @@ const Players = () => {
     return result;
   }, []);
 
-  // Normalize and persist columns when changed via UI
-  useEffect(() => {
-    const normalized = normalizeColumns(columnsState);
-    if (!stableEqual(normalized, columnsState)) {
-      setColumnsState(normalized);
-      return;
-    }
-    // Avoid unnecessary writes/bounces with repo state
-    if (!stableEqual(normalized, columns)) {
-      saveColumns(normalized);
-    }
-  }, [columnsState, columns, normalizeColumns, saveColumns]);
+  // Note: columns normalization and persistence is handled via setColumnsNormalized to prevent update loops
 
   const handleAddColumn = () => {
     if (newColumnName.trim()) {
@@ -73,7 +75,7 @@ const Players = () => {
         visible: true,
       };
       const updatedColumns = PlayersStorage.addColumn(columnsState, newColumn);
-      setColumnsState(updatedColumns);
+      setColumnsNormalized(updatedColumns);
       setNewColumnName('');
       setIsAddColumnModalOpen(false);
       
@@ -89,7 +91,7 @@ const Players = () => {
     }
     if (!window.confirm(t('players.confirmDeleteColumn') || 'Sütunu silmek istediğinize emin misiniz?')) return;
     const updatedColumns = normalizeColumns(PlayersStorage.deleteColumn(columnsState, columnId));
-    setColumnsState(updatedColumns);
+    setColumnsNormalized(updatedColumns);
     // Remove this field from all players so that table doesn't render empty cells
     setPlayersState(prev => prev.map((p) => {
       const { [columnId]: _removed, ...rest } = p as any;
@@ -103,7 +105,7 @@ const Players = () => {
 
   const handleToggleColumnVisibility = (columnId: string) => {
     const updated = columnsState.map((c) => (c.id === columnId ? { ...c, visible: !c.visible } : c));
-    setColumnsState(normalizeColumns(updated));
+    setColumnsNormalized(updated);
   };
 
   const handleAddTestPlayers = () => {
@@ -307,8 +309,7 @@ const Players = () => {
 
         if (newColumnsToAdd.length > 0) {
           const updated = [...columnsState, ...newColumnsToAdd];
-          setColumnsState(updated);
-          saveColumns(updated);
+          setColumnsNormalized(updated);
         }
 
         const importedPlayers = dataRows
@@ -466,7 +467,7 @@ const Players = () => {
               savePlayers(next as unknown as Player[]);
             }}
             columns={columnsState}
-            onColumnsChange={(next) => setColumnsState(next)}
+            onColumnsChange={(next) => setColumnsNormalized(next as Column[])}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             showAddRow={true}

@@ -9,6 +9,11 @@ export const PlayerSchema = z.object({
   handPreference: z.enum(['left', 'right', 'both']),
   birthday: z.string().optional(),
   city: z.string().optional(),
+  opponents: z.array(z.object({
+    playerId: z.string(),
+    matchDescription: z.string(),
+    result: z.enum(['win', 'loss'])
+  })).optional(), // Daha önce oynadığı rakiplerin ID'si, maç açıklaması ve sonucu
 });
 
 export const WeightRangeSchema = z.object({

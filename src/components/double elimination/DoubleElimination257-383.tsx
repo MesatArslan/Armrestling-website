@@ -20,7 +20,7 @@ interface DoubleElimination257_383Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, fixtureId }) => {
+const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -1022,9 +1022,14 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
         onMatchResult('double-elimination', winnerId, loserId);
       }
     }
-
+    
     // completedOrder'u güncelle (bye maçlarını sayma)
     const match = baseMatches.find(m => m.id === matchId);
+    
+    // Update opponents after match
+    if (match && onUpdateOpponents) {
+      onUpdateOpponents(match.player1Id, match.player2Id, match.description || 'Unknown Match', winnerId);
+    }
     const isByeMatch = Boolean(match?.isBye);
     const prevOrder = completedOrderRef.current;
     const newCompletedOrder = isByeMatch || prevOrder.includes(matchId)

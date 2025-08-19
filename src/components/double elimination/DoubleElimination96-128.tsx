@@ -21,7 +21,7 @@ interface DoubleElimination96_128Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ players, resetKey, onTournamentComplete, fixtureId }) => {
+const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -903,6 +903,17 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
       : [...completedOrder, matchId];
     setCompletedOrder(newCompletedOrder);
     saveTournamentState(updatedMatches, updatedRankings, complete, currentRoundKey, newCompletedOrder);
+    
+    // Call parent's match result handler
+    if (onMatchResult) {
+      onMatchResult(matchId, winnerId);
+    }
+    
+    // Update opponents after match
+    if (matchRef && onUpdateOpponents) {
+      onUpdateOpponents(matchRef.player1Id, matchRef.player2Id, matchRef.description || 'Unknown Match', winnerId);
+    }
+    
     if (complete && onTournamentComplete) {
       onTournamentComplete(updatedRankings);
     }

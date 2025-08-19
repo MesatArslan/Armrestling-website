@@ -165,7 +165,7 @@ const Matches = () => {
           weightRangeId: state.weightRange.id,
           weightRangeName,
           weightRange: { min: state.weightRange.min, max: state.weightRange.max },
-          players: eligiblePlayers.map(p => ({ id: p.id, name: p.name, surname: p.surname, weight: p.weight, gender: p.gender, handPreference: p.handPreference, birthday: p.birthday, city: p.city })),
+          players: eligiblePlayers.map(p => ({ id: p.id, name: p.name, surname: p.surname, weight: p.weight, gender: p.gender, handPreference: p.handPreference, birthday: p.birthday, city: p.city, opponents: [] })),
           playerCount: eligiblePlayers.length,
           status: 'active',
           createdAt: now,
@@ -263,12 +263,40 @@ const Matches = () => {
       handPreference: (p.handPreference as any) ?? 'right',
       birthday: p.birthday,
       city: p.city,
+      opponents: (p as any).opponents || [], // Opponents array'ini ekle
     }));
 
     const props = {
       players: uiPlayers,
       onMatchResult: handleMatchResult,
       onTournamentComplete: handleTournamentComplete,
+      onUpdateOpponents: (player1Id: string, player2Id: string, matchDescription: string, winnerId: string) => {
+        // Maç sonrası opponents güncelleme - maç açıklaması ve sonuç ile
+        const updatedPlayers = activeFixture.players.map(p => {
+          if (p.id === player1Id) {
+            const existingOpponents = p.opponents || [];
+            const newOpponent = {
+              playerId: player2Id,
+              matchDescription: matchDescription,
+              result: p.id === winnerId ? 'win' : 'loss'
+            };
+            return { ...p, opponents: [...existingOpponents, newOpponent] };
+          }
+          if (p.id === player2Id) {
+            const existingOpponents = p.opponents || [];
+            const newOpponent = {
+              playerId: player1Id,
+              matchDescription: matchDescription,
+              result: p.id === winnerId ? 'win' : 'loss'
+            };
+            return { ...p, opponents: [...existingOpponents, newOpponent] };
+          }
+          return p;
+        });
+        
+        const updatedFixture = { ...activeFixture, players: updatedPlayers };
+        upsertFixture(updatedFixture);
+      },
       fixtureId: activeFixture.id
     };
 

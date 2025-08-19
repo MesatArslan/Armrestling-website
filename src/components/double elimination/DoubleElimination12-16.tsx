@@ -31,7 +31,7 @@ const ROUND_ORDER = [
 
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTournamentComplete, fixtureId }) => {
+const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -205,6 +205,16 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players,onTo
       : [...completedOrder, matchId];
     setCompletedOrder(newCompletedOrder);
     saveTournamentState(updatedMatches, newRankings, tournamentComplete, currentRoundKey, newCompletedOrder);
+    
+    // Call parent's match result handler
+    if (onMatchResult) {
+      onMatchResult(matchId, winnerId);
+    }
+    
+    // Update opponents after match
+    if (match && onUpdateOpponents) {
+      onUpdateOpponents(match.player1Id, match.player2Id, match.description || 'Unknown Match', winnerId);
+    }
     
     // Call parent's tournament complete handler if tournament is complete
     if (match && (match.id === 'final' || match.id === 'grand_final')) {
