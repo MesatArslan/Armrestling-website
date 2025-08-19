@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { DoubleEliminationProps } from '../../types';
 import { generateFixturePDF } from '../../utils/pdfGenerator';
 
-const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
+const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   if (players.length !== 1) {
     return (
       <div className="p-4 text-center text-gray-600">

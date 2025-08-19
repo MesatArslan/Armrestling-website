@@ -27,7 +27,7 @@ const ROUND_ORDER = [
 
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
+const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{
     first?: string;
@@ -626,6 +626,7 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
     if (stack.length === 0) return;
 
     const lastId = stack[stack.length - 1];
+    const undoneMatchRef = matches.find(m => m.id === lastId);
     const newCompletedOrder = stack.slice(0, -1);
 
     let updatedMatches = [...matches];
@@ -752,6 +753,11 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
     setCompletedOrder(newCompletedOrder);
 
     saveTournamentState(updatedMatches, updatedRankings, newTournamentComplete, newCurrentRoundKey, newCompletedOrder);
+
+    // Opponents listelerinden bu maçı kaldır
+    if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
+      onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
+    }
   };
 
   const renderMatch = (match: Match) => {

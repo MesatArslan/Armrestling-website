@@ -20,7 +20,7 @@ interface DoubleElimination384_512Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
+const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [currentRoundKey, setCurrentRoundKey] = useState<RoundKey>('WB1');
@@ -834,6 +834,7 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
     if (stack.length === 0) return;
 
     const lastId = stack[stack.length - 1];
+    const undoneMatchRef = matches.find(m => m.id === lastId);
     const newCompletedOrder = stack.slice(0, -1);
 
     let updatedMatches = [...matches];
@@ -913,6 +914,9 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
     setCompletedOrder(newCompletedOrder);
 
     saveTournamentState(updatedMatches, updatedRankings, newTournamentComplete, newCurrentRoundKey, newCompletedOrder);
+    if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
+      onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
+    }
   };
 
 

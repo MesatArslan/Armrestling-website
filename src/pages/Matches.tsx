@@ -259,11 +259,11 @@ const Matches = () => {
       name: p.name ?? '',
       surname: p.surname ?? '',
       weight: p.weight ?? 0,
-      gender: (p.gender as any) ?? 'male',
-      handPreference: (p.handPreference as any) ?? 'right',
+      gender: (p.gender as 'male' | 'female') ?? 'male',
+      handPreference: (p.handPreference as 'left' | 'right' | 'both') ?? 'right',
       birthday: p.birthday,
       city: p.city,
-      opponents: (p as any).opponents || [], // Opponents array'ini ekle
+      opponents: (p.opponents || []) as Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>,
     }));
 
     const props = {
@@ -274,8 +274,8 @@ const Matches = () => {
         // Maç sonrası opponents güncelleme - maç açıklaması ve sonuç ile
         const updatedPlayers = activeFixture.players.map(p => {
           if (p.id === player1Id) {
-            const existingOpponents = p.opponents || [];
-            const newOpponent = {
+            const existingOpponents = (p.opponents || []) as Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+            const newOpponent: { playerId: string; matchDescription: string; result: 'win' | 'loss' } = {
               playerId: player2Id,
               matchDescription: matchDescription,
               result: p.id === winnerId ? 'win' : 'loss'
@@ -283,8 +283,8 @@ const Matches = () => {
             return { ...p, opponents: [...existingOpponents, newOpponent] };
           }
           if (p.id === player2Id) {
-            const existingOpponents = p.opponents || [];
-            const newOpponent = {
+            const existingOpponents = (p.opponents || []) as Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+            const newOpponent: { playerId: string; matchDescription: string; result: 'win' | 'loss' } = {
               playerId: player1Id,
               matchDescription: matchDescription,
               result: p.id === winnerId ? 'win' : 'loss'
@@ -295,6 +295,37 @@ const Matches = () => {
         });
         
         const updatedFixture = { ...activeFixture, players: updatedPlayers };
+        upsertFixture(updatedFixture);
+      },
+      onRemoveOpponents: (player1Id: string, player2Id: string, matchDescription: string) => {
+        const updatedPlayers = activeFixture.players.map(p => {
+          if (p.id === player1Id) {
+            const list = (p.opponents || []) as Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+            let idx = -1;
+            for (let i = list.length - 1; i >= 0; i--) {
+              const o = list[i];
+              if (o.playerId === player2Id && o.matchDescription === matchDescription) { idx = i; break; }
+            }
+            if (idx !== -1) {
+              const newList = [...list.slice(0, idx), ...list.slice(idx + 1)];
+              return { ...p, opponents: newList };
+            }
+          }
+          if (p.id === player2Id) {
+            const list = (p.opponents || []) as Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+            let idx = -1;
+            for (let i = list.length - 1; i >= 0; i--) {
+              const o = list[i];
+              if (o.playerId === player1Id && o.matchDescription === matchDescription) { idx = i; break; }
+            }
+            if (idx !== -1) {
+              const newList = [...list.slice(0, idx), ...list.slice(idx + 1)];
+              return { ...p, opponents: newList };
+            }
+          }
+          return p;
+        });
+        const updatedFixture = { ...activeFixture, players: updatedPlayers } as RepoFixture;
         upsertFixture(updatedFixture);
       },
       fixtureId: activeFixture.id
@@ -723,7 +754,7 @@ const Matches = () => {
           {fixtures.length > 0 && (
             <div className="mb-8">
               <ActiveFixturesNav 
-                fixtures={fixtures as unknown as any[]}
+                fixtures={fixtures}
                 onFixtureSelect={handleFixtureSelect}
                 onFixtureClose={handleFixtureClose}
                 activeFixtureId={activeFixture?.id}

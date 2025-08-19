@@ -14,7 +14,7 @@ import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
 const ROUND_ORDER = ['WB1', 'WB2', 'LB1', 'LB2', 'WB3', 'LB_Final', 'Place56', 'Final', 'GrandFinal'] as const;
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
+const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{
     first?: string;
@@ -533,6 +533,7 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
     if (stack.length === 0) return;
 
     const lastId = stack[stack.length - 1];
+    const undoneMatchRef = matches.find(m => m.id === lastId);
     const newCompletedOrder = stack.slice(0, -1);
 
     let updatedMatches = [...matches];
@@ -661,6 +662,11 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
     };
     const playerIds = players.map(p => p.id).sort().join('-');
     DoubleEliminationStorage.saveDoubleEliminationState(6, playerIds, state, fixtureId);
+    
+    // Opponents listesinden sil
+    if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
+      onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
+    }
   };
 
   const renderMatch = (match: Match) => {

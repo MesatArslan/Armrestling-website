@@ -14,7 +14,7 @@ import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
 const ROUND_ORDER = ['Semifinal', 'Final', 'GrandFinal'] as const;
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
+const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{
     first?: string;
@@ -376,6 +376,11 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
       };
       const playerIds = players.map(p => p.id).sort().join('-');
       DoubleEliminationStorage.saveDoubleEliminationState(2, playerIds, state, fixtureId);
+      
+      // Remove opponents for the undone match
+      if (onRemoveOpponents && undoneMatch && !undoneMatch.isBye) {
+        onRemoveOpponents(undoneMatch.player1Id, undoneMatch.player2Id, undoneMatch.description || 'Unknown Match');
+      }
       
       // Reset the undoing flag after a short delay
       setTimeout(() => {

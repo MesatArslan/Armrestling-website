@@ -21,7 +21,7 @@ const ROUND_ORDER = [
 ] as const;
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, fixtureId }) => {
+const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{ first?: string; second?: string; third?: string; fourth?: string }>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -360,6 +360,7 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatch
     if (stack.length === 0) return;
 
     const lastId = stack[stack.length - 1];
+    const undoneMatchRef = matches.find(m => m.id === lastId);
     const newCompletedOrder = stack.slice(0, -1);
 
     let updatedMatches = [...matches];
@@ -460,6 +461,10 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatch
     };
     const playerIds = players.map(p => p.id).sort().join('-');
     DoubleEliminationStorage.saveDoubleEliminationState(4, playerIds, state, fixtureId);
+
+    if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
+      onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
+    }
   };
   const renderMatch = (match: Match) => {
     // Grand Final maçında oyuncuları ters göster (final'daki pozisyonların tersi)
