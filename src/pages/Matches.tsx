@@ -78,7 +78,7 @@ const Matches = () => {
     try {
       const loadedPlayers = PlayersStorage.getPlayers();
       setPlayers(loadedPlayers);
-    } catch {}
+    } catch { }
   }, []);
 
   // Handle URL parameters for fixture selection and tab switching (process once per search change)
@@ -293,7 +293,7 @@ const Matches = () => {
           }
           return p;
         });
-        
+
         const updatedFixture = { ...activeFixture, players: updatedPlayers };
         upsertFixture(updatedFixture);
       },
@@ -753,7 +753,7 @@ const Matches = () => {
           {/* Fixtures Navigation */}
           {fixtures.length > 0 && (
             <div className="mb-8">
-              <ActiveFixturesNav 
+              <ActiveFixturesNav
                 fixtures={fixtures}
                 onFixtureSelect={handleFixtureSelect}
                 onFixtureClose={handleFixtureClose}
@@ -776,7 +776,7 @@ const Matches = () => {
           {activeFixture ? (
             <div className="space-y-6">
               <div className="overflow-x-auto px-0 sm:px-2">
-              {getDoubleEliminationComponentWithKey()}
+                {getDoubleEliminationComponentWithKey()}
               </div>
             </div>
           ) : (
