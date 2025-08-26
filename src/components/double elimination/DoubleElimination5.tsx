@@ -353,14 +353,15 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
   }
 
   const handleMatchResult = (matchId: string, winnerId: string) => {
-    const currentMatch = matches.find(m => m.id === matchId);
+    const updatedMatchesLocal = matches.map(match => 
+      match.id === matchId ? { ...match, winnerId } : match
+    );
+    const currentMatch = updatedMatchesLocal.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
     if (!currentMatch) return;
     
     const loserId = currentMatch.player1Id === winnerId ? currentMatch.player2Id : currentMatch.player1Id || '';
     
-    let finalMatches = matches.map(match => 
-      match.id === matchId ? { ...match, winnerId } : match
-    );
+    let finalMatches = updatedMatchesLocal;
     
     let finalRankings = { ...rankings };
     let finalTournamentComplete = tournamentComplete;

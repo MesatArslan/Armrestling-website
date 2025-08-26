@@ -715,7 +715,7 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
     setRankings(updatedRankings);
     setTournamentComplete(complete);
 
-    const matchRef = matches.find(m => m.id === matchId);
+    const matchRef = updatedMatches.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
     const isByeMatch = Boolean(matchRef?.isBye);
     const newCompletedOrder = isByeMatch || completedOrder.includes(matchId)
       ? completedOrder

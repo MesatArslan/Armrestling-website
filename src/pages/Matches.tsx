@@ -229,13 +229,17 @@ const Matches = () => {
   const handleTournamentComplete = (rankings: { first?: string; second?: string; third?: string }) => {
     if (!activeFixture) return;
 
+    // Read latest fixture to avoid overwriting recent opponents updates
+    const latest = MatchesStorage.getFixtureById(activeFixture.id) as RepoFixture | null;
+    const base = latest || activeFixture;
+
     const updatedFixture = {
-      ...activeFixture,
+      ...base,
       status: 'completed' as const,
       rankings,
       completedAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
-      activeTab: MatchesStorage.getFixtureActiveTab(activeFixture.id) // activeTab'ı localStorage'dan oku
+      activeTab: MatchesStorage.getFixtureActiveTab(base.id)
     } as RepoFixture;
 
     upsertFixture(updatedFixture);

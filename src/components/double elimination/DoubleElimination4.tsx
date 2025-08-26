@@ -147,7 +147,7 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatch
     }
     
     // Update opponents after match
-    const currentMatch = matches.find(m => m.id === matchId);
+    const currentMatch = updatedMatches.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
     if (currentMatch && onUpdateOpponents) {
       onUpdateOpponents(currentMatch.player1Id, currentMatch.player2Id, currentMatch.description || 'Unknown Match', winnerId);
     }

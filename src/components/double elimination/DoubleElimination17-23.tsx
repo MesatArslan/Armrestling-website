@@ -451,7 +451,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
       m.id === matchId ? { ...m, winnerId } : m
     );
     let newRankings = { ...rankings };
-    const match = matches.find(m => m.id === matchId);
+    const match = updatedMatches.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
     if (match) {
       if (match.id === 'seventh_eighth') {
         newRankings.seventh = winnerId;

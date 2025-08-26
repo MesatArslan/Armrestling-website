@@ -621,7 +621,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     // Sıralama güncellemeleri (final, 3.lük, 5.lik, 7.lik maçları vs.)
     let updatedRankings = { ...rankings };
     let complete = tournamentComplete;
-    const match = matches.find(m => m.id === matchId);
+    const match = updatedMatches.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
     if (!match) return;
     const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
     // 7-8 maçı

@@ -230,7 +230,7 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
       match.id === matchId ? { ...match, winnerId } : match
     );
     
-    const currentMatch = matches.find(m => m.id === matchId);
+    const currentMatch = updatedMatches.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
     if (!currentMatch) return;
     
     const loserId = currentMatch.player1Id === winnerId ? currentMatch.player2Id : currentMatch.player1Id;
