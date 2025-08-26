@@ -6,10 +6,11 @@ import { PlayersStorage, type Column as PlayersColumn } from '../utils/playersSt
 import { TournamentsStorage, type Tournament as StoredTournament } from '../utils/tournamentsStorage';
 import { MatchesStorage, type Fixture } from '../utils/matchesStorage';
 import { openScoringPreviewModal, generateScoringPDF } from '../utils/pdfGenerator';
+import { DoubleEliminationRepository } from '../storage/DoubleEliminationRepository';
 
 type PlacementKey = 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'seventh' | 'eighth';
 
-interface PointsConfig {
+interface PointsConfig extends Record<string, number> {
   first: number;
   second: number;
   third: number;
@@ -40,6 +41,27 @@ const defaultPoints: PointsConfig = {
 const placementOrder: PlacementKey[] = ['first','second','third','fourth','fifth','sixth','seventh','eighth'];
 
 const SCORING_STORAGE_KEY = 'arm-wrestling-scoring-config';
+
+// Helper function to merge fixture with double elimination state
+const mergeFixtureWithDEState = (fixture: Fixture): any => {
+  try {
+    const deRepo = new DoubleEliminationRepository<any>();
+    const state = deRepo.getState(fixture.id);
+    if (state && state.rankings && typeof state.rankings === 'object') {
+      return { ...fixture, rankings: state.rankings };
+    }
+  } catch {}
+  try {
+    const legacy = window.localStorage.getItem(`double-elimination-fixture-${fixture.id}`);
+    if (legacy) {
+      const parsed = JSON.parse(legacy);
+      if (parsed.rankings && typeof parsed.rankings === 'object') {
+        return { ...fixture, rankings: parsed.rankings };
+      }
+    }
+  } catch {}
+  return fixture;
+};
 
 const Scoring: React.FC = () => {
   const { t } = useTranslation();
@@ -119,10 +141,14 @@ const Scoring: React.FC = () => {
 
     for (const f of fixtures) {
       if (!selectedIds.has(f.tournamentId)) continue;
-      if (f.status !== 'completed' || !f.rankings) continue;
+      if (f.status !== 'completed') continue;
+      
+      // Merge fixture with double elimination state to get rankings
+      const mergedFixture = mergeFixtureWithDEState(f);
+      if (!mergedFixture.rankings) continue;
 
       for (const key of placementOrder) {
-        const playerId = (f.rankings as any)[key] as string | undefined;
+        const playerId = (mergedFixture.rankings as any)[key] as string | undefined;
         if (!playerId) continue;
         const player = playerById.get(playerId);
         if (!player) continue;
@@ -480,7 +506,9 @@ const Scoring: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                           {fs.map(f => {
-                            const completed = f.status === 'completed' && !!f.rankings;
+                            // Merge fixture with double elimination state to get rankings
+                            const mergedFixture = mergeFixtureWithDEState(f);
+                            const completed = f.status === 'completed' && !!mergedFixture.rankings;
                             return (
                               <div key={f.id} className={`rounded-xl p-4 border-2 transition-all duration-200 ${
                                 completed 
@@ -502,7 +530,7 @@ const Scoring: React.FC = () => {
                                 {completed ? (
                                   <div className="space-y-2">
                                     {placementOrder.map((pk, idx) => {
-                                      const pid = (f.rankings as any)[pk] as string | undefined;
+                                      const pid = (mergedFixture.rankings as any)[pk] as string | undefined;
                                       if (!pid) return null;
                                       const pts = (config.points as any)[pk] as number;
                                       return (

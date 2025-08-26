@@ -7,6 +7,7 @@ import MatchCard from '../UI/MatchCard';
 import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
+import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
@@ -179,13 +180,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
     }
   }, [matches, tournamentComplete, currentRoundKey]);
 
-  // Persist interim rankings to fixture storage
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      MatchesStorage.updateTournamentState(fixtureId, { rankings: calculateRankings(matches) });
-    } catch {}
-  }, [fixtureId, matches]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   const isRoundComplete = (roundKey: RoundKey, matchList: Match[]) => {
     const roundMatches = matchList.filter(m => getMatchRoundKey(m) === roundKey);
@@ -779,6 +774,10 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
     return player ? `${player.name} ${player.surname}` : 'Unknown Player';
   };
 
+  const getPlayer = (playerId: string) => {
+    return players.find(p => p.id === playerId);
+  };
+
   const undoLastMatch = () => {
     const stack = completedOrder.length > 0 ? completedOrder : [...matches]
       .filter(m => m.winnerId && !m.isBye)
@@ -1002,6 +1001,8 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
+        player1={getPlayer(match.player1Id || '')}
+        player2={getPlayer(match.player2Id || '')}
         bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}
@@ -1045,6 +1046,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
         </div>
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
+
       <div className="max-w-4xl mx-auto">
         {/* Aktif Tur bilgisi kaldırıldı */}
       </div>
@@ -1138,7 +1140,16 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
         </>
       )}
       {activeTab === 'completed' && (
-        <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+        <>
+          <div className="max-w-4xl mx-auto mb-6">
+            <MatchCounter 
+              playerCount={players.length}
+              completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
+              hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+            />
+          </div>
+          <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+        </>
       )}
       {activeTab === 'rankings' && (
         <RankingsTable

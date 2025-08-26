@@ -7,6 +7,7 @@ import MatchCard from '../UI/MatchCard';
 import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
+import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
@@ -506,18 +507,17 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
     }
   }, []);
 
-  // Persist interim rankings to fixture storage
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      MatchesStorage.updateTournamentState(fixtureId, { rankings });
-    } catch {}
-  }, [fixtureId, rankings]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   const getPlayerName = (playerId: string) => {
     if (!playerId) return '';
     const player = players.find(p => p.id === playerId);
     return player ? `${player.name} ${player.surname}` : '';
+  };
+
+  const getPlayer = (playerId: string) => {
+    if (!playerId) return undefined;
+    return players.find(p => p.id === playerId);
   };
 
   const undoLastMatch = () => {
@@ -702,6 +702,8 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
           winnerId={match.winnerId}
           player1Id={match.player2Id || ''}
           player2Id={match.player1Id || ''}
+          player1={getPlayer(match.player2Id || '')}
+          player2={getPlayer(match.player1Id || '')}
           bracket={match.bracket as 'winner' | 'loser' | 'placement'}
           round={match.round}
           matchNumber={match.matchNumber}
@@ -743,6 +745,8 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
+        player1={getPlayer(match.player1Id || '')}
+        player2={getPlayer(match.player2Id || '')}
         bracket={match.bracket}
         round={match.round}
         matchNumber={match.matchNumber}
@@ -771,6 +775,7 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
         </h2>
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
+
       {activeTab === 'active' && (
         <div className="flex justify-center gap-4 mb-4">
           <button
@@ -846,7 +851,16 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
         </div>
       )}
       {activeTab === 'completed' && (
-        <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+        <>
+          <div className="max-w-4xl mx-auto mb-6">
+            <MatchCounter 
+              playerCount={players.length}
+              completedMatches={matches.filter(m => m.winnerId).length}
+              hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+            />
+          </div>
+          <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+        </>
       )}
       {activeTab === 'rankings' && (
         <RankingsTable rankings={rankings} players={players} getPlayerName={getPlayerName} playersLength={players.length} />

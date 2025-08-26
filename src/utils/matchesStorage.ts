@@ -21,15 +21,8 @@ export interface Fixture {
   createdAt: string;
   lastUpdated: string;
   completedAt?: string;
-  results: MatchResult[];
-  rankings?: {
-    first?: string;
-    second?: string;
-    third?: string;
-  };
+  // Rankings are now stored in double elimination storage, not in main fixture data
   tournamentComplete: boolean;
-  playerWins: {[playerId: string]: number};
-  matches: Match[];
   activeTab?: 'active' | 'completed' | 'rankings'; // Track which tab is active for this fixture
 }
 
@@ -44,25 +37,9 @@ export interface Player {
   city?: string;
 }
 
-export interface Match {
-  id: string;
-  player1Id?: string;
-  player2Id?: string;
-  winnerId?: string;
-  bracket: 'winner' | 'loser';
-  round: number;
-  matchNumber: number;
-  isBye: boolean;
-  isCompleted: boolean;
-}
 
-export interface MatchResult {
-  matchId: string;
-  winnerId: string;
-  loserId?: string;
-  timestamp: string;
-  type: string;
-}
+
+
 
 export interface MatchesData {
   fixtures: Fixture[];
@@ -229,54 +206,10 @@ export const MatchesStorage = {
     return data.fixtures.find(f => f.id === fixtureId) || null;
   },
 
-  // Maç sonucu ekle
-  addMatchResult: (fixtureId: string, result: MatchResult) => {
-    const data = MatchesStorage.getMatchesData();
-    const fixture = data.fixtures.find(f => f.id === fixtureId);
-    if (fixture) {
-      fixture.results.push(result);
-      fixture.lastUpdated = new Date().toISOString();
-      data.lastUpdated = new Date().toISOString();
-      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
-      MatchesStorage.saveMatchesData(data);
-    }
-  },
 
-  // Turnuva durumunu güncelle
-  updateTournamentState: (fixtureId: string, state: {
-    matches?: Match[];
-    rankings?: { first?: string; second?: string; third?: string };
-    tournamentComplete?: boolean;
-    playerWins?: {[playerId: string]: number};
-  }) => {
-    const data = MatchesStorage.getMatchesData();
-    const fixture = data.fixtures.find(f => f.id === fixtureId);
-    if (fixture) {
-      if (state.matches) fixture.matches = state.matches;
-      if (state.rankings) fixture.rankings = state.rankings;
-      if (state.tournamentComplete !== undefined) fixture.tournamentComplete = state.tournamentComplete;
-      if (state.playerWins) fixture.playerWins = state.playerWins;
-      fixture.lastUpdated = new Date().toISOString();
-      data.lastUpdated = new Date().toISOString();
-      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
-      MatchesStorage.saveMatchesData(data);
-    }
-  },
 
-  // Rankings'i kaydet
-  saveRankings: (fixtureId: string, rankings: { first?: string; second?: string; third?: string }) => {
-    const data = MatchesStorage.getMatchesData();
-    const fixture = data.fixtures.find(f => f.id === fixtureId);
-    if (fixture) {
-      fixture.rankings = rankings;
-      fixture.status = 'completed';
-      fixture.completedAt = new Date().toISOString();
-      fixture.lastUpdated = new Date().toISOString();
-      data.lastUpdated = new Date().toISOString();
-      try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
-      MatchesStorage.saveMatchesData(data);
-    }
-  },
+  // Rankings are now stored in double elimination storage, not in main fixture data
+  // These functions have been removed as they are no longer needed
 
   // Fixture'ın aktif tab'ını güncelle
   updateFixtureActiveTab: (fixtureId: string, activeTab: 'active' | 'completed' | 'rankings') => {
@@ -302,19 +235,8 @@ export const MatchesStorage = {
     return fixture?.activeTab || 'active';
   },
 
-  // Fixture'ı rankings ile tamamla
-  completeFixtureWithRankings: (fixtureId: string, rankings: { first?: string; second?: string; third?: string }) => {
-    const data = MatchesStorage.getMatchesData();
-    const fixture = data.fixtures.find(f => f.id === fixtureId);
-    if (fixture) {
-      fixture.status = 'completed';
-      fixture.rankings = rankings;
-      fixture.completedAt = new Date().toISOString();
-      fixture.lastUpdated = new Date().toISOString();
-      data.lastUpdated = new Date().toISOString();
-      MatchesStorage.saveMatchesData(data);
-    }
-  },
+  // Rankings are now stored in double elimination storage, not in main fixture data
+  // This function has been removed as it is no longer needed
 
   // Fixture'ı tamamla
   completeFixture: (fixtureId: string) => {
@@ -385,10 +307,7 @@ export const MatchesStorage = {
       status: 'active',
       createdAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
-      results: [],
       tournamentComplete: false,
-      playerWins: {},
-      matches: [],
       activeTab: 'active'
     };
   },
@@ -418,10 +337,7 @@ export const MatchesStorage = {
       status: 'active',
       createdAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
-      results: [],
       tournamentComplete: false,
-      playerWins: {},
-      matches: [],
       activeTab: 'active'
     };
   }

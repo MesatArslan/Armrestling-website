@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import type { Player as UIPlayer } from '../types';
-import type { Fixture as RepoFixture, Tournament, WeightRange } from '../storage/schemas';
+import type { Fixture, Tournament, WeightRange } from '../storage/schemas';
 import DeleteConfirmationModal from '../components/UI/DeleteConfirmationModal';
 import { PlayersStorage } from '../utils/playersStorage';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
@@ -44,8 +44,8 @@ const Matches = () => {
   const processedSearchRef = useRef<string | null>(null);
   const [players, setPlayers] = useState<UIPlayer[]>([]);
   const { fixtureIds, fixtures: fixturesMap, activeFixtureId, isLoading, upsertFixture, removeFixture, setActiveFixtureId } = useMatches();
-  const fixtures: RepoFixture[] = fixtureIds.map(id => fixturesMap[id]).filter(Boolean) as RepoFixture[];
-  const activeFixture: RepoFixture | null = activeFixtureId ? (fixturesMap[activeFixtureId] as RepoFixture) : null;
+  const fixtures: Fixture[] = fixtureIds.map(id => fixturesMap[id]).filter(Boolean) as Fixture[];
+  const activeFixture: Fixture | null = activeFixtureId ? (fixturesMap[activeFixtureId] as Fixture) : null;
   const [desiredTab, setDesiredTab] = useState<'active' | 'completed' | 'rankings' | null>(null);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
@@ -70,7 +70,7 @@ const Matches = () => {
   const hideProgressTimer = useRef<number | null>(null);
 
   // Use ref to track current fixtures to avoid dependency issues
-  const fixturesRef = useRef<RepoFixture[]>([]);
+  const fixturesRef = useRef<Fixture[]>([]);
   fixturesRef.current = fixtures;
 
   // Load players on mount
@@ -105,7 +105,7 @@ const Matches = () => {
       fixtures.forEach(fixture => {
         const current = fixturesMap[fixture.id];
         const activeTab = current?.activeTab;
-        if (activeTab && fixture.activeTab !== activeTab) upsertFixture({ ...fixture, activeTab } as RepoFixture);
+        if (activeTab && fixture.activeTab !== activeTab) upsertFixture({ ...fixture, activeTab });
       });
     }
   }, [fixtures, activeFixture, isLoading, upsertFixture]);
@@ -157,7 +157,7 @@ const Matches = () => {
         const fixtureNumber = existingForTournament.length + 1;
         const weightRangeName = state.weightRange.name || `${state.weightRange.min}-${state.weightRange.max} kg`;
         const now = new Date().toISOString();
-        const newFixture: RepoFixture = {
+        const newFixture = {
           id: `${state.tournament.id}-${state.weightRange.id}-${fixtureNumber}`,
           name: `${state.tournament.name} - ${weightRangeName}`,
           tournamentId: state.tournament.id,
@@ -167,13 +167,10 @@ const Matches = () => {
           weightRange: { min: state.weightRange.min, max: state.weightRange.max },
           players: eligiblePlayers.map(p => ({ id: p.id, name: p.name, surname: p.surname, weight: p.weight, gender: p.gender, handPreference: p.handPreference, birthday: p.birthday, city: p.city, opponents: [] })),
           playerCount: eligiblePlayers.length,
-          status: 'active',
+          status: 'active' as const,
           createdAt: now,
           lastUpdated: now,
-          results: [],
-          playerWins: {},
-          matches: [],
-          activeTab: 'active',
+          activeTab: 'active' as const,
         };
         upsertFixture(newFixture);
         setActiveFixtureId(newFixture.id);
@@ -205,28 +202,19 @@ const Matches = () => {
     if (activeFixture?.id === deleteModal.fixtureId) setActiveFixtureId(null);
   };
 
-  const handleMatchResult = (type: string, winnerId: string, loserId?: string) => {
+  const handleMatchResult = () => {
     if (!activeFixture) return;
 
-    // Add match result to fixture
-    const result = {
-      matchId: `match-${Date.now()}`,
-      winnerId,
-      loserId,
-      timestamp: new Date().toISOString(),
-      type
-    };
-
+    // Update fixture timestamp only
     const next = {
       ...activeFixture,
-      results: [...activeFixture.results, result],
       lastUpdated: new Date().toISOString(),
       activeTab: MatchesStorage.getFixtureActiveTab(activeFixture.id),
-    } as RepoFixture;
+    };
     upsertFixture(next);
   };
 
-  const handleTournamentComplete = (rankings: { first?: string; second?: string; third?: string }) => {
+  const handleTournamentComplete = () => {
     if (!activeFixture) return;
 
     // Read latest fixture to avoid overwriting recent opponents updates
@@ -236,11 +224,11 @@ const Matches = () => {
     const updatedFixture = {
       ...base,
       status: 'completed' as const,
-      rankings,
+      // Rankings are already saved in double elimination storage, no need to duplicate here
       completedAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
-      activeTab: MatchesStorage.getFixtureActiveTab(base.id)
-    } as RepoFixture;
+      activeTab: MatchesStorage.getFixtureActiveTab(activeFixture.id) // activeTab'ı localStorage'dan oku
+    };
 
     upsertFixture(updatedFixture);
   };

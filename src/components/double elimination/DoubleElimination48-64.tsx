@@ -7,6 +7,7 @@ import MatchCard from '../UI/MatchCard';
 import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
+import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
@@ -183,13 +184,7 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
     }
   }, [matches, tournamentComplete, currentRoundKey]);
 
-  // Persist interim rankings to fixture storage
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      MatchesStorage.updateTournamentState(fixtureId, { rankings: calculateRankings(matches) });
-    } catch {}
-  }, [fixtureId, matches]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   // --- Round Completion Check ---
   const isRoundComplete = (roundKey: RoundKey, matchList: Match[]) => {
@@ -690,6 +685,10 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
     return player ? `${player.name} ${player.surname}` : 'Unknown Player';
   };
 
+  const getPlayer = (playerId: string) => {
+    return players.find(p => p.id === playerId);
+  };
+
   const undoLastMatch = () => {
     // Stack mevcutsa onu, yoksa maçlardan round ve numaraya göre türet
     const stack = completedOrder.length > 0 ? completedOrder : [...matches]
@@ -1086,6 +1085,8 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
+        player1={getPlayer(match.player1Id || '')}
+        player2={getPlayer(match.player2Id || '')}
         bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}
@@ -1128,6 +1129,16 @@ const DoubleElimination48_64: React.FC<DoubleElimination48_64Props> = ({ players
         </h2>
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
+      
+      {/* Match Counter */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <MatchCounter 
+          playerCount={players.length}
+          completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
+          hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+        />
+      </div>
+      
       <div className="max-w-4xl mx-auto">
         {/* Aktif Tur bilgisi kaldırıldı */}
       </div>

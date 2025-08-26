@@ -6,6 +6,7 @@ import MatchCard from '../UI/MatchCard';
 import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
+import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
@@ -909,6 +910,11 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
     return player ? `${player.name} ${player.surname}` : '';
   };
 
+  const getPlayer = (playerId: string) => {
+    if (!playerId) return undefined;
+    return players.find(p => p.id === playerId);
+  };
+
   const undoLastMatch = () => {
     const stack = completedOrder.length > 0 ? completedOrder : [...matches]
       .filter(m => m.winnerId && !m.isBye)
@@ -1146,6 +1152,8 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
+        player1={getPlayer(match.player1Id || '')}
+        player2={getPlayer(match.player2Id || '')}
         bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}
@@ -1180,13 +1188,7 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
   const activeRoundMatches = matches.filter(m => getMatchRoundKey(m) === currentRoundKey);
   const rankingsComputed = calculateRankings(matches);
   const firstSecondDetermined = Boolean(rankingsComputed.first && rankingsComputed.second);
-  // Persist interim rankings to fixture storage
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      MatchesStorage.updateTournamentState(fixtureId, { rankings: calculateRankings(matches) });
-    } catch {}
-  }, [fixtureId, matches]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
   
   return (
     <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
@@ -1227,9 +1229,11 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
         </div>
       </div>
               <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
-      <div className="max-w-4xl mx-auto">
-        {/* Aktif Tur bilgisi kaldırıldı */}
-      </div>
+              
+              
+              <div className="max-w-4xl mx-auto">
+                {/* Aktif Tur bilgisi kaldırıldı */}
+              </div>
       {/* Otomatik Kazananları Seç Butonu */}
       {activeTab === 'active' && !firstSecondDetermined && (
         <div className="flex justify-center mb-4">
@@ -1285,7 +1289,16 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
         </>
       )}
       {activeTab === 'completed' && (
-        <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+        <>
+          <div className="max-w-4xl mx-auto mb-6">
+            <MatchCounter 
+              playerCount={players.length}
+              completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
+              hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+            />
+          </div>
+          <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+        </>
       )}
       {activeTab === 'rankings' && (
         <RankingsTable rankings={calculateRankings(matches)} players={players} getPlayerName={getPlayerName} />

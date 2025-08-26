@@ -7,6 +7,7 @@ import MatchCard from '../UI/MatchCard';
 import TabSwitcher from '../UI/TabSwitcher';
 import CompletedMatchesTable from '../UI/CompletedMatchesTable';
 import RankingsTable from '../UI/RankingsTable';
+import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
@@ -191,15 +192,7 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
     }
   }, [matches, tournamentComplete, currentRoundKey]);
 
-  // Persist interim rankings to fixture storage for broader consumption (e.g., PDFs, scoring)
-  React.useEffect(() => {
-    if (!fixtureId) return;
-    try {
-      // Ensure we persist the latest computed rankings
-      const latest = calculateRankings(matchesRef.current);
-      MatchesStorage.updateTournamentState(fixtureId, { rankings: latest });
-    } catch {}
-  }, [fixtureId, rankings]);
+  // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   // Start/Stop auto selecting helpers
   const stopAutoSelecting = () => {
@@ -854,6 +847,10 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
     return player ? `${player.name} ${player.surname}` : 'Unknown Player';
   };
 
+  const getPlayer = (playerId: string) => {
+    return players.find(p => p.id === playerId);
+  };
+
   const undoLastMatch = () => {
     if (autoSelectingRef.current) {
       stopAutoSelecting();
@@ -1091,6 +1088,8 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
         winnerId={match.winnerId}
         player1Id={match.player1Id || ''}
         player2Id={match.player2Id || ''}
+        player1={getPlayer(match.player1Id || '')}
+        player2={getPlayer(match.player2Id || '')}
         bracket={match.bracket as 'winner' | 'loser' | 'placement'}
         round={match.round}
         matchNumber={match.matchNumber}
@@ -1133,6 +1132,16 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
         </div>
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
+      
+      {/* Match Counter */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <MatchCounter 
+          playerCount={players.length}
+          completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
+          hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+        />
+      </div>
+      
       <div className="max-w-4xl mx-auto">
         {/* Aktif Tur bilgisi kaldırıldı */}
       </div>

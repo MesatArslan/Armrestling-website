@@ -35,26 +35,9 @@ export const TournamentSchema = z.object({
   birthYearMax: z.number().nullable().optional(),
 });
 
-export const MatchSchema = z.object({
-  timestamp: z.number().optional(),
-  id: z.string(),
-  player1Id: z.string(),
-  player2Id: z.string(),
-  winnerId: z.string().optional(),
-  bracket: z.enum(['winner', 'loser', 'placement']),
-  round: z.number(),
-  matchNumber: z.number(),
-  isBye: z.boolean(),
-  description: z.string().optional(),
-  tablePosition: z.record(z.enum(['left', 'right'])).optional(),
-});
 
-export const RankingsSchema = z.object({
-  first: z.string().optional(),
-  second: z.string().optional(),
-  third: z.string().optional(),
-  fourth: z.string().optional(),
-});
+
+// Rankings are now stored in double elimination storage, not in main fixture data
 
 export const FixtureSchema = z.object({
   id: z.string(),
@@ -70,17 +53,8 @@ export const FixtureSchema = z.object({
   createdAt: z.string(),
   lastUpdated: z.string(),
   completedAt: z.string().optional(),
-  results: z.array(z.object({
-    matchId: z.string(),
-    winnerId: z.string(),
-    loserId: z.string().optional(),
-    timestamp: z.string(),
-    type: z.string(),
-  })),
-  rankings: RankingsSchema.optional(),
+  // Rankings are now stored in double elimination storage, not in main fixture data
   tournamentComplete: z.boolean().optional(),
-  playerWins: z.record(z.number()),
-  matches: z.array(MatchSchema),
   activeTab: z.enum(['active', 'completed', 'rankings']).optional(),
 });
 
