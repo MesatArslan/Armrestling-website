@@ -1134,17 +1134,6 @@ const OpponentsCell: React.FC<OpponentsCellProps> = ({ opponents, playerName, pl
     );
   }
 
-  if (opponents.length === 1) {
-    return (
-      <button
-        onClick={() => onOpenModal(playerName, playerSurname, opponents)}
-        className="text-gray-700 hover:text-blue-600 transition-colors duration-200 text-sm font-medium underline decoration-dotted hover:decoration-solid"
-      >
-        {opponents[0].matchDescription}
-      </button>
-    );
-  }
-
   return (
     <div className="relative">
       <button
@@ -1152,7 +1141,7 @@ const OpponentsCell: React.FC<OpponentsCellProps> = ({ opponents, playerName, pl
         className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors duration-200 group"
       >
         <span className="text-sm font-medium">
-          {opponents.length} opponents
+          {opponents.length} {opponents.length === 1 ? 'opponent' : 'opponents'}
         </span>
         <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-transform duration-200" />
       </button>
