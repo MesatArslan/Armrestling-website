@@ -268,12 +268,12 @@ export const RoundDescriptionUtils = {
     // For 2-7 players, use predefined counts
     if (playerCount <= 7) {
       const matchCounts = {
-        2: 1,   // 2 players: 1 final match
-        3: 3,   // 3 players: 3 matches (WB1, WB2, Final)
-        4: 5,   // 4 players: 5 matches (WB1, WB2, LB1, Final, GrandFinal)
-        5: 7,   // 5 players: 7 matches
-        6: 9,   // 6 players: 9 matches
-        7: 11   // 7 players: 11 matches
+        2: 2,   // 2 players: 2 matches (semifinal + final), Grand Final adds +1 if played
+        3: 4,   // 3 players: 4 matches (WB1, WB2, LB1, Final), Grand Final adds +1 if played
+        4: 6,   // 4 players: 6 matches (WB1, WB2, LB1, LB2, Final), Grand Final adds +1 if played
+        5: 9,   // 5 players: 9 matches (WB1, WB2, LB1, LB2, LB3, Final), Grand Final adds +1 if played
+        6: 11,  // 6 players: 11 matches (WB1, WB2, WB3, LB1, LB2, LB3, LB4, LB5, Final), Grand Final adds +1 if played
+        7: 13   // 7 players: 13 matches (WB1, WB2, WB3, LB1, LB2, LB3, LB4, LB5, LB6, Final), Grand Final adds +1 if played
       };
       return matchCounts[playerCount as keyof typeof matchCounts];
     }
@@ -304,7 +304,12 @@ export const RoundDescriptionUtils = {
 
   // Check if grand final will be played based on tournament structure
   willGrandFinalBePlayed: (playerCount: number): boolean => {
-    if (playerCount <= 7) return false; // No grand final for small tournaments
+    if (playerCount === 1) return false; // Single player, no matches needed
+    
+    // For 2-7 players, grand final is possible if both players win one match each
+    if (playerCount === 2 || playerCount === 3 || playerCount === 4 || playerCount === 5 || playerCount === 6 || playerCount === 7) return true;
+    
+    if (playerCount === 7) return true; // 7 players can have grand final
     
     // For 8+ players, grand final is typically played
     // This could be enhanced to check actual tournament progression
@@ -313,7 +318,12 @@ export const RoundDescriptionUtils = {
 
   // Determine if grand final will be played based on tournament structure and current state
   determineGrandFinalStatus: (playerCount: number, currentMatches: any[] = []): boolean => {
-    if (playerCount <= 7) return false;
+    if (playerCount === 1) return false; // Single player, no matches needed
+    
+    // For 2-7 players, grand final is possible if both players win one match each
+    if (playerCount === 2 || playerCount === 3 || playerCount === 4 || playerCount === 5 || playerCount === 6 || playerCount === 7) return true;
+    
+    if (playerCount === 7) return true; // 7 players can have grand final
     
     // For 8+ players, check if the tournament structure supports grand final
     // This is a simplified check - in reality, it depends on bracket progression

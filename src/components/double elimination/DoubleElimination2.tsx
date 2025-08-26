@@ -441,15 +441,6 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
       
-      {/* Match Counter */}
-      <div className="max-w-4xl mx-auto mb-6">
-        <MatchCounter 
-          playerCount={players.length}
-          completedMatches={matches.filter(m => m.winnerId).length}
-          hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
-        />
-      </div>
-      
       {activeTab === 'active' && (
         <div className="flex justify-center gap-4 mb-4">
           {matchHistory.length > 0 && (
@@ -492,8 +483,8 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
                   <h2 className="text-3xl font-bold text-green-800 mb-2">🏆 Turnuva Tamamlandı!</h2>
                   <p className="text-green-700 text-lg mb-2">
                     {(() => {
-                      const completedCount = matches.filter(m => m.winnerId).length;
-                      let totalMatches = matches.length;
+                      const completedCount = matches.filter(m => m.winnerId && !m.isBye).length;
+                      let totalMatches = matches.filter(m => !m.isBye).length;
                       return `${completedCount} / ${totalMatches} maç başarıyla tamamlandı.`;
                     })()}
                   </p>
@@ -519,6 +510,15 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
               </div>
             ))
           )}
+        </div>
+      )}
+      {activeTab === 'completed' && (
+        <div className="max-w-4xl mx-auto mb-6">
+          <MatchCounter 
+            playerCount={players.length}
+            completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
+            hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+          />
         </div>
       )}
       {activeTab === 'completed' && (

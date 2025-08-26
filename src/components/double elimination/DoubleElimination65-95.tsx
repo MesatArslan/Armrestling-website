@@ -1048,15 +1048,6 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
       
-      {/* Match Counter */}
-      <div className="max-w-4xl mx-auto mb-6">
-        <MatchCounter 
-          playerCount={players.length}
-          completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
-          hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
-        />
-      </div>
-      
       <div className="max-w-4xl mx-auto">
         {/* Aktif Tur bilgisi kaldırıldı */}
       </div>
@@ -1157,7 +1148,16 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
         </>
       )}
       {activeTab === 'completed' && (
-        <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+        <>
+          <div className="max-w-4xl mx-auto mb-6">
+            <MatchCounter 
+              playerCount={players.length}
+              completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
+              hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+            />
+          </div>
+          <CompletedMatchesTable matches={matches} players={players} getPlayerName={getPlayerName} />
+        </>
       )}
       {activeTab === 'rankings' && (
         <RankingsTable

@@ -598,8 +598,8 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
                   <h2 className="text-3xl font-bold text-green-800 mb-2">🏆 Turnuva Tamamlandı!</h2>
                   <p className="text-green-700 text-lg mb-2">
                     {(() => {
-                      const completedCount = matches.filter(m => m.winnerId).length;
-                      let totalMatches = matches.length;
+                      const completedCount = matches.filter(m => m.winnerId && !m.isBye).length;
+                      let totalMatches = matches.filter(m => !m.isBye).length;
                       return `${completedCount} / ${totalMatches} maç başarıyla tamamlandı.`;
                     })()}
                   </p>
@@ -632,7 +632,7 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
           <div className="max-w-4xl mx-auto mb-6">
             <MatchCounter 
               playerCount={players.length}
-              completedMatches={completedMatches.length}
+              completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
               hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
             />
           </div>

@@ -946,7 +946,7 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
                   <h2 className="text-3xl font-bold text-green-800 mb-2">🏆 Turnuva Tamamlandı!</h2>
                   <p className="text-green-700 text-lg mb-2">
                     {(() => {
-                      const completedCount = matches.filter(m => m.winnerId).length;
+                      const completedCount = matches.filter(m => m.winnerId && !m.isBye).length;
                       let totalMatches = 0;
                       if (players.length === 8) {
                         totalMatches = matches.some(m => m.id === 'grandfinal') ? 15 : 14;
