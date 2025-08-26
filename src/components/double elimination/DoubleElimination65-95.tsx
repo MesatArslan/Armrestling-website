@@ -21,7 +21,7 @@ interface DoubleElimination65_95Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players, resetKey, onTournamentComplete, fixtureId }) => {
+const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -806,6 +806,7 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
     if (stack.length === 0) return;
 
     const lastId = stack[stack.length - 1];
+    const undoneMatchRef = matches.find(m => m.id === lastId);
     const newCompletedOrder = stack.slice(0, -1);
 
     let updatedMatches = [...matches];
@@ -885,6 +886,10 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
     setCompletedOrder(newCompletedOrder);
 
     saveTournamentState(updatedMatches, updatedRankings, newTournamentComplete, newCurrentRoundKey, newCompletedOrder);
+    // Opponents listesinden sil
+    if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
+      onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
+    }
   };
 
 
@@ -910,13 +915,24 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
     setMatches(updatedMatches);
     setRankings(updatedRankings);
     setTournamentComplete(complete);
-    const matchRef = matches.find(m => m.id === matchId);
+    const matchRef = updatedMatches.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
     const isByeMatch = Boolean(matchRef?.isBye);
     const newCompletedOrder = isByeMatch || completedOrder.includes(matchId)
       ? completedOrder
       : [...completedOrder, matchId];
     setCompletedOrder(newCompletedOrder);
     saveTournamentState(updatedMatches, updatedRankings, complete, currentRoundKey, newCompletedOrder);
+    
+    // Call parent's match result handler
+    if (onMatchResult) {
+      onMatchResult(matchId, winnerId);
+    }
+    
+    // Update opponents after match
+    if (matchRef && onUpdateOpponents) {
+      onUpdateOpponents(matchRef.player1Id, matchRef.player2Id, matchRef.description || 'Unknown Match', winnerId);
+    }
+    
     if (complete && onTournamentComplete) {
       onTournamentComplete(updatedRankings);
     }

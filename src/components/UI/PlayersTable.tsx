@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect, useDeferredValue } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { v4 as uuidv4 } from 'uuid';
 import type { Player } from '../../types';
 import { useTranslation } from 'react-i18next';
+import OpponentsModal from './OpponentsModal';
 
 interface Column {
   id: string;
@@ -37,6 +38,7 @@ interface PlayersTableProps {
   onDeletePlayer?: (playerId: string) => void;
   className?: string;
   showFilters?: boolean;
+  allPlayers?: Array<{ id: string; name: string; surname: string }>;
 }
 
 const PlayersTable: React.FC<PlayersTableProps> = ({
@@ -49,7 +51,8 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   showDeleteColumn = true,
   onDeletePlayer,
   className = "",
-  showFilters = true
+  showFilters = true,
+  allPlayers = []
 }) => {
   const { t } = useTranslation();
   const [editingCell, setEditingCell] = useState<{ id: string; column: string } | null>(null);
@@ -71,6 +74,12 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   const [showAddRangeForm, setShowAddRangeForm] = useState(false);
   const [isEditRangesMode, setIsEditRangesMode] = useState(false);
   const [selectedRangeIds, setSelectedRangeIds] = useState<string[]>([]);
+  const [isOpponentsModalOpen, setIsOpponentsModalOpen] = useState(false);
+  const [modalData, setModalData] = useState<{
+    playerName: string;
+    playerSurname: string;
+    opponents: Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+  } | null>(null);
 
   // Virtualization constants
   const ROW_HEIGHT = 56; // px
@@ -165,6 +174,11 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
       counts.set(key, (counts.get(key) || 0) + 1);
     }
     return counts;
+  };
+
+  const handleOpenOpponentsModal = (playerName: string, playerSurname: string, opponents: Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>) => {
+    setModalData({ playerName, playerSurname, opponents });
+    setIsOpponentsModalOpen(true);
   };
 
   const handleFilterChange = (columnId: string, value: string) => {
@@ -482,6 +496,25 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
       } else if (column.id === 'gender') {
         displayValue = t(`players.${displayValue}`);
         className += ' cursor-pointer hover:bg-blue-100 px-2 py-1 rounded transition-colors';
+      } else if (column.id === 'opponents') {
+        const opponents = player.opponents || [];
+        if (!opponents || opponents.length === 0) {
+          return (
+            <span className="text-gray-400 text-sm italic">
+              No opponents yet
+            </span>
+          );
+        }
+        
+        return (
+          <OpponentsCell 
+            opponents={opponents}
+            playerName={player.name || ''}
+            playerSurname={player.surname || ''}
+            allPlayers={allPlayers}
+            onOpenModal={handleOpenOpponentsModal}
+          />
+        );
       }
       
       // HandPreference hücresinde sadece "left", "right" veya "both" yazıyorsa çevir:
@@ -1064,6 +1097,54 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
           )}
         </tbody>
       </table>
+      
+      {/* Opponents Modal */}
+      {modalData && (
+        <OpponentsModal
+          isOpen={isOpponentsModalOpen}
+          onClose={() => {
+            setIsOpponentsModalOpen(false);
+            setModalData(null);
+          }}
+          playerName={modalData.playerName}
+          playerSurname={modalData.playerSurname}
+          opponents={modalData.opponents}
+          allPlayers={allPlayers}
+        />
+      )}
+    </div>
+  );
+};
+
+// Opponents Cell Component
+interface OpponentsCellProps {
+  opponents: Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+  playerName: string;
+  playerSurname: string;
+  allPlayers: Array<{ id: string; name: string; surname: string }>;
+  onOpenModal: (playerName: string, playerSurname: string, opponents: Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>) => void;
+}
+
+const OpponentsCell: React.FC<OpponentsCellProps> = ({ opponents, playerName, playerSurname, onOpenModal }) => {
+  if (opponents.length === 0) {
+    return (
+      <span className="text-gray-400 text-sm italic">
+        No opponents yet
+      </span>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => onOpenModal(playerName, playerSurname, opponents)}
+        className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors duration-200 group"
+      >
+        <span className="text-sm font-medium">
+          {opponents.length} {opponents.length === 1 ? 'opponent' : 'opponents'}
+        </span>
+        <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-transform duration-200" />
+      </button>
     </div>
   );
 };

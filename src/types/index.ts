@@ -8,6 +8,7 @@ export interface Player {
   handPreference: 'left' | 'right' | 'both';
   birthday?: string;
   city?: string;
+  opponents?: Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
 }
 
 // Turnuva ile ilgili tipler
@@ -72,6 +73,8 @@ export interface DoubleEliminationProps {
   players: Player[];
   onMatchResult: (type: string, winnerId: string, loserId?: string) => void;
   onTournamentComplete?: (rankings: { first?: string; second?: string; third?: string; fourth?: string }) => void;
+  onUpdateOpponents?: (player1Id: string, player2Id: string, matchDescription: string, winnerId: string) => void;
+  onRemoveOpponents?: (player1Id: string, player2Id: string, matchDescription: string) => void;
   initialTab?: 'active' | 'completed' | 'rankings';
   fixtureId?: string;
 }

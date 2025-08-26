@@ -57,6 +57,7 @@ interface TournamentCardProps {
   onShowPDFPreview?: (tournament: Tournament, weightRange: WeightRange) => void;
   onShowPDFColumnModal?: (tournament: Tournament, weightRange: WeightRange) => void;
   onOpenBulkPDF?: (tournament: Tournament) => void;
+  fixtures?: any[]; // Fixtures bilgisi eklendi
 }
 
 const TournamentCard: React.FC<TournamentCardProps> = ({
@@ -74,7 +75,8 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   selectedTournament,
   className = "",
   onShowPDFColumnModal,
-  onOpenBulkPDF
+  onOpenBulkPDF,
+  fixtures = []
 }) => {
   const { t } = useTranslation();
   const [] = useState({
@@ -87,6 +89,45 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   // Bulk PDF state handled by parent
 
 
+
+
+
+  // Fixture'da maç başladı mı kontrol et
+  const hasStartedMatches = (weightRange: WeightRange) => {
+    if (!fixtures || fixtures.length === 0) return false;
+    
+    const fixture = fixtures.find(f => 
+      f.tournamentId === tournament.id && 
+      f.weightRangeId === weightRange.id
+    );
+    
+    return fixture && fixture.players && fixture.players.some((p: any) => p.opponents && Array.isArray(p.opponents) && p.opponents.length > 0);
+  };
+
+  // Oyuncunun opponents bilgisini al
+  const getPlayerOpponents = (weightRange: WeightRange, playerId: string) => {
+    if (!fixtures || fixtures.length === 0) return [];
+    
+    const fixture = fixtures.find(f => 
+      f.tournamentId === tournament.id && 
+      f.weightRangeId === weightRange.id
+    );
+    
+    if (!fixture || !fixture.players) return [];
+    
+    const player = fixture.players.find((p: any) => p.id === playerId);
+    return player?.opponents || [];
+  };
+
+  // Opponents'ları oyuncu isimlerine çevir
+  const getOpponentsNames = (weightRange: WeightRange, playerId: string) => {
+    const opponents = getPlayerOpponents(weightRange, playerId);
+    return opponents.map((opponent: any) => {
+      const player = players.find(p => p.id === opponent.playerId);
+      const playerName = player ? `${player.name} ${player.surname}` : 'Unknown';
+      return `${playerName} - ${opponent.matchDescription}`;
+    });
+  };
 
   const getFilteredPlayers = (weightRange: WeightRange) => {
     return players.filter(player => {
@@ -327,7 +368,10 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                   </h4>
                   <div className="h-96 overflow-y-auto">
                     <PlayersTable
-                      players={getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
+                      players={getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).map(player => ({
+                        ...player,
+                        opponents: getPlayerOpponents(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!, player.id)
+                      }))}
                       onPlayersChange={() => { }} // Read-only for tournaments
                       columns={[
                         { id: 'name', name: 'Name', visible: true },
@@ -335,6 +379,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                         { id: 'weight', name: 'Weight', visible: true },
                         { id: 'handPreference', name: 'Hand Preference', visible: true },
                         { id: 'birthday', name: 'Birthday', visible: true },
+                        { id: 'opponents', name: 'Opponents', visible: hasStartedMatches(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!) },
                       ]}
                       onColumnsChange={() => { }} // Read-only
                       searchTerm=""
@@ -344,6 +389,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       onDeletePlayer={handleExcludePlayer}
                       className="bg-white/50 rounded-xl"
                       showFilters={false}
+                      allPlayers={players}
                     />
                   </div>
                 </div>
@@ -360,7 +406,10 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       </p>
                       <div className="h-64 overflow-y-auto">
                         <PlayersTable
-                          players={getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!)}
+                          players={getExcludedPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).map(player => ({
+                            ...player,
+                            opponents: getPlayerOpponents(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!, player.id)
+                          }))}
                           onPlayersChange={() => { }} // Read-only for tournaments
                           columns={[
                             { id: 'name', name: 'Name', visible: true },
@@ -368,6 +417,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                             { id: 'weight', name: 'Weight', visible: true },
                             { id: 'handPreference', name: 'Hand Preference', visible: true },
                             { id: 'birthday', name: 'Birthday', visible: true },
+                            { id: 'opponents', name: 'Opponents', visible: hasStartedMatches(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!) },
                           ]}
                           onColumnsChange={() => { }} // Read-only
                           searchTerm=""
@@ -377,6 +427,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                           onDeletePlayer={handleIncludePlayer}
                           className="opacity-60"
                           showFilters={false}
+                          allPlayers={players}
                         />
                       </div>
                     </div>
@@ -472,6 +523,8 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
         >
           {t('tournamentCard.managePlayers', { count: availablePlayers })}
         </button>
+
+
 
         {!existingFixture ? (
           <button

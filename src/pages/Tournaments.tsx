@@ -10,6 +10,7 @@ import { type Column } from '../utils/playersStorage';
 import { openPreviewModal, generatePDF, generateCombinedPreviewPages, generateCombinedTournamentPDF } from '../utils/pdfGenerator';
 import { useTournaments } from '../hooks/useTournaments';
 import { usePlayers } from '../hooks/usePlayers';
+import { useMatches } from '../hooks/useMatches';
 
 type UITournament = Omit<StorageTournament, 'isExpanded'> & { isExpanded: boolean };
 
@@ -22,6 +23,7 @@ const Tournaments = () => {
   const { t } = useTranslation();
   const { tournaments: repoTournaments, selectedTournamentId, selectedWeightRangeId, playerFilters: repoFilters, isLoading, saveTournaments, setSelectedTournament, setSelectedWeightRange, savePlayerFilters, clearAllTournamentData } = useTournaments();
   const { players: repoPlayers, columns: playerColumns } = usePlayers();
+  const { fixtures } = useMatches();
   const [tournaments, setTournaments] = useState<UITournament[]>([]);
   const [players, setPlayers] = useState<ExtendedPlayer[]>([]);
   const [selectedWeightRange, setSelectedWeightRangeLocal] = useState<string | null>(null);
@@ -676,6 +678,7 @@ const Tournaments = () => {
                     setCurrentTournamentForPDF(t);
                     setIsBulkPreviewMode(false);
                   }}
+                  fixtures={Object.values(fixtures)}
                 />
               ))
             )}

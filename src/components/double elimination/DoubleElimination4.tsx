@@ -21,7 +21,7 @@ const ROUND_ORDER = [
 ] as const;
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTournamentComplete, fixtureId }) => {
+const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{ first?: string; second?: string; third?: string; fourth?: string }>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -140,6 +140,18 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
       : [...completedOrder, matchId];
     setMatches(updatedMatches);
     setCompletedOrder(newCompletedOrder);
+    
+    // Call parent's match result handler
+    if (onMatchResult) {
+      onMatchResult(matchId, winnerId);
+    }
+    
+    // Update opponents after match
+    const currentMatch = updatedMatches.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
+    if (currentMatch && onUpdateOpponents) {
+      onUpdateOpponents(currentMatch.player1Id, currentMatch.player2Id, currentMatch.description || 'Unknown Match', winnerId);
+    }
+    
     // Persist immediately; next round creation and rankings are handled by effects
     saveTournamentState(updatedMatches, rankings, tournamentComplete, currentRoundKey, newCompletedOrder);
   }
@@ -348,6 +360,7 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
     if (stack.length === 0) return;
 
     const lastId = stack[stack.length - 1];
+    const undoneMatchRef = matches.find(m => m.id === lastId);
     const newCompletedOrder = stack.slice(0, -1);
 
     let updatedMatches = [...matches];
@@ -448,6 +461,10 @@ const DoubleElimination4: React.FC<DoubleEliminationProps> = ({ players, onTourn
     };
     const playerIds = players.map(p => p.id).sort().join('-');
     DoubleEliminationStorage.saveDoubleEliminationState(4, playerIds, state, fixtureId);
+
+    if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
+      onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
+    }
   };
   const renderMatch = (match: Match) => {
     // Grand Final maçında oyuncuları ters göster (final'daki pozisyonların tersi)

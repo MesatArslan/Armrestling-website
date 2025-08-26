@@ -21,7 +21,7 @@ interface DoubleElimination24_32Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players, resetKey, onTournamentComplete, fixtureId }) => {
+const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -621,7 +621,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     // Sıralama güncellemeleri (final, 3.lük, 5.lik, 7.lik maçları vs.)
     let updatedRankings = { ...rankings };
     let complete = tournamentComplete;
-    const match = matches.find(m => m.id === matchId);
+    const match = updatedMatches.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
     if (!match) return;
     const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
     // 7-8 maçı
@@ -675,6 +675,16 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     setCompletedOrder(newCompletedOrder);
     saveTournamentState(updatedMatches, updatedRankings, complete, currentRoundKey, newCompletedOrder);
     
+    // Call parent's match result handler
+    if (onMatchResult) {
+      onMatchResult(matchId, winnerId);
+    }
+    
+    // Update opponents after match
+    if (onUpdateOpponents) {
+      onUpdateOpponents(match.player1Id, match.player2Id, match.description || 'Unknown Match', winnerId);
+    }
+    
     // Call parent's tournament complete handler if tournament is complete
     if (complete && onTournamentComplete) {
       onTournamentComplete(updatedRankings);
@@ -702,6 +712,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     if (stack.length === 0) return;
 
     const lastId = stack[stack.length - 1];
+    const undoneMatchRef = matches.find(m => m.id === lastId);
     const newCompletedOrder = stack.slice(0, -1);
 
     let updatedMatches = [...matches];
@@ -900,6 +911,10 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     setCompletedOrder(newCompletedOrder);
 
     saveTournamentState(updatedMatches, updatedRankings, newTournamentComplete, newCurrentRoundKey, newCompletedOrder);
+    // Opponents listesinden sil
+    if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
+      onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
+    }
   };
   const handleWinnerSelect = (matchId: string, winnerId: string) => {
     setSelectedWinner(prev => ({ ...prev, [matchId]: winnerId }));

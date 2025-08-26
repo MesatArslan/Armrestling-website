@@ -17,7 +17,7 @@ const ROUND_ORDER = [
 
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, fixtureId }) => {
+const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{
     first?: string;
@@ -474,7 +474,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
       match.id === matchId ? { ...match, winnerId } : match
     );
 
-    const currentMatch = matches.find(m => m.id === matchId);
+    const currentMatch = updatedMatches.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
     if (!currentMatch) return;
 
     const loserId = currentMatch.player1Id === winnerId ? currentMatch.player2Id : currentMatch.player1Id;
@@ -521,6 +521,11 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     // Call onMatchResult callback
     if (onMatchResult) {
       onMatchResult(matchId, winnerId, loserId);
+    }
+
+    // Update opponents after match
+    if (onUpdateOpponents) {
+      onUpdateOpponents(currentMatch.player1Id, currentMatch.player2Id, currentMatch.description || 'Unknown Match', winnerId);
     }
 
     // Call onTournamentComplete callback
@@ -610,6 +615,7 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     if (stack.length === 0) return;
 
     const lastId = stack[stack.length - 1];
+    const undoneMatchRef = matches.find(m => m.id === lastId);
     const newCompletedOrder = stack.slice(0, -1);
 
     let updatedMatches = [...matches];
@@ -735,6 +741,11 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     };
     const playerIds = players.map(p => p.id).sort().join('-');
     DoubleEliminationStorage.saveDoubleEliminationState(7, playerIds, state, fixtureId);
+    
+    // Opponents listesinden sil
+    if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
+      onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
+    }
   };
 
   const renderMatch = (match: Match) => {

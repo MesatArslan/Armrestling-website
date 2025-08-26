@@ -21,7 +21,7 @@ interface DoubleElimination129_191Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, fixtureId }) => {
+const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -870,6 +870,7 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
     if (stack.length === 0) return;
 
     const lastId = stack[stack.length - 1];
+    const undoneMatchRef = matches.find(m => m.id === lastId);
     const newCompletedOrder = stack.slice(0, -1);
 
     let updatedMatches = [...matches];
@@ -949,6 +950,10 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
     setCompletedOrder(newCompletedOrder);
 
     saveTournamentState(updatedMatches, updatedRankings, newTournamentComplete, newCurrentRoundKey, newCompletedOrder);
+    // Opponents listesinden sil
+    if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
+      onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
+    }
   };
 
 
@@ -997,6 +1002,12 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
       : [...prevOrder, matchId];
     setCompletedOrder(newCompletedOrder);
     saveTournamentState(updatedMatches, updatedRankings, complete, currentRoundKeyRef.current, newCompletedOrder);
+    
+    // Update opponents after match
+    if (matchRefObj && onUpdateOpponents) {
+      onUpdateOpponents(matchRefObj.player1Id, matchRefObj.player2Id, matchRefObj.description || 'Unknown Match', winnerId);
+    }
+    
     if (complete && onTournamentComplete) {
       onTournamentComplete(updatedRankings);
     }

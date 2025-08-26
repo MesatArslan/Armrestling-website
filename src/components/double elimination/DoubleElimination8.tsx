@@ -27,7 +27,7 @@ const ROUND_ORDER = [
 
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, fixtureId }) => {
+const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{
     first?: string;
@@ -529,7 +529,7 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
       match.id === matchId ? { ...match, winnerId } : match
     );
     
-    const currentMatch = matches.find(m => m.id === matchId);
+    const currentMatch = updatedMatches.find(m => m.id === matchId) || matches.find(m => m.id === matchId);
     if (!currentMatch) return;
     
     const loserId = currentMatch.player1Id === winnerId ? currentMatch.player2Id : currentMatch.player1Id;
@@ -573,6 +573,11 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
     
     if (onMatchResult) {
       onMatchResult(matchId, winnerId);
+    }
+    
+    // Update opponents after match
+    if (onUpdateOpponents) {
+      onUpdateOpponents(currentMatch.player1Id, currentMatch.player2Id, currentMatch.description || 'Unknown Match', winnerId);
     }
     
     // Call parent's tournament complete handler if tournament is complete
@@ -621,6 +626,7 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
     if (stack.length === 0) return;
 
     const lastId = stack[stack.length - 1];
+    const undoneMatchRef = matches.find(m => m.id === lastId);
     const newCompletedOrder = stack.slice(0, -1);
 
     let updatedMatches = [...matches];
@@ -747,6 +753,11 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
     setCompletedOrder(newCompletedOrder);
 
     saveTournamentState(updatedMatches, updatedRankings, newTournamentComplete, newCurrentRoundKey, newCompletedOrder);
+
+    // Opponents listelerinden bu maçı kaldır
+    if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
+      onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
+    }
   };
 
   const renderMatch = (match: Match) => {

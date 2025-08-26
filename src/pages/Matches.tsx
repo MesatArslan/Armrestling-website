@@ -78,7 +78,7 @@ const Matches = () => {
     try {
       const loadedPlayers = PlayersStorage.getPlayers();
       setPlayers(loadedPlayers);
-    } catch {}
+    } catch { }
   }, []);
 
   // Handle URL parameters for fixture selection and tab switching (process once per search change)
@@ -165,7 +165,7 @@ const Matches = () => {
           weightRangeId: state.weightRange.id,
           weightRangeName,
           weightRange: { min: state.weightRange.min, max: state.weightRange.max },
-          players: eligiblePlayers.map(p => ({ id: p.id, name: p.name, surname: p.surname, weight: p.weight, gender: p.gender, handPreference: p.handPreference, birthday: p.birthday, city: p.city })),
+          players: eligiblePlayers.map(p => ({ id: p.id, name: p.name, surname: p.surname, weight: p.weight, gender: p.gender, handPreference: p.handPreference, birthday: p.birthday, city: p.city, opponents: [] })),
           playerCount: eligiblePlayers.length,
           status: 'active',
           createdAt: now,
@@ -229,13 +229,17 @@ const Matches = () => {
   const handleTournamentComplete = (rankings: { first?: string; second?: string; third?: string }) => {
     if (!activeFixture) return;
 
+    // Read latest fixture to avoid overwriting recent opponents updates
+    const latest = MatchesStorage.getFixtureById(activeFixture.id) as RepoFixture | null;
+    const base = latest || activeFixture;
+
     const updatedFixture = {
-      ...activeFixture,
+      ...base,
       status: 'completed' as const,
       rankings,
       completedAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
-      activeTab: MatchesStorage.getFixtureActiveTab(activeFixture.id) // activeTab'ı localStorage'dan oku
+      activeTab: MatchesStorage.getFixtureActiveTab(base.id)
     } as RepoFixture;
 
     upsertFixture(updatedFixture);
@@ -259,16 +263,75 @@ const Matches = () => {
       name: p.name ?? '',
       surname: p.surname ?? '',
       weight: p.weight ?? 0,
-      gender: (p.gender as any) ?? 'male',
-      handPreference: (p.handPreference as any) ?? 'right',
+      gender: (p.gender as 'male' | 'female') ?? 'male',
+      handPreference: (p.handPreference as 'left' | 'right' | 'both') ?? 'right',
       birthday: p.birthday,
       city: p.city,
+      opponents: (p.opponents || []) as Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>,
     }));
 
     const props = {
       players: uiPlayers,
       onMatchResult: handleMatchResult,
       onTournamentComplete: handleTournamentComplete,
+      onUpdateOpponents: (player1Id: string, player2Id: string, matchDescription: string, winnerId: string) => {
+        // Maç sonrası opponents güncelleme - maç açıklaması ve sonuç ile
+        const updatedPlayers = activeFixture.players.map(p => {
+          if (p.id === player1Id) {
+            const existingOpponents = (p.opponents || []) as Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+            const newOpponent: { playerId: string; matchDescription: string; result: 'win' | 'loss' } = {
+              playerId: player2Id,
+              matchDescription: matchDescription,
+              result: p.id === winnerId ? 'win' : 'loss'
+            };
+            return { ...p, opponents: [...existingOpponents, newOpponent] };
+          }
+          if (p.id === player2Id) {
+            const existingOpponents = (p.opponents || []) as Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+            const newOpponent: { playerId: string; matchDescription: string; result: 'win' | 'loss' } = {
+              playerId: player1Id,
+              matchDescription: matchDescription,
+              result: p.id === winnerId ? 'win' : 'loss'
+            };
+            return { ...p, opponents: [...existingOpponents, newOpponent] };
+          }
+          return p;
+        });
+
+        const updatedFixture = { ...activeFixture, players: updatedPlayers };
+        upsertFixture(updatedFixture);
+      },
+      onRemoveOpponents: (player1Id: string, player2Id: string, matchDescription: string) => {
+        const updatedPlayers = activeFixture.players.map(p => {
+          if (p.id === player1Id) {
+            const list = (p.opponents || []) as Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+            let idx = -1;
+            for (let i = list.length - 1; i >= 0; i--) {
+              const o = list[i];
+              if (o.playerId === player2Id && o.matchDescription === matchDescription) { idx = i; break; }
+            }
+            if (idx !== -1) {
+              const newList = [...list.slice(0, idx), ...list.slice(idx + 1)];
+              return { ...p, opponents: newList };
+            }
+          }
+          if (p.id === player2Id) {
+            const list = (p.opponents || []) as Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+            let idx = -1;
+            for (let i = list.length - 1; i >= 0; i--) {
+              const o = list[i];
+              if (o.playerId === player1Id && o.matchDescription === matchDescription) { idx = i; break; }
+            }
+            if (idx !== -1) {
+              const newList = [...list.slice(0, idx), ...list.slice(idx + 1)];
+              return { ...p, opponents: newList };
+            }
+          }
+          return p;
+        });
+        const updatedFixture = { ...activeFixture, players: updatedPlayers } as RepoFixture;
+        upsertFixture(updatedFixture);
+      },
       fixtureId: activeFixture.id
     };
 
@@ -694,8 +757,8 @@ const Matches = () => {
           {/* Fixtures Navigation */}
           {fixtures.length > 0 && (
             <div className="mb-8">
-              <ActiveFixturesNav 
-                fixtures={fixtures as unknown as any[]}
+              <ActiveFixturesNav
+                fixtures={fixtures}
                 onFixtureSelect={handleFixtureSelect}
                 onFixtureClose={handleFixtureClose}
                 activeFixtureId={activeFixture?.id}
@@ -717,7 +780,7 @@ const Matches = () => {
           {activeFixture ? (
             <div className="space-y-6">
               <div className="overflow-x-auto px-0 sm:px-2">
-              {getDoubleEliminationComponentWithKey()}
+                {getDoubleEliminationComponentWithKey()}
               </div>
             </div>
           ) : (
