@@ -218,7 +218,7 @@ const Matches = () => {
     if (!activeFixture) return;
 
     // Read latest fixture to avoid overwriting recent opponents updates
-    const latest = MatchesStorage.getFixtureById(activeFixture.id) as RepoFixture | null;
+    const latest = MatchesStorage.getFixtureById(activeFixture.id) as Fixture | null;
     const base = latest || activeFixture;
 
     const updatedFixture = {
@@ -317,7 +317,7 @@ const Matches = () => {
           }
           return p;
         });
-        const updatedFixture = { ...activeFixture, players: updatedPlayers } as RepoFixture;
+        const updatedFixture = { ...activeFixture, players: updatedPlayers } as Fixture;
         upsertFixture(updatedFixture);
       },
       fixtureId: activeFixture.id

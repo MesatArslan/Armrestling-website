@@ -985,14 +985,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
                         </svg>
                       </div>
                       <h2 className="text-3xl font-bold text-green-800 mb-2">🏆 Turnuva Tamamlandı!</h2>
-                      <p className="text-green-700 text-lg mb-2">
-                        {(() => {
-                          const nonByeMatches = matches.filter(m => !m.isBye);
-                          const completedCount = nonByeMatches.filter(m => m.winnerId).length;
-                          const totalMatches = nonByeMatches.length;
-                          return `${completedCount} / ${totalMatches} maç başarıyla tamamlandı.`;
-                        })()}
-                      </p>
+
                       <p className="text-green-700 text-lg mb-6">Sonuçları ve sıralamaları görmek için aşağıdaki butona tıklayın.</p>
                       <button
                         onClick={() => TabManager.createTabChangeHandler(setActiveTab, fixtureId)('rankings')}

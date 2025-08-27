@@ -1214,7 +1214,7 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
                   </div>
                   <h2 className="text-3xl font-bold text-green-800 mb-2">🏆 Turnuva Tamamlandı!</h2>
                   <p className="text-green-700 text-lg mb-6">
-                    Tüm maçlar başarıyla tamamlandı. Sonuçları ve sıralamaları görmek için aşağıdaki butona tıklayın.
+                    Sonuçları ve sıralamaları görmek için aşağıdaki butona tıklayın.
                   </p>
                   <button
                     onClick={() => TabManager.createTabChangeHandler(setActiveTab, fixtureId)('rankings')}

@@ -819,13 +819,7 @@ const DoubleElimination6: React.FC<DoubleEliminationProps> = ({ players, onMatch
                     </svg>
                   </div>
                   <h2 className="text-3xl font-bold text-green-800 mb-2">🏆 Turnuva Tamamlandı!</h2>
-                  <p className="text-green-700 text-lg mb-2">
-                    {(() => {
-                      const completedCount = matches.filter(m => m.winnerId).length;
-                      let totalMatches = matches.length;
-                      return `${completedCount} / ${totalMatches} maç başarıyla tamamlandı.`;
-                    })()}
-                  </p>
+
                   <p className="text-green-700 text-lg mb-6">
                     Sonuçları ve sıralamaları görmek için aşağıdaki butona tıklayın.
                   </p>
