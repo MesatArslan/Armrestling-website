@@ -369,7 +369,8 @@
     "info": "Bilgi",
     "yes": "Evet",
     "no": "Hayır",
-    "ok": "Tamam"
+    "ok": "Tamam",
+    "unknownPlayer": "Bilinmeyen Oyuncu"
   },
   "language": {
     "en": "İngilizce",
@@ -396,6 +397,23 @@
     "pdfSuccessMessage": "PDF başarıyla oluşturuldu!\nDosya boyutu: {{fileSize}}\nToplam sayfa: {{totalPages}}",
     "pdfErrorMessage": "PDF oluşturulurken bir hata oluştu.",
     "previewDescription": "Bu, puanlama PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki \"PDF İndir\" butonunu kullanabilirsiniz."
+  }
+  ,
+  "opponentsModal": {
+    "title": "Maç Geçmişi",
+    "emptyTitle": "Henüz Maç Yok",
+    "emptyDesc": "Bu oyuncu bu turnuvada henüz maç yapmadı.",
+    "totalMatches": "Toplam Maç: {{count}}",
+    "progress": "Turnuva İlerlemesi",
+    "matchNumber": "Maç #{{num}}",
+    "summaryTitle": "Turnuva Özeti",
+    "summaryTotalMatches": "Toplam Maç",
+    "summaryUniqueOpponents": "Benzersiz Rakip",
+    "summaryWins": "Galibiyet",
+    "summaryLosses": "Mağlubiyet",
+    "noOpponentsYet": "Henüz rakip yok",
+    "opponent": "rakip",
+    "opponents": "Rakipler"
   }
 }
 

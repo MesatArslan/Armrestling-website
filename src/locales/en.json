@@ -313,7 +313,8 @@
     "info": "Information",
     "yes": "Yes",
     "no": "No",
-    "ok": "OK"
+    "ok": "OK",
+    "unknownPlayer": "Unknown Player"
   },
   "language": {
     "en": "English",
@@ -354,6 +355,22 @@
     "nextPage": "Next Page",
     "pdfSuccessMessage": "PDF created successfully!\nFile size: {{fileSize}}\nTotal pages: {{totalPages}}\nPlayers per page: {{playersPerPage}}",
     "pdfErrorMessage": "An error occurred while creating the PDF."
+  },
+  "opponentsModal": {
+    "title": "Match History",
+    "emptyTitle": "No Matches Yet",
+    "emptyDesc": "This player hasn't played any matches in this tournament yet.",
+    "totalMatches": "Total Matches: {{count}}",
+    "progress": "Tournament Progress",
+    "matchNumber": "Match #{{num}}",
+    "summaryTitle": "Tournament Summary",
+    "summaryTotalMatches": "Total Matches",
+    "summaryUniqueOpponents": "Unique Opponents",
+    "summaryWins": "Wins",
+    "summaryLosses": "Losses",
+    "noOpponentsYet": "No opponents yet",
+    "opponent": "opponent",
+    "opponents": "Opponents"
   },
   "pdf": {
     "footer": "Arm Wrestling Tournament Management System"

@@ -120,14 +120,6 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   };
 
   // Opponents'ları oyuncu isimlerine çevir
-  const getOpponentsNames = (weightRange: WeightRange, playerId: string) => {
-    const opponents = getPlayerOpponents(weightRange, playerId);
-    return opponents.map((opponent: any) => {
-      const player = players.find(p => p.id === opponent.playerId);
-      const playerName = player ? `${player.name} ${player.surname}` : 'Unknown';
-      return `${playerName} - ${opponent.matchDescription}`;
-    });
-  };
 
   const getFilteredPlayers = (weightRange: WeightRange) => {
     return players.filter(player => {
@@ -374,12 +366,12 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                       }))}
                       onPlayersChange={() => { }} // Read-only for tournaments
                       columns={[
-                        { id: 'name', name: 'Name', visible: true },
-                        { id: 'surname', name: 'Surname', visible: true },
-                        { id: 'weight', name: 'Weight', visible: true },
-                        { id: 'handPreference', name: 'Hand Preference', visible: true },
-                        { id: 'birthday', name: 'Birthday', visible: true },
-                        { id: 'opponents', name: 'Opponents', visible: hasStartedMatches(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!) },
+                        { id: 'name', name: t('players.name'), visible: true },
+                        { id: 'surname', name: t('players.surname'), visible: true },
+                        { id: 'weight', name: t('players.weight'), visible: true },
+                        { id: 'handPreference', name: t('players.handPreference'), visible: true },
+                        { id: 'birthday', name: t('players.birthday'), visible: true },
+                        { id: 'opponents', name: t('opponentsModal.opponents'), visible: hasStartedMatches(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!) },
                       ]}
                       onColumnsChange={() => { }} // Read-only
                       searchTerm=""
@@ -412,12 +404,12 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                           }))}
                           onPlayersChange={() => { }} // Read-only for tournaments
                           columns={[
-                            { id: 'name', name: 'Name', visible: true },
-                            { id: 'surname', name: 'Surname', visible: true },
-                            { id: 'weight', name: 'Weight', visible: true },
-                            { id: 'handPreference', name: 'Hand Preference', visible: true },
-                            { id: 'birthday', name: 'Birthday', visible: true },
-                            { id: 'opponents', name: 'Opponents', visible: hasStartedMatches(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!) },
+                            { id: 'name', name: t('players.name'), visible: true },
+                            { id: 'surname', name: t('players.surname'), visible: true },
+                            { id: 'weight', name: t('players.weight'), visible: true },
+                            { id: 'handPreference', name: t('players.handPreference'), visible: true },
+                            { id: 'birthday', name: t('players.birthday'), visible: true },
+                            { id: 'opponents', name: t('opponentsModal.opponents'), visible: hasStartedMatches(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!) },
                           ]}
                           onColumnsChange={() => { }} // Read-only
                           searchTerm=""

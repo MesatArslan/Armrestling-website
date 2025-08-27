@@ -233,6 +233,10 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     if (columnId === 'handPreference') {
       return;
     }
+    // Do not allow editing Opponents column; it only opens the modal
+    if (columnId === 'opponents') {
+      return;
+    }
     
     setEditingCell({ id: playerId, column: columnId });
     setEditingValue(value ? String(value) : '');
@@ -501,7 +505,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
         if (!opponents || opponents.length === 0) {
           return (
             <span className="text-gray-400 text-sm italic">
-              No opponents yet
+              {t('opponentsModal.noOpponentsYet')}
             </span>
           );
         }
@@ -1126,10 +1130,11 @@ interface OpponentsCellProps {
 }
 
 const OpponentsCell: React.FC<OpponentsCellProps> = ({ opponents, playerName, playerSurname, onOpenModal }) => {
+  const { t } = useTranslation();
   if (opponents.length === 0) {
     return (
       <span className="text-gray-400 text-sm italic">
-        No opponents yet
+        {t('opponentsModal.noOpponentsYet')}
       </span>
     );
   }
@@ -1141,7 +1146,7 @@ const OpponentsCell: React.FC<OpponentsCellProps> = ({ opponents, playerName, pl
         className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors duration-200 group"
       >
         <span className="text-sm font-medium">
-          {opponents.length} {opponents.length === 1 ? 'opponent' : 'opponents'}
+          {opponents.length} {opponents.length === 1 ? t('opponentsModal.opponent') : t('opponentsModal.opponents')}
         </span>
         <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-transform duration-200" />
       </button>
