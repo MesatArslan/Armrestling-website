@@ -275,6 +275,10 @@ export const MatchesStorage = {
       data.lastUpdated = new Date().toISOString();
       try { new MatchesRepo().upsertFixture(fixture as any); } catch {}
       MatchesStorage.saveMatchesData(data);
+      // Notify UI about the update so hooks/pages can refresh
+      try {
+        window.dispatchEvent(new CustomEvent('matches:fixture-updated', { detail: { fixtureId } }));
+      } catch {}
     }
   },
 

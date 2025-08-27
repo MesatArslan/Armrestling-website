@@ -755,6 +755,12 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players, onMa
     if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
       onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
     }
+    // If a completed match is undone, ensure fixture status returns to active
+    try {
+      if (fixtureId) {
+        MatchesStorage.activateFixture(fixtureId);
+      }
+    } catch {}
   };
   const renderMatch = (match: Match) => {
     const player1Name = getPlayerName(match.player1Id);

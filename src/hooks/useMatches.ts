@@ -29,6 +29,24 @@ export function useMatches() {
     }
   }, [matchesRepo]);
 
+  // Listen for external fixture updates (e.g., activate on undo) and refresh state
+  useEffect(() => {
+    const handler = () => {
+      try {
+        const ids = matchesRepo.getIndex();
+        const active = matchesRepo.getActiveFixtureId();
+        const fixtures: Record<string, Fixture> = {};
+        ids.forEach((id) => {
+          const f = matchesRepo.getFixture(id);
+          if (f) fixtures[id] = f as Fixture;
+        });
+        setState(prev => ({ ...prev, fixtureIds: ids, fixtures, activeFixtureId: active }));
+      } catch {}
+    };
+    window.addEventListener('matches:fixture-updated', handler as EventListener);
+    return () => window.removeEventListener('matches:fixture-updated', handler as EventListener);
+  }, [matchesRepo]);
+
   const upsertFixture = useCallback((fixture: Fixture) => {
     setState(prev => ({
       ...prev,

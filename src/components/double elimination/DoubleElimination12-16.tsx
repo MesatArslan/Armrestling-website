@@ -803,6 +803,12 @@ const DoubleElimination12_16: React.FC<DoubleEliminationProps> = ({ players, onM
     if (onRemoveOpponents && undoneMatchRef && !undoneMatchRef.isBye) {
       onRemoveOpponents(undoneMatchRef.player1Id, undoneMatchRef.player2Id, undoneMatchRef.description || 'Unknown Match');
     }
+    // Reactivate fixture if an undo happens
+    try {
+      if (fixtureId) {
+        MatchesStorage.activateFixture(fixtureId);
+      }
+    } catch {}
   };
 
   // Sıralama Sonuçları (Maç Sonucu) - 9-11'deki gibi
