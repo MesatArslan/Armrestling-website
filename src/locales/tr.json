@@ -415,5 +415,14 @@
     "opponent": "rakip",
     "opponents": "Rakipler"
   }
+  ,
+  "matchCounter": {
+    "title": "Maç Sayısı",
+    "total": "Toplam Maç",
+    "includesGrandFinal": "Grand Final Dahil",
+    "completed": "Tamamlanan",
+    "remaining": "Kalan",
+    "progress": "İlerleme"
+  }
 }
 

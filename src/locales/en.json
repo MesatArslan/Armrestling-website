@@ -397,5 +397,14 @@
     "pdfErrorMessage": "An error occurred while creating the PDF.",
     "previewDescription": "This is a preview of how your scoring PDF will look. You can use the \"Download PDF\" button above to download the PDF."
   }
+  ,
+  "matchCounter": {
+    "title": "Match Count",
+    "total": "Total Matches",
+    "includesGrandFinal": "Includes Grand Final",
+    "completed": "Completed",
+    "remaining": "Remaining",
+    "progress": "Progress"
+  }
 }
 
