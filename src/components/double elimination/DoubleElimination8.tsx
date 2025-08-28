@@ -168,10 +168,18 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
           m.player1Id === m.winnerId ? m.player2Id : m.player1Id
         );
         
+        // LB1-1 için rematch önleme
+        const lb1_1Players = [losers[0], losers[1]];
+        const lb1_1Pairs = pairAvoidingRematch(lb1_1Players);
+        
+        // LB1-2 için rematch önleme
+        const lb1_2Players = [losers[2], losers[3]];
+        const lb1_2Pairs = pairAvoidingRematch(lb1_2Players);
+        
         newMatches.push({
           id: 'lb1-1',
-          player1Id: losers[0],
-          player2Id: losers[1],
+          player1Id: lb1_1Pairs[0][0],
+          player2Id: lb1_1Pairs[0][1],
           bracket: 'loser',
           round: 1,
           matchNumber: 1,
@@ -181,8 +189,8 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
         
         newMatches.push({
           id: 'lb1-2',
-          player1Id: losers[2],
-          player2Id: losers[3],
+          player1Id: lb1_2Pairs[0][0],
+          player2Id: lb1_2Pairs[0][1],
           bracket: 'loser',
           round: 1,
           matchNumber: 2,
@@ -231,34 +239,14 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
           m.player1Id === m.winnerId ? m.player2Id : m.player1Id
         );
         
-        // Pair players who haven't played each other in WB1
-        const wb1Matches = matchList.filter(m => m.id.startsWith('wb1-'));
-        const wb1Pairs = wb1Matches.map(m => [m.player1Id, m.player2Id]);
-        
-        // Find players who haven't played each other
-        const findUnplayedPair = (players: string[], pairs: string[][]) => {
-          for (let i = 0; i < players.length; i++) {
-            for (let j = i + 1; j < players.length; j++) {
-              const pair = [players[i], players[j]].sort();
-              const hasPlayed = pairs.some(p => 
-                p.sort().join(',') === pair.join(',')
-              );
-              if (!hasPlayed) {
-                return [players[i], players[j]];
-              }
-            }
-          }
-          return [players[0], players[1]]; // Fallback
-        };
-        
-        const lb2Pair1 = findUnplayedPair([...lb1Winners, ...wb2Losers], wb1Pairs);
-        const lb2Pair2 = [lb1Winners[0], lb1Winners[1]].filter(p => !lb2Pair1.includes(p));
-        const lb2Pair2Remaining = wb2Losers.filter(p => !lb2Pair1.includes(p));
+        // LB2 için tüm oyuncuları birleştir ve rematch önleme uygula
+        const lb2Players = [...lb1Winners, ...wb2Losers];
+        const lb2Pairs = pairAvoidingRematch(lb2Players);
         
         newMatches.push({
           id: 'lb2-1',
-          player1Id: lb2Pair1[0],
-          player2Id: lb2Pair1[1],
+          player1Id: lb2Pairs[0][0],
+          player2Id: lb2Pairs[0][1],
           bracket: 'loser',
           round: 2,
           matchNumber: 1,
@@ -268,8 +256,8 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
         
         newMatches.push({
           id: 'lb2-2',
-          player1Id: lb2Pair2[0] || lb2Pair2Remaining[0],
-          player2Id: lb2Pair2[1] || lb2Pair2Remaining[1],
+          player1Id: lb2Pairs[1][0],
+          player2Id: lb2Pairs[1][1],
           bracket: 'loser',
           round: 2,
           matchNumber: 2,
@@ -302,10 +290,13 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
         const lb2Matches = matchList.filter(m => m.id.startsWith('lb2-'));
         const lb2Winners = lb2Matches.map(m => m.winnerId!);
         
+        // LB3 için rematch önleme
+        const lb3Pairs = pairAvoidingRematch(lb2Winners);
+        
         newMatches.push({
           id: 'lb3',
-          player1Id: lb2Winners[0],
-          player2Id: lb2Winners[1],
+          player1Id: lb3Pairs[0][0],
+          player2Id: lb3Pairs[0][1],
           bracket: 'loser',
           round: 3,
           matchNumber: 1,
@@ -603,6 +594,37 @@ const DoubleElimination8: React.FC<DoubleEliminationProps> = ({ players, onMatch
     if (match.id === 'final') return 'Final';
     if (match.id === 'grandfinal') return 'GrandFinal';
     return 'WB1';
+  };
+
+  // --- Rematch Avoidance Helpers ---
+  const hasPlayedBefore = (playerAId: string, playerBId: string): boolean => {
+    if (!playerAId || !playerBId) return false;
+    const playerA = players.find(p => p.id === playerAId);
+    if (!playerA || !playerA.opponents || playerA.opponents.length === 0) return false;
+    return playerA.opponents.some(o => o.playerId === playerBId);
+  };
+
+  const pairAvoidingRematch = (playerIds: string[]): Array<[string, string]> => {
+    const ids = [...playerIds];
+    const pairs: Array<[string, string]> = [];
+    for (let i = 0; i < ids.length; i += 2) {
+      if (i + 1 >= ids.length) break;
+      let first = ids[i];
+      let second = ids[i + 1];
+      if (hasPlayedBefore(first, second)) {
+        for (let j = i + 2; j < ids.length; j++) {
+          const candidate = ids[j];
+          if (!hasPlayedBefore(first, candidate)) {
+            ids[i + 1] = candidate;
+            ids[j] = second;
+            second = ids[i + 1];
+            break;
+          }
+        }
+      }
+      pairs.push([first, second]);
+    }
+    return pairs;
   };
 
   const undoLastMatch = () => {

@@ -216,6 +216,37 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
     return 'WB1';
   }
 
+  // --- Rematch Avoidance Helpers ---
+  function hasPlayedBefore(playerAId: string, playerBId: string): boolean {
+    if (!playerAId || !playerBId) return false;
+    const playerA = players.find(p => p.id === playerAId);
+    if (!playerA || !playerA.opponents || playerA.opponents.length === 0) return false;
+    return playerA.opponents.some(o => o.playerId === playerBId);
+  }
+
+  function pairAvoidingRematch(playerIds: string[]): Array<[string, string]> {
+    const ids = [...playerIds];
+    const pairs: Array<[string, string]> = [];
+    for (let i = 0; i < ids.length; i += 2) {
+      if (i + 1 >= ids.length) break;
+      let first = ids[i];
+      let second = ids[i + 1];
+      if (hasPlayedBefore(first, second)) {
+        for (let j = i + 2; j < ids.length; j++) {
+          const candidate = ids[j];
+          if (!hasPlayedBefore(first, candidate)) {
+            ids[i + 1] = candidate;
+            ids[j] = second;
+            second = ids[i + 1];
+            break;
+          }
+        }
+      }
+      pairs.push([first, second]);
+    }
+    return pairs;
+  }
+
   // --- Next Round Creation ---
   React.useEffect(() => {
     if (matches.length === 0) return;
@@ -315,11 +346,19 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
           const wb2_1Loser = wb2_1.player1Id === wb2_1.winnerId ? wb2_1.player2Id : wb2_1.player1Id;
           const wb2_2Loser = wb2_2.player1Id === wb2_2.winnerId ? wb2_2.player2Id : wb2_2.player1Id;
           
+          // LB2-1 için rematch önleme
+          const lb2_1Players = [lb1_1.winnerId, lb1_bye.winnerId];
+          const lb2_1Pairs = pairAvoidingRematch(lb2_1Players);
+          
+          // LB2-2 için rematch önleme
+          const lb2_2Players = [wb2_1Loser, wb2_2Loser];
+          const lb2_2Pairs = pairAvoidingRematch(lb2_2Players);
+          
           return [
             {
               id: 'lb2-1',
-              player1Id: lb1_1.winnerId,
-              player2Id: lb1_bye.winnerId, // LB1'den bye geçen kişi
+              player1Id: lb2_1Pairs[0][0],
+              player2Id: lb2_1Pairs[0][1],
               bracket: 'loser',
               round: 2,
               matchNumber: 1,
@@ -328,8 +367,8 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
             },
             {
               id: 'lb2-2',
-              player1Id: wb2_1Loser,
-              player2Id: wb2_2Loser,
+              player1Id: lb2_2Pairs[0][0],
+              player2Id: lb2_2Pairs[0][1],
               bracket: 'loser',
               round: 2,
               matchNumber: 2,
@@ -852,7 +891,6 @@ const DoubleElimination7: React.FC<DoubleEliminationProps> = ({ players, onMatch
   };
 
   const activeMatches = matches.filter(m => !m.winnerId);
-  const completedMatches = matches.filter(m => m.winnerId);
 
   if (players.length !== 7) {
     return (

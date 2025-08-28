@@ -187,6 +187,37 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
     return 'WB1';
   }
 
+  // --- Rematch Avoidance Helpers ---
+  function hasPlayedBefore(playerAId: string, playerBId: string): boolean {
+    if (!playerAId || !playerBId) return false;
+    const playerA = players.find(p => p.id === playerAId);
+    if (!playerA || !playerA.opponents || playerA.opponents.length === 0) return false;
+    return playerA.opponents.some(o => o.playerId === playerBId);
+  }
+
+  function pairAvoidingRematch(playerIds: string[]): Array<[string, string]> {
+    const ids = [...playerIds];
+    const pairs: Array<[string, string]> = [];
+    for (let i = 0; i < ids.length; i += 2) {
+      if (i + 1 >= ids.length) break;
+      let first = ids[i];
+      let second = ids[i + 1];
+      if (hasPlayedBefore(first, second)) {
+        for (let j = i + 2; j < ids.length; j++) {
+          const candidate = ids[j];
+          if (!hasPlayedBefore(first, candidate)) {
+            ids[i + 1] = candidate;
+            ids[j] = second;
+            second = ids[i + 1];
+            break;
+          }
+        }
+      }
+      pairs.push([first, second]);
+    }
+    return pairs;
+  }
+
   function createNextRoundWithMatches(matchList: Match[], nextRoundKey: RoundKey): Match[] {
     switch (nextRoundKey) {
       case 'LB1': {
@@ -260,40 +291,38 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         const lb2Players = [...lb1Winners, ...wb2Losers];
         if (lb2Players.length !== 256) return [];
         const lb2Matches: Match[] = [];
-        for (let i = 0; i < lb2Players.length; i += 2) {
-          if (i + 1 < lb2Players.length) {
-            lb2Matches.push({
-              id: `lb2_${Math.floor(i/2) + 1}`,
-              player1Id: lb2Players[i],
-              player2Id: lb2Players[i + 1],
-              bracket: 'loser',
-              round: 2,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB2', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb2Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb2Matches.push({
+            id: `lb2_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 2,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB2', idx + 1)
+          });
+        });
         return lb2Matches;
       }
       case 'LB3': {
         const lb2Winners = matchList.filter(m => getMatchRoundKey(m) === 'LB2' && m.winnerId && !m.isBye).map(m => m.winnerId!);
         if (lb2Winners.length !== 128) return [];
         const lb3Matches: Match[] = [];
-        for (let i = 0; i < lb2Winners.length; i += 2) {
-          if (i + 1 < lb2Winners.length) {
-            lb3Matches.push({
-              id: `lb3_${Math.floor(i/2) + 1}`,
-              player1Id: lb2Winners[i],
-              player2Id: lb2Winners[i + 1],
-              bracket: 'loser',
-              round: 3,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB3', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb2Winners);
+        pairs.forEach(([p1, p2], idx) => {
+          lb3Matches.push({
+            id: `lb3_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 3,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB3', idx + 1)
+          });
+        });
         return lb3Matches;
       }
       case 'WB3': {
@@ -325,40 +354,38 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         const lb4Players = [...lb3Winners, ...wb3Losers];
         if (lb4Players.length !== 128) return [];
         const lb4Matches: Match[] = [];
-        for (let i = 0; i < lb4Players.length; i += 2) {
-          if (i + 1 < lb4Players.length) {
-            lb4Matches.push({
-              id: `lb4_${Math.floor(i/2) + 1}`,
-              player1Id: lb4Players[i],
-              player2Id: lb4Players[i + 1],
-              bracket: 'loser',
-              round: 4,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB4', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb4Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb4Matches.push({
+            id: `lb4_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 4,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB4', idx + 1)
+          });
+        });
         return lb4Matches;
       }
       case 'LB5': {
         const lb4Winners = matchList.filter(m => getMatchRoundKey(m) === 'LB4' && m.winnerId && !m.isBye).map(m => m.winnerId!);
         if (lb4Winners.length !== 64) return [];
         const lb5Matches: Match[] = [];
-        for (let i = 0; i < lb4Winners.length; i += 2) {
-          if (i + 1 < lb4Winners.length) {
-            lb5Matches.push({
-              id: `lb5_${Math.floor(i/2) + 1}`,
-              player1Id: lb4Winners[i],
-              player2Id: lb4Winners[i + 1],
-              bracket: 'loser',
-              round: 5,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB5', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb4Winners);
+        pairs.forEach(([p1, p2], idx) => {
+          lb5Matches.push({
+            id: `lb5_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 5,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB5', idx + 1)
+          });
+        });
         return lb5Matches;
       }
       case 'WB4': {
@@ -390,40 +417,38 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         const lb6Players = [...lb5Winners, ...wb4Losers];
         if (lb6Players.length !== 64) return [];
         const lb6Matches: Match[] = [];
-        for (let i = 0; i < lb6Players.length; i += 2) {
-          if (i + 1 < lb6Players.length) {
-            lb6Matches.push({
-              id: `lb6_${Math.floor(i/2) + 1}`,
-              player1Id: lb6Players[i],
-              player2Id: lb6Players[i + 1],
-              bracket: 'loser',
-              round: 6,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB6', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb6Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb6Matches.push({
+            id: `lb6_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 6,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB6', idx + 1)
+          });
+        });
         return lb6Matches;
       }
       case 'LB7': {
         const lb6Winners = matchList.filter(m => getMatchRoundKey(m) === 'LB6' && m.winnerId && !m.isBye).map(m => m.winnerId!);
         if (lb6Winners.length !== 32) return [];
         const lb7Matches: Match[] = [];
-        for (let i = 0; i < lb6Winners.length; i += 2) {
-          if (i + 1 < lb6Winners.length) {
-            lb7Matches.push({
-              id: `lb7_${Math.floor(i/2) + 1}`,
-              player1Id: lb6Winners[i],
-              player2Id: lb6Winners[i + 1],
-              bracket: 'loser',
-              round: 7,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB7', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb6Winners);
+        pairs.forEach(([p1, p2], idx) => {
+          lb7Matches.push({
+            id: `lb7_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 7,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB7', idx + 1)
+          });
+        });
         return lb7Matches;
       }
       case 'WB5': {
@@ -455,40 +480,38 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         const lb8Players = [...lb7Winners, ...wb5Losers];
         if (lb8Players.length !== 32) return [];
         const lb8Matches: Match[] = [];
-        for (let i = 0; i < lb8Players.length; i += 2) {
-          if (i + 1 < lb8Players.length) {
-            lb8Matches.push({
-              id: `lb8_${Math.floor(i/2) + 1}`,
-              player1Id: lb8Players[i],
-              player2Id: lb8Players[i + 1],
-              bracket: 'loser',
-              round: 8,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB8', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb8Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb8Matches.push({
+            id: `lb8_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 8,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB8', idx + 1)
+          });
+        });
         return lb8Matches;
       }
       case 'LB9': {
         const lb8Winners = matchList.filter(m => getMatchRoundKey(m) === 'LB8' && m.winnerId && !m.isBye).map(m => m.winnerId!);
         if (lb8Winners.length !== 16) return [];
         const lb9Matches: Match[] = [];
-        for (let i = 0; i < lb8Winners.length; i += 2) {
-          if (i + 1 < lb8Winners.length) {
-            lb9Matches.push({
-              id: `lb9_${Math.floor(i/2) + 1}`,
-              player1Id: lb8Winners[i],
-              player2Id: lb8Winners[i + 1],
-              bracket: 'loser',
-              round: 9,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB9', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb8Winners);
+        pairs.forEach(([p1, p2], idx) => {
+          lb9Matches.push({
+            id: `lb9_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 9,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB9', idx + 1)
+          });
+        });
         return lb9Matches;
       }
       case 'WB6': {
@@ -520,40 +543,38 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         const lb10Players = [...lb9Winners, ...wb6Losers];
         if (lb10Players.length !== 16) return [];
         const lb10Matches: Match[] = [];
-        for (let i = 0; i < lb10Players.length; i += 2) {
-          if (i + 1 < lb10Players.length) {
-            lb10Matches.push({
-              id: `lb10_${Math.floor(i/2) + 1}`,
-              player1Id: lb10Players[i],
-              player2Id: lb10Players[i + 1],
-              bracket: 'loser',
-              round: 10,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB10', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb10Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb10Matches.push({
+            id: `lb10_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 10,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB10', idx + 1)
+          });
+        });
         return lb10Matches;
       }
       case 'LB11': {
         const lb10Winners = matchList.filter(m => getMatchRoundKey(m) === 'LB10' && m.winnerId && !m.isBye).map(m => m.winnerId!);
         if (lb10Winners.length !== 8) return [];
         const lb11Matches: Match[] = [];
-        for (let i = 0; i < lb10Winners.length; i += 2) {
-          if (i + 1 < lb10Winners.length) {
-            lb11Matches.push({
-              id: `lb11_${Math.floor(i/2) + 1}`,
-              player1Id: lb10Winners[i],
-              player2Id: lb10Winners[i + 1],
-              bracket: 'loser',
-              round: 11,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB11', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb10Winners);
+        pairs.forEach(([p1, p2], idx) => {
+          lb11Matches.push({
+            id: `lb11_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 11,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB11', idx + 1)
+          });
+        });
         return lb11Matches;
       }
       case 'WB7': {
@@ -585,40 +606,38 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         const lb12Players = [...lb11Winners, ...wb7Losers];
         if (lb12Players.length !== 8) return [];
         const lb12Matches: Match[] = [];
-        for (let i = 0; i < lb12Players.length; i += 2) {
-          if (i + 1 < lb12Players.length) {
-            lb12Matches.push({
-              id: `lb12_${Math.floor(i/2) + 1}`,
-              player1Id: lb12Players[i],
-              player2Id: lb12Players[i + 1],
-              bracket: 'loser',
-              round: 12,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB12', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb12Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb12Matches.push({
+            id: `lb12_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 12,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB12', idx + 1)
+          });
+        });
         return lb12Matches;
       }
       case 'LB13': {
         const lb12Winners = matchList.filter(m => getMatchRoundKey(m) === 'LB12' && m.winnerId && !m.isBye).map(m => m.winnerId!);
         if (lb12Winners.length !== 4) return [];
         const lb13Matches: Match[] = [];
-        for (let i = 0; i < lb12Winners.length; i += 2) {
-          if (i + 1 < lb12Winners.length) {
-            lb13Matches.push({
-              id: `lb13_${Math.floor(i/2) + 1}`,
-              player1Id: lb12Winners[i],
-              player2Id: lb12Winners[i + 1],
-              bracket: 'loser',
-              round: 13,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB13', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb12Winners);
+        pairs.forEach(([p1, p2], idx) => {
+          lb13Matches.push({
+            id: `lb13_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 13,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB13', idx + 1)
+          });
+        });
         return lb13Matches;
       }
       case 'WB8': {
@@ -650,20 +669,19 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         const lb14Players = [...lb13Winners, ...wb8Losers];
         if (lb14Players.length !== 4) return [];
         const lb14Matches: Match[] = [];
-        for (let i = 0; i < lb14Players.length; i += 2) {
-          if (i + 1 < lb14Players.length) {
-            lb14Matches.push({
-              id: `lb14_${Math.floor(i/2) + 1}`,
-              player1Id: lb14Players[i],
-              player2Id: lb14Players[i + 1],
-              bracket: 'loser',
-              round: 14,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB14', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb14Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb14Matches.push({
+            id: `lb14_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 14,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB14', idx + 1)
+          });
+        });
         return lb14Matches;
       }
       case 'Semifinals': {
@@ -690,20 +708,19 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         const lb14Winners = matchList.filter(m => getMatchRoundKey(m) === 'LB14' && m.winnerId && !m.isBye).map(m => m.winnerId!);
         if (lb14Winners.length !== 2) return [];
         const lb15Matches: Match[] = [];
-        for (let i = 0; i < lb14Winners.length; i += 2) {
-          if (i + 1 < lb14Winners.length) {
-            lb15Matches.push({
-              id: `lb15_${Math.floor(i/2) + 1}`,
-              player1Id: lb14Winners[i],
-              player2Id: lb14Winners[i + 1],
-              bracket: 'loser',
-              round: 15,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB15', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb14Winners);
+        pairs.forEach(([p1, p2], idx) => {
+          lb15Matches.push({
+            id: `lb15_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 15,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB15', idx + 1)
+          });
+        });
         return lb15Matches;
       }
       case '7th8th': {

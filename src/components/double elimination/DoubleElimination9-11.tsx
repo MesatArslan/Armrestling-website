@@ -187,6 +187,37 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players, onMa
     return 'WB1';
   }
 
+  // --- Rematch Avoidance Helpers ---
+  function hasPlayedBefore(playerAId: string, playerBId: string): boolean {
+    if (!playerAId || !playerBId) return false;
+    const playerA = players.find(p => p.id === playerAId);
+    if (!playerA || !playerA.opponents || playerA.opponents.length === 0) return false;
+    return playerA.opponents.some(o => o.playerId === playerBId);
+  }
+
+  function pairAvoidingRematch(playerIds: string[]): Array<[string, string]> {
+    const ids = [...playerIds];
+    const pairs: Array<[string, string]> = [];
+    for (let i = 0; i < ids.length; i += 2) {
+      if (i + 1 >= ids.length) break;
+      let first = ids[i];
+      let second = ids[i + 1];
+      if (hasPlayedBefore(first, second)) {
+        for (let j = i + 2; j < ids.length; j++) {
+          const candidate = ids[j];
+          if (!hasPlayedBefore(first, candidate)) {
+            ids[i + 1] = candidate;
+            ids[j] = second;
+            second = ids[i + 1];
+            break;
+          }
+        }
+      }
+      pairs.push([first, second]);
+    }
+    return pairs;
+  }
+
   // --- Next Round Creation ---
   React.useEffect(() => {
     if (matches.length === 0) return;
@@ -285,20 +316,19 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players, onMa
         const lb2Players = [...lb1Winners, ...lb1Byes];
         const lb2Matches: Match[] = [];
         
-        for (let i = 0; i < lb2Players.length; i += 2) {
-          if (i + 1 < lb2Players.length) {
-            lb2Matches.push({
-              id: `lb2_${Math.floor(i/2) + 1}`,
-              player1Id: lb2Players[i],
-              player2Id: lb2Players[i + 1],
-              bracket: 'loser',
-              round: 2,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB2', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb2Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb2Matches.push({
+            id: `lb2_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 2,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB2', idx + 1)
+          });
+        });
         return lb2Matches;
       }
       
@@ -331,20 +361,19 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players, onMa
         const lb3Players = [...wb3Losers, ...lb2Winners];
         const lb3Matches: Match[] = [];
         
-        for (let i = 0; i < lb3Players.length; i += 2) {
-          if (i + 1 < lb3Players.length) {
-            lb3Matches.push({
-              id: `lb3_${Math.floor(i/2) + 1}`,
-              player1Id: lb3Players[i],
-              player2Id: lb3Players[i + 1],
-              bracket: 'loser',
-              round: 3,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB3', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb3Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb3Matches.push({
+            id: `lb3_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 3,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB3', idx + 1)
+          });
+        });
         return lb3Matches;
       }
       

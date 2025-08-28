@@ -196,6 +196,37 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
     return 'WB_R1';
   }
 
+  // --- Rematch Avoidance Helpers ---
+  function hasPlayedBefore(playerAId: string, playerBId: string): boolean {
+    if (!playerAId || !playerBId) return false;
+    const playerA = players.find(p => p.id === playerAId);
+    if (!playerA || !playerA.opponents || playerA.opponents.length === 0) return false;
+    return playerA.opponents.some(o => o.playerId === playerBId);
+  }
+
+  function pairAvoidingRematch(playerIds: string[]): Array<[string, string]> {
+    const ids = [...playerIds];
+    const pairs: Array<[string, string]> = [];
+    for (let i = 0; i < ids.length; i += 2) {
+      if (i + 1 >= ids.length) break;
+      let first = ids[i];
+      let second = ids[i + 1];
+      if (hasPlayedBefore(first, second)) {
+        for (let j = i + 2; j < ids.length; j++) {
+          const candidate = ids[j];
+          if (!hasPlayedBefore(first, candidate)) {
+            ids[i + 1] = candidate;
+            ids[j] = second;
+            second = ids[i + 1];
+            break;
+          }
+        }
+      }
+      pairs.push([first, second]);
+    }
+    return pairs;
+  }
+
   // --- Next Round Creation ---
   React.useEffect(() => {
     if (matches.length === 0) return;
@@ -590,20 +621,19 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
         const lb1Byes = lb1Matches.filter(m => m.isBye).map(m => m.player1Id);
         const lb2Players = [...lb1Winners, ...lb1Byes];
         const lb2Matches: Match[] = [];
-        for (let i = 0; i < lb2Players.length; i += 2) {
-          if (i + 1 < lb2Players.length) {
-            lb2Matches.push({
-              id: `lb_r2_${Math.floor(i/2) + 1}`,
-              player1Id: lb2Players[i],
-              player2Id: lb2Players[i + 1],
-              bracket: 'loser',
-              round: 2,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB2', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb2Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb2Matches.push({
+            id: `lb_r2_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 2,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB2', idx + 1)
+          });
+        });
         return lb2Matches;
       }
       case 'WB_R3': {
@@ -635,20 +665,19 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
         const wb3Losers = wb3Matches.filter(m => m.winnerId).map(m => m.player1Id === m.winnerId ? m.player2Id : m.player1Id);
         const lb3Players = [...lb2Winners, ...wb3Losers];
         const lb3Matches: Match[] = [];
-        for (let i = 0; i < lb3Players.length; i += 2) {
-          if (i + 1 < lb3Players.length) {
-            lb3Matches.push({
-              id: `lb_r3_${Math.floor(i/2) + 1}`,
-              player1Id: lb3Players[i],
-              player2Id: lb3Players[i + 1],
-              bracket: 'loser',
-              round: 3,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB3', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb3Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb3Matches.push({
+            id: `lb_r3_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 3,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB3', idx + 1)
+          });
+        });
         return lb3Matches;
       }
       case 'LB_R4': {
@@ -656,20 +685,19 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
         const lb3Matches = matchList.filter(m => getMatchRoundKey(m) === 'LB_R3');
         const lb3Winners = lb3Matches.filter(m => m.winnerId).map(m => m.winnerId!);
         const lb4Matches: Match[] = [];
-        for (let i = 0; i < lb3Winners.length; i += 2) {
-          if (i + 1 < lb3Winners.length) {
-            lb4Matches.push({
-              id: `lb_r4_${Math.floor(i/2) + 1}`,
-              player1Id: lb3Winners[i],
-              player2Id: lb3Winners[i + 1],
-              bracket: 'loser',
-              round: 4,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB4', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb3Winners);
+        pairs.forEach(([p1, p2], idx) => {
+          lb4Matches.push({
+            id: `lb_r4_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 4,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB4', idx + 1)
+          });
+        });
         return lb4Matches;
       }
       case 'WB_R4': {
@@ -701,20 +729,19 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
         const lb4Winners = lb4Matches.filter(m => m.winnerId).map(m => m.winnerId!);
         const lb5Players = [...wb4Losers, ...lb4Winners];
         const lb5Matches: Match[] = [];
-        for (let i = 0; i < lb5Players.length; i += 2) {
-          if (i + 1 < lb5Players.length) {
-            lb5Matches.push({
-              id: `lb_r5_${Math.floor(i/2) + 1}`,
-              player1Id: lb5Players[i],
-              player2Id: lb5Players[i + 1],
-              bracket: 'loser',
-              round: 5,
-              matchNumber: Math.floor(i/2) + 1,
-              isBye: false,
-              description: RoundDescriptionUtils.createMatchDescription('LB5', Math.floor(i/2) + 1)
-            });
-          }
-        }
+        const pairs = pairAvoidingRematch(lb5Players);
+        pairs.forEach(([p1, p2], idx) => {
+          lb5Matches.push({
+            id: `lb_r5_${idx + 1}`,
+            player1Id: p1,
+            player2Id: p2,
+            bracket: 'loser',
+            round: 5,
+            matchNumber: idx + 1,
+            isBye: false,
+            description: RoundDescriptionUtils.createMatchDescription('LB5', idx + 1)
+          });
+        });
         return lb5Matches;
       }
       case 'YARI_FINAL': {
@@ -1053,30 +1080,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
       {activeTab === 'rankings' && (
         <RankingsTable rankings={rankings} players={players} getPlayerName={getPlayerName} />
       )}
-      {/* Turnuva ilerlemesi göstergesi */}
-      {!tournamentComplete && activeTab === 'active' && (
-        <div className="mt-6 text-center">
-          <div className="text-sm text-gray-600">
-            {(() => {
-              const nonByeMatches = matches.filter(m => !m.isBye);
-              const completedCount = nonByeMatches.filter(m => m.winnerId).length;
-              const totalMatches = nonByeMatches.length;
-              return `${completedCount} / ${totalMatches} maç tamamlandı`;
-            })()}
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-2 max-w-xs mx-auto">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-              style={{ width: `${(() => {
-                const nonByeMatches = matches.filter(m => !m.isBye);
-                const completedCount = nonByeMatches.filter(m => m.winnerId).length;
-                const totalMatches = nonByeMatches.length;
-                return totalMatches > 0 ? (completedCount / totalMatches) * 100 : 0;
-              })()}%` }}
-            ></div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

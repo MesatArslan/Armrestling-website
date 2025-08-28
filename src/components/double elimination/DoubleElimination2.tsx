@@ -456,14 +456,7 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
       
-      {/* Match Counter */}
-      <div className="max-w-4xl mx-auto mb-6">
-        <MatchCounter 
-          playerCount={players.length}
-          completedMatches={matches.filter(m => m.winnerId).length}
-          hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
-        />
-      </div>
+
       
       {activeTab === 'active' && (
         <div className="flex justify-center gap-4 mb-4">
@@ -531,11 +524,20 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
         </div>
       )}
       {activeTab === 'completed' && (
-        <CompletedMatchesTable
-          matches={completedMatches}
-          players={players}
-          getPlayerName={getPlayerName}
-        />
+        <>
+          <div className="max-w-4xl mx-auto mb-6">
+            <MatchCounter 
+              playerCount={players.length}
+              completedMatches={matches.filter(m => m.winnerId).length}
+              hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
+            />
+          </div>
+          <CompletedMatchesTable
+            matches={completedMatches}
+            players={players}
+            getPlayerName={getPlayerName}
+          />
+        </>
       )}
       {activeTab === 'rankings' && (
         <RankingsTable
