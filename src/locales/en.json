@@ -229,7 +229,7 @@
     "startTournamentMessage": "Start a tournament from the Tournaments page to create a fixture",
     "goToTournaments": "Go to Tournaments",
     "deleteFixture": "Delete Fixture",
-    "deleteFixtureMessage": "Are you sure you want to delete \"{fixtureName}\"? This action cannot be undone.",
+    "deleteFixtureMessage": "Are you sure you want to delete \"{{fixtureName}}\"? This action cannot be undone.",
     "cancel": "Cancel",
     "totalFixtures": "Total Fixtures",
     "fixture": "fixture",

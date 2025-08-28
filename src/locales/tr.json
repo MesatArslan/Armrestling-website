@@ -285,7 +285,7 @@
     "startTournamentMessage": "Fikstür oluşturmak için Turnuvalar sayfasından bir turnuva başlatın",
     "goToTournaments": "Turnuvalara Git",
     "deleteFixture": "Fikstürü Sil",
-    "deleteFixtureMessage": "\"{fixtureName}\" fikstürünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "deleteFixtureMessage": "\"{{fixtureName}}\" fikstürünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
     "cancel": "İptal",
     "totalFixtures": "Toplam Fikstür",
     "fixture": "fikstür",
