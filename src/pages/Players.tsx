@@ -555,7 +555,7 @@ const Players = () => {
           <div className="backdrop-blur-md bg-white/90 p-6 rounded-2xl w-full max-w-lg mx-4 shadow-2xl border border-gray-200">
             <div className="mb-4">
               <h2 className="text-2xl font-bold text-gray-900">{t('players.manageColumns')}</h2>
-              <p className="mt-1 text-sm text-gray-500">Görünürlüğünü yönetmek istediğin özel sütunları aç/kapat. Satıra tıklayarak da görünürlüğü değiştirebilirsin.</p>
+              <p className="mt-1 text-sm text-gray-500">{t('players.manageColumnsDescription')}</p>
             </div>
             <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
               {columns
@@ -572,7 +572,6 @@ const Players = () => {
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="font-medium text-gray-900 truncate">{col.name}</span>
-                      <span className="text-xs text-gray-400 shrink-0">({col.id})</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <label
