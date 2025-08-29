@@ -331,6 +331,8 @@ const Matches = () => {
     setIsImporting(true);
     setImportMessage(null);
     
+    let addedPlayersCount = 0;
+    
     try {
       console.log('İçe aktarılan dosya bilgileri:', {
         name: importFile.name,
@@ -458,6 +460,42 @@ const Matches = () => {
         lastUpdated: new Date().toISOString()
       } as Fixture;
 
+      // Check and add missing players to Players page
+      try {
+        const existingPlayers = PlayersStorage.getPlayers();
+        const existingPlayerIds = new Set(existingPlayers.map(p => p.id));
+        const playersToAdd: any[] = [];
+        
+        processedPlayers.forEach((fixturePlayer: any) => {
+          if (!existingPlayerIds.has(fixturePlayer.id)) {
+            // Player doesn't exist in Players page, add them
+            const newPlayer = {
+              id: fixturePlayer.id,
+              name: fixturePlayer.name,
+              surname: fixturePlayer.surname,
+              weight: fixturePlayer.weight,
+              gender: fixturePlayer.gender,
+              handPreference: fixturePlayer.handPreference,
+              birthday: fixturePlayer.birthday,
+              city: fixturePlayer.city
+            };
+            playersToAdd.push(newPlayer);
+          }
+        });
+        
+        if (playersToAdd.length > 0) {
+          const updatedPlayers = [...existingPlayers, ...playersToAdd];
+          PlayersStorage.savePlayers(updatedPlayers);
+          console.log(`${playersToAdd.length} yeni oyuncu Players sayfasına eklendi:`, playersToAdd.map(p => `${p.name} ${p.surname}`));
+          
+          addedPlayersCount = playersToAdd.length;
+        } else {
+          console.log('Tüm oyuncular zaten Players sayfasında mevcut');
+        }
+      } catch (playerError) {
+        console.warn('Oyuncular eklenirken hata:', playerError);
+      }
+
       MatchesStorage.addFixture(fixtureToImport as any);
 
       // Import double elimination data if available
@@ -493,9 +531,16 @@ const Matches = () => {
         console.log('Double elimination verisi bulunamadı');
       }
 
+      // Create success message with player info
+      let successMessage = `Fixtür başarıyla içe aktarıldı: ${importData.fixture.name}`;
+      
+      if (addedPlayersCount > 0) {
+        successMessage += ` (${addedPlayersCount} yeni oyuncu Players sayfasına eklendi)`;
+      }
+      
       setImportMessage({ 
         type: 'success', 
-        text: `Fixtür başarıyla içe aktarıldı: ${importData.fixture.name}` 
+        text: successMessage
       });
       
       // Refresh fixtures list
