@@ -77,6 +77,21 @@ const Matches = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Duplicate fixture confirmation states
+  const [duplicateFixtureModal, setDuplicateFixtureModal] = useState<{
+    isOpen: boolean;
+    importData: any;
+    existingFixture: any;
+    processedPlayers: any[];
+    addedPlayersCount: number;
+  }>({
+    isOpen: false,
+    importData: null,
+    existingFixture: null,
+    processedPlayers: [],
+    addedPlayersCount: 0
+  });
+
   // Use ref to track current fixtures to avoid dependency issues
   const fixturesRef = useRef<Fixture[]>([]);
   fixturesRef.current = fixtures;
@@ -433,15 +448,7 @@ const Matches = () => {
         }
       }
 
-      const existingFixture = MatchesStorage.getFixtureById(importData.fixture.id);
-      if (existingFixture) {
-        setImportMessage({ 
-          type: 'error', 
-          text: 'Bu fixtür zaten mevcut. Lütfen önce mevcut fixtürü silin veya farklı bir fixtür dosyası seçin.' 
-        });
-        return;
-      }
-
+      // Process players first
       const processedPlayers = importData.fixture.players.map((p: any) => ({
         id: p.id,
         name: p.name || '',
@@ -454,13 +461,77 @@ const Matches = () => {
         opponents: p.opponents || []
       }));
 
-      const fixtureToImport = {
-        ...importData.fixture,
-        players: processedPlayers,
-        lastUpdated: new Date().toISOString()
-      } as Fixture;
+      const existingFixture = MatchesStorage.getFixtureById(importData.fixture.id);
+      if (existingFixture) {
+        // Show duplicate fixture confirmation modal
+        setDuplicateFixtureModal({
+          isOpen: true,
+          importData,
+          existingFixture,
+          processedPlayers,
+          addedPlayersCount
+        });
+        setIsImporting(false);
+        return;
+      }
 
-      // Check and add missing players to Players page
+      // Perform the import
+      await performFixtureImport(importData, processedPlayers, addedPlayersCount);
+      
+    } catch (error) {
+      setImportMessage({ 
+        type: 'error', 
+        text: error instanceof Error ? error.message : 'Fixtür içe aktarılırken bir hata oluştu' 
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // Handle duplicate fixture confirmation
+  const handleDuplicateFixtureConfirm = async () => {
+    const { importData, processedPlayers, addedPlayersCount } = duplicateFixtureModal;
+    
+    try {
+      setIsImporting(true);
+      setDuplicateFixtureModal({ ...duplicateFixtureModal, isOpen: false });
+
+      // Remove existing fixture first
+      MatchesStorage.deleteFixture(importData.fixture.id);
+
+      // Continue with import process (same as original import logic)
+      await performFixtureImport(importData, processedPlayers, addedPlayersCount);
+      
+    } catch (error) {
+      setImportMessage({ 
+        type: 'error', 
+        text: error instanceof Error ? error.message : 'Fixtür güncellenirken bir hata oluştu' 
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // Handle duplicate fixture cancel
+  const handleDuplicateFixtureCancel = () => {
+    setDuplicateFixtureModal({
+      isOpen: false,
+      importData: null,
+      existingFixture: null,
+      processedPlayers: [],
+      addedPlayersCount: 0
+    });
+  };
+
+  // Perform the actual fixture import (extracted from handleImportFixture)
+  const performFixtureImport = async (importData: any, processedPlayers: any[], addedPlayersCount: number) => {
+    const fixtureToImport = {
+      ...importData.fixture,
+      players: processedPlayers,
+      lastUpdated: new Date().toISOString()
+    } as Fixture;
+
+    // Check and add missing players to Players page
       try {
         const existingPlayers = PlayersStorage.getPlayers();
         const existingPlayerIds = new Set(existingPlayers.map(p => p.id));
@@ -545,14 +616,6 @@ const Matches = () => {
       
       // Refresh fixtures list
       window.location.reload(); // Simple refresh to reload all data
-    } catch (error) {
-      setImportMessage({ 
-        type: 'error', 
-        text: error instanceof Error ? error.message : 'Fixtür içe aktarılırken bir hata oluştu' 
-      });
-    } finally {
-      setIsImporting(false);
-    }
   };
 
   // Reset import modal
@@ -1446,6 +1509,97 @@ const Matches = () => {
                   </svg>
                 )}
                 {isImporting ? 'İçe Aktarılıyor...' : 'İçe Aktar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Duplicate Fixture Confirmation Modal */}
+      {duplicateFixtureModal.isOpen && (
+        <div
+          className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9999] overflow-hidden"
+          onClick={handleDuplicateFixtureCancel}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md sm:max-w-lg max-h-[85vh] overflow-y-auto mx-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Fixtür Zaten Mevcut</h3>
+                <p className="text-sm text-gray-600">Bu fixtür zaten sistemde var</p>
+              </div>
+              <button
+                onClick={handleDuplicateFixtureCancel}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <h4 className="font-semibold text-amber-800 mb-2">Mevcut Fixtür:</h4>
+                <p className="text-sm text-amber-700">
+                  <span className="font-medium">Ad:</span> {duplicateFixtureModal.existingFixture?.name}
+                </p>
+                <p className="text-sm text-amber-700">
+                  <span className="font-medium">Oyuncu Sayısı:</span> {duplicateFixtureModal.existingFixture?.players?.length || 0}
+                </p>
+                <p className="text-sm text-amber-700">
+                  <span className="font-medium">Son Güncelleme:</span> {
+                    duplicateFixtureModal.existingFixture?.lastUpdated 
+                      ? new Date(duplicateFixtureModal.existingFixture.lastUpdated).toLocaleString('tr-TR')
+                      : 'Bilinmiyor'
+                  }
+                </p>
+              </div>
+
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-blue-800 mb-2">İçe Aktarılacak Fixtür:</h4>
+                <p className="text-sm text-blue-700">
+                  <span className="font-medium">Ad:</span> {duplicateFixtureModal.importData?.fixture?.name}
+                </p>
+                <p className="text-sm text-blue-700">
+                  <span className="font-medium">Oyuncu Sayısı:</span> {duplicateFixtureModal.processedPlayers?.length || 0}
+                </p>
+                <p className="text-sm text-blue-700">
+                  <span className="font-medium">Export Tarihi:</span> {
+                    duplicateFixtureModal.importData?.exportDate 
+                      ? new Date(duplicateFixtureModal.importData.exportDate).toLocaleString('tr-TR')
+                      : 'Bilinmiyor'
+                  }
+                </p>
+              </div>
+
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>Uyarı:</strong> Mevcut fixtürü güncellerseniz, mevcut tüm veriler (maç sonuçları, turnuva ilerlemesi) 
+                  içe aktarılan dosyadaki verilerle değiştirilecektir.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleDuplicateFixtureCancel}
+                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm font-semibold rounded-lg"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleDuplicateFixtureConfirm}
+                disabled={isImporting}
+                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow hover:from-orange-600 hover:to-orange-700 transition-all duration-200 text-sm font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isImporting && (
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                )}
+                {isImporting ? 'Güncelleniyor...' : 'Fixtürü Güncelle'}
               </button>
             </div>
           </div>

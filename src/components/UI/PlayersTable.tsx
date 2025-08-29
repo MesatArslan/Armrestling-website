@@ -1146,7 +1146,7 @@ const OpponentsCell: React.FC<OpponentsCellProps> = ({ opponents, playerName, pl
         className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors duration-200 group"
       >
         <span className="text-sm font-medium">
-          {opponents.length} {opponents.length === 1 ? t('opponentsModal.opponent') : t('opponentsModal.opponents')}
+          {opponents.length} {t('opponentsModal.opponent')}
         </span>
         <ChevronRightIcon className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-transform duration-200" />
       </button>
