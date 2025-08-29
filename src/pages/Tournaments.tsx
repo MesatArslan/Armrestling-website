@@ -48,7 +48,7 @@ const Tournaments = () => {
     weightMax: null,
   });
   const [, setShowFilteredPlayers] = useState(false);
-  const [createTournamentGenderFilter, setCreateTournamentGenderFilter] = useState<'male' | 'female' | null>(null);
+  const [createTournamentGenderFilter, setCreateTournamentGenderFilter] = useState<'male' | 'female' | null>('male');
   const [createTournamentHandPreferenceFilter, setCreateTournamentHandPreferenceFilter] = useState<'left' | 'right' | null>(null);
   const [createTournamentBirthYearMin, setCreateTournamentBirthYearMin] = useState<number | null>(null);
   const [createTournamentBirthYearMax, setCreateTournamentBirthYearMax] = useState<number | null>(null);
@@ -312,7 +312,7 @@ const Tournaments = () => {
     saveTournaments(updatedTournaments as any);
     setNewTournamentName('');
     setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
-    setCreateTournamentGenderFilter(null);
+    setCreateTournamentGenderFilter('male');
     setCreateTournamentHandPreferenceFilter(null);
     setCreateTournamentBirthYearMin(null);
     setCreateTournamentBirthYearMax(null);
@@ -391,7 +391,7 @@ const Tournaments = () => {
     setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
     setIsEditMode(false);
     setEditingTournamentId(null);
-    setCreateTournamentGenderFilter(null);
+    setCreateTournamentGenderFilter('male');
     setCreateTournamentHandPreferenceFilter(null);
     setCreateTournamentBirthYearMin(null);
     setCreateTournamentBirthYearMax(null);
@@ -600,7 +600,7 @@ const Tournaments = () => {
                 setEditingTournamentId(null);
                 setNewTournamentName('');
                 setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
-                setCreateTournamentGenderFilter(null);
+                setCreateTournamentGenderFilter('male');
                 setCreateTournamentHandPreferenceFilter(null);
                 setCreateTournamentBirthYearMin(null);
                 setCreateTournamentBirthYearMax(null);
@@ -630,7 +630,7 @@ const Tournaments = () => {
                     setEditingTournamentId(null);
                     setNewTournamentName('');
                     setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
-                    setCreateTournamentGenderFilter(null);
+                    setCreateTournamentGenderFilter('male');
                     setCreateTournamentHandPreferenceFilter(null);
                     setCreateTournamentBirthYearMin(null);
                     setCreateTournamentBirthYearMax(null);
@@ -1144,7 +1144,7 @@ const Tournaments = () => {
                             {t('tournaments.genderRestriction')}
                           </label>
                           <select
-                            value={isEditMode ? (playerFilters.gender || '') : (createTournamentGenderFilter || '')}
+                            value={isEditMode ? (playerFilters.gender ?? 'male') : (createTournamentGenderFilter ?? 'male')}
                             onChange={(e) => {
                               if (isEditMode) {
                                 setPlayerFilters({...playerFilters, gender: e.target.value as 'male' | 'female' | null || null});
@@ -1154,7 +1154,6 @@ const Tournaments = () => {
                             }}
                             className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800"
                           >
-                            <option value="">{t('tournaments.allGenders')}</option>
                             <option value="male">{t('players.maleOnly')}</option>
                             <option value="female">{t('players.femaleOnly')}</option>
                           </select>
@@ -1319,7 +1318,7 @@ const Tournaments = () => {
                       setEditingTournamentId(null);
                       setNewTournamentName('');
                       setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
-                      setCreateTournamentGenderFilter(null);
+                      setCreateTournamentGenderFilter('male');
                       setCreateTournamentHandPreferenceFilter(null);
                       setPlayerFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
                       setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});

@@ -1092,8 +1092,6 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
       
-
-      
       <div className="max-w-4xl mx-auto">
         {/* Aktif Tur bilgisi kaldırıldı */}
       </div>

@@ -40,8 +40,8 @@ const MatchCounter: React.FC<MatchCounterProps> = ({
         <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
           <div className="text-2xl font-bold text-blue-600">{totalMatches}</div>
           <div className="text-sm text-blue-700 font-medium">{t('matchCounter.total')}</div>
-          {playerCount > 7 && hasGrandFinal && (
-            <div className="text-xs text-blue-600 mt-1">{t('matchCounter.includesGrandFinal')}</div>
+          {hasGrandFinal && (
+            <div className="text-xs text-blue-600 mt-1">{t('matchCounter.grandFinalIncluded')}</div>
           )}
         </div>
         

@@ -3,7 +3,8 @@
     "home": "Home",
     "tournaments": "Tournaments",
     "players": "Players",
-    "matches": "Matches"
+    "matches": "Matches",
+    "scoring": "Scoring"
   },
   "home": {
     "title": "Arm Wrestling Tournament Manager",
@@ -257,6 +258,14 @@
     "bye": "BYE",
     "loser": "Loser"
   },
+  "matchCounter": {
+    "title": "Match Count",
+    "total": "Total Matches",
+    "completed": "Completed",
+    "remaining": "Remaining",
+    "progress": "Progress",
+    "grandFinalIncluded": "Including Grand Final"
+  },
   "completedMatches": {
     "searchPlayersPlaceholder": "Search player name...",
     "hideByeMatches": "Hide BYE matches",
@@ -397,7 +406,30 @@
     "page": "Page",
     "pdfSuccessMessage": "PDF created successfully!\nFile size: {{fileSize}}\nTotal pages: {{totalPages}}",
     "pdfErrorMessage": "An error occurred while creating the PDF.",
-    "previewDescription": "This is a preview of how your scoring PDF will look. You can use the \"Download PDF\" button above to download the PDF."
+    "previewDescription": "This is a preview of how your scoring PDF will look. You can use the \"Download PDF\" button above to download the PDF.",
+    "title": "Scoring System",
+    "subtitle": "Calculate points and rankings based on tournament results",
+    "pointsSettings": "Points Settings",
+    "placementPoints": "Placement Points",
+    "placeLabel": "for {{place}} place",
+    "pointsSuffix": "points",
+    "groupBy": "Grouping Criteria",
+    "groupByHelp": "Aggregated by the selected player column (e.g., city, club).",
+    "loadDefaults": "Load Default Points",
+    "tournamentSelection": "Tournament Selection",
+    "tournamentsSelected": "{{count}} tournaments selected",
+    "selectAll": "Select All",
+    "clear": "Clear",
+    "noTournaments": "No tournaments yet.",
+    "fixturesCount": "{{count}} fixtures",
+    "totalPoints": "Total Points",
+    "noScoresYet": "No scores yet.",
+    "noCompletedFixtures": "No completed fixtures found.",
+    "fixtureDetails": "Fixture Details",
+    "selectAtLeastOneTournament": "Please select at least one tournament.",
+    "noFixturesForTournament": "No fixtures found for this tournament.",
+    "resultsNotReady": "Results are not available yet",
+    "unknown": "Unknown"
   }
   ,
   "matchCounter": {

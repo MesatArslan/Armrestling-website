@@ -112,7 +112,7 @@ export const PlayersStorage = {
     try {
       const repo = new PlayersRepository();
       const fromRepo = repo.getColumns<Column>();
-      // Only use legacy if fromRepo is null/undefined, not if it's an empty array
+      // Use defaultColumns if fromRepo is null/undefined, otherwise use the stored columns
       if (fromRepo !== null && fromRepo !== undefined) return fromRepo;
       
       const saved = localStorage.getItem('arm-wrestling-columns');

@@ -1161,8 +1161,6 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
       
-
-      
       <div className="max-w-4xl mx-auto">
         {/* Aktif Tur bilgisi kaldırıldı */}
       </div>

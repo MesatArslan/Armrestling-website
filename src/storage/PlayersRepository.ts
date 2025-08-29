@@ -28,8 +28,8 @@ export class PlayersRepository {
   }
 
   // Columns
-  getColumns<T = any>(): T[] {
-    return this.store.get<T[]>(PLAYERS.COLUMNS, []);
+  getColumns<T = any>(): T[] | null {
+    return this.store.get<T[]>(PLAYERS.COLUMNS, null);
   }
   saveColumns<T = any>(columns: T[]): void {
     this.store.set<T[]>(PLAYERS.COLUMNS, columns);

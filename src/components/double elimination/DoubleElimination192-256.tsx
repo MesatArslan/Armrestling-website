@@ -1176,9 +1176,7 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
         </div>
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={TabManager.createTabChangeHandler(setActiveTab, fixtureId)} />
-
-
-
+      
       <div className="max-w-4xl mx-auto">
         {/* Aktif Tur bilgisi kaldırıldı */}
       </div>
@@ -1275,7 +1273,7 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
       {activeTab === 'completed' && (
         <>
           <div className="max-w-4xl mx-auto mb-6">
-            <MatchCounter
+            <MatchCounter 
               playerCount={players.length}
               completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
               hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}

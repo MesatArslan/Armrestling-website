@@ -456,8 +456,6 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
       )}
       <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
       
-
-      
       {activeTab === 'active' && (
         <div className="flex justify-center gap-4 mb-4">
           {completedOrder.length > 0 && (
@@ -498,7 +496,13 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
                     </svg>
                   </div>
                   <h2 className="text-3xl font-bold text-green-800 mb-2">🏆 Turnuva Tamamlandı!</h2>
-
+                  <p className="text-green-700 text-lg mb-2">
+                    {(() => {
+                      const completedCount = matches.filter(m => m.winnerId && !m.isBye).length;
+                      let totalMatches = matches.filter(m => !m.isBye).length;
+                      return `${completedCount} / ${totalMatches} maç başarıyla tamamlandı.`;
+                    })()}
+                  </p>
                   <p className="text-green-700 text-lg mb-6">
                     Sonuçları ve sıralamaları görmek için aşağıdaki butona tıklayın.
                   </p>
@@ -524,20 +528,20 @@ const DoubleElimination2: React.FC<DoubleEliminationProps> = ({ players, onMatch
         </div>
       )}
       {activeTab === 'completed' && (
-        <>
-          <div className="max-w-4xl mx-auto mb-6">
-            <MatchCounter 
-              playerCount={players.length}
-              completedMatches={matches.filter(m => m.winnerId).length}
-              hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
-            />
-          </div>
-          <CompletedMatchesTable
-            matches={completedMatches}
-            players={players}
-            getPlayerName={getPlayerName}
+        <div className="max-w-4xl mx-auto mb-6">
+          <MatchCounter 
+            playerCount={players.length}
+            completedMatches={matches.filter(m => m.winnerId && !m.isBye).length}
+            hasGrandFinal={RoundDescriptionUtils.hasGrandFinalMatch(matches)}
           />
-        </>
+        </div>
+      )}
+      {activeTab === 'completed' && (
+        <CompletedMatchesTable
+          matches={completedMatches}
+          players={players}
+          getPlayerName={getPlayerName}
+        />
       )}
       {activeTab === 'rankings' && (
         <RankingsTable
