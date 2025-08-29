@@ -284,8 +284,8 @@ const Scoring: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4">
             <TrophyIcon className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">Puanlama Sistemi</h1>
-          <p className="text-lg text-gray-600">Turnuva sonuçlarına göre puan hesaplama ve sıralama</p>
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">{t('scoring.title')}</h1>
+          <p className="text-lg text-gray-600">{t('scoring.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -296,12 +296,12 @@ const Scoring: React.FC = () => {
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
                   <Cog6ToothIcon className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">Puan Ayarları</h2>
+                <h2 className="text-xl font-bold text-gray-900">{t('scoring.pointsSettings')}</h2>
               </div>
 
               {/* Points Configuration */}
               <div className="space-y-4 mb-8">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Sıralama Puanları</h3>
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{t('scoring.placementPoints')}</h3>
                 <div className="grid grid-cols-1 gap-3">
                   {placementOrder.map((key, idx) => (
                     <div key={key} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200/50">
@@ -309,7 +309,7 @@ const Scoring: React.FC = () => {
                         {getPlacementIcon(idx)}
                       </div>
                       <div className="flex-1">
-                        <label className="text-sm font-medium text-gray-700">{idx + 1}. sıraya</label>
+                        <label className="text-sm font-medium text-gray-700">{t('scoring.placeLabel', { place: idx + 1 })}</label>
                       </div>
                       <div className="flex items-center gap-2">
                         <input
@@ -322,7 +322,7 @@ const Scoring: React.FC = () => {
                           className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center font-semibold bg-white text-gray-900"
                           min="0"
                         />
-                        <span className="text-sm text-gray-500 font-medium">puan</span>
+                        <span className="text-sm text-gray-500 font-medium">{t('scoring.pointsSuffix')}</span>
                       </div>
                     </div>
                   ))}
@@ -331,7 +331,7 @@ const Scoring: React.FC = () => {
 
               {/* Grouping Configuration */}
               <div className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Sıralama Kriteri</h3>
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">{t('scoring.groupBy')}</h3>
                 <select
                   value={config.groupBy}
                   onChange={(e) => setConfig(prev => ({ ...prev, groupBy: e.target.value }))}
@@ -341,7 +341,7 @@ const Scoring: React.FC = () => {
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-2">Oyuncu kaydındaki seçilen kolona göre toplanır (örn. şehir, kulüp).</p>
+                <p className="text-xs text-gray-500 mt-2">{t('scoring.groupByHelp')}</p>
               </div>
 
               {/* Reset Button */}
@@ -349,7 +349,7 @@ const Scoring: React.FC = () => {
                 onClick={() => setConfig(prev => ({ ...prev, points: defaultPoints }))}
                 className="w-full px-4 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl font-semibold hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-md hover:shadow-lg"
               >
-                Varsayılan Puanları Yükle
+                {t('scoring.loadDefaults')}
               </button>
             </div>
           </div>
@@ -362,12 +362,12 @@ const Scoring: React.FC = () => {
                 <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
                   <CheckCircleIcon className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">Turnuva Seçimi</h2>
+                <h2 className="text-xl font-bold text-gray-900">{t('scoring.tournamentSelection')}</h2>
               </div>
               
               <div className="flex items-center justify-between mb-6">
                 <div className="text-sm text-gray-600">
-                  <span className="font-semibold text-blue-600">{config.selectedTournamentIds.length}</span> turnuva seçildi
+                  <span className="font-semibold text-blue-600">{config.selectedTournamentIds.length}</span> {t('scoring.tournamentsSelected', { count: config.selectedTournamentIds.length })}
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -375,14 +375,14 @@ const Scoring: React.FC = () => {
                     className="px-4 py-2 text-sm rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-60 transition-all duration-200 font-medium"
                     disabled={allSelected}
                   >
-                    Hepsini Seç
+                    {t('scoring.selectAll')}
                   </button>
                   <button
                     onClick={() => setConfig(prev => ({ ...prev, selectedTournamentIds: [] }))}
                     className="px-4 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition-all duration-200 font-medium"
                     disabled={!anySelected}
                   >
-                    Temizle
+                    {t('scoring.clear')}
                   </button>
                 </div>
               </div>
@@ -392,24 +392,24 @@ const Scoring: React.FC = () => {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <TrophyIcon className="w-8 h-8 text-gray-400" />
                   </div>
-                  <p className="text-sm">Henüz turnuva yok.</p>
+                  <p className="text-sm">{t('scoring.noTournaments')}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {tournaments.map(t => (
-                    <label key={t.id} className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 cursor-pointer group">
+                  {tournaments.map(tour => (
+                    <label key={tour.id} className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 cursor-pointer group">
                       <input
                         type="checkbox"
-                        checked={config.selectedTournamentIds.includes(t.id)}
-                        onChange={() => handleToggleTournament(t.id)}
+                        checked={config.selectedTournamentIds.includes(tour.id)}
+                        onChange={() => handleToggleTournament(tour.id)}
                         className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 truncate group-hover:text-blue-700 transition-colors">
-                          {t.name}
+                          {tour.name}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {t.weightRanges.length} fikstür
+                          {t('scoring.fixturesCount', { count: (tour.weightRanges?.length ?? 0) })}
                         </div>
                       </div>
                     </label>
@@ -424,7 +424,7 @@ const Scoring: React.FC = () => {
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
                   <ChartBarIcon className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">Toplam Puanlar</h2>
+                <h2 className="text-xl font-bold text-gray-900">{t('scoring.totalPoints')}</h2>
                 <div className="ml-auto flex items-center gap-3">
                   <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                     {config.groupBy}
@@ -445,8 +445,8 @@ const Scoring: React.FC = () => {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <ClockIcon className="w-8 h-8 text-gray-400" />
                   </div>
-                  <p className="text-sm">Henüz puan hesaplanamadı.</p>
-                  <p className="text-xs text-gray-400 mt-1">Tamamlanan fikstür bulunamadı.</p>
+                  <p className="text-sm">{t('scoring.noScoresYet')}</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('scoring.noCompletedFixtures')}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -456,11 +456,11 @@ const Scoring: React.FC = () => {
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <div className="font-semibold text-gray-900 text-lg">{row.group}</div>
+                        <div className="font-semibold text-gray-900 text-lg">{row.group === 'Unknown' ? t('scoring.unknown') : row.group}</div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-gray-900">{row.total}</div>
-                        <div className="text-sm text-gray-500">puan</div>
+                        <div className="text-sm text-gray-500">{t('scoring.pointsSuffix')}</div>
                       </div>
                     </div>
                   ))}
@@ -474,7 +474,7 @@ const Scoring: React.FC = () => {
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                   <StarIcon className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">Fikstür Detayları</h2>
+                <h2 className="text-xl font-bold text-gray-900">{t('scoring.fixtureDetails')}</h2>
               </div>
 
               {selectedTournaments.length === 0 ? (
@@ -482,27 +482,27 @@ const Scoring: React.FC = () => {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <CheckCircleIcon className="w-8 h-8 text-gray-400" />
                   </div>
-                  <p className="text-sm">Lütfen en az bir turnuva seçin.</p>
+                  <p className="text-sm">{t('scoring.selectAtLeastOneTournament')}</p>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {selectedTournaments.map(t => {
-                    const fs = tournamentIdToFixtures.get(t.id) || [];
+                  {selectedTournaments.map(tour => {
+                    const fs = tournamentIdToFixtures.get(tour.id) || [];
                     if (fs.length === 0) {
                       return (
-                        <div key={t.id} className="border border-gray-200/50 rounded-xl p-6 bg-gray-50/50">
-                          <div className="font-semibold text-gray-900 text-lg mb-2">{t.name}</div>
-                          <div className="text-sm text-gray-600">Bu turnuvaya ait fikstür bulunamadı.</div>
+                        <div key={tour.id} className="border border-gray-200/50 rounded-xl p-6 bg-gray-50/50">
+                          <div className="font-semibold text-gray-900 text-lg mb-2">{tour.name}</div>
+                          <div className="text-sm text-gray-600">{t('scoring.noFixturesForTournament')}</div>
                         </div>
                       );
                     }
                     return (
-                      <div key={t.id} className="border border-gray-200/50 rounded-xl p-6 bg-gradient-to-br from-gray-50/50 to-white/50">
+                      <div key={tour.id} className="border border-gray-200/50 rounded-xl p-6 bg-gradient-to-br from-gray-50/50 to-white/50">
                         <div className="font-semibold text-gray-900 text-lg mb-4 flex items-center gap-2">
                           <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                             <TrophyIcon className="w-3 h-3 text-white" />
                           </div>
-                          {t.name}
+                          {tour.name}
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                           {fs.map(f => {
@@ -524,7 +524,7 @@ const Scoring: React.FC = () => {
                                       ? 'bg-green-100 text-green-700 border border-green-200' 
                                       : 'bg-gray-100 text-gray-600 border border-gray-200'
                                   }`}>
-                                    {completed ? 'Tamamlandı' : 'Devam Ediyor'}
+                                    {completed ? t('matches.completed') : t('matches.inProgress')}
                                   </span>
                                 </div>
                                 {completed ? (
@@ -549,7 +549,7 @@ const Scoring: React.FC = () => {
                                 ) : (
                                   <div className="text-sm text-gray-600 text-center py-4">
                                     <ClockIcon className="w-6 h-6 mx-auto mb-2 text-gray-400" />
-                                    Sonuçlar henüz oluşmadı
+                                    {t('scoring.resultsNotReady')}
                                   </div>
                                 )}
                               </div>

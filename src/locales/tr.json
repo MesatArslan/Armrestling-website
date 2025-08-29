@@ -3,7 +3,8 @@
     "home": "Ana Sayfa",
     "tournaments": "Turnuvalar",
     "players": "Yarışmacılar",
-    "matches": "Maçlar"
+    "matches": "Maçlar",
+    "scoring": "Puanlama"
   },
   "home": {
     "title": "Bilek Güreşi Turnuva Yöneticisi",
@@ -403,7 +404,30 @@
     "page": "Sayfa",
     "pdfSuccessMessage": "PDF başarıyla oluşturuldu!\nDosya boyutu: {{fileSize}}\nToplam sayfa: {{totalPages}}",
     "pdfErrorMessage": "PDF oluşturulurken bir hata oluştu.",
-    "previewDescription": "Bu, puanlama PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki \"PDF İndir\" butonunu kullanabilirsiniz."
+    "previewDescription": "Bu, puanlama PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki \"PDF İndir\" butonunu kullanabilirsiniz.",
+    "title": "Puanlama Sistemi",
+    "subtitle": "Turnuva sonuçlarına göre puan hesaplama ve sıralama",
+    "pointsSettings": "Puan Ayarları",
+    "placementPoints": "Sıralama Puanları",
+    "placeLabel": "{{place}}. sıraya",
+    "pointsSuffix": "puan",
+    "groupBy": "Sıralama Kriteri",
+    "groupByHelp": "Oyuncu kaydındaki seçilen kolona göre toplanır (örn. şehir, kulüp).",
+    "loadDefaults": "Varsayılan Puanları Yükle",
+    "tournamentSelection": "Turnuva Seçimi",
+    "tournamentsSelected": "{{count}} turnuva seçildi",
+    "selectAll": "Hepsini Seç",
+    "clear": "Temizle",
+    "noTournaments": "Henüz turnuva yok.",
+    "fixturesCount": "{{count}} fikstür",
+    "totalPoints": "Toplam Puanlar",
+    "noScoresYet": "Henüz puan hesaplanamadı.",
+    "noCompletedFixtures": "Tamamlanan fikstür bulunamadı.",
+    "fixtureDetails": "Fikstür Detayları",
+    "selectAtLeastOneTournament": "Lütfen en az bir turnuva seçin.",
+    "noFixturesForTournament": "Bu turnuvaya ait fikstür bulunamadı.",
+    "resultsNotReady": "Sonuçlar henüz oluşmadı",
+    "unknown": "Bilinmiyor"
   }
 }
 
