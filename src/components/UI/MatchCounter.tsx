@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChartBarIcon } from '@heroicons/react/24/outline';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
 
@@ -15,6 +16,7 @@ const MatchCounter: React.FC<MatchCounterProps> = ({
   hasGrandFinal = false,
   className = '' 
 }) => {
+  const { t } = useTranslation();
   const baseTotalMatches = RoundDescriptionUtils.calculateTotalMatches(playerCount);
   const totalMatches = hasGrandFinal ? baseTotalMatches + 1 : baseTotalMatches;
   const remainingMatches = RoundDescriptionUtils.calculateRemainingMatches(totalMatches, completedMatches);
@@ -30,36 +32,36 @@ const MatchCounter: React.FC<MatchCounterProps> = ({
         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
           <ChartBarIcon className="w-5 h-5 text-white" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900">Maç Sayısı</h3>
+        <h3 className="text-lg font-bold text-gray-900">{t('matchCounter.title')}</h3>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Matches */}
         <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
           <div className="text-2xl font-bold text-blue-600">{totalMatches}</div>
-          <div className="text-sm text-blue-700 font-medium">Toplam Maç</div>
+          <div className="text-sm text-blue-700 font-medium">{t('matchCounter.total')}</div>
           {hasGrandFinal && (
-            <div className="text-xs text-blue-600 mt-1">Grand Final Dahil</div>
+            <div className="text-xs text-blue-600 mt-1">{t('matchCounter.grandFinalIncluded')}</div>
           )}
         </div>
         
         {/* Completed Matches */}
         <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
           <div className="text-2xl font-bold text-green-600">{completedMatches}</div>
-          <div className="text-sm text-green-700 font-medium">Tamamlanan</div>
+          <div className="text-sm text-green-700 font-medium">{t('matchCounter.completed')}</div>
         </div>
         
         {/* Remaining Matches */}
         <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-200">
           <div className="text-2xl font-bold text-orange-600">{remainingMatches}</div>
-          <div className="text-sm text-orange-700 font-medium">Kalan</div>
+          <div className="text-sm text-orange-700 font-medium">{t('matchCounter.remaining')}</div>
         </div>
       </div>
       
       {/* Progress Bar */}
       <div className="mt-4">
         <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-          <span>İlerleme</span>
+          <span>{t('matchCounter.progress')}</span>
           <span>{progressPercentage}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">

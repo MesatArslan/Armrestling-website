@@ -255,6 +255,14 @@
     "bye": "BYE",
     "loser": "Loser"
   },
+  "matchCounter": {
+    "title": "Match Count",
+    "total": "Total Matches",
+    "completed": "Completed",
+    "remaining": "Remaining",
+    "progress": "Progress",
+    "grandFinalIncluded": "Including Grand Final"
+  },
   "completedMatches": {
     "searchPlayersPlaceholder": "Search player name...",
     "hideByeMatches": "Hide BYE matches",
