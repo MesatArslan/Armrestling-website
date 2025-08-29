@@ -10,7 +10,9 @@ import LoadingSpinner from '../components/UI/LoadingSpinner';
 import ActiveFixturesNav from '../components/UI/ActiveFixturesNav';
 import { useMatches } from '../hooks/useMatches';
 import { MatchesStorage } from '../utils/matchesStorage';
+import { TournamentsStorage } from '../utils/tournamentsStorage';
 import { openFixturePreviewModal, generateFixturePDF } from '../utils/pdfGenerator';
+
 
 // Import all double elimination components
 import {
@@ -68,6 +70,12 @@ const Matches = () => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [pdfProgress, setPdfProgress] = useState<number>(0);
   const hideProgressTimer = useRef<number | null>(null);
+
+  // Import/Export modal states
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Use ref to track current fixtures to avoid dependency issues
   const fixturesRef = useRef<Fixture[]>([]);
@@ -231,6 +239,283 @@ const Matches = () => {
     };
 
     upsertFixture(updatedFixture);
+  };
+
+  // Handle fixture export
+  const handleExportFixture = async () => {
+    if (!activeFixture) return;
+    
+    try {
+      // Simple export logic inline
+      const fixture = activeFixture;
+      const tournaments = TournamentsStorage.getTournaments();
+      const tournament = tournaments.find(t => t.id === fixture.tournamentId);
+      if (!tournament) {
+        throw new Error('Tournament not found');
+      }
+
+      const weightRange = tournament.weightRanges.find(wr => wr.id === fixture.weightRangeId);
+      if (!weightRange) {
+        throw new Error('Weight range not found');
+      }
+
+      // Get double elimination data
+      let doubleEliminationData: any = null;
+      try {
+        // Check localStorage for double elimination data
+        const deKeys = Object.keys(localStorage).filter(key => key.includes(`double-elimination-fixture-${fixture.id}`));
+        if (deKeys.length > 0) {
+          doubleEliminationData = {} as any;
+          deKeys.forEach(key => {
+            doubleEliminationData[key] = JSON.parse(localStorage.getItem(key) || '{}');
+          });
+        }
+        
+        // Also check the new repository format
+        try {
+          const { DoubleEliminationRepository } = await import('../storage/DoubleEliminationRepository');
+          const deRepo = new DoubleEliminationRepository();
+          const repoData = deRepo.getState(fixture.id);
+          if (repoData) {
+            if (!doubleEliminationData) doubleEliminationData = {} as any;
+            (doubleEliminationData as any).repositoryData = repoData;
+          }
+        } catch (repoError) {
+          console.warn('Could not load double elimination repository data:', repoError);
+        }
+      } catch (error) {
+        console.warn('Could not load double elimination data:', error);
+      }
+
+      const exportData = {
+        version: '1.0.0',
+        exportDate: new Date().toISOString(),
+        fixture,
+        tournament,
+        weightRange,
+        doubleEliminationData
+      };
+
+      console.log('Export edilen veri yapısı:', {
+        version: exportData.version,
+        fixture: { id: exportData.fixture.id, name: exportData.fixture.name },
+        tournament: { id: exportData.tournament.id, name: exportData.tournament.name },
+        weightRange: { id: exportData.weightRange.id, name: exportData.weightRange.name },
+        doubleEliminationData: doubleEliminationData ? 'Mevcut' : 'Yok'
+      });
+      
+      if (doubleEliminationData) {
+        console.log('Double elimination verileri:', Object.keys(doubleEliminationData));
+      }
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      console.log('Export JSON (ilk 300 karakter):', dataStr.substring(0, 300));
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `fixture_${fixture.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    } catch (error) {
+      console.error('Export failed:', error);
+      // Could add error toast here
+    }
+  };
+
+  // Handle fixture import
+  const handleImportFixture = async () => {
+    if (!importFile) return;
+    
+    setIsImporting(true);
+    setImportMessage(null);
+    
+    try {
+      console.log('İçe aktarılan dosya bilgileri:', {
+        name: importFile.name,
+        size: importFile.size,
+        type: importFile.type,
+        lastModified: new Date(importFile.lastModified).toLocaleString()
+      });
+      
+      const fileContent = await importFile.text();
+      console.log('Dosya içeriği (ilk 500 karakter):', fileContent.substring(0, 500));
+      
+      // First check if it's valid JSON
+      let importData;
+      try {
+        importData = JSON.parse(fileContent);
+        console.log('JSON parse başarılı, veri anahtarları:', Object.keys(importData));
+      } catch (jsonError) {
+        console.error('JSON parse hatası:', jsonError);
+        throw new Error('Dosya geçerli bir JSON formatında değil. Lütfen doğru fixtür dosyasını seçtiğinizden emin olun.');
+      }
+
+      // Detailed validation with specific error messages
+      console.log('Dosyada bulunan tüm alanlar:', Object.keys(importData));
+      console.log('Version alanı:', importData.version);
+      
+      if (!importData.version) {
+        console.error('Version alanı eksik! Mevcut alanlar:', Object.keys(importData));
+        
+        // Check if this might be an old format file and try to handle it
+        if (importData.fixture && importData.tournament && importData.weightRange) {
+          console.warn('Eski format fixtür dosyası tespit edildi, version ekleniyor...');
+          importData.version = '1.0.0'; // Add missing version
+        } else {
+          throw new Error('Fixtür dosyasında version bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
+        }
+      }
+      
+      if (!importData.fixture) {
+        throw new Error('Fixtür dosyasında fixture bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
+      }
+      
+      if (!importData.tournament) {
+        throw new Error('Fixtür dosyasında tournament bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
+      }
+      
+      if (!importData.weightRange) {
+        throw new Error('Fixtür dosyasında weightRange bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
+      }
+
+      // Additional validation for critical fixture fields
+      if (!importData.fixture.id || !importData.fixture.name || !importData.fixture.players) {
+        throw new Error('Fixtür bilgileri eksik veya bozuk (id, name veya players eksik).');
+      }
+
+      console.log('İçe aktarılan veri yapısı:', {
+        version: importData.version,
+        fixture: {
+          id: importData.fixture.id,
+          name: importData.fixture.name,
+          playersCount: importData.fixture.players?.length || 0
+        },
+        tournament: {
+          id: importData.tournament.id,
+          name: importData.tournament.name
+        },
+        weightRange: {
+          id: importData.weightRange.id,
+          name: importData.weightRange.name
+        }
+      });
+
+      const existingTournaments = TournamentsStorage.getTournaments();
+      let tournament = existingTournaments.find(t => t.id === importData.tournament.id);
+      
+      if (!tournament) {
+        const newTournament = {
+          id: importData.tournament.id,
+          name: importData.tournament.name,
+          weightRanges: importData.tournament.weightRanges || [],
+          isExpanded: false,
+          genderFilter: importData.tournament.genderFilter || null,
+          handPreferenceFilter: importData.tournament.handPreferenceFilter || null,
+          birthYearMin: importData.tournament.birthYearMin || null,
+          birthYearMax: importData.tournament.birthYearMax || null
+        };
+        
+        const updatedTournaments = [...existingTournaments, newTournament];
+        TournamentsStorage.saveTournaments(updatedTournaments);
+      } else {
+        const existingWeightRange = tournament.weightRanges.find(wr => wr.id === importData.weightRange.id);
+        
+        if (!existingWeightRange) {
+          tournament.weightRanges.push(importData.weightRange);
+          const updatedTournaments = existingTournaments.map(t => 
+            t.id === tournament!.id ? tournament! : t
+          );
+          TournamentsStorage.saveTournaments(updatedTournaments);
+        }
+      }
+
+      const existingFixture = MatchesStorage.getFixtureById(importData.fixture.id);
+      if (existingFixture) {
+        setImportMessage({ 
+          type: 'error', 
+          text: 'Bu fixtür zaten mevcut. Lütfen önce mevcut fixtürü silin veya farklı bir fixtür dosyası seçin.' 
+        });
+        return;
+      }
+
+      const processedPlayers = importData.fixture.players.map((p: any) => ({
+        id: p.id,
+        name: p.name || '',
+        surname: p.surname || '',
+        weight: p.weight || 0,
+        gender: (p.gender || 'male') as 'male' | 'female',
+        handPreference: (p.handPreference || 'right') as 'left' | 'right' | 'both',
+        birthday: p.birthday,
+        city: p.city,
+        opponents: p.opponents || []
+      }));
+
+      const fixtureToImport = {
+        ...importData.fixture,
+        players: processedPlayers,
+        lastUpdated: new Date().toISOString()
+      } as Fixture;
+
+      MatchesStorage.addFixture(fixtureToImport as any);
+
+      // Import double elimination data if available
+      if (importData.doubleEliminationData) {
+        try {
+          console.log('Double elimination verisi içe aktarılıyor...');
+          
+          // Restore localStorage keys
+          Object.keys(importData.doubleEliminationData).forEach(key => {
+            if (key !== 'repositoryData') {
+              localStorage.setItem(key, JSON.stringify(importData.doubleEliminationData[key]));
+              console.log(`Restored localStorage key: ${key}`);
+            }
+          });
+          
+          // Restore repository data
+          if (importData.doubleEliminationData.repositoryData) {
+            try {
+              const { DoubleEliminationRepository } = await import('../storage/DoubleEliminationRepository');
+              const deRepo = new DoubleEliminationRepository();
+              deRepo.saveState(importData.fixture.id, importData.doubleEliminationData.repositoryData);
+              console.log('Repository data restored');
+            } catch (repoError) {
+              console.warn('Could not restore repository data:', repoError);
+            }
+          }
+          
+          console.log('Double elimination verisi başarıyla içe aktarıldı');
+        } catch (deError) {
+          console.warn('Double elimination verisi içe aktarılırken hata:', deError);
+        }
+      } else {
+        console.log('Double elimination verisi bulunamadı');
+      }
+
+      setImportMessage({ 
+        type: 'success', 
+        text: `Fixtür başarıyla içe aktarıldı: ${importData.fixture.name}` 
+      });
+      
+      // Refresh fixtures list
+      window.location.reload(); // Simple refresh to reload all data
+    } catch (error) {
+      setImportMessage({ 
+        type: 'error', 
+        text: error instanceof Error ? error.message : 'Fixtür içe aktarılırken bir hata oluştu' 
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // Reset import modal
+  const resetImportModal = () => {
+    setIsImportModalOpen(false);
+    setImportFile(null);
+    setImportMessage(null);
+    setIsImporting(false);
   };
 
 
@@ -751,16 +1036,39 @@ const Matches = () => {
                 onFixtureClose={handleFixtureClose}
                 activeFixtureId={activeFixture?.id}
               />
-              {activeFixture && (
-                <div className="mt-4 flex justify-end">
-                  <button
-                    onClick={() => setIsMatchPDFModalOpen(true)}
-                    className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-                  >
-                    {t('tournamentCard.createPDF')}
-                  </button>
-                </div>
-              )}
+              <div className="mt-4 flex justify-end gap-3">
+                {/* İçe Aktar butonu her zaman görünür */}
+                <button
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                  İçe Aktar
+                </button>
+                
+                {/* Dışa Aktar ve PDF butonları sadece aktif fixtür varken görünür */}
+                {activeFixture && (
+                  <>
+                    <button
+                      onClick={handleExportFixture}
+                      className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Dışa Aktar
+                    </button>
+                    <button
+                      onClick={() => setIsMatchPDFModalOpen(true)}
+                      className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+                    >
+                      {t('tournamentCard.createPDF')}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
@@ -780,12 +1088,23 @@ const Matches = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('matches.noActiveFixtures')}</h3>
               <p className="text-gray-600 mb-6">{t('matches.startTournamentMessage')}</p>
-              <button
-                onClick={() => navigate('/tournaments')}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
-              >
-                {t('matches.goToTournaments')}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
+                <button
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-base font-semibold"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                  </svg>
+                  Fixtür İçe Aktar
+                </button>
+                <button
+                  onClick={() => navigate('/tournaments')}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
+                >
+                  {t('matches.goToTournaments')}
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -997,6 +1316,96 @@ const Matches = () => {
         confirmText={t('matches.deleteFixture')}
         cancelText={t('matches.cancel')}
       />
+
+      {/* Import Fixture Modal */}
+      {isImportModalOpen && (
+        <div
+          className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9998] overflow-hidden"
+          onClick={resetImportModal}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md sm:max-w-lg max-h-[85vh] overflow-y-auto mx-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Fixtür İçe Aktar</h3>
+                <p className="text-sm text-gray-600">Daha önce dışa aktardığınız bir fixtür dosyasını seçin</p>
+              </div>
+              <button
+                onClick={resetImportModal}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fixtür Dosyası (.json)
+                </label>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setImportFile(file);
+                      setImportMessage(null);
+                    }
+                  }}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer border border-gray-300 rounded-lg"
+                />
+              </div>
+
+              {importFile && (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-semibold">Seçilen dosya:</span> {importFile.name}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Boyut: {(importFile.size / 1024).toFixed(2)} KB
+                  </p>
+                </div>
+              )}
+
+              {importMessage && (
+                <div className={`p-3 rounded-lg border ${
+                  importMessage.type === 'success' 
+                    ? 'bg-green-50 border-green-200 text-green-800' 
+                    : 'bg-red-50 border-red-200 text-red-800'
+                }`}>
+                  <p className="text-sm">{importMessage.text}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={resetImportModal}
+                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm font-semibold rounded-lg"
+                disabled={isImporting}
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleImportFixture}
+                disabled={!importFile || isImporting || (importMessage?.type === 'success')}
+                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isImporting && (
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                )}
+                {isImporting ? 'İçe Aktarılıyor...' : 'İçe Aktar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
