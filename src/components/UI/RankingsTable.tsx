@@ -57,7 +57,7 @@ const RankingsTable: React.FC<RankingsTableProps> = ({ rankings, players, player
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border-2 border-yellow-300 mb-6">
-      <h3 className="text-xl font-bold text-center mb-4 text-gray-800">�� {t('rankings.title')}</h3>
+      <h3 className="text-xl font-bold text-center mb-4 text-gray-800">{t('rankings.title')}</h3>
       <div className="space-y-4">
         {filteredPlaceLabels.map((place) => {
           const playerId = rankings[place.key as keyof Rankings];
@@ -80,7 +80,7 @@ const RankingsTable: React.FC<RankingsTableProps> = ({ rankings, players, player
                     e.stopPropagation();
                     openPlayerInfo(player, e.currentTarget);
                   }}
-                  className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 shadow-md hover:shadow-lg z-10"
+                  className="ml-auto w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 shadow-md hover:shadow-lg z-10"
                   title={t('players.viewPlayerInfo')}
                 >
                   i

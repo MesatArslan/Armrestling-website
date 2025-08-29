@@ -13,17 +13,53 @@ const PlayerInfoModal: React.FC<PlayerInfoModalProps> = ({ player, isOpen, onClo
   const { t } = useTranslation();
   const tooltipRef = useRef<HTMLDivElement>(null);
 
+  // Positioning function
+  const positionTooltip = () => {
+    if (!isOpen || !triggerElement || !tooltipRef.current) return;
+    
+    const rect = triggerElement.getBoundingClientRect();
+    const tooltip = tooltipRef.current;
+    
+    // Get viewport dimensions
+    const viewportWidth = window.innerWidth;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    
+    // Get tooltip dimensions (use a fixed width for calculation)
+    const tooltipWidth = window.innerWidth <= 640 ? Math.min(320, viewportWidth - 16) : 360;
+    
+    // Always position below the button with 4px gap
+    const top = rect.bottom + scrollY + 4;
+    let left = rect.left + scrollX + (rect.width / 2) - (tooltipWidth / 2);
+    
+    // Adjust horizontal position if tooltip goes outside viewport
+    if (left < 8) {
+      left = 8; // 8px margin from left edge
+    } else if (left + tooltipWidth > viewportWidth - 8) {
+      left = viewportWidth - tooltipWidth - 8; // 8px margin from right edge
+    }
+    
+    tooltip.style.top = `${top - 90}px`;
+    tooltip.style.left = `${left - 115}px`;
+    tooltip.style.width = `${tooltipWidth}px`;
+  };
+
   useEffect(() => {
-    if (isOpen && triggerElement && tooltipRef.current) {
-      const rect = triggerElement.getBoundingClientRect();
-      const tooltip = tooltipRef.current;
+    if (isOpen) {
+      // Initial positioning
+      setTimeout(positionTooltip, 0);
       
-      // Position tooltip below the button, centered on the button
-      const top = rect.bottom + 8; // 8px below the button
-      const left = rect.left + (rect.width / 2) - 180; // Center tooltip on button (360px width / 2)
+      // Listen for window resize and scroll events
+      const handleResize = () => positionTooltip();
+      const handleScroll = () => positionTooltip();
       
-      tooltip.style.top = `${top}px`;
-      tooltip.style.left = `${left}px`;
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('scroll', handleScroll, true);
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('scroll', handleScroll, true);
+      };
     }
   }, [isOpen, triggerElement]);
 
@@ -131,13 +167,20 @@ const PlayerInfoModal: React.FC<PlayerInfoModalProps> = ({ player, isOpen, onClo
   return (
     <div 
       ref={tooltipRef}
-      className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-100 max-w-[360px] w-[360px] p-4"
+      className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 sm:p-4"
       style={{ 
         top: '0px', 
         left: '0px',
-        animation: 'fadeIn 0.2s ease-out'
+        animation: 'fadeIn 0.2s ease-out',
+        maxWidth: '95vw', // Prevent modal from being wider than viewport
+        minWidth: '280px'
       }}
     >
+      {/* Arrow pointing up to the button */}
+      <div 
+        className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45"
+        style={{ zIndex: -1 }}
+      />
       {/* Header with player name */}
       <div className="border-b border-gray-100 pb-3 mb-3">
         <div className="flex items-center gap-3">
