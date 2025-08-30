@@ -7,6 +7,7 @@ import Scoring from './pages/Scoring';
 import './i18n';
 import Navbar from './components/UI/Navbar';
 import ScrollToTop from './components/UI/ScrollToTop';
+import { AuthProvider } from './contexts/AuthContext';
 
 const Layout = () => {
   return (
@@ -22,17 +23,19 @@ const Layout = () => {
 
 const App = () => {
   return (
-    <Router basename={import.meta.env.BASE_URL}>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="players" element={<Players />} />
-          <Route path="tournaments" element={<Tournaments />} />
-          <Route path="matches" element={<Matches />} />
-          <Route path="scoring" element={<Scoring />} />
-        </Route>
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router basename={import.meta.env.BASE_URL}>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="players" element={<Players />} />
+            <Route path="tournaments" element={<Tournaments />} />
+            <Route path="matches" element={<Matches />} />
+            <Route path="scoring" element={<Scoring />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 };
 

@@ -1,12 +1,30 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import { UserIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import LanguageSwitcher from './LanguageSwitcher';
+import { AuthModal } from './AuthModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Navbar = () => {
   const { t } = useTranslation();
+  const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  
   const toggleMenu = () => setIsOpen(prev => !prev);
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsOpen(false);
+  };
+
+  const openAuthModal = (mode: 'login' | 'signup') => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+    setIsOpen(false);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 shadow-sm border-b border-gray-100">
@@ -33,6 +51,38 @@ const Navbar = () => {
               {t('navigation.scoring')}
             </Link>
             <LanguageSwitcher />
+            
+            {/* Auth buttons */}
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <UserIcon className="h-5 w-5" />
+                  <span className="text-sm">{user.email}</span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors duration-200"
+                >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                  <span>{t('auth.logout')}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => openAuthModal('login')}
+                  className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                >
+                  {t('auth.login')}
+                </button>
+                <button
+                  onClick={() => openAuthModal('signup')}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                >
+                  {t('auth.signup')}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -67,11 +117,52 @@ const Navbar = () => {
           <Link to="/scoring" onClick={() => setIsOpen(false)} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
             {t('navigation.scoring')}
           </Link>
+          
+          {/* Mobile Auth */}
+          {user ? (
+            <div className="pt-2 border-t border-gray-100 space-y-2">
+              <div className="flex items-center justify-center space-x-2 text-gray-600">
+                <UserIcon className="h-5 w-5" />
+                <span className="text-sm">{user.email}</span>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center justify-center space-x-2 w-full px-3 py-2 rounded-lg text-red-600 hover:bg-red-50"
+              >
+                <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                <span>{t('auth.logout')}</span>
+              </button>
+            </div>
+          ) : (
+            <div className="pt-2 border-t border-gray-100 space-y-2">
+              <button
+                onClick={() => openAuthModal('login')}
+                className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+              >
+                {t('auth.login')}
+              </button>
+              <button
+                onClick={() => openAuthModal('signup')}
+                className="block w-full text-center px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+              >
+                {t('auth.signup')}
+              </button>
+            </div>
+          )}
+          
           <div className="pt-2 border-t border-gray-100 flex justify-center">
             <LanguageSwitcher />
           </div>
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        mode={authMode}
+        onModeChange={setAuthMode}
+      />
     </nav>
   );
 };
