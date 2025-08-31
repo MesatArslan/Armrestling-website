@@ -136,6 +136,85 @@ export class AuthService {
     }
   }
 
+  static async updateInstitution(id: string, data: Partial<Institution>): Promise<ApiResponse<Institution>> {
+    try {
+      console.log('Updating institution:', id, data)
+
+      const { data: updatedInstitution, error } = await supabase
+        .from('institutions')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Update institution error:', error)
+        return { success: false, error: error.message }
+      }
+
+      console.log('Updated institution:', updatedInstitution)
+      return { success: true, data: updatedInstitution }
+    } catch (error) {
+      console.error('UpdateInstitution error:', error)
+      return { success: false, error: 'Kurum güncellenemedi' }
+    }
+  }
+
+  static async deleteInstitution(id: string): Promise<ApiResponse<void>> {
+    try {
+      console.log('Deleting institution:', id)
+
+      // Önce bu kuruma ait kullanıcıları kontrol et
+      const { data: users, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('institution_id', id)
+
+      if (usersError) {
+        console.error('Check users error:', usersError)
+        return { success: false, error: `Kullanıcılar kontrol edilemedi: ${usersError.message}` }
+      }
+
+      // Cascade delete: Önce kullanıcıları sil, sonra kurumu sil
+      if (users && users.length > 0) {
+        console.log(`Deleting ${users.length} users from institution`)
+        
+        // Profiles tablosundan kullanıcıları sil (trigger otomatik olarak auth.users'dan da silecek)
+        const { error: deleteUsersError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('institution_id', id)
+
+        if (deleteUsersError) {
+          console.error('Delete users error:', deleteUsersError)
+          return { success: false, error: `Kullanıcılar silinemedi: ${deleteUsersError.message}` }
+        }
+
+        console.log('Users deleted successfully (profiles + auth.users)')
+      }
+
+      // Kurumu sil
+      const { error } = await supabase
+        .from('institutions')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('Delete institution error:', error)
+        return { success: false, error: error.message }
+      }
+
+      console.log('Institution deleted successfully')
+      return { success: true }
+    } catch (error) {
+      console.error('DeleteInstitution error:', error)
+      return { success: false, error: 'Kurum silinemedi' }
+    }
+  }
+
   static async getInstitutionUsers(institutionId: string): Promise<ApiResponse<Profile[]>> {
     try {
       const { data, error } = await supabase

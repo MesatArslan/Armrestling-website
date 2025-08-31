@@ -22,6 +22,20 @@ export const SuperAdmin: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingInstitution, setEditingInstitution] = useState<Institution | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    user_quota: 0,
+    subscription_end_date: ''
+  })
+
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletingInstitution, setDeletingInstitution] = useState<Institution | null>(null)
 
   useEffect(() => {
     loadData()
@@ -108,6 +122,86 @@ export const SuperAdmin: React.FC = () => {
       ...prev,
       [name]: type === 'number' ? parseInt(value) || 0 : value
     }))
+  }
+
+  const handleEditInstitution = (institution: Institution) => {
+    setEditingInstitution(institution)
+    setEditFormData({
+      name: institution.name,
+      email: institution.email,
+      user_quota: institution.user_quota,
+      subscription_end_date: institution.subscription_end_date.split('T')[0] // Sadece tarih kısmını al
+    })
+    setShowEditModal(true)
+  }
+
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseInt(value) || 0 : value
+    }))
+  }
+
+  const handleUpdateInstitution = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingInstitution) return
+
+    setIsSubmitting(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const result = await AuthService.updateInstitution(editingInstitution.id, {
+        name: editFormData.name,
+        email: editFormData.email,
+        user_quota: editFormData.user_quota,
+        subscription_end_date: editFormData.subscription_end_date
+      })
+      
+      if (result.success) {
+        setSuccess('Kurum başarıyla güncellendi!')
+        setShowEditModal(false)
+        setEditingInstitution(null)
+        await loadData()
+      } else {
+        setError(result.error || 'Kurum güncellenirken hata oluştu')
+      }
+    } catch (error) {
+      setError('Beklenmeyen bir hata oluştu')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteInstitution = (institution: Institution) => {
+    setDeletingInstitution(institution)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDeleteInstitution = async () => {
+    if (!deletingInstitution) return
+
+    setIsSubmitting(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const result = await AuthService.deleteInstitution(deletingInstitution.id)
+      
+      if (result.success) {
+        setSuccess('Kurum başarıyla silindi!')
+        setShowDeleteModal(false)
+        setDeletingInstitution(null)
+        await loadData()
+      } else {
+        setError(result.error || 'Kurum silinirken hata oluştu')
+      }
+    } catch (error) {
+      setError('Beklenmeyen bir hata oluştu')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleSignOut = async () => {
@@ -342,6 +436,7 @@ export const SuperAdmin: React.FC = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı Kotası</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bitiş Tarihi</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -350,10 +445,12 @@ export const SuperAdmin: React.FC = () => {
                       return (
                         <tr
                           key={institution.id}
-                          onClick={() => handleInstitutionClick(institution)}
-                          className="hover:bg-gray-50 cursor-pointer"
+                          className="hover:bg-gray-50"
                         >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td 
+                            className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 cursor-pointer"
+                            onClick={() => handleInstitutionClick(institution)}
+                          >
                             {institution.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -373,6 +470,26 @@ export const SuperAdmin: React.FC = () => {
                             }`}>
                               {isExpired ? 'Süresi Dolmuş' : 'Aktif'}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditInstitution(institution)
+                              }}
+                              className="text-blue-600 hover:text-blue-900 mr-2"
+                            >
+                              Düzenle
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteInstitution(institution)
+                              }}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Sil
+                            </button>
                           </td>
                         </tr>
                       )
@@ -424,6 +541,140 @@ export const SuperAdmin: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Edit Modal */}
+      {showEditModal && editingInstitution && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Kurum Düzenle: {editingInstitution.name}
+              </h3>
+              
+              <form onSubmit={handleUpdateInstitution} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Kurum Adı</label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={editFormData.name}
+                    onChange={handleEditInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={editFormData.email}
+                    onChange={handleEditInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Kullanıcı Kotası</label>
+                  <input
+                    type="number"
+                    name="user_quota"
+                    required
+                    min={1}
+                    value={editFormData.user_quota}
+                    onChange={handleEditInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Üyelik Bitiş Tarihi</label>
+                  <input
+                    type="date"
+                    name="subscription_end_date"
+                    required
+                    value={editFormData.subscription_end_date}
+                    onChange={handleEditInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false)
+                      setEditingInstitution(null)
+                    }}
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? <LoadingSpinner /> : 'Güncelle'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deletingInstitution && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              
+              <h3 className="text-lg font-medium text-gray-900 mt-4 mb-2">
+                Kurum Silme Onayı
+              </h3>
+              
+              <p className="text-sm text-gray-500 mb-6">
+                <strong>{deletingInstitution.name}</strong> kurumunu silmek istediğinizden emin misiniz?
+                <br />
+                <span className="text-red-600 font-medium">
+                  Bu işlem geri alınamaz!
+                </span>
+                <br />
+                <span className="text-orange-600 font-medium">
+                  Kuruma ait tüm kullanıcılar da silinecektir!
+                </span>
+              </p>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setDeletingInstitution(null)
+                  }}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={confirmDeleteInstitution}
+                  disabled={isSubmitting}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? <LoadingSpinner /> : 'Sil'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
