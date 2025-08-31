@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { PlusIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import * as XLSX from 'xlsx';
 import { v4 as uuidv4 } from 'uuid';
@@ -389,6 +389,37 @@ const Players = () => {
     reader.readAsArrayBuffer(file);
   };
 
+  // Helper function to normalize Turkish characters
+  const normalizeTurkishText = (text: string): string => {
+    return text
+      .toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/Ğ/g, 'g')
+      .replace(/Ü/g, 'u')
+      .replace(/Ş/g, 's')
+      .replace(/I/g, 'i')
+      .replace(/İ/g, 'i')
+      .replace(/Ö/g, 'o')
+      .replace(/Ç/g, 'c');
+  };
+
+  const filteredPlayers = useMemo(() => {
+    if (!searchTerm) return players;
+    
+    const normalizedSearchTerm = normalizeTurkishText(searchTerm.trim());
+    
+    return players.filter(player => {
+      const fullName = `${player.name || ''} ${player.surname || ''}`;
+      const normalizedFullName = normalizeTurkishText(fullName.trim());
+      return normalizedFullName.includes(normalizedSearchTerm);
+    });
+  }, [players, searchTerm]);
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -479,13 +510,12 @@ const Players = () => {
 
           {/* Players Table */}
           <PlayersTable
-            players={playersState}
+            players={filteredPlayers}
             onPlayersChange={(next) => {
               setPlayersState(next as ExtendedPlayer[]);
-              savePlayers(next as unknown as Player[]);
             }}
             columns={columnsState}
-            onColumnsChange={(next) => setColumnsNormalized(next as Column[])}
+            onColumnsChange={setColumnsNormalized}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             showAddRow={true}
