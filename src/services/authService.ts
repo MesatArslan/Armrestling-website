@@ -116,17 +116,22 @@ export class AuthService {
 
   static async getInstitutions(): Promise<ApiResponse<Institution[]>> {
     try {
+      console.log('Getting institutions...')
+
       const { data, error } = await supabase
         .from('institutions')
         .select('*')
         .order('created_at', { ascending: false })
 
       if (error) {
+        console.error('Institutions error:', error)
         return { success: false, error: error.message }
       }
 
+      console.log('Institutions data:', data)
       return { success: true, data: data || [] }
     } catch (error) {
+      console.error('GetInstitutions error:', error)
       return { success: false, error: 'Kurumlar getirilemedi' }
     }
   }

@@ -29,6 +29,7 @@ export const SuperAdmin: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true)
+    setError('')
     try {
       const [institutionsResult, statsResult] = await Promise.all([
         AuthService.getInstitutions(),
@@ -37,13 +38,19 @@ export const SuperAdmin: React.FC = () => {
 
       if (institutionsResult.success) {
         setInstitutions(institutionsResult.data || [])
+      } else {
+        setError(`Kurumlar yüklenemedi: ${institutionsResult.error}`)
+        console.error('Institutions error:', institutionsResult.error)
       }
 
       if (statsResult.success) {
         setStats(statsResult.data || null)
+      } else {
+        console.error('Stats error:', statsResult.error)
       }
     } catch (error) {
       console.error('Data loading error:', error)
+      setError('Veri yüklenirken beklenmeyen bir hata oluştu')
     } finally {
       setLoading(false)
     }

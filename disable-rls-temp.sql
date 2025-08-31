@@ -1,11 +1,7 @@
--- Basit RLS Politikaları - Sonsuz Döngü Sorunu Çözümü
+-- Geçici Çözüm: RLS'i Tamamen Kapat
 -- Bu SQL'i Supabase Dashboard > SQL Editor'da çalıştırın
 
--- 1. Önce RLS'i tamamen kapat
-ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
-ALTER TABLE institutions DISABLE ROW LEVEL SECURITY;
-
--- 2. Tüm politikaları sil
+-- Tüm politikaları sil
 DROP POLICY IF EXISTS "Super admins can view all profiles" ON profiles;
 DROP POLICY IF EXISTS "Admins can view their institution users" ON profiles;
 DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
@@ -35,32 +31,18 @@ DROP POLICY IF EXISTS "institutions_select_policy" ON institutions;
 DROP POLICY IF EXISTS "institutions_insert_policy" ON institutions;
 DROP POLICY IF EXISTS "institutions_update_policy" ON institutions;
 
--- 3. Basit politikalar oluştur (döngü olmadan)
+DROP POLICY IF EXISTS "profiles_read_policy" ON profiles;
+DROP POLICY IF EXISTS "profiles_insert_policy" ON profiles;
+DROP POLICY IF EXISTS "profiles_update_policy" ON profiles;
 
--- Profiles tablosu için basit politikalar
-CREATE POLICY "profiles_read_policy" ON profiles
-    FOR SELECT USING (true);
+DROP POLICY IF EXISTS "institutions_read_policy" ON institutions;
+DROP POLICY IF EXISTS "institutions_insert_policy" ON institutions;
+DROP POLICY IF EXISTS "institutions_update_policy" ON institutions;
 
-CREATE POLICY "profiles_insert_policy" ON profiles
-    FOR INSERT WITH CHECK (true);
+-- RLS'i kapat
+ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE institutions DISABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "profiles_update_policy" ON profiles
-    FOR UPDATE USING (true);
-
--- Institutions tablosu için basit politikalar  
-CREATE POLICY "institutions_read_policy" ON institutions
-    FOR SELECT USING (true);
-
-CREATE POLICY "institutions_insert_policy" ON institutions
-    FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "institutions_update_policy" ON institutions
-    FOR UPDATE USING (true);
-
--- 4. RLS'i yeniden aç
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE institutions ENABLE ROW LEVEL SECURITY;
-
--- 5. Test query'si
--- SELECT * FROM profiles WHERE id = auth.uid();
--- SELECT * FROM institutions;
+-- Test
+SELECT * FROM profiles LIMIT 5;
+SELECT * FROM institutions LIMIT 5;
