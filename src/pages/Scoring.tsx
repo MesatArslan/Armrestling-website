@@ -279,14 +279,7 @@ const Scoring: React.FC = () => {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4">
-            <TrophyIcon className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">{t('scoring.title')}</h1>
-          <p className="text-lg text-gray-600">{t('scoring.subtitle')}</p>
-        </div>
+
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Settings Panel */}
