@@ -180,6 +180,11 @@ const Matches = () => {
         const fixtureNumber = existingForTournament.length + 1;
         const weightRangeName = state.weightRange.name || `${state.weightRange.min}-${state.weightRange.max} kg`;
         const now = new Date().toISOString();
+        
+        // Sadece görünür sütunları al
+        const visibleColumns = PlayersStorage.getColumns().filter(col => col.visible);
+        const visibleColumnIds = visibleColumns.map(col => col.id);
+        
         const newFixture = {
           id: `${state.tournament.id}-${state.weightRange.id}-${fixtureNumber}`,
           name: `${state.tournament.name} - ${weightRangeName}`,
@@ -188,7 +193,21 @@ const Matches = () => {
           weightRangeId: state.weightRange.id,
           weightRangeName,
           weightRange: { min: state.weightRange.min, max: state.weightRange.max },
-          players: eligiblePlayers.map(p => ({ id: p.id, name: p.name, surname: p.surname, weight: p.weight, gender: p.gender, handPreference: p.handPreference, birthday: p.birthday, city: p.city, opponents: [] })),
+          players: eligiblePlayers.map(p => {
+            const player: any = {
+              id: p.id, // id her zaman gerekli
+              opponents: [] // opponents her zaman gerekli
+            };
+            
+            // Sadece görünür sütunları kopyala
+            visibleColumnIds.forEach(columnId => {
+              if (p.hasOwnProperty(columnId)) {
+                player[columnId] = p[columnId];
+              }
+            });
+            
+            return player;
+          }),
           playerCount: eligiblePlayers.length,
           status: 'active' as const,
           createdAt: now,
@@ -537,19 +556,25 @@ const Matches = () => {
         const existingPlayerIds = new Set(existingPlayers.map(p => p.id));
         const playersToAdd: any[] = [];
         
+        // Sadece görünür sütunları al
+        const visibleColumns = PlayersStorage.getColumns().filter(col => col.visible);
+        const visibleColumnIds = visibleColumns.map(col => col.id);
+        
         processedPlayers.forEach((fixturePlayer: any) => {
           if (!existingPlayerIds.has(fixturePlayer.id)) {
             // Player doesn't exist in Players page, add them
-            const newPlayer = {
-              id: fixturePlayer.id,
-              name: fixturePlayer.name,
-              surname: fixturePlayer.surname,
-              weight: fixturePlayer.weight,
-              gender: fixturePlayer.gender,
-              handPreference: fixturePlayer.handPreference,
-              birthday: fixturePlayer.birthday,
-              city: fixturePlayer.city
+            // Sadece görünür sütunları kaydet
+            const newPlayer: any = {
+              id: fixturePlayer.id // id her zaman gerekli
             };
+            
+            // Sadece görünür sütunları kopyala
+            visibleColumnIds.forEach(columnId => {
+              if (fixturePlayer.hasOwnProperty(columnId)) {
+                newPlayer[columnId] = fixturePlayer[columnId];
+              }
+            });
+            
             playersToAdd.push(newPlayer);
           }
         });
