@@ -1107,16 +1107,16 @@ const Tournaments = () => {
                 </p>
               </div>
               
-              {/* Content Area - Scrollable */}
-              <div className="flex-1 p-8 overflow-y-auto">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Left Column - Basic Info */}
+              {/* Content Area - Two Separate Scrollable Sections */}
+              <div className="flex-1 flex overflow-hidden">
+                {/* Left Column - Tournament Details and Filters */}
+                <div className="w-1/2 p-8 overflow-y-auto border-r border-gray-200">
                   <div className="space-y-6">
                     {/* Tournament Name */}
                     <div className="bg-gray-50 rounded-lg p-6">
                       <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                         <span className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">1</span>
-                        {t('tournaments.details')}
+                        {t('tournaments.tournamentName')}
                       </h3>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1213,8 +1213,10 @@ const Tournaments = () => {
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Right Column - Weight Ranges */}
+                {/* Right Column - Weight Ranges */}
+                <div className="w-1/2 p-8 overflow-y-auto">
                   <div className="space-y-6">
                     <div className="bg-gray-50 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-6">
