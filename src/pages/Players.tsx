@@ -107,14 +107,13 @@ const Players = () => {
     saveColumns(updatedColumns);
     
     // Remove this field from all players so that table doesn't render empty cells
-    setPlayersState(prev => prev.map((p) => {
+    const updatedPlayers = playersState.map((p) => {
       const { [columnId]: _removed, ...rest } = p as any;
       return rest as any;
-    }));
-    // Persist updated players without the removed field
-    setTimeout(() => {
-      savePlayers((playersState as unknown as Player[]).map(p => ({ ...p })));
     });
+    setPlayersState(updatedPlayers);
+    // Persist updated players without the removed field
+    savePlayers(updatedPlayers as unknown as Player[]);
   };
 
   const handleToggleColumnVisibility = (columnId: string) => {
@@ -409,16 +408,16 @@ const Players = () => {
   };
 
   const filteredPlayers = useMemo(() => {
-    if (!searchTerm) return players;
+    if (!searchTerm) return playersState;
     
     const normalizedSearchTerm = normalizeTurkishText(searchTerm.trim());
     
-    return players.filter(player => {
+    return playersState.filter(player => {
       const fullName = `${player.name || ''} ${player.surname || ''}`;
       const normalizedFullName = normalizeTurkishText(fullName.trim());
       return normalizedFullName.includes(normalizedSearchTerm);
     });
-  }, [players, searchTerm]);
+  }, [playersState, searchTerm]);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
@@ -428,7 +427,7 @@ const Players = () => {
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-6 border-b border-gray-200">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('players.title')}</h1>
-              <p className="text-base text-gray-500 mt-1">{t('players.totalPlayers')}: {players.length}</p>
+              <p className="text-base text-gray-500 mt-1">{t('players.totalPlayers')}: {playersState.length}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <div className="relative shadow-md rounded-lg w-full sm:w-auto">
@@ -513,6 +512,7 @@ const Players = () => {
             players={filteredPlayers}
             onPlayersChange={(next) => {
               setPlayersState(next as ExtendedPlayer[]);
+              savePlayers(next as unknown as Player[]);
             }}
             columns={columnsState}
             onColumnsChange={setColumnsNormalized}
