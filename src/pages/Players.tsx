@@ -317,6 +317,10 @@ const Players = () => {
 
         cleanedHeaders.forEach(({ original }) => {
           if (headerToKeyMap[original]) return; // already mapped to a known field
+          
+          // Skip columns with empty or whitespace-only names
+          if (!original || original.trim() === '') return;
+          
           const newId = original.toLowerCase().trim().replace(/\s+/g, '_');
           if (!currentColumnIds.has(newId) && !currentColumnNames.has(original.toLowerCase())) {
             newColumnsToAdd.push({ id: newId, name: original, visible: true });
@@ -334,6 +338,9 @@ const Players = () => {
           .map((row) => {
             const obj: Record<string, any> = {};
             cleanedHeaders.forEach(({ original }, idx) => {
+              // Skip columns with empty or whitespace-only names
+              if (!original || original.trim() === '') return;
+              
               const key = headerToKeyMap[original];
               obj[key] = row[idx];
             });
