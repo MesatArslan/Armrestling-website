@@ -68,6 +68,7 @@ export interface AuthContextType {
   signIn: (email: string, password: string, roleType?: 'admin' | 'user') => Promise<ApiResponse<AuthUser>>;
   signOut: () => Promise<ApiResponse<void>>;
   refreshProfile: () => Promise<void>;
+  createProfile: (userId: string, email: string, role?: string) => Promise<Profile | null>;
 }
 
 // Route Protection Types

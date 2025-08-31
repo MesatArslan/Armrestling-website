@@ -7,6 +7,7 @@ import Scoring from './pages/Scoring';
 import { Login } from './pages/Login';
 import { SuperAdmin } from './pages/SuperAdmin';
 import { Admin } from './pages/Admin';
+import { AuthDebug } from './pages/AuthDebug';
 import './i18n';
 import Navbar from './components/UI/Navbar';
 import ScrollToTop from './components/UI/ScrollToTop';
@@ -32,6 +33,7 @@ const App = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/debug" element={<AuthDebug />} />
           
           {/* Super Admin Routes */}
           <Route 

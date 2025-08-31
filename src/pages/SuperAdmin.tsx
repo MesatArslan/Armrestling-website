@@ -38,8 +38,25 @@ export const SuperAdmin: React.FC = () => {
   const [deletingInstitution, setDeletingInstitution] = useState<Institution | null>(null)
 
   useEffect(() => {
+    // Loading durumunda hiçbir şey yapma
+    if (loading) {
+      return
+    }
+
+    // Kullanıcının super_admin rolünde olup olmadığını kontrol et
+    if (!user) {
+      setError('Giriş yapmanız gerekiyor. Lütfen önce giriş yapın.')
+      return
+    }
+
+    if (user.role !== 'super_admin') {
+      setError('Bu sayfaya erişim izniniz yok. Sadece Super Admin kullanıcıları bu sayfayı görüntüleyebilir.')
+      return
+    }
+
+    // Kullanıcı doğruysa verileri yükle
     loadData()
-  }, [])
+  }, [user, loading])
 
   const loadData = async () => {
     setLoading(true)
@@ -53,8 +70,14 @@ export const SuperAdmin: React.FC = () => {
       if (institutionsResult.success) {
         setInstitutions(institutionsResult.data || [])
       } else {
-        setError(`Kurumlar yüklenemedi: ${institutionsResult.error}`)
+        const errorMessage = institutionsResult.error || 'Bilinmeyen hata'
+        setError(`Kurumlar yüklenemedi: ${errorMessage}`)
         console.error('Institutions error:', institutionsResult.error)
+        
+        // Eğer permission denied hatası varsa, kullanıcıya özel mesaj göster
+        if (errorMessage.includes('erişim izni yok')) {
+          setError('Kurumlara erişim izniniz yok. Lütfen sistem yöneticisi ile iletişime geçin veya tekrar giriş yapmayı deneyin.')
+        }
       }
 
       if (statsResult.success) {
@@ -208,10 +231,47 @@ export const SuperAdmin: React.FC = () => {
     await signOut()
   }
 
-  if (loading && !institutions.length) {
+  // Loading state
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
+        <div className="text-center">
+          <LoadingSpinner />
+          <p className="mt-4 text-gray-600">Kimlik doğrulama kontrol ediliyor...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Authentication error state
+  if (error && (error.includes('Giriş yapmanız gerekiyor') || error.includes('erişim izni yok') || error.includes('Aktif oturum bulunamadı'))) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+              <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">Erişim Hatası</h3>
+            <p className="mt-2 text-sm text-gray-500">{error}</p>
+            <div className="mt-6 space-y-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Sayfayı Yenile
+              </button>
+              <button
+                onClick={() => window.location.href = '/login'}
+                className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Giriş Sayfasına Git
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -317,7 +377,29 @@ export const SuperAdmin: React.FC = () => {
         {/* Messages */}
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Hata</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+                {error.includes('erişim izni yok') && (
+                  <div className="mt-3">
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
+                    >
+                      Sayfayı Yenile
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
         

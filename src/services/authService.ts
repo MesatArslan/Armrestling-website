@@ -118,6 +118,21 @@ export class AuthService {
     try {
       console.log('Getting institutions...')
 
+      // Önce session'ı kontrol et
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+        return { success: false, error: 'Oturum bilgisi alınamadı' }
+      }
+
+      if (!session) {
+        console.error('No active session')
+        return { success: false, error: 'Aktif oturum bulunamadı. Lütfen tekrar giriş yapın.' }
+      }
+
+      console.log('Active session found for user:', session.user.id)
+
       const { data, error } = await supabase
         .from('institutions')
         .select('*')
@@ -125,6 +140,12 @@ export class AuthService {
 
       if (error) {
         console.error('Institutions error:', error)
+        
+        // Eğer permission denied hatası varsa, RLS politikalarını kontrol et
+        if (error.code === '42501') {
+          return { success: false, error: 'Kurumlara erişim izni yok. Lütfen sistem yöneticisi ile iletişime geçin.' }
+        }
+        
         return { success: false, error: error.message }
       }
 
