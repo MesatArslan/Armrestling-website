@@ -507,11 +507,12 @@ interface MatchLike {
   player1Id: string;
   player2Id: string;
   winnerId?: string;
-  bracket: 'winner' | 'loser' | 'placement';
-  round: number;
-  matchNumber: number;
-  isBye: boolean;
+  bracket?: 'winner' | 'loser' | 'placement';
+  round?: number;
+  matchNumber?: number;
+  isBye?: boolean;
   description?: string;
+  tablePosition?: Record<string, 'left' | 'right'>;
 }
 
 const getPlayerNameFromFixture = (fixture: FixtureLike, playerId?: string) => {
@@ -568,7 +569,7 @@ const buildFixtureHeader = (fixture: FixtureLike, pageNum: number, totalPages: n
   `;
 };
 
-const buildRankingsSection = (fixture: any, isForPDF: boolean) => {
+const buildRankingsSection = (fixture: any, isForPDF: boolean, selectedColumns: string[] = ['name', 'surname', 'weight']) => {
   const t = (key: string) => String(i18n.t(key));
   const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-3px) !important;">${content}</div>` : content);
   const entries: Array<{ key: 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'seventh' | 'eighth'; label: string; icon: string }> = [
@@ -585,11 +586,53 @@ const buildRankingsSection = (fixture: any, isForPDF: boolean) => {
   const maxPlaces = Math.max(0, Math.min(playersLen, entries.length));
   const rows = entries.slice(0, maxPlaces).map(({ key, label, icon }) => {
     const playerId = (fixture as any).rankings?.[key as any];
+    const player = fixture.players.find(p => p.id === playerId);
     const playerName = getPlayerNameFromFixture(fixture, playerId);
+    
+    // Build player info based on selected columns
+    const playerInfo = selectedColumns.map(colId => {
+      let value = '';
+      switch (colId) {
+        case 'name':
+          value = player?.name || '';
+          break;
+        case 'surname':
+          value = player?.surname || '';
+          break;
+        case 'weight':
+          value = player?.weight ? `${player.weight} kg` : '';
+          break;
+        case 'age':
+          if (player?.birthday) {
+            const birthYear = new Date(player.birthday).getFullYear();
+            const currentYear = new Date().getFullYear();
+            value = String(currentYear - birthYear);
+          }
+          break;
+        case 'gender':
+          value = player?.gender ? t(`players.${player.gender}`) : '';
+          break;
+        case 'handPreference':
+          value = player?.handPreference ? t(`players.${player.handPreference}`) : '';
+          break;
+        case 'birthday':
+          value = player?.birthday ? new Date(player.birthday).toLocaleDateString() : '';
+          break;
+        case 'city':
+          value = player?.city || '';
+          break;
+        default:
+          // For custom columns, try to get the value directly from player object
+          value = player?.[colId] || '';
+      }
+      return value;
+    }).filter(v => v).join(' - ');
+    
     return `
       <tr>
         <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important;\">${wrap(`${icon} ${label}`)}</td>
         <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight:600 !important;\">${wrap(playerName || '—')}</td>
+        <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; color:#6b7280 !important;\">${wrap(playerInfo || '—')}</td>
       </tr>
     `;
   }).join('');
@@ -597,6 +640,13 @@ const buildRankingsSection = (fixture: any, isForPDF: boolean) => {
     <div style="margin-bottom: 10px !important;">
       <h3 style="font-size: 14px !important; font-weight: bold !important; color: #111827 !important; margin-bottom: 6px !important;">${wrap(String(i18n.t('rankings.title')))}</h3>
       <table style="width:100% !important; border-collapse: collapse !important;">
+        <thead>
+          <tr style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;">
+            <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap(String(t('rankings.title')))}</th>
+            <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap(String(t('players.name')))}</th>
+            <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap(String(t('players.basicInfo') || 'Bilgiler'))}</th>
+          </tr>
+        </thead>
         <tbody>
           ${rows}
         </tbody>
@@ -655,10 +705,11 @@ const buildCompletedMatchesTable = (fixture: FixtureLike, matches: MatchLike[], 
     if (!leftId) leftId = m.player1Id;
     if (!rightId) rightId = m.player2Id;
     // For BYE matches: left table shows BYE, right shows actual player name, winner shows player's name, loser shows BYE
-    const rightPlayer = m.isBye ? (getPlayerNameFromFixture(fixture, winnerId) || t('matches.bye')) : (getPlayerNameFromFixture(fixture, rightId) || '—');
-    const leftPlayer = m.isBye ? t('matches.bye') : (getPlayerNameFromFixture(fixture, leftId) || '—');
-    const winner = m.isBye ? (getPlayerNameFromFixture(fixture, winnerId) || t('matches.bye')) : getPlayerNameFromFixture(fixture, winnerId);
-    const loser = m.isBye ? t('matches.bye') : getPlayerNameFromFixture(fixture, loserId);
+    const isBye = m.isBye || false;
+    const rightPlayer = isBye ? (getPlayerNameFromFixture(fixture, winnerId) || t('matches.bye')) : (getPlayerNameFromFixture(fixture, rightId) || '—');
+    const leftPlayer = isBye ? t('matches.bye') : (getPlayerNameFromFixture(fixture, leftId) || '—');
+    const winner = isBye ? (getPlayerNameFromFixture(fixture, winnerId) || t('matches.bye')) : getPlayerNameFromFixture(fixture, winnerId);
+    const loser = isBye ? t('matches.bye') : getPlayerNameFromFixture(fixture, loserId);
     let bracketDisplay = '';
     if (m.description && m.description.toLowerCase() !== 'result') {
       bracketDisplay = getLocalizedBracketLabel(m.description);
@@ -666,12 +717,12 @@ const buildCompletedMatchesTable = (fixture: FixtureLike, matches: MatchLike[], 
     if (!bracketDisplay) {
       if (m.bracket === 'winner' && m.round) {
         const key = `WB${m.round}`;
-        bracketDisplay = ROUND_DESCRIPTIONS[key] ? `${String(i18n.t(`rounds.${key}`))} - ${t('matches.match')} ${m.matchNumber}` : `${t('matches.match')} ${m.matchNumber}`;
+        bracketDisplay = ROUND_DESCRIPTIONS[key] ? `${String(i18n.t(`rounds.${key}`))} - ${t('matches.match')} ${m.matchNumber || ''}` : `${t('matches.match')} ${m.matchNumber || ''}`;
       } else if (m.bracket === 'loser' && m.round) {
         const key = `LB${m.round}`;
-        bracketDisplay = ROUND_DESCRIPTIONS[key] ? `${String(i18n.t(`rounds.${key}`))} - ${t('matches.match')} ${m.matchNumber}` : `${t('matches.match')} ${m.matchNumber}`;
+        bracketDisplay = ROUND_DESCRIPTIONS[key] ? `${String(i18n.t(`rounds.${key}`))} - ${t('matches.match')} ${m.matchNumber || ''}` : `${t('matches.match')} ${m.matchNumber || ''}`;
       } else {
-        bracketDisplay = m.description && m.description !== 'Result' ? m.description : `${t('matches.match')} ${m.matchNumber}`;
+        bracketDisplay = m.description && m.description !== 'Result' ? m.description : `${t('matches.match')} ${m.matchNumber || ''}`;
       }
     }
     return `
@@ -698,15 +749,40 @@ const buildCompletedMatchesTable = (fixture: FixtureLike, matches: MatchLike[], 
 };
 
 const getCompletedMatchesForFixture = (fixture: any): MatchLike[] => {
-  // No results array anymore, return empty array
-  return [];
+  try {
+    // Get double elimination state
+    const deRepo = new DoubleEliminationRepository<any>();
+    const state = deRepo.getState(fixture.id);
+    
+    if (state && state.matches && Array.isArray(state.matches)) {
+      // Filter completed matches (those with winnerId)
+      return state.matches.filter((match: any) => match.winnerId && match.winnerId !== 'pending');
+    }
+    
+    // Try legacy storage
+    try {
+      const legacy = window.localStorage.getItem(`double-elimination-fixture-${fixture.id}`);
+      if (legacy) {
+        const legacyState = JSON.parse(legacy);
+        if (legacyState && legacyState.matches && Array.isArray(legacyState.matches)) {
+          return legacyState.matches.filter((match: any) => match.winnerId && match.winnerId !== 'pending');
+        }
+      }
+    } catch {}
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting completed matches:', error);
+    return [];
+  }
 };
 
 export const generateFixturePreviewPages = (
   fixture: FixtureLike,
   includeRankings: boolean,
   includeCompletedMatches: boolean,
-  rowsPerPage: number = 18
+  rowsPerPage: number = 18,
+  selectedPlayerColumns: string[] = ['name', 'surname', 'weight']
 ) => {
   const fresh = mergeFixtureWithDEState(getFreshFixture(fixture.id) || fixture);
   const completed = includeCompletedMatches ? getCompletedMatchesForFixture(fresh) : [];
@@ -736,7 +812,7 @@ export const generateFixturePreviewPages = (
       let content = '';
       content += buildFixtureHeader(fresh, pageNum, totalPages, false);
       if (pageNum === 0 && includeRankings) {
-        content += buildRankingsSection(fresh, false);
+        content += buildRankingsSection(fresh, false, selectedPlayerColumns);
       }
       if (includeCompletedMatches && totalRows > 0) {
         content += buildCompletedMatchesTable(fresh, completed as any, startIndex, endIndex, false);
@@ -760,7 +836,7 @@ export const generateFixturePreviewPages = (
       let content = '';
       content += buildFixtureHeader(fresh, pageNum, totalPages, false);
       if (pageNum === 0 && includeRankings) {
-        content += buildRankingsSection(fresh, false);
+        content += buildRankingsSection(fresh, false, selectedPlayerColumns);
       }
       if (includeCompletedMatches) {
         content += buildCompletedMatchesTable(fresh, completed as any, startIndex, endIndex, false);
@@ -783,9 +859,10 @@ export const openFixturePreviewModal = (
   fixture: FixtureLike,
   includeRankings: boolean,
   includeCompletedMatches: boolean,
-  rowsPerPage: number = 18
+  rowsPerPage: number = 18,
+  selectedPlayerColumns: string[] = ['name', 'surname', 'weight']
 ) => {
-  const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, rowsPerPage);
+  const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, rowsPerPage, selectedPlayerColumns);
   return { pages, currentPage: 0 };
 };
 
@@ -976,11 +1053,12 @@ export const generateFixturePDF = async (
   includeRankings: boolean,
   includeCompletedMatches: boolean,
   rowsPerPage: number = 18,
+  selectedPlayerColumns: string[] = ['name', 'surname', 'weight'],
   onProgress?: (percent: number) => void
 ): Promise<{ fileName: string; fileSize: string; totalPages: number }> => {
   try {
     await document.fonts.ready;
-    const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, rowsPerPage);
+    const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, rowsPerPage, selectedPlayerColumns);
     const pdf = new jsPDF('p', 'mm', 'a4');
     if (onProgress) onProgress(0);
     for (let i = 0; i < pages.length; i++) {

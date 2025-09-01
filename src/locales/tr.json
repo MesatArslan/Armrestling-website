@@ -202,7 +202,7 @@
     "addTestPlayers": "5 Test Yarışmacısı Ekle",
     "clearAllData": "Tüm Verileri Temizle",
           "addColumn": "Sütun Ekle",
-      "manageColumns": "Sütunları Düzenle",
+      "manageColumns": "Oyuncu Kolonları",
       "manageColumnsDescription": "Görünürlüğünü yönetmek istediğin özel sütunları aç/kapat. Satıra tıklayarak da görünürlüğü değiştirebilirsin.",
       "confirmDeleteColumn": "Bu sütunu silmek istediğinizden emin misiniz?",
       "noCustomColumns": "Özel sütun bulunmuyor",
