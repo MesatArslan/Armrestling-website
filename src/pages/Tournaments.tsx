@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import TournamentCard from '../components/UI/TournamentCard';
@@ -383,13 +383,18 @@ const Tournaments = () => {
   };
 
   // Template selection handlers
-  const handleTemplateSelect = (template: TournamentTemplate) => {
+  const handleTemplateSelect = (template: TournamentTemplate, handPreference: 'left' | 'right') => {
+    const handPreferenceText = handPreference === 'left' ? t('players.leftHanded') : t('players.rightHanded');
+    const tournamentName = `${t(template.nameKey)} - ${handPreferenceText}`;
+    
     setConfirmationModal({
       isOpen: true,
       title: 'Turnuva Oluştur',
-      message: `"${t(template.nameKey)}" şablonunu kullanarak bu turnuvayı oluşturmak istiyor musunuz?`,
+      message: `"${tournamentName}" turnuvasını oluşturmak istiyor musunuz?`,
       onConfirm: () => {
-        const newTournament = createTournamentFromTemplate(template, t(template.nameKey));
+        const newTournament = createTournamentFromTemplate(template, tournamentName);
+        // Apply hand preference filter to the tournament
+        newTournament.handPreferenceFilter = handPreference;
         const updatedTournaments = [...tournaments, newTournament];
         setTournaments(updatedTournaments);
         saveTournaments(updatedTournaments as any);
@@ -1165,23 +1170,47 @@ const Tournaments = () => {
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 overflow-hidden"
       >
         <div 
-          className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden transform-none"
+          className="bg-white rounded-xl shadow-2xl max-w-6xl w-full mx-4 max-h-[95vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
               {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex-shrink-0">
-                <h2 className="text-3xl font-bold text-white">
-                  {isEditMode ? t('tournaments.editTournament') : t('tournaments.createNewTournament')}
-                </h2>
-                <p className="text-blue-100 mt-2">
-                  {isEditMode ? t('tournaments.updateTournamentSettings') : t('tournaments.setupTournament')}
-                </p>
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-white/20 rounded-lg p-2">
+                      <UserGroupIcon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">
+                        {isEditMode ? t('tournaments.editTournament') : t('tournaments.createNewTournament')}
+                      </h2>
+                      <p className="text-blue-100 mt-1">
+                        {isEditMode ? t('tournaments.updateTournamentSettings') : t('tournaments.setupTournament')}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      setIsEditMode(false);
+                      setEditingTournamentId(null);
+                      setNewTournamentName('');
+                      setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
+                      setCreateTournamentGenderFilter('male');
+                      setCreateTournamentHandPreferenceFilter(null);
+                      setPlayerFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
+                      setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
+                    }}
+                    className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
               </div>
               
-              {/* Content Area - Two Separate Scrollable Sections */}
-              <div className="flex-1 flex overflow-hidden">
+              <div className="flex h-[calc(95vh-120px)]">
                 {/* Left Column - Tournament Details and Filters */}
-                <div className="w-1/2 p-8 overflow-y-auto border-r border-gray-200">
+                <div className="w-1/2 border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-6 overflow-y-auto">
                   <div className="space-y-6">
                     {/* Tournament Name */}
                     <div className="bg-gray-50 rounded-lg p-6">
@@ -1287,7 +1316,7 @@ const Tournaments = () => {
                 </div>
 
                 {/* Right Column - Weight Ranges */}
-                <div className="w-1/2 p-8 overflow-y-auto">
+                <div className="flex-1 p-8 overflow-y-auto bg-gray-50">
                   <div className="space-y-6">
                     <div className="bg-gray-50 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-6">
@@ -1375,14 +1404,8 @@ const Tournaments = () => {
                 </div>
               </div>
 
-              {/* Footer - Always visible */}
-              <div className="bg-gray-50 px-8 py-6 border-t border-gray-200 flex justify-between items-center flex-shrink-0">
-                <div className="text-sm text-gray-600">
-                  {newTournamentName.trim() && weightRanges.filter(r => r.name.trim() && r.min > 0 && r.max > 0).length > 0 
-                    ? (isEditMode ? t('tournaments.readyToSave') : t('tournaments.readyToCreate'))
-                    : t('tournaments.completeAllFields')
-                  }
-                </div>
+              {/* Footer */}
+              <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
                 <div className="flex space-x-3">
                   <button
                     onClick={() => {
