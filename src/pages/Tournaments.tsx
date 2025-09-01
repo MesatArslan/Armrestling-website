@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import TournamentCard from '../components/UI/TournamentCard';
 import TemplateSelectionModal from '../components/UI/TemplateSelectionModal';
+import ConfirmationModal from '../components/UI/ConfirmationModal';
 import type { Tournament as StorageTournament, WeightRange } from '../storage/schemas';
 import { type Column } from '../utils/playersStorage';
 import { openPreviewModal, generatePDF, generateCombinedPreviewPages, generateCombinedTournamentPDF } from '../utils/pdfGenerator';
@@ -78,6 +79,21 @@ const Tournaments = () => {
 
   // Template Selection Modal States
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+
+  // Confirmation Modal States
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'danger'
+  });
 
   // Toggle to disable all background sync effects (diagnostic/safe mode)
   const NO_BACKGROUND_SYNC = true;
@@ -350,20 +366,36 @@ const Tournaments = () => {
   };
 
   const handleDeleteTournament = (tournamentId: string) => {
-    const updatedTournaments = tournaments.filter(t => t.id !== tournamentId);
-    setTournaments(updatedTournaments);
-    saveTournaments(updatedTournaments as any);
+    const tournament = tournaments.find(t => t.id === tournamentId);
+    if (!tournament) return;
+    
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Turnuvayı Sil',
+      message: t('tournamentCard.confirmDeleteTournament', { name: tournament.name }),
+      onConfirm: () => {
+        const updatedTournaments = tournaments.filter(t => t.id !== tournamentId);
+        setTournaments(updatedTournaments);
+        saveTournaments(updatedTournaments as any);
+      },
+      type: 'danger'
+    });
   };
 
   // Template selection handlers
   const handleTemplateSelect = (template: TournamentTemplate) => {
-    const newTournament = createTournamentFromTemplate(template);
-    const updatedTournaments = [...tournaments, newTournament];
-    setTournaments(updatedTournaments);
-    saveTournaments(updatedTournaments as any);
-    
-    // Show success message
-    alert(t('tournaments.templateCreated'));
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Turnuva Oluştur',
+      message: `"${t(template.nameKey)}" şablonunu kullanarak bu turnuvayı oluşturmak istiyor musunuz?`,
+      onConfirm: () => {
+        const newTournament = createTournamentFromTemplate(template, t(template.nameKey));
+        const updatedTournaments = [...tournaments, newTournament];
+        setTournaments(updatedTournaments);
+        saveTournaments(updatedTournaments as any);
+      },
+      type: 'info'
+    });
   };
 
   const handleOpenTemplateModal = () => {
@@ -472,15 +504,20 @@ const Tournaments = () => {
   
 
   const handleClearAllTournamentData = () => {
-    if (window.confirm('Are you sure you want to clear all tournament data? This will remove all tournaments, selections, and filters.')) {
-      clearAllTournamentData();
-      setTournaments([]);
-      setSelectedTournamentLocal(null);
-      setSelectedWeightRangeLocal(null);
-      setPlayerFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
-      setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
-      setShowFilteredPlayers(false);
-    }
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Tüm Turnuva Verilerini Temizle',
+      message: 'Tüm turnuva verilerini temizlemek istediğinizden emin misiniz? Bu işlem tüm turnuvaları, seçimleri ve filtreleri kaldıracaktır.',
+      onConfirm: () => {
+        clearAllTournamentData();
+        setTournaments([]);
+        setSelectedTournamentLocal(null);
+        setSelectedWeightRangeLocal(null);
+        setPlayerFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
+        setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
+        setShowFilteredPlayers(false);
+      }
+    });
   };
 
   const handleStartTournament = (tournamentId: string, weightRangeId: string) => {
@@ -1381,6 +1418,16 @@ const Tournaments = () => {
           isOpen={isTemplateModalOpen}
           onClose={() => setIsTemplateModalOpen(false)}
           onTemplateSelect={handleTemplateSelect}
+        />
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={confirmationModal.isOpen}
+          onClose={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmationModal.onConfirm}
+          title={confirmationModal.title}
+          message={confirmationModal.message}
+          type={confirmationModal.type || 'danger'}
         />
     </>
   );

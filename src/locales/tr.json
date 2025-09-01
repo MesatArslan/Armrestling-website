@@ -109,7 +109,6 @@
     "createTournament": "Turnuva Oluştur",
     "tournamentNamePlaceholder": "örn. Gençler Sol Kol Şampiyonası",
     "weightCategory": "sıklet kategorisi",
-    "weightCategories": "sıklet kategorisi",
     "confirmDeleteTournament": "\"{{name}}\" turnuvasını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
     "managingPlayersFor": "{{name}} için Yarışmacı Yönetimi",
     "weightRange": "Sıklet Aralığı",

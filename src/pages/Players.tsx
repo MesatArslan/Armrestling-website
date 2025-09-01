@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import PlayersTable from '../components/UI/PlayersTable';
+import ImportNotificationModal from '../components/UI/ImportNotificationModal';
+import ConfirmationModal from '../components/UI/ConfirmationModal';
 import { PlayersStorage, type Column, type ExtendedPlayer, defaultColumns } from '../utils/playersStorage';
 import { usePlayers } from '../hooks/usePlayers';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -20,6 +22,28 @@ const Players = () => {
   const [isAddColumnModalOpen, setIsAddColumnModalOpen] = useState(false);
   const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
+  const [importModal, setImportModal] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
 
@@ -99,21 +123,27 @@ const Players = () => {
     if (defaultColumns.some((c) => c.id === columnId)) {
       return;
     }
-    if (!window.confirm(t('players.confirmDeleteColumn') || 'Sütunu silmek istediğinize emin misiniz?')) return;
-    const updatedColumns = normalizeColumns(PlayersStorage.deleteColumn(columnsState, columnId));
-    setColumnsState(updatedColumns);
-    
-    // Save the updated columns to the repository so column deletion persists
-    saveColumns(updatedColumns);
-    
-    // Remove this field from all players so that table doesn't render empty cells
-    const updatedPlayers = playersState.map((p) => {
-      const { [columnId]: _removed, ...rest } = p as any;
-      return rest as any;
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Sütunu Sil',
+      message: t('players.confirmDeleteColumn') || 'Sütunu silmek istediğinize emin misiniz?',
+      onConfirm: () => {
+        const updatedColumns = normalizeColumns(PlayersStorage.deleteColumn(columnsState, columnId));
+        setColumnsState(updatedColumns);
+        
+        // Save the updated columns to the repository so column deletion persists
+        saveColumns(updatedColumns);
+        
+        // Remove this field from all players so that table doesn't render empty cells
+        const updatedPlayers = playersState.map((p) => {
+          const { [columnId]: _removed, ...rest } = p as any;
+          return rest as any;
+        });
+        setPlayersState(updatedPlayers);
+        // Persist updated players without the removed field
+        savePlayers(updatedPlayers as unknown as Player[]);
+      }
     });
-    setPlayersState(updatedPlayers);
-    // Persist updated players without the removed field
-    savePlayers(updatedPlayers as unknown as Player[]);
   };
 
   const handleToggleColumnVisibility = (columnId: string) => {
@@ -133,13 +163,18 @@ const Players = () => {
   };
 
   const handleClearAllData = () => {
-    if (window.confirm(t('players.clearAllDataConfirm'))) {
-      try { clearPlayers(); } catch {}
-      try { clearColumns(); } catch {}
-      setPlayersState([]);
-      setColumnsState(defaultColumns);
-      setSearchTerm('');
-    }
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Tüm Verileri Temizle',
+      message: t('players.clearAllDataConfirm'),
+      onConfirm: () => {
+        try { clearPlayers(); } catch {}
+        try { clearColumns(); } catch {}
+        setPlayersState([]);
+        setColumnsState(defaultColumns);
+        setSearchTerm('');
+      }
+    });
   };
 
   // JSON Export
@@ -158,9 +193,19 @@ const Players = () => {
         const mergedPlayers = PlayersStorage.importPlayersFromJSON(jsonData, playersState);
         setPlayersState(mergedPlayers);
         savePlayers(mergedPlayers as unknown as Player[]);
-        alert(t('players.importSuccess'));
+        setImportModal({
+          isOpen: true,
+          type: 'success',
+          title: 'Başarılı!',
+          message: t('players.importSuccess')
+        });
       } catch (err: any) {
-        alert(t('players.importError', { error: err.message }));
+        setImportModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Hata!',
+          message: t('players.importError', { error: err.message })
+        });
       }
       // Aynı dosya tekrar yüklenirse de çalışsın diye input'u sıfırla
       if (e.target) e.target.value = '';
@@ -385,9 +430,19 @@ const Players = () => {
         const updatedPlayers = [...playersState, ...importedPlayers];
         setPlayersState(updatedPlayers);
         savePlayers(updatedPlayers as unknown as Player[]);
-        alert(t('players.importSuccess'));
+        setImportModal({
+          isOpen: true,
+          type: 'success',
+          title: 'Başarılı!',
+          message: t('players.importSuccess')
+        });
       } catch (err: any) {
-        alert(t('players.importError', { error: err.message || String(err) }));
+        setImportModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Hata!',
+          message: t('players.importError', { error: err.message || String(err) })
+        });
       } finally {
         if (e.target) e.target.value = '';
       }
@@ -653,6 +708,25 @@ const Players = () => {
           </div>
         </div>
       )}
+
+      {/* Import Notification Modal */}
+      <ImportNotificationModal
+        isOpen={importModal.isOpen}
+        onClose={() => setImportModal(prev => ({ ...prev, isOpen: false }))}
+        type={importModal.type}
+        title={importModal.title}
+        message={importModal.message}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        onClose={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmationModal.onConfirm}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+        type="danger"
+      />
     </div>
   );
 };

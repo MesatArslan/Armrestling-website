@@ -259,9 +259,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (window.confirm(t('tournamentCard.confirmDeleteTournament', { name: tournament.name }))) {
-                onDelete(tournament.id);
-              }
+              onDelete(tournament.id);
             }}
             className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 group"
             title={t('tournamentCard.deleteTournament')}
