@@ -1,17 +1,23 @@
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Player } from '../../types';
+import type { ExtendedPlayer } from '../../utils/playersStorage';
+import { usePlayers } from '../../hooks/usePlayers';
 
 interface PlayerInfoModalProps {
-  player: Player | null;
+  player: ExtendedPlayer | null;
   isOpen: boolean;
   onClose: () => void;
   triggerElement?: HTMLElement | null;
+  columns?: Array<{ id: string; name: string; visible: boolean }>;
 }
 
-const PlayerInfoModal: React.FC<PlayerInfoModalProps> = ({ player, isOpen, onClose, triggerElement }) => {
-  const { t } = useTranslation();
+const PlayerInfoModal: React.FC<PlayerInfoModalProps> = ({ player, isOpen, onClose, triggerElement, columns = [] }) => {
+  useTranslation();
+  const { columns: allColumns, players: allPlayers } = usePlayers();
   const tooltipRef = useRef<HTMLDivElement>(null);
+  
+  // Get the full player data from storage
+  const fullPlayer = player ? allPlayers.find(p => p.id === player.id) || player : null;
 
   // Positioning function
   const positionTooltip = () => {
@@ -98,71 +104,100 @@ const PlayerInfoModal: React.FC<PlayerInfoModalProps> = ({ player, isOpen, onClo
     }
   }, [isOpen, onClose]);
 
-  if (!isOpen || !player) {
+  if (!isOpen || !fullPlayer) {
     return null;
   }
 
   // Helper function to format birthday
-  const formatBirthday = (birthday?: string) => {
-    if (!birthday) return null;
-    try {
-      const date = new Date(birthday);
-      return date.toLocaleDateString('tr-TR', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-    } catch {
-      return birthday;
-    }
-  };
 
   // Helper function to get field icon
-  const getFieldIcon = (field: string) => {
-    switch (field) {
-      case 'name': return '👤';
-      case 'surname': return '📝';
-      case 'weight': return '⚖️';
-      case 'gender': return player.gender === 'male' ? '👨' : '👩';
-      case 'handPreference': 
-        return player.handPreference === 'left' ? '🤚' : 
-               player.handPreference === 'right' ? '✋' : '🤲';
-      case 'birthday': return '🎂';
-      case 'city': return '🏙️';
-      default: return 'ℹ️';
-    }
+  const getFieldIcon = () => {
+    return '🔹'; // Modern info icon for all fields
   };
 
   // Helper function to get field label
   const getFieldLabel = (field: string) => {
     switch (field) {
-      case 'name': return t('players.name');
-      case 'surname': return t('players.surname');
-      case 'weight': return t('players.weight');
-      case 'gender': return t('players.gender');
-      case 'handPreference': return t('players.handPreference');
-      case 'birthday': return t('players.birthday');
-      case 'city': return t('players.city');
-      default: return field;
+      case 'opponents': return 'Rakipler';
+      default: {
+        // Check if it's a custom column
+        const columnsToUse = columns.length > 0 ? columns : allColumns;
+        const customColumn = columnsToUse.find(col => col.id === field);
+        return customColumn ? customColumn.name : field;
+      }
     }
   };
 
   // Helper function to get field value
   const getFieldValue = (field: string) => {
     switch (field) {
-      case 'name': return player.name;
-      case 'surname': return player.surname;
-      case 'weight': return player.weight ? `${player.weight} kg` : null;
-      case 'gender': return player.gender ? t(`players.${player.gender}`) : null;
-      case 'handPreference': return player.handPreference ? t(`players.${player.handPreference}`) : null;
-      case 'birthday': return formatBirthday(player.birthday);
-      case 'city': return player.city;
-      default: return (player as any)[field];
+      case 'opponents': return fullPlayer.opponents && fullPlayer.opponents.length > 0 
+        ? `${fullPlayer.opponents.length} rakip` 
+        : null;
+      default: {
+        // Get value from player object (ExtendedPlayer supports any key)
+        const value = fullPlayer[field];
+        
+        // For custom columns, show even if empty (but show "—" for empty values)
+        const columnsToUse = columns.length > 0 ? columns : allColumns;
+        const isCustomColumn = columnsToUse.some(col => col.id === field);
+        
+        if (isCustomColumn) {
+          // Show custom columns even if empty
+          const result = value !== undefined && value !== null && value !== '' ? value : '—';
+          return result;
+        }
+        
+        // For regular fields, hide if empty
+        if (value === null || value === undefined || value === '') {
+          return null;
+        }
+        return value;
+      }
     }
   };
 
-  // Define all fields to display
-  const displayFields = ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday', 'city'];
+  // Get all available fields from player object (excluding specified ones)
+  const getAllPlayerFields = () => {
+    const excludedFields = ['name', 'surname', 'gender', 'handPreference', 'birthday', 'city', 'id', 'fullName', 'weight'];
+    const allFields = Object.keys(fullPlayer);
+    return allFields.filter(field => !excludedFields.includes(field));
+  };
+
+  // Get custom column fields that are visible
+  const getCustomColumnFields = () => {
+    const columnsToUse = columns.length > 0 ? columns : allColumns;
+    return columnsToUse
+      .filter(col => col.visible && !['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday', 'city', 'id', 'fullName'].includes(col.id))
+      .map(col => col.id);
+  };
+
+  // Get all fields to display (both player fields and custom columns)
+  const getAllDisplayFields = () => {
+    const playerFields = getAllPlayerFields();
+    const customFields = getCustomColumnFields();
+    
+    // Combine and remove duplicates - prioritize custom columns
+    const allFields = [...new Set([...customFields, ...playerFields])];
+    return allFields;
+  };
+
+  // Combine player fields and custom column fields
+  const displayFields = getAllDisplayFields();
+  
+  // Debug: Show all player data
+  console.log('=== OYUNCU TÜM BİLGİLERİ ===');
+  console.log('Oyuncu objesi:', fullPlayer);
+  console.log('Oyuncu tüm alanları:', Object.keys(fullPlayer));
+  console.log('Mevcut kolonlar:', allColumns);
+  console.log('Custom kolonlar:', getCustomColumnFields());
+  console.log('Gösterilecek alanlar:', displayFields);
+  
+  // Her alanın değerini göster
+  displayFields.forEach(field => {
+    console.log(`${field}:`, fullPlayer[field]);
+  });
+  console.log('=== OYUNCU BİLGİLERİ SONU ===');
 
   return (
     <div 
@@ -185,15 +220,15 @@ const PlayerInfoModal: React.FC<PlayerInfoModalProps> = ({ player, isOpen, onClo
       <div className="border-b border-gray-100 pb-3 mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-            {player.name.charAt(0).toUpperCase()}
+            {fullPlayer.name.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-bold text-gray-900 text-lg truncate">
-              {player.name}
+              {fullPlayer.name}
             </div>
-            {player.surname && (
+            {fullPlayer.surname && (
               <div className="text-sm text-gray-600 truncate">
-                {player.surname}
+                {fullPlayer.surname}
               </div>
             )}
           </div>
@@ -204,12 +239,21 @@ const PlayerInfoModal: React.FC<PlayerInfoModalProps> = ({ player, isOpen, onClo
       <div className="space-y-3">
         {displayFields.map((field) => {
           const value = getFieldValue(field);
-          if (value === null || value === undefined || value === '') return null;
+          
+          // Don't hide null/undefined values for custom columns
+          const columnsToUse = columns.length > 0 ? columns : allColumns;
+          const isCustomColumn = columnsToUse.some(col => col.id === field);
+          
+          // For custom columns, always show (even if empty)
+          // For regular fields, hide if empty
+          if (!isCustomColumn && (value === null || value === undefined || value === '')) {
+            return null;
+          }
           
           return (
             <div key={field} className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-600 text-sm">{getFieldIcon(field)}</span>
+                <span className="text-gray-600 text-sm">{getFieldIcon()}</span>
               </div>
               <div className="flex-1">
                 <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
