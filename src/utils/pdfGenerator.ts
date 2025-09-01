@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import i18n from '../i18n';
 import type { Fixture } from '../storage/schemas';
+import type { Player } from '../types';
 import { ROUND_DESCRIPTIONS } from './roundDescriptions';
 import MatchesRepository from '../storage/MatchesRepository';
 import DoubleEliminationRepository from '../storage/DoubleEliminationRepository';
@@ -586,7 +587,7 @@ const buildRankingsSection = (fixture: any, isForPDF: boolean, selectedColumns: 
   const maxPlaces = Math.max(0, Math.min(playersLen, entries.length));
   const rows = entries.slice(0, maxPlaces).map(({ key, label, icon }) => {
     const playerId = (fixture as any).rankings?.[key as any];
-    const player = fixture.players.find(p => p.id === playerId);
+    const player = fixture.players.find((p: Player) => p.id === playerId);
     const playerName = getPlayerNameFromFixture(fixture, playerId);
     
     // Build player info based on selected columns
@@ -873,20 +874,12 @@ interface ScoringData {
   total: number;
 }
 
-interface ScoringConfig {
-  points: Record<string, number>;
-  groupBy: string;
-  selectedTournamentIds: string[];
-}
 
 export const generateScoringPreviewContent = (
   aggregatedScores: ScoringData[],
-  config: ScoringConfig,
   groupFieldName: string,
   isForPDF: boolean = false
 ): string[] => {
-  const t = (key: string, options?: any) => String(i18n.t(key, options));
-  const getLocale = () => (i18n.language && i18n.language.toLowerCase().startsWith('tr') ? 'tr-TR' : 'en-US');
   
   // Helper function to wrap text for PDF (moves text slightly upward)
   const wrapForPDF = (content: string) => {
@@ -970,22 +963,20 @@ export const generateScoringPreviewContent = (
 
 export const openScoringPreviewModal = (
   aggregatedScores: ScoringData[],
-  config: ScoringConfig,
   groupFieldName: string
 ) => {
-  const pages = generateScoringPreviewContent(aggregatedScores, config, groupFieldName, false);
+  const pages = generateScoringPreviewContent(aggregatedScores, groupFieldName, false);
   return { pages, currentPage: 0 };
 };
 
 export const generateScoringPDF = async (
   aggregatedScores: ScoringData[],
-  config: ScoringConfig,
   groupFieldName: string,
   onProgress?: (percent: number) => void
 ): Promise<{ fileName: string; fileSize: string; totalPages: number }> => {
   try {
     await document.fonts.ready;
-    const pages = generateScoringPreviewContent(aggregatedScores, config, groupFieldName, true);
+    const pages = generateScoringPreviewContent(aggregatedScores, groupFieldName, true);
     const pdf = new jsPDF('p', 'mm', 'a4');
     
     if (onProgress) onProgress(0);
