@@ -5,12 +5,14 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import TournamentCard from '../components/UI/TournamentCard';
+import TemplateSelectionModal from '../components/UI/TemplateSelectionModal';
 import type { Tournament as StorageTournament, WeightRange } from '../storage/schemas';
 import { type Column } from '../utils/playersStorage';
 import { openPreviewModal, generatePDF, generateCombinedPreviewPages, generateCombinedTournamentPDF } from '../utils/pdfGenerator';
 import { useTournaments } from '../hooks/useTournaments';
 import { usePlayers } from '../hooks/usePlayers';
 import { useMatches } from '../hooks/useMatches';
+import { createTournamentFromTemplate, type TournamentTemplate } from '../utils/tournamentTemplates';
 
 type UITournament = Omit<StorageTournament, 'isExpanded'> & { isExpanded: boolean };
 
@@ -74,6 +76,9 @@ const Tournaments = () => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const hideProgressTimer = React.useRef<number | null>(null);
 
+  // Template Selection Modal States
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+
   // Toggle to disable all background sync effects (diagnostic/safe mode)
   const NO_BACKGROUND_SYNC = true;
   const [hasInitialSync, setHasInitialSync] = useState(false);
@@ -131,7 +136,7 @@ const Tournaments = () => {
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (isCreateModalOpen || isPDFPreviewModalOpen || isPDFColumnModalOpen || isBulkPDFModalOpen) {
+    if (isCreateModalOpen || isPDFPreviewModalOpen || isPDFColumnModalOpen || isBulkPDFModalOpen || isTemplateModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -140,7 +145,7 @@ const Tournaments = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isCreateModalOpen, isPDFPreviewModalOpen, isPDFColumnModalOpen, isBulkPDFModalOpen]);
+  }, [isCreateModalOpen, isPDFPreviewModalOpen, isPDFColumnModalOpen, isBulkPDFModalOpen, isTemplateModalOpen]);
 
   // Sync from repositories (guarded by stable snapshot to prevent loops)
   const lastRepoSnapshotRef = React.useRef<{
@@ -348,6 +353,21 @@ const Tournaments = () => {
     const updatedTournaments = tournaments.filter(t => t.id !== tournamentId);
     setTournaments(updatedTournaments);
     saveTournaments(updatedTournaments as any);
+  };
+
+  // Template selection handlers
+  const handleTemplateSelect = (template: TournamentTemplate) => {
+    const newTournament = createTournamentFromTemplate(template);
+    const updatedTournaments = [...tournaments, newTournament];
+    setTournaments(updatedTournaments);
+    saveTournaments(updatedTournaments as any);
+    
+    // Show success message
+    alert(t('tournaments.templateCreated'));
+  };
+
+  const handleOpenTemplateModal = () => {
+    setIsTemplateModalOpen(true);
   };
 
   const handleSaveEdit = () => {
@@ -595,6 +615,12 @@ const Tournaments = () => {
               {t('tournaments.clearAllData')}
             </button>
             <button
+              onClick={handleOpenTemplateModal}
+              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+            >
+              {t('tournaments.useTemplate')}
+            </button>
+            <button
               onClick={() => {
                 setIsEditMode(false);
                 setEditingTournamentId(null);
@@ -624,22 +650,30 @@ const Tournaments = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('tournaments.noTournamentsYet')}</h3>
                 <p className="text-gray-600 mb-6">{t('tournaments.createFirstTournament')}</p>
-                          <button
-                            onClick={() => {
-                    setIsEditMode(false);
-                    setEditingTournamentId(null);
-                    setNewTournamentName('');
-                    setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
-                    setCreateTournamentGenderFilter('male');
-                    setCreateTournamentHandPreferenceFilter(null);
-                    setCreateTournamentBirthYearMin(null);
-                    setCreateTournamentBirthYearMax(null);
-                    setIsCreateModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
-                >
-                  {t('tournaments.createFirstTournamentButton')}
-                          </button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={handleOpenTemplateModal}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow-lg hover:from-green-500 hover:to-green-700 transition-all duration-200 text-base font-semibold"
+                  >
+                    {t('tournaments.useTemplate')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditMode(false);
+                      setEditingTournamentId(null);
+                      setNewTournamentName('');
+                      setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
+                      setCreateTournamentGenderFilter('male');
+                      setCreateTournamentHandPreferenceFilter(null);
+                      setCreateTournamentBirthYearMin(null);
+                      setCreateTournamentBirthYearMax(null);
+                      setIsCreateModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
+                  >
+                    {t('tournaments.createFirstTournamentButton')}
+                  </button>
+                </div>
                         </div>
             ) : (
               tournaments.map((tournament) => (
@@ -1341,6 +1375,13 @@ const Tournaments = () => {
             </div>
           </div>
         )}
+
+        {/* Template Selection Modal */}
+        <TemplateSelectionModal
+          isOpen={isTemplateModalOpen}
+          onClose={() => setIsTemplateModalOpen(false)}
+          onTemplateSelect={handleTemplateSelect}
+        />
     </>
   );
 };
