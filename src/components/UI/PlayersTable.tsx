@@ -211,12 +211,36 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
-    
-    const items = Array.from(columns);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    
-    onColumnsChange(items);
+
+    // Map visible indices to actual indices in the full columns array
+    const visibleToActual = columns
+      .map((col, idx) => (col.visible ? idx : -1))
+      .filter((idx) => idx !== -1);
+
+    const sourceActualIndex = visibleToActual[result.source.index];
+    const destinationActualIndex = visibleToActual[result.destination.index];
+    if (sourceActualIndex == null || destinationActualIndex == null) return;
+
+    const next = Array.from(columns);
+    const [moved] = next.splice(sourceActualIndex, 1);
+    next.splice(destinationActualIndex, 0, moved);
+
+    onColumnsChange(next);
+  };
+
+  // Offset the drag preview by +20px on X and -20px on Y
+  const getDragOffsetStyle = (
+    style: React.CSSProperties | undefined,
+    snapshot: { isDragging: boolean }
+  ): React.CSSProperties | undefined => {
+    if (!snapshot.isDragging || !style || !style.transform) return style;
+    const transform = style.transform as string;
+    const match = transform.match(/translate\(([-0-9.]+)px, ([-0-9.]+)px\)/);
+    if (!match) return style;
+    const x = parseFloat(match[1]);
+    const y = parseFloat(match[2]);
+    const newTransform = `translate(${x - 116}px, ${y - 65}px)`;
+    return { ...style, transform: newTransform } as React.CSSProperties;
   };
 
   const handleCellClick = useCallback((playerId: string, columnId: string, value: any) => {
@@ -674,20 +698,18 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                   className="bg-white"
                 >
                   <th className="w-8 p-1 font-bold text-gray-900 text-sm sm:text-base bg-white border-b border-r border-gray-100 text-center sticky top-0 z-20">#</th>
-                  {(() => {
-                    let visibleHeaderIndex = -1;
-                    return columns.map((column, index) => {
-                      if (column.visible) visibleHeaderIndex += 1;
-                      const responsiveCls = column.visible ? getResponsiveVisibilityClass(visibleHeaderIndex) : 'hidden';
-                      return (
-                        <Draggable key={column.id} draggableId={column.id} index={index}>
-                          {(provided) => (
-                            <th
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className={`p-3 ${column.visible ? 'w-48' : 'w-10'} bg-white border-b border-r border-gray-100 ${responsiveCls} sticky top-0 z-20`}
-                            >
+                  {visibleColumns.map((column, visibleIndex) => {
+                    const responsiveCls = getResponsiveVisibilityClass(visibleIndex);
+                    return (
+                      <Draggable key={column.id} draggableId={column.id} index={visibleIndex}>
+                        {(provided, snapshot) => (
+                          <th
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            style={getDragOffsetStyle(provided.draggableProps.style as React.CSSProperties | undefined, snapshot)}
+                            className={`p-3 w-48 bg-white border-b border-r ${snapshot.isDragging ? 'border-blue-500 border-2' : 'border-gray-100'} ${responsiveCls} sticky top-0 z-20`}
+                          >
                               {column.visible && (
                                 <div className="flex flex-col">
                                   <div className="flex items-center justify-between">
@@ -996,12 +1018,11 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                   )}
                                 </div>
                               )}
-                            </th>
-                          )}
-                        </Draggable>
-                      );
-                    });
-                  })()}
+                          </th>
+                        )}
+                      </Draggable>
+                    );
+                  })}
                   {showDeleteColumn && (
                     <th className="w-12 p-1 font-bold text-gray-900 text-lg bg-white border-b border-r border-gray-100 text-center sticky top-0 z-20">
                       {t('players.delete')}
@@ -1029,23 +1050,18 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
             return (
               <tr key={player.id} className="hover:bg-blue-50/60 transition-all duration-200 rounded-xl shadow-md" style={{ height: ROW_HEIGHT }}>
                 <td className="w-8 px-1 py-2 text-sm sm:text-base font-semibold text-gray-700 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">{globalIndex + 1}</td>
-              {(() => {
-                let visibleBodyIndex = -1;
-                return columns.map((column) => {
-                  if (!column.visible) return null;
-                  visibleBodyIndex += 1;
-                  const responsiveCls = getResponsiveVisibilityClass(visibleBodyIndex);
-                  return (
-                    <td
-                      key={column.id}
-                      className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
-                      onClick={() => handleCellClick(player.id, column.id, player[column.id])}
-                    >
-                      {renderCellContent(player, column)}
-                    </td>
-                  );
-                });
-              })()}
+              {visibleColumns.map((column, visibleBodyIndex) => {
+                const responsiveCls = getResponsiveVisibilityClass(visibleBodyIndex);
+                return (
+                  <td
+                    key={column.id}
+                    className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
+                    onClick={() => handleCellClick(player.id, column.id, player[column.id])}
+                  >
+                    {renderCellContent(player, column)}
+                  </td>
+                );
+              })}
               {showDeleteColumn && (
                 <td className="w-12 px-2 py-2 text-center border-r border-gray-100 bg-white/70 rounded-r-xl">
                   <button
@@ -1078,22 +1094,17 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
               <td className="w-8 px-1 py-2 text-sm sm:text-base font-semibold text-gray-400 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">
                 {filteredPlayers.length + 1}
               </td>
-              {(() => {
-                let visibleAddRowIndex = -1;
-                return columns.map((column) => {
-                  if (!column.visible) return null;
-                  visibleAddRowIndex += 1;
-                  const responsiveCls = getResponsiveVisibilityClass(visibleAddRowIndex);
-                  return (
-                    <td
-                      key={column.id}
-                      className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
-                    >
-                      {renderNewPlayerInput(column)}
-                    </td>
-                  );
-                });
-              })()}
+              {visibleColumns.map((column, visibleAddRowIndex) => {
+                const responsiveCls = getResponsiveVisibilityClass(visibleAddRowIndex);
+                return (
+                  <td
+                    key={column.id}
+                    className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
+                  >
+                    {renderNewPlayerInput(column)}
+                  </td>
+                );
+              })}
               {showDeleteColumn && (
                 <td className="w-12 px-2 py-2 text-center border-r border-gray-100 bg-white/70 rounded-r-xl"></td>
               )}
