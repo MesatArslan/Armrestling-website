@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { AuthContextType, Profile, Institution, ApiResponse, AuthUser } from '../types/auth'
-import { clearAuthTokens, checkRemainingAuthTokens } from '../utils/authUtils'
+import { clearAuthTokens } from '../utils/authUtils'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 

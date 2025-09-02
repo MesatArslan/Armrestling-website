@@ -91,18 +91,8 @@ export class AuthService {
         return { success: false, error: `Admin profili oluşturulamadı: ${profileError.message}` }
       }
 
-      // 4. Kurumun users_created counter'ını güncelle (admin eklendiği için)
-      const { error: updateError } = await supabase
-        .from('institutions')
-        .update({
-          users_created: 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', institutionData.id)
-
-      if (updateError) {
-        console.warn('Kurum sayacı güncellenemedi:', updateError)
-      }
+      // 4. Admin kurumun sahibi olarak atanır ama kullanıcı kotasından sayılmaz
+      // users_created 0 olarak kalır, sadece 'user' rolündeki kullanıcılar sayılır
 
       return {
         success: true,
@@ -242,17 +232,18 @@ export class AuthService {
 
       const totalInstitutions = institutions?.length || 0
 
-      // 2. Tüm kullanıcıları al (sadece 'user' rolündeki)
+      // 2. Tüm kullanıcıları al
       const { data: users, error: usersError } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('role', 'user')
+        .select('id, institution_id, role')
 
       if (usersError) {
         return { success: false, error: `Kullanıcılar alınamadı: ${usersError.message}` }
       }
 
       const totalUsers = users?.length || 0
+      const institutionUsers = users?.filter(user => user.institution_id && user.role === 'user').length || 0
+      const nonInstitutionUsers = users?.filter(user => !user.institution_id).length || 0
 
       // 3. Aktif ve süresi dolmuş kurumları hesapla
       const now = new Date()
@@ -273,6 +264,8 @@ export class AuthService {
       const stats: SuperAdminStats = {
         totalInstitutions,
         totalUsers,
+        institutionUsers,
+        nonInstitutionUsers,
         activeInstitutions,
         expiredInstitutions
       }
@@ -406,6 +399,76 @@ export class AuthService {
       return { success: true, data: data || [] }
     } catch (error) {
       return { success: false, error: 'Kullanıcılar getirilemedi' }
+    }
+  }
+
+  // Super Admin için tüm kullanıcıları getir
+  static async getAllUsers(): Promise<ApiResponse<Profile[]>> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          institutions (
+            id,
+            name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true, data: data || [] }
+    } catch (error) {
+      return { success: false, error: 'Kullanıcılar getirilemedi' }
+    }
+  }
+
+  // Super Admin için belirli bir kurumun tüm kullanıcılarını getir (admin ve user)
+  static async getInstitutionUsersForSuperAdmin(institutionId: string): Promise<ApiResponse<Profile[]>> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          institutions (
+            id,
+            name,
+            email
+          )
+        `)
+        .eq('institution_id', institutionId)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true, data: data || [] }
+    } catch (error) {
+      return { success: false, error: 'Kurum kullanıcıları getirilemedi' }
+    }
+  }
+
+  // Super Admin için kurum olmayan kullanıcıları getir
+  static async getNonInstitutionUsers(): Promise<ApiResponse<Profile[]>> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .is('institution_id', null)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true, data: data || [] }
+    } catch (error) {
+      return { success: false, error: 'Kurum olmayan kullanıcılar getirilemedi' }
     }
   }
 

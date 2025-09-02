@@ -45,20 +45,49 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- Kurum users_created sayacını güncelleyen trigger
+-- Kurum users_created sayacını güncelleyen trigger (sadece 'user' rolündeki kullanıcıları sayar)
 CREATE OR REPLACE FUNCTION public.update_institution_user_count()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF TG_OP = 'INSERT' AND NEW.institution_id IS NOT NULL THEN
+    IF TG_OP = 'INSERT' AND NEW.institution_id IS NOT NULL AND NEW.role = 'user' THEN
         UPDATE institutions 
         SET users_created = users_created + 1,
             updated_at = NOW()
         WHERE id = NEW.institution_id;
-    ELSIF TG_OP = 'DELETE' AND OLD.institution_id IS NOT NULL THEN
+    ELSIF TG_OP = 'DELETE' AND OLD.institution_id IS NOT NULL AND OLD.role = 'user' THEN
         UPDATE institutions 
         SET users_created = users_created - 1,
             updated_at = NOW()
         WHERE id = OLD.institution_id;
+    ELSIF TG_OP = 'UPDATE' AND OLD.institution_id IS NOT NULL AND NEW.institution_id IS NOT NULL THEN
+        -- Rol değişikliği durumu
+        IF OLD.role = 'user' AND NEW.role != 'user' THEN
+            -- User'dan başka role geçiş
+            UPDATE institutions 
+            SET users_created = users_created - 1,
+                updated_at = NOW()
+            WHERE id = OLD.institution_id;
+        ELSIF OLD.role != 'user' AND NEW.role = 'user' THEN
+            -- Başka rolden user'a geçiş
+            UPDATE institutions 
+            SET users_created = users_created + 1,
+                updated_at = NOW()
+            WHERE id = NEW.institution_id;
+        ELSIF OLD.institution_id != NEW.institution_id THEN
+            -- Kurum değişikliği
+            IF OLD.role = 'user' THEN
+                UPDATE institutions 
+                SET users_created = users_created - 1,
+                    updated_at = NOW()
+                WHERE id = OLD.institution_id;
+            END IF;
+            IF NEW.role = 'user' THEN
+                UPDATE institutions 
+                SET users_created = users_created + 1,
+                    updated_at = NOW()
+                WHERE id = NEW.institution_id;
+            END IF;
+        END IF;
     END IF;
     
     IF TG_OP = 'DELETE' THEN
@@ -68,9 +97,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Profil eklendiğinde/silindiğinde kurum sayacını güncelle
+-- Profil eklendiğinde/silindiğinde/güncellendiğinde kurum sayacını güncelle
 CREATE OR REPLACE TRIGGER on_profile_institution_change
-    AFTER INSERT OR DELETE ON profiles
+    AFTER INSERT OR DELETE OR UPDATE ON profiles
     FOR EACH ROW EXECUTE FUNCTION public.update_institution_user_count();
 
 -- 4. Row Level Security (RLS) Politikaları

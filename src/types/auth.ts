@@ -10,6 +10,7 @@ export interface Profile {
   institution_id?: string;
   created_at: string;
   updated_at: string;
+  institutions?: Institution;
 }
 
 export interface Institution {
@@ -82,6 +83,8 @@ export interface RouteGuardProps {
 export interface SuperAdminStats {
   totalInstitutions: number;
   totalUsers: number;
+  institutionUsers: number;
+  nonInstitutionUsers: number;
   activeInstitutions: number;
   expiredInstitutions: number;
 }
