@@ -205,13 +205,13 @@ const MatchCard: React.FC<MatchCardProps> = ({
           </div>
           
           {/* VS - Only shown in horizontal layout */}
-          <div className="hidden lg:flex items-center justify-center px-1 md:px-2">
-            <div className="text-xl md:text-2xl font-bold text-gray-400">{t('matches.vs')}</div>
+          <div className="hidden lg:flex items-center justify-center px-0 md:px-0">
+            <div className="text-sm md:text-base font-bold text-gray-400">{t('matches.vs')}</div>
           </div>
           
           {/* VS - Only shown in vertical layout */}
           <div className="lg:hidden flex items-center justify-center py-1">
-            <div className="text-xl font-bold text-gray-400">{t('matches.vs')}</div>
+            <div className="text-sm font-bold text-gray-400">{t('matches.vs')}</div>
           </div>
           
           {/* Right Player (Sağ Masa) */}
