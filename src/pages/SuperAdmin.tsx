@@ -166,7 +166,20 @@ export const SuperAdmin: React.FC = () => {
           user_quota: 10,
           subscription_end_date: ''
         })
-        await loadData()
+        
+        // Yeni kurumu listeye ekle
+        if (result.data) {
+          setInstitutions(prev => [result.data!, ...prev])
+          
+          // Stats'i de güncelle
+          if (stats) {
+            setStats(prev => prev ? {
+              ...prev,
+              totalInstitutions: prev.totalInstitutions + 1,
+              activeInstitutions: prev.activeInstitutions + 1
+            } : null)
+          }
+        }
       } else {
         setError(result.error || 'Kurum oluşturulurken hata oluştu')
       }
@@ -197,7 +210,20 @@ export const SuperAdmin: React.FC = () => {
           password: '',
           username: ''
         })
-        await loadData()
+        
+        // Yeni kullanıcıyı listeye ekle
+        if (result.data) {
+          setNonInstitutionUsers(prev => [result.data!, ...prev])
+          
+          // Stats'i de güncelle
+          if (stats) {
+            setStats(prev => prev ? {
+              ...prev,
+              totalUsers: prev.totalUsers + 1,
+              nonInstitutionUsers: prev.nonInstitutionUsers + 1
+            } : null)
+          }
+        }
       } else {
         setError(result.error || 'Kullanıcı oluşturulurken hata oluştu')
       }
@@ -279,7 +305,13 @@ export const SuperAdmin: React.FC = () => {
         setSuccess('Kullanıcı başarıyla güncellendi!')
         setShowEditUserModal(false)
         setEditingUser(null)
-        await loadData()
+        
+        // Sadece ilgili kullanıcıyı güncelle
+        setNonInstitutionUsers(prev => prev.map(user => 
+          user.id === editingUser.id 
+            ? { ...user, ...editUserFormData }
+            : user
+        ))
       } else {
         setError(result.error || 'Kullanıcı güncellenirken hata oluştu')
       }
@@ -309,7 +341,18 @@ export const SuperAdmin: React.FC = () => {
         setSuccess('Kullanıcı başarıyla silindi!')
         setShowDeleteUserModal(false)
         setDeletingUser(null)
-        await loadData()
+        
+        // Sadece ilgili kullanıcıyı listeden kaldır
+        setNonInstitutionUsers(prev => prev.filter(user => user.id !== deletingUser.id))
+        
+        // Stats'i de güncelle
+        if (stats) {
+          setStats(prev => prev ? {
+            ...prev,
+            totalUsers: prev.totalUsers - 1,
+            nonInstitutionUsers: prev.nonInstitutionUsers - 1
+          } : null)
+        }
       } else {
         setError(result.error || 'Kullanıcı silinirken hata oluştu')
       }
@@ -359,7 +402,13 @@ export const SuperAdmin: React.FC = () => {
         setSuccess('Kurum başarıyla güncellendi!')
         setShowEditModal(false)
         setEditingInstitution(null)
-        await loadData()
+        
+        // Sadece ilgili kurumu güncelle
+        setInstitutions(prev => prev.map(institution => 
+          institution.id === editingInstitution?.id 
+            ? { ...institution, ...editFormData }
+            : institution
+        ))
       } else {
         setError(result.error || 'Kurum güncellenirken hata oluştu')
       }
@@ -389,7 +438,22 @@ export const SuperAdmin: React.FC = () => {
         setSuccess('Kurum başarıyla silindi!')
         setShowDeleteModal(false)
         setDeletingInstitution(null)
-        await loadData()
+        
+        // Sadece ilgili kurumu listeden kaldır
+        if (deletingInstitution) {
+          setInstitutions(prev => prev.filter(institution => institution.id !== deletingInstitution.id))
+          
+          // Stats'i de güncelle
+          if (stats) {
+            const isExpired = new Date(deletingInstitution.subscription_end_date) < new Date()
+            setStats(prev => prev ? {
+              ...prev,
+              totalInstitutions: prev.totalInstitutions - 1,
+              activeInstitutions: isExpired ? prev.activeInstitutions : prev.activeInstitutions - 1,
+              expiredInstitutions: isExpired ? prev.expiredInstitutions - 1 : prev.expiredInstitutions
+            } : null)
+          }
+        }
       } else {
         setError(result.error || 'Kurum silinirken hata oluştu')
       }
