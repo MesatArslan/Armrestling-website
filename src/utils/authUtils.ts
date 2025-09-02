@@ -45,7 +45,6 @@ export const clearAuthTokens = (): void => {
       }
     })
 
-    console.log('Auth tokens cleared from localStorage')
   } catch (error) {
     console.error('Error clearing auth tokens:', error)
   }

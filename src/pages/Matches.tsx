@@ -311,20 +311,7 @@ const Matches = () => {
         doubleEliminationData
       };
 
-      console.log('Export edilen veri yapısı:', {
-        version: exportData.version,
-        fixture: { id: exportData.fixture.id, name: exportData.fixture.name },
-        tournament: { id: exportData.tournament.id, name: exportData.tournament.name },
-        weightRange: { id: exportData.weightRange.id, name: exportData.weightRange.name },
-        doubleEliminationData: doubleEliminationData ? 'Mevcut' : 'Yok'
-      });
-      
-      if (doubleEliminationData) {
-        console.log('Double elimination verileri:', Object.keys(doubleEliminationData));
-      }
-
       const dataStr = JSON.stringify(exportData, null, 2);
-      console.log('Export JSON (ilk 300 karakter):', dataStr.substring(0, 300));
       const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
       
       const exportFileDefaultName = `fixture_${fixture.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`;
@@ -349,36 +336,21 @@ const Matches = () => {
     let addedPlayersCount = 0;
     
     try {
-      console.log('İçe aktarılan dosya bilgileri:', {
-        name: importFile.name,
-        size: importFile.size,
-        type: importFile.type,
-        lastModified: new Date(importFile.lastModified).toLocaleString()
-      });
-      
       const fileContent = await importFile.text();
-      console.log('Dosya içeriği (ilk 500 karakter):', fileContent.substring(0, 500));
       
       // First check if it's valid JSON
       let importData;
       try {
         importData = JSON.parse(fileContent);
-        console.log('JSON parse başarılı, veri anahtarları:', Object.keys(importData));
       } catch (jsonError) {
         console.error('JSON parse hatası:', jsonError);
         throw new Error('Dosya geçerli bir JSON formatında değil. Lütfen doğru fixtür dosyasını seçtiğinizden emin olun.');
       }
 
       // Detailed validation with specific error messages
-      console.log('Dosyada bulunan tüm alanlar:', Object.keys(importData));
-      console.log('Version alanı:', importData.version);
-      
       if (!importData.version) {
-        console.error('Version alanı eksik! Mevcut alanlar:', Object.keys(importData));
-        
         // Check if this might be an old format file and try to handle it
         if (importData.fixture && importData.tournament && importData.weightRange) {
-          console.warn('Eski format fixtür dosyası tespit edildi, version ekleniyor...');
           importData.version = '1.0.0'; // Add missing version
         } else {
           throw new Error('Fixtür dosyasında version bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
@@ -402,22 +374,7 @@ const Matches = () => {
         throw new Error('Fixtür bilgileri eksik veya bozuk (id, name veya players eksik).');
       }
 
-      console.log('İçe aktarılan veri yapısı:', {
-        version: importData.version,
-        fixture: {
-          id: importData.fixture.id,
-          name: importData.fixture.name,
-          playersCount: importData.fixture.players?.length || 0
-        },
-        tournament: {
-          id: importData.tournament.id,
-          name: importData.tournament.name
-        },
-        weightRange: {
-          id: importData.weightRange.id,
-          name: importData.weightRange.name
-        }
-      });
+      // İçe aktarılan veri yapısı doğrulandı
 
       const existingTournaments = TournamentsStorage.getTournaments();
       let tournament = existingTournaments.find(t => t.id === importData.tournament.id);
@@ -557,11 +514,8 @@ const Matches = () => {
         if (playersToAdd.length > 0) {
           const updatedPlayers = [...existingPlayers, ...playersToAdd];
           PlayersStorage.savePlayers(updatedPlayers);
-          console.log(`${playersToAdd.length} yeni oyuncu Players sayfasına eklendi:`, playersToAdd.map(p => `${p.name} ${p.surname}`));
           
           addedPlayersCount = playersToAdd.length;
-        } else {
-          console.log('Tüm oyuncular zaten Players sayfasında mevcut');
         }
       } catch (playerError) {
         console.warn('Oyuncular eklenirken hata:', playerError);
@@ -572,13 +526,10 @@ const Matches = () => {
       // Import double elimination data if available
       if (importData.doubleEliminationData) {
         try {
-          console.log('Double elimination verisi içe aktarılıyor...');
-          
           // Restore localStorage keys
           Object.keys(importData.doubleEliminationData).forEach(key => {
             if (key !== 'repositoryData') {
               localStorage.setItem(key, JSON.stringify(importData.doubleEliminationData[key]));
-              console.log(`Restored localStorage key: ${key}`);
             }
           });
           
@@ -588,18 +539,13 @@ const Matches = () => {
               const { DoubleEliminationRepository } = await import('../storage/DoubleEliminationRepository');
               const deRepo = new DoubleEliminationRepository();
               deRepo.saveState(importData.fixture.id, importData.doubleEliminationData.repositoryData);
-              console.log('Repository data restored');
             } catch (repoError) {
-              console.warn('Could not restore repository data:', repoError);
+              // Repository data restore failed
             }
           }
-          
-          console.log('Double elimination verisi başarıyla içe aktarıldı');
         } catch (deError) {
-          console.warn('Double elimination verisi içe aktarılırken hata:', deError);
+          // Double elimination data import failed
         }
-      } else {
-        console.log('Double elimination verisi bulunamadı');
       }
 
       // Create success message with player info

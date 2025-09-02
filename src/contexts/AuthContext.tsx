@@ -26,22 +26,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Profil bilgilerini getir
   const fetchProfile = async (userId: string): Promise<(Profile & { institution?: Institution }) | null> => {
-    console.log('🔍 [fetchProfile] Starting profile fetch for user:', userId)
-    
     // Cache kontrolü
     const cachedProfile = profileCache.get(userId)
     if (cachedProfile) {
-      console.log('✅ [fetchProfile] Using cached profile for user:', userId)
       return cachedProfile
     }
     
     // Profile fetch timeout
     const profileTimeout = setTimeout(() => {
-      console.log('⏰ [fetchProfile] Profile fetch timeout - using mock profile')
+      // Timeout durumunda hiçbir şey yapma
     }, 5000) // 5 saniye timeout
     
     try {
-      console.log('🔍 [fetchProfile] Querying profiles table...')
       // Önce profiles tablosundan profil bilgilerini al
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -50,25 +46,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .single()
 
       clearTimeout(profileTimeout)
-      console.log('🔍 [fetchProfile] Profile query result:', { profile, error: profileError })
 
       if (profileError) {
-        console.error('❌ [fetchProfile] Profile fetch error:', profileError)
-        
         // Eğer profil bulunamazsa, gerçek profil oluştur
         if (profileError.code === 'PGRST116') {
-          console.log('🔄 [fetchProfile] Profile not found, creating real profile')
-          
           // Auth user bilgilerini al
-          console.log('🔍 [fetchProfile] Getting auth user...')
           const { data: { user: authUser } } = await supabase.auth.getUser()
-          console.log('🔍 [fetchProfile] Auth user:', authUser)
           
           if (authUser) {
-            console.log('🔄 [fetchProfile] Creating new profile...')
             const newProfile = await createProfile(userId, authUser.email || 'unknown@example.com', 'super_admin')
             if (newProfile) {
-              console.log('✅ [fetchProfile] New profile created successfully')
               return {
                 ...newProfile,
                 institution: undefined
@@ -77,7 +64,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
           
           // Eğer profil oluşturulamazsa, mock profil döndür
-          console.log('⚠️ [fetchProfile] Could not create profile, using mock profile')
           const mockProfile: Profile & { institution?: Institution } = {
             id: userId,
             email: 'superadmin@example.com',
@@ -94,7 +80,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         // Diğer hatalar için mock profil döndür
-        console.log('⚠️ [fetchProfile] Other error, using mock profile')
         const mockProfile: Profile & { institution?: Institution } = {
           id: userId,
           email: 'superadmin@example.com',
@@ -110,12 +95,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return mockProfile
       }
 
-      console.log('✅ [fetchProfile] Profile data from database:', profile)
-
       // Eğer institution_id varsa, institution bilgilerini de al
       let institution: Institution | undefined
       if (profile.institution_id) {
-        console.log('🔍 [fetchProfile] Fetching institution data for ID:', profile.institution_id)
         const { data: instData, error: instError } = await supabase
           .from('institutions')
           .select('*')
@@ -124,9 +106,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (!instError && instData) {
           institution = instData
-          console.log('✅ [fetchProfile] Institution data:', institution)
-        } else {
-          console.log('⚠️ [fetchProfile] Institution fetch error:', instError)
         }
       }
 
@@ -137,11 +116,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Cache'e kaydet
       setProfileCache(prev => new Map(prev).set(userId, result))
-      console.log('✅ [fetchProfile] Returning profile with institution:', { profile, institution })
       return result
     } catch (error) {
       clearTimeout(profileTimeout)
-      console.error('❌ [fetchProfile] Unexpected error:', error)
       
       // Hata durumunda mock profil döndür
       const mockProfile: Profile & { institution?: Institution } = {
@@ -175,8 +152,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Profil oluşturma fonksiyonu
   const createProfile = async (userId: string, email: string, role: string = 'super_admin'): Promise<Profile | null> => {
     try {
-      console.log('Creating profile for user:', userId, email, role)
-      
       const { data: profile, error } = await supabase
         .from('profiles')
         .insert({
@@ -189,110 +164,78 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .single()
 
       if (error) {
-        console.error('Profile creation error:', error)
         return null
       }
 
-      console.log('Profile created:', profile)
       return profile
     } catch (error) {
-      console.error('CreateProfile error:', error)
       return null
     }
   }
 
   useEffect(() => {
-    // İlk yükleme
+        // İlk yükleme
     const initializeAuth = async () => {
-      console.log('🚀 [initializeAuth] Starting auth initialization...')
-      
-      // Debug: Check remaining auth tokens
-      const remainingTokens = checkRemainingAuthTokens()
-      console.log('🔍 [initializeAuth] Remaining auth tokens:', remainingTokens)
-      
       // Auth initialization timeout
       const authTimeout = setTimeout(() => {
-        console.log('⏰ [initializeAuth] Auth initialization timeout - setting loading to false')
         setLoading(false)
       }, 8000) // 8 saniye timeout
       
       try {
-        console.log('🔍 [initializeAuth] Getting session...')
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error('❌ [initializeAuth] Session error:', error)
           setLoading(false)
           clearTimeout(authTimeout)
           return
         }
         
-        console.log('🔍 [initializeAuth] Session result:', session)
-        
         if (session?.user) {
-          console.log('👤 [initializeAuth] User found in session:', session.user.id)
           const profileData = await fetchProfile(session.user.id)
           if (profileData) {
-            console.log('✅ [initializeAuth] Profile loaded, setting user state')
             setProfile(profileData)
             setUser({ ...profileData, institution: profileData.institution })
-          } else {
-            console.log('⚠️ [initializeAuth] No profile data found')
           }
-        } else {
-          console.log('👤 [initializeAuth] No user in session')
         }
       } catch (error) {
-        console.error('❌ [initializeAuth] Auth initialization error:', error)
-              } finally {
-          console.log('✅ [initializeAuth] Setting loading to false')
-          setLoading(false)
-          setIsInitialized(true)
-          clearTimeout(authTimeout)
-        }
+        // Hata durumunda hiçbir şey yapma
+      } finally {
+        setLoading(false)
+        setIsInitialized(true)
+        clearTimeout(authTimeout)
       }
+    }
 
-      initializeAuth()
+    initializeAuth()
 
     // Auth state değişikliklerini dinle
-    console.log('👂 [useEffect] Setting up auth state change listener...')
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔄 [onAuthStateChange] Auth state changed:', event, session)
-      
       // Sadece initialization tamamlandıktan sonra auth state change'leri işle
       if (!isInitialized) {
-        console.log('⏳ [onAuthStateChange] Skipping auth state change - not initialized yet')
         return
       }
       
       // INITIAL_SESSION event'ini ignore et (bu ilk yükleme sırasında gelir)
       if (event === 'INITIAL_SESSION') {
-        console.log('⏳ [onAuthStateChange] Skipping INITIAL_SESSION event')
         return
       }
       
       try {
         if (session?.user) {
-          console.log('👤 [onAuthStateChange] User in session, fetching profile...')
           const profileData = await fetchProfile(session.user.id)
           if (profileData) {
-            console.log('✅ [onAuthStateChange] Profile loaded, updating state')
             setProfile(profileData)
             setUser({ ...profileData, institution: profileData.institution })
-          } else {
-            console.log('⚠️ [onAuthStateChange] No profile data found')
           }
         } else {
-          console.log('👤 [onAuthStateChange] No user in session, clearing state')
           setUser(null)
           setProfile(null)
         }
       } catch (error) {
-        console.error('❌ [onAuthStateChange] Auth state change error:', error)
+        // Hata durumunda hiçbir şey yapma
       } finally {
-        console.log('✅ [onAuthStateChange] Setting loading to false')
         setLoading(false)
       }
     })
@@ -379,8 +322,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshProfile,
     createProfile,
   }
-
-  console.log('🔄 [AuthProvider] Current state:', { user: !!user, profile: !!profile, loading })
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
