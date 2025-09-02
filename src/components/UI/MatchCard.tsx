@@ -182,7 +182,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
   };
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 w-full max-w-md mx-auto md:max-w-md lg:max-w-full">
+    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 w-full max-w-md mx-auto md:max-w-md lg:max-w-full flex flex-col h-full">
       {/* Header */}
       <div className={`text-white p-3 md:p-3 lg:p-4 ${
         bracket === 'loser' 
@@ -226,7 +226,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
       </div>
       
       {/* Players Section */}
-      <div className="p-3 md:p-4 lg:p-6">
+      <div className="p-3 md:p-4 lg:p-6 flex-1 flex flex-col">
         <div className="flex flex-col lg:flex-row items-stretch justify-between mb-4 md:mb-4 lg:mb-6 gap-2 md:gap-3 lg:md:gap-4 min-w-0">
           {/* Left Player (Sol Masa) */}
           <div 
@@ -351,7 +351,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
         
         {/* Action Buttons */}
         {!winnerId && player2Id && (
-          <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-gray-200">
+          <div className="mt-auto pt-3 md:pt-4 border-t border-gray-200">
             <div className="text-center">
               {/** Confirm handler clears persisted match status after confirmation */}
               {(() => {
