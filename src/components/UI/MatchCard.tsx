@@ -106,14 +106,79 @@ const MatchCard: React.FC<MatchCardProps> = ({
     return localizedBase;
   };
 
-  // Dynamically size player name based on length to keep it visible and tidy
-  const getNameSizeClass = (name: string): string => {
-    const len = name?.length || 0;
+  // Split full name into first part(s) and last token (surname)
+  const splitName = (fullName: string): { first: string; last: string } => {
+    const tokens = (fullName || '').trim().split(/\s+/).filter(Boolean);
+    if (tokens.length <= 1) {
+      return { first: fullName || '', last: '' };
+    }
+    const last = tokens[tokens.length - 1];
+    const first = tokens.slice(0, -1).join(' ');
+    return { first, last };
+  };
+
+  // Size for first name(s): more forgiving thresholds
+  const getFirstNameSizeClass = (first: string): string => {
+    const len = first?.length || 0;
     if (len <= 18) return 'text-base lg:text-lg';
     if (len <= 26) return 'text-sm lg:text-base';
     if (len <= 34) return 'text-xs lg:text-sm';
     if (len <= 44) return 'text-[11px] lg:text-xs';
     return 'text-[10px] lg:text-[11px]';
+  };
+
+  // Size for surname: stricter thresholds to prevent overflow (even ~10 chars)
+  const getLastNameSizeClass = (last: string): string => {
+    const len = last?.length || 0;
+    if (len <= 8) return 'text-base lg:text-lg';
+    if (len <= 10) return 'text-sm lg:text-base';
+    if (len <= 12) return 'text-xs lg:text-sm';
+    if (len <= 14) return 'text-[11px] lg:text-xs';
+    return 'text-[10px] lg:text-[11px]';
+  };
+
+  // Auto-fit a single-line text to its container by shrinking font size classes
+  const AutoFitText: React.FC<{
+    text: string;
+    baseClasses?: string;
+    sizeClasses?: string[];
+  }> = ({ text, baseClasses = '', sizeClasses = ['text-base', 'text-sm', 'text-xs', 'text-[11px]', 'text-[10px]'] }) => {
+    const containerRef = React.useRef<HTMLDivElement | null>(null);
+    const [sizeIndex, setSizeIndex] = React.useState<number>(0);
+
+    const fit = React.useCallback(() => {
+      const el = containerRef.current;
+      if (!el) return;
+
+      // Try shrinking until it fits (or we reach the smallest size)
+      let nextIndex = 0;
+      for (let i = 0; i < sizeClasses.length; i++) {
+        nextIndex = i;
+        el.className = `${baseClasses} ${sizeClasses[i]}`.trim();
+        if (el.scrollWidth <= el.clientWidth) break;
+      }
+      setSizeIndex(nextIndex);
+    }, [baseClasses, sizeClasses]);
+
+    React.useEffect(() => {
+      fit();
+      const el = containerRef.current;
+      if (!el) return;
+      const ro = new ResizeObserver(() => fit());
+      ro.observe(el);
+      const onResize = () => fit();
+      window.addEventListener('resize', onResize);
+      return () => {
+        ro.disconnect();
+        window.removeEventListener('resize', onResize);
+      };
+    }, [fit]);
+
+    return (
+      <div ref={containerRef} className={`${baseClasses} ${sizeClasses[sizeIndex]}`.trim()}>
+        {text}
+      </div>
+    );
   };
 
   return (
@@ -189,7 +254,21 @@ const MatchCard: React.FC<MatchCardProps> = ({
             )}
             
             <div className="flex-1 flex flex-col justify-center">
-              <div className={`font-bold ${getNameSizeClass(player1Name)} text-gray-800 mb-1 break-words leading-snug`}>{player1Name}</div>
+              {(() => {
+                const { first: p1First, last: p1Last } = splitName(player1Name);
+                return (
+                  <div className="font-bold text-gray-800 mb-1 leading-tight">
+                    <div className={`text-center ${getFirstNameSizeClass(p1First)} whitespace-normal break-normal`}>{p1First}</div>
+                    {p1Last && (
+                      <AutoFitText
+                        text={p1Last}
+                        baseClasses="text-center whitespace-nowrap"
+                        sizeClasses={[getLastNameSizeClass(p1Last), 'text-sm lg:text-base', 'text-xs lg:text-sm', 'text-[11px] lg:text-xs', 'text-[10px] lg:text-[11px]']}
+                      />
+                    )}
+                  </div>
+                );
+              })()}
               {winnerId === player1Id && (
                 <div className="mt-1 md:mt-2">
                   <span className="inline-flex items-center px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-bold bg-green-500 text-white">
@@ -240,7 +319,21 @@ const MatchCard: React.FC<MatchCardProps> = ({
             )}
             
             <div className="flex-1 flex flex-col justify-center">
-              <div className={`font-bold ${getNameSizeClass(player2Name)} text-gray-800 mb-1 break-words leading-snug`}>{player2Name}</div>
+              {(() => {
+                const { first: p2First, last: p2Last } = splitName(player2Name);
+                return (
+                  <div className="font-bold text-gray-800 mb-1 leading-tight">
+                    <div className={`text-center ${getFirstNameSizeClass(p2First)} whitespace-normal break-normal`}>{p2First}</div>
+                    {p2Last && (
+                      <AutoFitText
+                        text={p2Last}
+                        baseClasses="text-center whitespace-nowrap"
+                        sizeClasses={[getLastNameSizeClass(p2Last), 'text-sm lg:text-base', 'text-xs lg:text-sm', 'text-[11px] lg:text-xs', 'text-[10px] lg:text-[11px]']}
+                      />
+                    )}
+                  </div>
+                );
+              })()}
               {winnerId === player2Id && (
                 <div className="mt-1 md:mt-2">
                   <span className="inline-flex items-center px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-bold bg-green-500 text-white">
