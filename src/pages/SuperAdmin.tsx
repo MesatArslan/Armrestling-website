@@ -38,11 +38,6 @@ export const SuperAdmin: React.FC = () => {
   const [deletingInstitution, setDeletingInstitution] = useState<Institution | null>(null)
 
   useEffect(() => {
-    // Loading durumunda hiçbir şey yapma
-    if (loading) {
-      return
-    }
-
     // Kullanıcının super_admin rolünde olup olmadığını kontrol et
     if (!user) {
       setError('Giriş yapmanız gerekiyor. Lütfen önce giriş yapın.')
@@ -56,10 +51,13 @@ export const SuperAdmin: React.FC = () => {
 
     // Kullanıcı doğruysa verileri yükle
     loadData()
-  }, [user, loading])
+  }, [user]) // loading dependency'sini kaldırdık
 
   const loadData = async () => {
-    setLoading(true)
+    // Eğer zaten loading durumundaysa, tekrar set etme
+    if (!loading) {
+      setLoading(true)
+    }
     setError('')
     try {
       const [institutionsResult, statsResult] = await Promise.all([
@@ -237,7 +235,7 @@ export const SuperAdmin: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner />
-          <p className="mt-4 text-gray-600">Kimlik doğrulama kontrol ediliyor...</p>
+          <p className="mt-4 text-gray-600">Veriler yükleniyor...</p>
         </div>
       </div>
     )
