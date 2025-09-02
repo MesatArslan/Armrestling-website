@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { AuthContextType, Profile, Institution, ApiResponse, AuthUser } from '../types/auth'
+import { clearAuthTokens } from '../utils/authUtils'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -267,6 +268,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (error) {
         return { success: false, error: error.message }
       }
+
+      // Clear all Supabase authentication tokens from localStorage
+      // This ensures complete logout and prevents token persistence issues
+      clearAuthTokens()
 
       setUser(null)
       setProfile(null)

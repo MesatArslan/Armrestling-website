@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { checkRemainingAuthTokens, clearAuthTokens } from '../utils/authUtils'
 
 export const AuthDebug: React.FC = () => {
-  const { user, loading } = useAuth()
+  const { user, loading, signOut } = useAuth()
   const [sessionInfo, setSessionInfo] = useState<any>(null)
   const [error, setError] = useState<string>('')
+  const [remainingTokens, setRemainingTokens] = useState<string[]>([])
 
   useEffect(() => {
     const checkSession = async () => {
@@ -40,12 +42,23 @@ export const AuthDebug: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut()
+      await signOut() // This will automatically clear tokens
       setSessionInfo(null)
       setError('')
+      setRemainingTokens([])
     } catch (err) {
       setError('Çıkış yapılırken hata oluştu')
     }
+  }
+
+  const handleCheckTokens = () => {
+    const tokens = checkRemainingAuthTokens()
+    setRemainingTokens(tokens)
+  }
+
+  const handleClearTokens = () => {
+    clearAuthTokens()
+    setRemainingTokens([])
   }
 
   return (
@@ -92,7 +105,7 @@ export const AuthDebug: React.FC = () => {
         )}
 
         {/* Actions */}
-        <div className="mt-8 flex space-x-4">
+        <div className="mt-8 flex space-x-4 flex-wrap">
           <button
             onClick={handleRefreshSession}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
@@ -106,12 +119,36 @@ export const AuthDebug: React.FC = () => {
             Çıkış Yap
           </button>
           <button
+            onClick={handleCheckTokens}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md"
+          >
+            Token'ları Kontrol Et
+          </button>
+          <button
+            onClick={handleClearTokens}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md"
+          >
+            Token'ları Temizle
+          </button>
+          <button
             onClick={() => window.location.reload()}
             className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
           >
             Sayfayı Yenile
           </button>
         </div>
+
+        {/* Remaining Tokens Display */}
+        {remainingTokens.length > 0 && (
+          <div className="mt-8 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
+            <h3 className="font-semibold mb-2">Kalan Auth Token'ları:</h3>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              {remainingTokens.map((token, index) => (
+                <li key={index}>{token}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Instructions */}
         <div className="mt-8 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">
@@ -121,6 +158,8 @@ export const AuthDebug: React.FC = () => {
             <li>User null ise, kullanıcı giriş yapmamış</li>
             <li>Session null ise, aktif oturum yok</li>
             <li>Session varsa ama user null ise, profil bilgisi eksik</li>
+            <li>Kalan token'lar varsa, localStorage'da auth verisi kalmış demektir</li>
+            <li>Çıkış yaparken token'lar otomatik temizlenir</li>
           </ul>
         </div>
       </div>
