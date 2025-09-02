@@ -59,33 +59,64 @@ export const SuperAdmin: React.FC = () => {
     }
     setError('')
     try {
-      const [institutionsResult, statsResult] = await Promise.all([
-        AuthService.getInstitutions(),
-        AuthService.getSuperAdminStats()
-      ])
+      // Sadece institutions'ı çağır, stats'i ayrıca çağırmaya gerek yok
+      const institutionsResult = await AuthService.getInstitutions()
 
       if (institutionsResult.success) {
-        setInstitutions(institutionsResult.data || [])
+        const institutionsData = institutionsResult.data || []
+        setInstitutions(institutionsData)
+        
+        // Stats'i institutions verilerinden hesapla
+        const stats = await calculateStatsFromInstitutions(institutionsData)
+        setStats(stats)
       } else {
         const errorMessage = institutionsResult.error || 'Bilinmeyen hata'
         setError(`Kurumlar yüklenemedi: ${errorMessage}`)
         console.error('Institutions error:', institutionsResult.error)
         
         if (errorMessage.includes('erişim izni yok')) {
-          setError('Kurumlara erişim izniniz yok. Lütfen sistem yöneticisi ile iletişime geçin veya tekrar giriş yapmayı deneyin.')
+          setError('Kurumlara erişim izni yok. Lütfen sistem yöneticisi ile iletişime geçin veya tekrar giriş yapmayı deneyin.')
         }
-      }
-
-      if (statsResult.success) {
-        setStats(statsResult.data || null)
-      } else {
-        console.error('Stats error:', statsResult.error)
       }
     } catch (error) {
       console.error('Data loading error:', error)
       setError('Veri yüklenirken beklenmeyen bir hata oluştu')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Institutions verilerinden stats hesapla
+  const calculateStatsFromInstitutions = async (institutions: Institution[]): Promise<SuperAdminStats> => {
+    const totalInstitutions = institutions.length
+    const now = new Date()
+    
+    let activeInstitutions = 0
+    let expiredInstitutions = 0
+    let totalUsers = 0
+
+    institutions.forEach(institution => {
+      const subscriptionEndDate = new Date(institution.subscription_end_date)
+      if (subscriptionEndDate > now) {
+        activeInstitutions++
+      } else {
+        expiredInstitutions++
+      }
+      totalUsers += institution.users_created || 0
+    })
+
+    // Kurum dışı kullanıcıları al
+    const nonInstitutionUsersResult = await AuthService.getNonInstitutionUsers()
+    const nonInstitutionUsers = nonInstitutionUsersResult.success ? (nonInstitutionUsersResult.data?.length || 0) : 0
+    const institutionUsers = totalUsers
+
+    return {
+      totalInstitutions,
+      totalUsers: totalUsers + nonInstitutionUsers,
+      institutionUsers,
+      nonInstitutionUsers,
+      activeInstitutions,
+      expiredInstitutions
     }
   }
 
