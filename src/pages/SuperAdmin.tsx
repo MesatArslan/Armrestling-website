@@ -9,6 +9,7 @@ export const SuperAdmin: React.FC = () => {
   const [institutions, setInstitutions] = useState<Institution[]>([])
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null)
   const [institutionUsers, setInstitutionUsers] = useState<Profile[]>([])
+  const [nonInstitutionUsers, setNonInstitutionUsers] = useState<Profile[]>([])
   const [stats, setStats] = useState<SuperAdminStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -65,6 +66,12 @@ export const SuperAdmin: React.FC = () => {
       if (institutionsResult.success) {
         const institutionsData = institutionsResult.data || []
         setInstitutions(institutionsData)
+        
+        // Kurumu olmayan kullanıcıları da yükle
+        const nonInstitutionUsersResult = await AuthService.getNonInstitutionUsers()
+        if (nonInstitutionUsersResult.success) {
+          setNonInstitutionUsers(nonInstitutionUsersResult.data || [])
+        }
         
         // Stats'i institutions verilerinden hesapla
         const stats = await calculateStatsFromInstitutions(institutionsData)
@@ -695,6 +702,70 @@ export const SuperAdmin: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Kurumu Olmayan Kullanıcılar */}
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Kurumu Olmayan Kullanıcılar</h3>
+              <p className="text-sm text-gray-500 mt-1">Herhangi bir kuruma bağlı olmayan kullanıcılar</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oluşturulma Tarihi</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {nonInstitutionUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                              <span className="text-sm font-medium text-yellow-700">
+                                {(user.username || user.email).charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {user.username || 'İsimsiz'}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {user.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          user.role === 'admin' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(user.created_at).toLocaleDateString('tr-TR')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {nonInstitutionUsers.length === 0 && (
+              <div className="text-center text-gray-500 py-12">
+                <div className="text-lg font-medium mb-2">Kurumu olmayan kullanıcı bulunmuyor</div>
+                <div className="text-sm">Tüm kullanıcılar bir kuruma bağlı</div>
+              </div>
+            )}
           </div>
 
 

@@ -427,7 +427,7 @@ export class AuthService {
     }
   }
 
-  // Super Admin için belirli bir kurumun tüm kullanıcılarını getir (admin ve user)
+  // Super Admin için belirli bir kurumun sadece user rolündeki kullanıcılarını getir (admin hariç)
   static async getInstitutionUsersForSuperAdmin(institutionId: string): Promise<ApiResponse<Profile[]>> {
     try {
       const { data, error } = await supabase
@@ -441,6 +441,7 @@ export class AuthService {
           )
         `)
         .eq('institution_id', institutionId)
+        .eq('role', 'user') // Sadece user rolündeki kullanıcıları getir
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -453,13 +454,14 @@ export class AuthService {
     }
   }
 
-  // Super Admin için kurum olmayan kullanıcıları getir
+  // Super Admin için kurum olmayan kullanıcıları getir (super_admin hariç)
   static async getNonInstitutionUsers(): Promise<ApiResponse<Profile[]>> {
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .is('institution_id', null)
+        .neq('role', 'super_admin') // super_admin rolündeki kullanıcıları hariç tut
         .order('created_at', { ascending: false })
 
       if (error) {
