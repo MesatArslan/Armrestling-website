@@ -231,16 +231,55 @@ export class AuthService {
 
   static async getSuperAdminStats(): Promise<ApiResponse<SuperAdminStats>> {
     try {
-      // Basit istatistikler - şimdilik hardcoded
+      // 1. Tüm kurumları al
+      const { data: institutions, error: institutionsError } = await supabase
+        .from('institutions')
+        .select('*')
+
+      if (institutionsError) {
+        return { success: false, error: `Kurumlar alınamadı: ${institutionsError.message}` }
+      }
+
+      const totalInstitutions = institutions?.length || 0
+
+      // 2. Tüm kullanıcıları al (sadece 'user' rolündeki)
+      const { data: users, error: usersError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'user')
+
+      if (usersError) {
+        return { success: false, error: `Kullanıcılar alınamadı: ${usersError.message}` }
+      }
+
+      const totalUsers = users?.length || 0
+
+      // 3. Aktif ve süresi dolmuş kurumları hesapla
+      const now = new Date()
+      let activeInstitutions = 0
+      let expiredInstitutions = 0
+
+      if (institutions) {
+        institutions.forEach(institution => {
+          const subscriptionEndDate = new Date(institution.subscription_end_date)
+          if (subscriptionEndDate > now) {
+            activeInstitutions++
+          } else {
+            expiredInstitutions++
+          }
+        })
+      }
+
       const stats: SuperAdminStats = {
-        totalInstitutions: 0,
-        totalUsers: 0,
-        activeInstitutions: 0,
-        expiredInstitutions: 0
+        totalInstitutions,
+        totalUsers,
+        activeInstitutions,
+        expiredInstitutions
       }
 
       return { success: true, data: stats }
     } catch (error) {
+      console.error('Super admin stats error:', error)
       return { success: false, error: 'İstatistikler getirilemedi' }
     }
   }
@@ -248,6 +287,33 @@ export class AuthService {
   // Admin İşlemleri
   static async createUser(data: CreateUserForm, institutionId: string): Promise<ApiResponse<Profile>> {
     try {
+      // 0. Kota kontrolü yap
+      const { data: institution, error: institutionError } = await supabase
+        .from('institutions')
+        .select('user_quota, users_created, subscription_end_date')
+        .eq('id', institutionId)
+        .single()
+
+      if (institutionError) {
+        return { success: false, error: `Kurum bilgileri alınamadı: ${institutionError.message}` }
+      }
+
+      if (!institution) {
+        return { success: false, error: 'Kurum bulunamadı' }
+      }
+
+      // Abonelik süresi kontrolü
+      const subscriptionEndDate = new Date(institution.subscription_end_date)
+      const now = new Date()
+      if (subscriptionEndDate <= now) {
+        return { success: false, error: 'Aboneliğinizin süresi dolmuş. Yeni kullanıcı oluşturamazsınız.' }
+      }
+
+      // Kota kontrolü
+      if (institution.users_created >= institution.user_quota) {
+        return { success: false, error: 'Kullanıcı kotanız dolmuş. Yeni kullanıcı oluşturamazsınız.' }
+      }
+
       // 1. Auth kullanıcısı oluştur
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
@@ -343,18 +409,53 @@ export class AuthService {
     }
   }
 
-  static async getAdminStats(_institutionId: string): Promise<ApiResponse<AdminStats>> {
+  static async getAdminStats(institutionId: string): Promise<ApiResponse<AdminStats>> {
     try {
-      // Basit istatistikler - şimdilik hardcoded
+      // 1. Kurum bilgilerini al
+      const { data: institution, error: institutionError } = await supabase
+        .from('institutions')
+        .select('user_quota, users_created, subscription_end_date')
+        .eq('id', institutionId)
+        .single()
+
+      if (institutionError) {
+        return { success: false, error: `Kurum bilgileri alınamadı: ${institutionError.message}` }
+      }
+
+      if (!institution) {
+        return { success: false, error: 'Kurum bulunamadı' }
+      }
+
+      // 2. Gerçek kullanıcı sayısını al (sadece 'user' rolündeki kullanıcılar)
+      const { data: users, error: usersError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('institution_id', institutionId)
+        .eq('role', 'user')
+
+      if (usersError) {
+        return { success: false, error: `Kullanıcı sayısı alınamadı: ${usersError.message}` }
+      }
+
+      const totalUsers = users?.length || 0
+      const usedQuota = totalUsers
+      const remainingQuota = Math.max(0, institution.user_quota - usedQuota)
+
+      // 3. Abonelik günlerini hesapla
+      const subscriptionEndDate = new Date(institution.subscription_end_date)
+      const now = new Date()
+      const subscriptionDaysLeft = Math.ceil((subscriptionEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
       const stats: AdminStats = {
-        totalUsers: 0,
-        remainingQuota: 10,
-        usedQuota: 0,
-        subscriptionDaysLeft: 30
+        totalUsers,
+        remainingQuota,
+        usedQuota,
+        subscriptionDaysLeft: Math.max(0, subscriptionDaysLeft)
       }
 
       return { success: true, data: stats }
     } catch (error) {
+      console.error('Admin stats error:', error)
       return { success: false, error: 'İstatistikler getirilemedi' }
     }
   }
