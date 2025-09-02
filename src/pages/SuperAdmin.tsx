@@ -20,6 +20,15 @@ export const SuperAdmin: React.FC = () => {
     user_quota: 10,
     subscription_end_date: ''
   })
+  
+  // Kurumu olmayan kullanıcı ekleme state'leri
+  const [showCreateUserForm, setShowCreateUserForm] = useState(false)
+  const [userFormData, setUserFormData] = useState({
+    email: '',
+    password: '',
+    username: '',
+    role: 'user' as 'user' | 'admin'
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -157,6 +166,35 @@ export const SuperAdmin: React.FC = () => {
     }
   }
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const result = await AuthService.createNonInstitutionUser(userFormData)
+      
+      if (result.success) {
+        setSuccess('Kullanıcı başarıyla oluşturuldu!')
+        setShowCreateUserForm(false)
+        setUserFormData({
+          email: '',
+          password: '',
+          username: '',
+          role: 'user'
+        })
+        await loadData()
+      } else {
+        setError(result.error || 'Kullanıcı oluşturulurken hata oluştu')
+      }
+    } catch (error) {
+      setError('Beklenmeyen bir hata oluştu')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handleInstitutionClick = async (institution: Institution) => {
     setSelectedInstitution(institution)
     setLoading(true)
@@ -180,6 +218,14 @@ export const SuperAdmin: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       [name]: type === 'number' ? parseInt(value) || 0 : value
+    }))
+  }
+
+  const handleUserInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setUserFormData(prev => ({
+      ...prev,
+      [name]: value
     }))
   }
 
@@ -707,9 +753,86 @@ export const SuperAdmin: React.FC = () => {
           {/* Kurumu Olmayan Kullanıcılar */}
           <div className="bg-white shadow rounded-lg">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Kurumu Olmayan Kullanıcılar</h3>
-              <p className="text-sm text-gray-500 mt-1">Herhangi bir kuruma bağlı olmayan kullanıcılar</p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Kurumu Olmayan Kullanıcılar</h3>
+                  <p className="text-sm text-gray-500 mt-1">Herhangi bir kuruma bağlı olmayan kullanıcılar</p>
+                </div>
+                <button
+                  onClick={() => setShowCreateUserForm(!showCreateUserForm)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                >
+                  {showCreateUserForm ? 'İptal Et' : 'Yeni Kullanıcı Ekle'}
+                </button>
+              </div>
             </div>
+
+            {/* Kullanıcı Oluşturma Formu */}
+            {showCreateUserForm && (
+              <form onSubmit={handleCreateUser} className="space-y-4 border-t pt-4 px-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Kullanıcı Adı</label>
+                    <input
+                      type="text"
+                      name="username"
+                      required
+                      value={userFormData.username}
+                      onChange={handleUserInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      value={userFormData.email}
+                      onChange={handleUserInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Şifre</label>
+                    <input
+                      type="password"
+                      name="password"
+                      required
+                      minLength={6}
+                      value={userFormData.password}
+                      onChange={handleUserInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Rol</label>
+                    <select
+                      name="role"
+                      value={userFormData.role}
+                      onChange={handleUserInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    >
+                      <option value="user">Kullanıcı</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? <LoadingSpinner /> : 'Kullanıcı Oluştur'}
+                  </button>
+                </div>
+              </form>
+            )}
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">

@@ -474,6 +474,85 @@ export class AuthService {
     }
   }
 
+  // Super Admin için kurumu olmayan kullanıcı oluştur
+  static async createNonInstitutionUser(data: { email: string; password: string; username: string; role: 'user' | 'admin' }): Promise<ApiResponse<Profile>> {
+    try {
+      // 1. Auth kullanıcısı oluştur
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            username: data.username,
+            role: data.role
+          }
+        }
+      })
+
+      if (authError) {
+        return { success: false, error: `Auth kullanıcısı oluşturulamadı: ${authError.message}` }
+      }
+
+      if (!authData.user) {
+        return { success: false, error: 'Auth kullanıcısı oluşturulamadı' }
+      }
+
+      // 2. Kullanıcı profili oluştur veya güncelle (trigger nedeniyle zaten oluşturulmuş olabilir)
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single()
+
+      let profileError
+      let profileData
+
+      if (existingProfile) {
+        // Profil zaten var, güncelle
+        const { data: updatedProfile, error } = await supabase
+          .from('profiles')
+          .update({
+            username: data.username,
+            role: data.role,
+            institution_id: null, // Kurumu olmayan kullanıcı
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', authData.user.id)
+          .select()
+          .single()
+        profileError = error
+        profileData = updatedProfile
+      } else {
+        // Profil yok, oluştur
+        const { data: newProfile, error } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            email: data.email,
+            username: data.username,
+            role: data.role,
+            institution_id: null // Kurumu olmayan kullanıcı
+          })
+          .select()
+          .single()
+        profileError = error
+        profileData = newProfile
+      }
+
+      if (profileError) {
+        return { success: false, error: `Kullanıcı profili oluşturulamadı: ${profileError.message}` }
+      }
+
+      return {
+        success: true,
+        data: profileData
+      }
+    } catch (error) {
+      console.error('Create non-institution user error:', error)
+      return { success: false, error: 'Kullanıcı oluşturulamadı' }
+    }
+  }
+
   static async getAdminStats(institutionId: string): Promise<ApiResponse<AdminStats>> {
     try {
       // 1. Kurum bilgilerini al
