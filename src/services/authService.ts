@@ -474,9 +474,59 @@ export class AuthService {
     }
   }
 
+  // Super Admin için kullanıcı güncelle
+  static async updateUser(userId: string, data: { username: string; email: string; role: 'user' | 'admin' }): Promise<ApiResponse<Profile>> {
+    try {
+      const { data: updatedUser, error } = await supabase
+        .from('profiles')
+        .update({
+          username: data.username,
+          email: data.email,
+          role: data.role,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+        .select()
+        .single()
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true, data: updatedUser }
+    } catch (error) {
+      console.error('Update user error:', error)
+      return { success: false, error: 'Kullanıcı güncellenemedi' }
+    }
+  }
+
+  // Super Admin için kullanıcı sil
+  static async deleteUser(userId: string): Promise<ApiResponse<void>> {
+    try {
+      // Önce kullanıcıyı profiles tablosundan sil
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId)
+
+      if (profileError) {
+        return { success: false, error: `Kullanıcı profili silinemedi: ${profileError.message}` }
+      }
+
+      // Auth kullanıcısını da sil (trigger otomatik olarak silecek)
+      return { success: true }
+    } catch (error) {
+      console.error('Delete user error:', error)
+      return { success: false, error: 'Kullanıcı silinemedi' }
+    }
+  }
+
   // Super Admin için kurumu olmayan kullanıcı oluştur
   static async createNonInstitutionUser(data: { email: string; password: string; username: string; role: 'user' | 'admin' }): Promise<ApiResponse<Profile>> {
     try {
+      // Mevcut SuperAdmin oturumunu kaydet
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
       // 1. Auth kullanıcısı oluştur
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
@@ -541,6 +591,11 @@ export class AuthService {
 
       if (profileError) {
         return { success: false, error: `Kullanıcı profili oluşturulamadı: ${profileError.message}` }
+      }
+
+      // 3. SuperAdmin oturumunu geri yükle
+      if (currentSession) {
+        await supabase.auth.setSession(currentSession)
       }
 
       return {

@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { AuthService } from '../services/authService'
 import type { Institution, Profile, CreateInstitutionForm, SuperAdminStats } from '../types/auth'
 import LoadingSpinner from '../components/UI/LoadingSpinner'
+import { supabase } from '../lib/supabase'
 
 export const SuperAdmin: React.FC = () => {
   const { user, signOut } = useAuth()
@@ -26,8 +27,7 @@ export const SuperAdmin: React.FC = () => {
   const [userFormData, setUserFormData] = useState({
     email: '',
     password: '',
-    username: '',
-    role: 'user' as 'user' | 'admin'
+    username: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -46,6 +46,17 @@ export const SuperAdmin: React.FC = () => {
   // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingInstitution, setDeletingInstitution] = useState<Institution | null>(null)
+
+  // User edit/delete modal state
+  const [showEditUserModal, setShowEditUserModal] = useState(false)
+  const [editingUser, setEditingUser] = useState<Profile | null>(null)
+  const [editUserFormData, setEditUserFormData] = useState({
+    username: '',
+    email: '',
+    role: 'user' as 'user' | 'admin'
+  })
+  const [showDeleteUserModal, setShowDeleteUserModal] = useState(false)
+  const [deletingUser, setDeletingUser] = useState<Profile | null>(null)
 
   useEffect(() => {
     // Kullanıcının super_admin rolünde olup olmadığını kontrol et
@@ -173,7 +184,10 @@ export const SuperAdmin: React.FC = () => {
     setSuccess('')
 
     try {
-      const result = await AuthService.createNonInstitutionUser(userFormData)
+      const result = await AuthService.createNonInstitutionUser({
+        ...userFormData,
+        role: 'user' // Varsayılan olarak user rolü
+      })
       
       if (result.success) {
         setSuccess('Kullanıcı başarıyla oluşturuldu!')
@@ -181,8 +195,7 @@ export const SuperAdmin: React.FC = () => {
         setUserFormData({
           email: '',
           password: '',
-          username: '',
-          role: 'user'
+          username: ''
         })
         await loadData()
       } else {
@@ -227,6 +240,84 @@ export const SuperAdmin: React.FC = () => {
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleEditUserInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setEditUserFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleEditUser = (user: Profile) => {
+    setEditingUser(user)
+    setEditUserFormData({
+      username: user.username || '',
+      email: user.email,
+      role: user.role as 'user' | 'admin'
+    })
+    setShowEditUserModal(true)
+  }
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingUser) return
+
+    setIsSubmitting(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const result = await AuthService.updateUser(editingUser.id, {
+        username: editUserFormData.username,
+        email: editUserFormData.email,
+        role: editUserFormData.role
+      })
+      
+      if (result.success) {
+        setSuccess('Kullanıcı başarıyla güncellendi!')
+        setShowEditUserModal(false)
+        setEditingUser(null)
+        await loadData()
+      } else {
+        setError(result.error || 'Kullanıcı güncellenirken hata oluştu')
+      }
+    } catch (error) {
+      setError('Beklenmeyen bir hata oluştu')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteUser = (user: Profile) => {
+    setDeletingUser(user)
+    setShowDeleteUserModal(true)
+  }
+
+  const confirmDeleteUser = async () => {
+    if (!deletingUser) return
+
+    setIsSubmitting(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const result = await AuthService.deleteUser(deletingUser.id)
+      
+      if (result.success) {
+        setSuccess('Kullanıcı başarıyla silindi!')
+        setShowDeleteUserModal(false)
+        setDeletingUser(null)
+        await loadData()
+      } else {
+        setError(result.error || 'Kullanıcı silinirken hata oluştu')
+      }
+    } catch (error) {
+      setError('Beklenmeyen bir hata oluştu')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleEditInstitution = (institution: Institution) => {
@@ -807,19 +898,6 @@ export const SuperAdmin: React.FC = () => {
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Rol</label>
-                    <select
-                      name="role"
-                      value={userFormData.role}
-                      onChange={handleUserInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    >
-                      <option value="user">Kullanıcı</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
                 </div>
 
                 <div className="flex justify-end">
@@ -841,6 +919,7 @@ export const SuperAdmin: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oluşturulma Tarihi</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -876,6 +955,20 @@ export const SuperAdmin: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(user.created_at).toLocaleDateString('tr-TR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button
+                          onClick={() => handleEditUser(user)}
+                          className="text-blue-600 hover:text-blue-900 mr-2"
+                        >
+                          Düzenle
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Sil
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1109,6 +1202,124 @@ export const SuperAdmin: React.FC = () => {
                 </button>
                 <button
                   onClick={confirmDeleteInstitution}
+                  disabled={isSubmitting}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? <LoadingSpinner /> : 'Sil'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditUserModal && editingUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Kullanıcı Düzenle: {editingUser.username || editingUser.email}
+              </h3>
+              
+              <form onSubmit={handleUpdateUser} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Kullanıcı Adı</label>
+                  <input
+                    type="text"
+                    name="username"
+                    required
+                    value={editUserFormData.username}
+                    onChange={handleEditUserInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={editUserFormData.email}
+                    onChange={handleEditUserInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Rol</label>
+                  <select
+                    name="role"
+                    value={editUserFormData.role}
+                    onChange={handleEditUserInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="user">Kullanıcı</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditUserModal(false)
+                      setEditingUser(null)
+                    }}
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? <LoadingSpinner /> : 'Güncelle'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {showDeleteUserModal && deletingUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              
+              <h3 className="text-lg font-medium text-gray-900 mt-4 mb-2">
+                Kullanıcı Silme Onayı
+              </h3>
+              
+              <p className="text-sm text-gray-500 mb-6">
+                <strong>{deletingUser.username || deletingUser.email}</strong> kullanıcısını silmek istediğinizden emin misiniz?
+                <br />
+                <span className="text-red-600 font-medium">
+                  Bu işlem geri alınamaz!
+                </span>
+              </p>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteUserModal(false)
+                    setDeletingUser(null)
+                  }}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={confirmDeleteUser}
                   disabled={isSubmitting}
                   className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
