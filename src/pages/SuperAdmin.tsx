@@ -3,7 +3,6 @@ import { useAuth } from '../contexts/AuthContext'
 import { AuthService } from '../services/authService'
 import type { Institution, Profile, CreateInstitutionForm, SuperAdminStats } from '../types/auth'
 import LoadingSpinner from '../components/UI/LoadingSpinner'
-import { supabase } from '../lib/supabase'
 
 export const SuperAdmin: React.FC = () => {
   const { user, signOut } = useAuth()
@@ -13,12 +12,14 @@ export const SuperAdmin: React.FC = () => {
   const [nonInstitutionUsers, setNonInstitutionUsers] = useState<Profile[]>([])
   const [stats, setStats] = useState<SuperAdminStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [institutionUsersLoading, setInstitutionUsersLoading] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [formData, setFormData] = useState<CreateInstitutionForm>({
     email: '',
     password: '',
     name: '',
     user_quota: 10,
+    subscription_start_date: '',
     subscription_end_date: ''
   })
   
@@ -27,7 +28,8 @@ export const SuperAdmin: React.FC = () => {
   const [userFormData, setUserFormData] = useState({
     email: '',
     password: '',
-    username: ''
+    username: '',
+    expiration_date: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -40,6 +42,7 @@ export const SuperAdmin: React.FC = () => {
     name: '',
     email: '',
     user_quota: 0,
+    subscription_start_date: '',
     subscription_end_date: ''
   })
 
@@ -53,7 +56,8 @@ export const SuperAdmin: React.FC = () => {
   const [editUserFormData, setEditUserFormData] = useState({
     username: '',
     email: '',
-    role: 'user' as 'user' | 'admin'
+    role: 'user' as 'user' | 'admin',
+    expiration_date: ''
   })
   const [showDeleteUserModal, setShowDeleteUserModal] = useState(false)
   const [deletingUser, setDeletingUser] = useState<Profile | null>(null)
@@ -164,6 +168,7 @@ export const SuperAdmin: React.FC = () => {
           password: '',
           name: '',
           user_quota: 10,
+          subscription_start_date: '',
           subscription_end_date: ''
         })
         
@@ -208,7 +213,8 @@ export const SuperAdmin: React.FC = () => {
         setUserFormData({
           email: '',
           password: '',
-          username: ''
+          username: '',
+          expiration_date: ''
         })
         
         // Yeni kullanıcıyı listeye ekle
@@ -236,7 +242,7 @@ export const SuperAdmin: React.FC = () => {
 
   const handleInstitutionClick = async (institution: Institution) => {
     setSelectedInstitution(institution)
-    setLoading(true)
+    setInstitutionUsersLoading(true)
 
     try {
       const result = await AuthService.getInstitutionUsersForSuperAdmin(institution.id)
@@ -248,7 +254,7 @@ export const SuperAdmin: React.FC = () => {
     } catch (error) {
       console.error('Users loading error:', error)
     } finally {
-      setLoading(false)
+      setInstitutionUsersLoading(false)
     }
   }
 
@@ -281,7 +287,8 @@ export const SuperAdmin: React.FC = () => {
     setEditUserFormData({
       username: user.username || '',
       email: user.email,
-      role: user.role as 'user' | 'admin'
+      role: user.role as 'user' | 'admin',
+      expiration_date: user.expiration_date ? user.expiration_date.split('T')[0] + 'T' + user.expiration_date.split('T')[1]?.substring(0, 5) : ''
     })
     setShowEditUserModal(true)
   }
@@ -298,7 +305,8 @@ export const SuperAdmin: React.FC = () => {
       const result = await AuthService.updateUser(editingUser.id, {
         username: editUserFormData.username,
         email: editUserFormData.email,
-        role: editUserFormData.role
+        role: editUserFormData.role,
+        expiration_date: editUserFormData.expiration_date
       })
       
       if (result.success) {
@@ -369,6 +377,7 @@ export const SuperAdmin: React.FC = () => {
       name: institution.name,
       email: institution.email,
       user_quota: institution.user_quota,
+      subscription_start_date: institution.created_at.split('T')[0],
       subscription_end_date: institution.subscription_end_date.split('T')[0]
     })
     setShowEditModal(true)
@@ -466,6 +475,24 @@ export const SuperAdmin: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut()
+  }
+
+  // Kalan günleri hesapla
+  const calculateRemainingDays = (endDate: string): number => {
+    const end = new Date(endDate)
+    const now = new Date()
+    const diffTime = end.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return Math.max(0, diffDays)
+  }
+
+  // Tarih formatını düzenle
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
   }
 
   // Loading state
@@ -773,7 +800,19 @@ export const SuperAdmin: React.FC = () => {
                     />
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Üyelik Başlangıç Tarihi</label>
+                    <input
+                      type="datetime-local"
+                      name="subscription_start_date"
+                      required
+                      value={formData.subscription_start_date}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
                     <label className="block text-sm font-medium text-gray-700">Üyelik Bitiş Tarihi</label>
                     <input
                       type="datetime-local"
@@ -810,8 +849,8 @@ export const SuperAdmin: React.FC = () => {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kurum</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı Sayısı</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kota</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Başlangıç Tarihi</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bitiş Tarihi</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
@@ -839,7 +878,6 @@ export const SuperAdmin: React.FC = () => {
                             </div>
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">{institution.name}</div>
-                              <div className="text-sm text-gray-500">{institution.users_created} kullanıcı</div>
                             </div>
                           </div>
                         </td>
@@ -847,26 +885,18 @@ export const SuperAdmin: React.FC = () => {
                           {institution.email}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{institution.users_created}</div>
+                          <div className="text-sm font-medium text-gray-900">{institution.users_created}/{institution.user_quota}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {formatDate(institution.created_at)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="text-sm font-medium text-gray-900">
+                            {formatDate(institution.subscription_end_date)}
+                          </div>
                           <div className="text-sm text-gray-500">
-                            Kullanıcı kotasından sayılan kullanıcılar
+                            {calculateRemainingDays(institution.subscription_end_date)} gün kaldı
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <span className="text-sm font-medium">{institution.users_created} / {institution.user_quota}</span>
-                            <div className="ml-2 flex-1 bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-blue-600 h-2 rounded-full" 
-                                style={{ 
-                                  width: `${Math.min((institution.users_created / institution.user_quota) * 100, 100)}%` 
-                                }}
-                              ></div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(institution.subscription_end_date).toLocaleDateString('tr-TR')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -962,6 +992,18 @@ export const SuperAdmin: React.FC = () => {
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Son Kullanma Tarihi</label>
+                    <input
+                      type="datetime-local"
+                      name="expiration_date"
+                      required
+                      value={userFormData.expiration_date}
+                      onChange={handleUserInputChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end">
@@ -982,6 +1024,7 @@ export const SuperAdmin: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Son Kullanma Tarihi</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oluşturulma Tarihi</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                   </tr>
@@ -1016,6 +1059,20 @@ export const SuperAdmin: React.FC = () => {
                         }`}>
                           {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {user.expiration_date ? (
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {formatDate(user.expiration_date)}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {calculateRemainingDays(user.expiration_date)} gün kaldı
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">-</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(user.created_at).toLocaleDateString('tr-TR')}
@@ -1071,7 +1128,7 @@ export const SuperAdmin: React.FC = () => {
                 </button>
               </div>
               
-              {loading ? (
+              {institutionUsersLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="text-center">
                     <LoadingSpinner />
@@ -1185,6 +1242,18 @@ export const SuperAdmin: React.FC = () => {
                     required
                     min={1}
                     value={editFormData.user_quota}
+                    onChange={handleEditInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Üyelik Başlangıç Tarihi</label>
+                  <input
+                    type="date"
+                    name="subscription_start_date"
+                    required
+                    value={editFormData.subscription_start_date}
                     onChange={handleEditInputChange}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -1322,6 +1391,17 @@ export const SuperAdmin: React.FC = () => {
                     <option value="user">Kullanıcı</option>
                     <option value="admin">Admin</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Son Kullanma Tarihi</label>
+                  <input
+                    type="datetime-local"
+                    name="expiration_date"
+                    value={editUserFormData.expiration_date}
+                    onChange={handleEditUserInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  />
                 </div>
 
                 <div className="flex justify-end space-x-3">

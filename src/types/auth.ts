@@ -8,6 +8,7 @@ export interface Profile {
   username?: string;
   role: UserRole;
   institution_id?: string;
+  expiration_date?: string;
   created_at: string;
   updated_at: string;
   institutions?: Institution;
@@ -31,6 +32,7 @@ export interface CreateInstitutionForm {
   password: string;
   name: string;
   user_quota: number;
+  subscription_start_date: string;
   subscription_end_date: string;
 }
 
@@ -38,6 +40,7 @@ export interface CreateUserForm {
   username: string;
   email: string;
   password: string;
+  expiration_date?: string;
 }
 
 export interface LoginForm {

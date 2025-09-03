@@ -13,6 +13,9 @@ export class AuthService {
   // Super Admin İşlemleri
   static async createInstitution(data: CreateInstitutionForm): Promise<ApiResponse<Institution>> {
     try {
+      // Mevcut SuperAdmin oturumunu sakla (signUp oturumu değiştirebilir)
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+
       // 1. Auth kullanıcısı oluştur
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
@@ -93,6 +96,11 @@ export class AuthService {
 
       // 4. Admin kurumun sahibi olarak atanır ama kullanıcı kotasından sayılmaz
       // users_created 0 olarak kalır, sadece 'user' rolündeki kullanıcılar sayılır
+
+      // 5. SuperAdmin oturumunu geri yükle (yeni oluşturulan admin'e geçilmesini engelle)
+      if (currentSession) {
+        await supabase.auth.setSession(currentSession)
+      }
 
       return {
         success: true,
@@ -475,7 +483,7 @@ export class AuthService {
   }
 
   // Super Admin için kullanıcı güncelle
-  static async updateUser(userId: string, data: { username: string; email: string; role: 'user' | 'admin' }): Promise<ApiResponse<Profile>> {
+  static async updateUser(userId: string, data: { username: string; email: string; role: 'user' | 'admin'; expiration_date?: string }): Promise<ApiResponse<Profile>> {
     try {
       const { data: updatedUser, error } = await supabase
         .from('profiles')
@@ -483,6 +491,7 @@ export class AuthService {
           username: data.username,
           email: data.email,
           role: data.role,
+          expiration_date: data.expiration_date,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId)
@@ -522,7 +531,7 @@ export class AuthService {
   }
 
   // Super Admin için kurumu olmayan kullanıcı oluştur
-  static async createNonInstitutionUser(data: { email: string; password: string; username: string; role: 'user' | 'admin' }): Promise<ApiResponse<Profile>> {
+  static async createNonInstitutionUser(data: { email: string; password: string; username: string; role: 'user' | 'admin'; expiration_date?: string }): Promise<ApiResponse<Profile>> {
     try {
       // Mevcut SuperAdmin oturumunu kaydet
       const { data: { session: currentSession } } = await supabase.auth.getSession()
@@ -540,6 +549,7 @@ export class AuthService {
       })
 
       if (authError) {
+        console.error('Auth error details:', authError)
         return { success: false, error: `Auth kullanıcısı oluşturulamadı: ${authError.message}` }
       }
 
@@ -565,6 +575,7 @@ export class AuthService {
             username: data.username,
             role: data.role,
             institution_id: null, // Kurumu olmayan kullanıcı
+            expiration_date: data.expiration_date || null,
             updated_at: new Date().toISOString()
           })
           .eq('id', authData.user.id)
@@ -581,7 +592,8 @@ export class AuthService {
             email: data.email,
             username: data.username,
             role: data.role,
-            institution_id: null // Kurumu olmayan kullanıcı
+            institution_id: null, // Kurumu olmayan kullanıcı
+            expiration_date: data.expiration_date || null
           })
           .select()
           .single()
