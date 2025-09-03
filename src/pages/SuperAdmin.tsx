@@ -90,15 +90,18 @@ export const SuperAdmin: React.FC = () => {
       if (institutionsResult.success) {
         const institutionsData = institutionsResult.data || []
         setInstitutions(institutionsData)
-        
-        // Kurumu olmayan kullanıcıları da yükle
+
+        // Kurumu olmayan kullanıcıları da yükle (tek sefer)
+        let nonInstitutionUsersCount = 0
         const nonInstitutionUsersResult = await AuthService.getNonInstitutionUsers()
         if (nonInstitutionUsersResult.success) {
-          setNonInstitutionUsers(nonInstitutionUsersResult.data || [])
+          const list = nonInstitutionUsersResult.data || []
+          setNonInstitutionUsers(list)
+          nonInstitutionUsersCount = list.length
         }
-        
-        // Stats'i institutions verilerinden hesapla
-        const stats = await calculateStatsFromInstitutions(institutionsData)
+
+        // Stats'i institutions verilerinden hesapla (tekrar fetch etmeden)
+        const stats = await calculateStatsFromInstitutions(institutionsData, nonInstitutionUsersCount)
         setStats(stats)
       } else {
         const errorMessage = institutionsResult.error || 'Bilinmeyen hata'
@@ -117,8 +120,8 @@ export const SuperAdmin: React.FC = () => {
     }
   }
 
-  // Institutions verilerinden stats hesapla
-  const calculateStatsFromInstitutions = async (institutions: Institution[]): Promise<SuperAdminStats> => {
+  // Institutions verilerinden stats hesapla (kurum dışı kullanıcı sayısı dışarıdan verilir)
+  const calculateStatsFromInstitutions = async (institutions: Institution[], nonInstitutionUsers: number): Promise<SuperAdminStats> => {
     const totalInstitutions = institutions.length
     const now = new Date()
     
@@ -136,9 +139,6 @@ export const SuperAdmin: React.FC = () => {
       totalUsers += institution.users_created || 0
     })
 
-    // Kurum dışı kullanıcıları al
-    const nonInstitutionUsersResult = await AuthService.getNonInstitutionUsers()
-    const nonInstitutionUsers = nonInstitutionUsersResult.success ? (nonInstitutionUsersResult.data?.length || 0) : 0
     const institutionUsers = totalUsers
 
     return {
