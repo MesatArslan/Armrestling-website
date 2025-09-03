@@ -630,34 +630,11 @@ export const SuperAdmin: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-        {/* Header */}
-        <header className="bg-gradient-to-r from-gray-900 via-blue-800 to-blue-600 text-white shadow-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div>
-                <h1 className="text-3xl font-semibold tracking-tight">Super Admin Panel</h1>
-                <p className="text-sm text-blue-100">Hoş geldiniz, {user?.email}</p>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="inline-flex items-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium backdrop-blur transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
-              >
-                Çıkış Yap
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          {/* Loading Spinner */}
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <LoadingSpinner />
-              <p className="mt-4 text-gray-600">Veriler yükleniyor...</p>
-            </div>
-          </div>
-        </main>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner />
+          <p className="mt-4 text-gray-600">Veriler yükleniyor...</p>
+        </div>
       </div>
     )
   }
@@ -697,42 +674,62 @@ export const SuperAdmin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-gray-900 via-blue-800 to-blue-600 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight">Super Admin Panel</h1>
-              <p className="text-sm text-blue-100">Hoş geldiniz, {user?.email}</p>
+      <main className="flex">
+        {/* Sidebar */}
+        <aside className="w-64 bg-gradient-to-b from-gray-900 via-blue-800 to-blue-600 h-screen sticky top-0 shadow-lg">
+          <div className="p-6">
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-white mb-2">Super Admin</h2>
+              <p className="text-blue-100 text-sm">Hoş geldiniz, {user?.email}</p>
             </div>
+            
+            <nav>
+              <ul className="space-y-2">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection('institutions')}
+                    className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-3 transition-all duration-200 ${activeSection === 'institutions' ? 'bg-white/20 text-white shadow-lg backdrop-blur' : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    Kurum Yönetimi
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection('nonInstitutionUsers')}
+                    className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-3 transition-all duration-200 ${activeSection === 'nonInstitutionUsers' ? 'bg-white/20 text-white shadow-lg backdrop-blur' : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                    Kullanıcı Yönetimi
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+          
+          {/* Çıkış Butonu */}
+          <div className="absolute bottom-6 left-6 right-6">
             <button
               onClick={handleSignOut}
-              className="inline-flex items-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium backdrop-blur transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
+              className="w-full inline-flex items-center justify-center bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 backdrop-blur border border-white/20 hover:border-white/30"
             >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
               Çıkış Yap
             </button>
           </div>
-        </div>
-      </header>
+        </aside>
 
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* Section Switcher */}
-        <div className="mb-6 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setActiveSection('institutions')}
-            className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border transition-colors ${activeSection === 'institutions' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
-          >
-            Kurum Yönetimi
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSection('nonInstitutionUsers')}
-            className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border transition-colors ${activeSection === 'nonInstitutionUsers' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
-          >
-            Kurumu Olmayan Kullanıcılar
-          </button>
-        </div>
+        {/* Content */}
+        <div className="flex-1 bg-gray-50 min-h-screen">
+          <div className="p-8">
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -1172,7 +1169,9 @@ export const SuperAdmin: React.FC = () => {
           </div>
           )}
 
-
+          {/* Close content wrapper */}
+        </div>
+          </div>
         </div>
       </main>
 
