@@ -18,7 +18,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onModeChange,
 }) => {
   const { t } = useTranslation()
-  const { signIn, signUp, resetPassword } = useAuth()
+  const { signIn } = useAuth()
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -28,7 +28,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
-  const [showForgotPassword, setShowForgotPassword] = useState(false)
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -84,58 +83,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setMessage('')
     
     try {
-      if (mode === 'login') {
-        const { error } = await signIn(email, password)
-        if (error) {
-          setError(error.message || t('auth.signInError'))
-        } else {
-          setMessage(t('auth.welcomeBack'))
-          resetForm()
-          setTimeout(() => {
-            onClose()
-          }, 1000)
-        }
-      } else {
-        const { error } = await signUp(email, password)
-        if (error) {
-          setError(error.message || t('auth.signUpError'))
-        } else {
-          setMessage(t('auth.signUpSuccess'))
-          resetForm()
-        }
-      }
-    } catch (err) {
-      setError(mode === 'login' ? t('auth.signInError') : t('auth.signUpError'))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleForgotPassword = async () => {
-    if (!email.trim()) {
-      setError(t('auth.emailRequired'))
-      return
-    }
-    
-    if (!email.includes('@')) {
-      setError(t('auth.invalidEmail'))
-      return
-    }
-    
-    setLoading(true)
-    setError('')
-    setMessage('')
-    
-    try {
-      const { error } = await resetPassword(email)
+      const roleType = mode === 'login' ? 'user' : 'admin'
+      const { error } = await signIn(email, password, roleType)
       if (error) {
-        setError(error.message || t('auth.resetPasswordError'))
+        setError(error || t('auth.signInError'))
       } else {
-        setMessage(t('auth.resetPasswordSuccess'))
-        setShowForgotPassword(false)
+        setMessage(t('auth.welcomeBack'))
+        resetForm()
+        setTimeout(() => {
+          onClose()
+        }, 1000)
       }
     } catch (err) {
-      setError(t('auth.resetPasswordError'))
+      setError(t('auth.signInError'))
     } finally {
       setLoading(false)
     }
@@ -149,7 +109,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setShowConfirmPassword(false)
     setError('')
     setMessage('')
-    setShowForgotPassword(false)
   }
 
   const handleClose = () => {
@@ -190,11 +149,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Modal content */}
         <div className="px-6 py-8">
           <h3 className="text-2xl font-bold text-center text-gray-900 mb-6">
-            {showForgotPassword
-              ? t('auth.resetPassword')
-              : mode === 'login'
-              ? t('auth.login')
-              : t('auth.signup')}
+            {mode === 'login' ? 'Bireysel Girişi' : 'Kurum Girişi'}
           </h3>
 
           {error && (
@@ -227,39 +182,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               />
             </div>
 
-            {!showForgotPassword && (
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.password')}
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    required
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder={t('auth.enterPassword')}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
-                    )}
-                  </button>
-                </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('auth.password')}
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder={t('auth.enterPassword')}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
               </div>
-            )}
+            </div>
 
-            {mode === 'signup' && !showForgotPassword && (
+            {mode === 'signup' && (
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('auth.confirmPassword')}
@@ -292,66 +245,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             )}
 
             <div className="space-y-3 pt-2">
-              {showForgotPassword ? (
-                <>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? t('auth.loading') : (mode === 'login' ? 'Bireysel Girişi' : 'Kurum Girişi')}
+              </button>
+
+              <div className="text-center pt-4 border-t border-gray-200">
+                <span className="text-sm text-gray-600">
+                  {mode === 'login' ? 'Kurum hesabınız mı var?' : 'Bireysel hesabınız mı var?'}{' '}
                   <button
                     type="button"
-                    onClick={handleForgotPassword}
-                    disabled={loading}
-                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => onModeChange(mode === 'login' ? 'signup' : 'login')}
+                    className="font-medium text-indigo-600 hover:text-indigo-500"
                   >
-                    {loading ? t('auth.loading') : t('auth.resetPassword')}
+                    {mode === 'login' ? 'Kurum Girişi' : 'Bireysel Girişi'}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPassword(false)}
-                    className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    {t('common.cancel')}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading
-                      ? t('auth.loading')
-                      : mode === 'login'
-                      ? t('auth.signInWithEmail')
-                      : t('auth.signUpWithEmail')}
-                  </button>
-
-                  {mode === 'login' && (
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        onClick={() => setShowForgotPassword(true)}
-                        className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
-                      >
-                        {t('auth.forgotPassword')}
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="text-center pt-4 border-t border-gray-200">
-                    <span className="text-sm text-gray-600">
-                      {mode === 'login'
-                        ? t('auth.dontHaveAccount')
-                        : t('auth.alreadyHaveAccount')}{' '}
-                      <button
-                        type="button"
-                        onClick={() => onModeChange(mode === 'login' ? 'signup' : 'login')}
-                        className="font-medium text-indigo-600 hover:text-indigo-500"
-                      >
-                        {mode === 'login' ? t('auth.signup') : t('auth.login')}
-                      </button>
-                    </span>
-                  </div>
-                </>
-              )}
+                </span>
+              </div>
             </div>
           </form>
         </div>

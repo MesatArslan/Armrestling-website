@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
-import { UserIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect, useRef } from 'react';
+import { UserIcon, ArrowRightOnRectangleIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import LanguageSwitcher from './LanguageSwitcher';
 import { AuthModal } from './AuthModal';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,8 +12,24 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   const toggleMenu = () => setIsOpen(prev => !prev);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setLoginDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -24,6 +40,7 @@ const Navbar = () => {
     setAuthMode(mode);
     setAuthModalOpen(true);
     setIsOpen(false);
+    setLoginDropdownOpen(false);
   };
 
   return (
@@ -55,32 +72,48 @@ const Navbar = () => {
             {/* Auth buttons */}
             {user ? (
               <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2 text-gray-600">
-                  <UserIcon className="h-5 w-5" />
-                  <span className="text-sm">{user.email}</span>
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors duration-200"
-                >
-                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                  <span>{t('auth.logout')}</span>
-                </button>
+                {user.role === 'admin' ? (
+                  <Link
+                    to="/admin"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-gray-50"
+                  >
+                    <UserIcon className="h-5 w-5" />
+                    <span className="text-sm">{user.email}</span>
+                  </Link>
+                ) : (
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <UserIcon className="h-5 w-5" />
+                    <span className="text-sm">{user.email}</span>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={() => openAuthModal('login')}
-                  className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                  onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
+                  className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-gray-50"
                 >
-                  {t('auth.login')}
+                  <span>{t('auth.login')}</span>
+                  <ChevronDownIcon className="h-4 w-4" />
                 </button>
-                <button
-                  onClick={() => openAuthModal('signup')}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                >
-                  {t('auth.signup')}
-                </button>
+                
+                {/* Login Dropdown */}
+                {loginDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                    <button
+                      onClick={() => openAuthModal('login')}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                    >
+                      Bireysel Girişi
+                    </button>
+                    <button
+                      onClick={() => openAuthModal('signup')}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                    >
+                      Kurum Girişi
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -125,13 +158,15 @@ const Navbar = () => {
                 <UserIcon className="h-5 w-5" />
                 <span className="text-sm">{user.email}</span>
               </div>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center justify-center space-x-2 w-full px-3 py-2 rounded-lg text-red-600 hover:bg-red-50"
-              >
-                <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                <span>{t('auth.logout')}</span>
-              </button>
+              {user.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  onClick={() => setIsOpen(false)}
+                  className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  Kurum Paneli
+                </Link>
+              )}
             </div>
           ) : (
             <div className="pt-2 border-t border-gray-100 space-y-2">
@@ -139,13 +174,13 @@ const Navbar = () => {
                 onClick={() => openAuthModal('login')}
                 className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
               >
-                {t('auth.login')}
+                Bireysel Girişi
               </button>
               <button
                 onClick={() => openAuthModal('signup')}
-                className="block w-full text-center px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
               >
-                {t('auth.signup')}
+                Kurum Girişi
               </button>
             </div>
           )}

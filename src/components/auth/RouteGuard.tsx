@@ -20,6 +20,7 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
     )
   }
 
+  // Kullanıcı yoksa korumalı sayfalar için login'e; public sayfalar için engelleme yok
   if (!user) {
     return <Navigate to={redirectTo} state={{ from: location }} replace />
   }

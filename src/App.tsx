@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Players from './pages/Players';
 import Tournaments from './pages/Tournaments';
@@ -15,6 +15,20 @@ import { AuthProvider } from './contexts/AuthContext';
 import { RouteGuard } from './components/auth/RouteGuard';
 
 const Layout = () => {
+  const location = useLocation();
+  const isAdminPage = location.pathname === '/admin';
+
+  if (isAdminPage) {
+    return (
+      <div className="h-screen bg-gray-50 overflow-hidden">
+        <Navbar />
+        <div className="h-full pt-16">
+          <Outlet />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 w-screen">
       <Navbar />
@@ -45,30 +59,21 @@ const App = () => {
             } 
           />
           
-          {/* Admin Routes */}
-          <Route 
-            path="/admin" 
-            element={
-              <RouteGuard allowedRoles={['admin']}>
-                <Admin />
-              </RouteGuard>
-            } 
-          />
-          
-          {/* User Routes with Layout */}
+          {/* Routes with Layout (including Admin) */}
           <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
             <Route 
-              index 
+              path="admin" 
               element={
-                <RouteGuard allowedRoles={['user']}>
-                  <Home />
+                <RouteGuard allowedRoles={['admin']}>
+                  <Admin />
                 </RouteGuard>
               } 
             />
             <Route 
               path="players" 
               element={
-                <RouteGuard allowedRoles={['user']}>
+                <RouteGuard allowedRoles={['user', 'admin']}>
                   <Players />
                 </RouteGuard>
               } 
@@ -76,7 +81,7 @@ const App = () => {
             <Route 
               path="tournaments" 
               element={
-                <RouteGuard allowedRoles={['user']}>
+                <RouteGuard allowedRoles={['user', 'admin']}>
                   <Tournaments />
                 </RouteGuard>
               } 
@@ -84,7 +89,7 @@ const App = () => {
             <Route 
               path="matches" 
               element={
-                <RouteGuard allowedRoles={['user']}>
+                <RouteGuard allowedRoles={['user', 'admin']}>
                   <Matches />
                 </RouteGuard>
               } 
@@ -92,7 +97,7 @@ const App = () => {
             <Route 
               path="scoring" 
               element={
-                <RouteGuard allowedRoles={['user']}>
+                <RouteGuard allowedRoles={['user', 'admin']}>
                   <Scoring />
                 </RouteGuard>
               } 

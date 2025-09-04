@@ -18,6 +18,8 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
 }) => {
   const [institutionQuery, setInstitutionQuery] = useState('')
   const [institutionStatusFilter, setInstitutionStatusFilter] = useState<'all' | 'active' | 'expired'>('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
 
   const filteredInstitutions = useMemo(() => {
     const q = institutionQuery.trim().toLowerCase()
@@ -33,6 +35,12 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
       return matchesQuery && matchesStatus
     })
   }, [institutions, institutionQuery, institutionStatusFilter])
+
+  // Pagination
+  const totalPages = Math.ceil(filteredInstitutions.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentInstitutions = filteredInstitutions.slice(startIndex, endIndex)
 
   // Tarih yardımcıları
   const formatDate = (dateString: string): string => {
@@ -51,11 +59,30 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
     return Math.max(0, diffDays)
   }
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    // Scroll to top of table
+    const tableElement = document.querySelector('.institutions-table')
+    if (tableElement) {
+      tableElement.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1) // Reset to first page when changing items per page
+  }
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="px-6 py-4 border-b border-gray-100">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <h3 className="text-lg font-medium text-gray-900">Kurumlar</h3>
+          <div className="flex items-center gap-4">
+            <h3 className="text-lg font-medium text-gray-900">Kurumlar</h3>
+            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+              {filteredInstitutions.length} kurum
+            </span>
+          </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <div className="relative flex-1">
               <input
@@ -96,7 +123,8 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto rounded-b-xl">
+      
+      <div className="overflow-x-auto institutions-table overflow-y-auto border-b border-gray-100" style={{ maxHeight: 'calc(100vh - 350px)' }}>
         <table className="min-w-full divide-y divide-gray-100">
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
@@ -110,14 +138,14 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
-            {filteredInstitutions.length === 0 && (
+            {currentInstitutions.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500">
-                  Aramanıza uygun kurum bulunamadı
+                  {filteredInstitutions.length === 0 ? 'Aramanıza uygun kurum bulunamadı' : 'Bu sayfada kurum bulunamadı'}
                 </td>
               </tr>
             )}
-            {filteredInstitutions.map((institution) => {
+            {currentInstitutions.map((institution) => {
               const isExpired = new Date(institution.subscription_end_date) < new Date()
               const quotaTotal = Math.max(1, institution.user_quota || 1)
               const quotaUsed = Math.max(0, institution.users_created || 0)
@@ -198,6 +226,87 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-700">
+              <span className="font-medium">{startIndex + 1}</span>
+              {' - '}
+              <span className="font-medium">{Math.min(endIndex, filteredInstitutions.length)}</span>
+              {' / '}
+              <span className="font-medium">{filteredInstitutions.length}</span>
+              {' kurum'}
+            </div>
+            
+            {/* Items per page selector */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">Sayfa başına:</label>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                className="text-sm border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
+          
+          {totalPages > 1 && (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Önceki
+              </button>
+              
+              {/* Page numbers */}
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum
+                  if (totalPages <= 5) {
+                    pageNum = i + 1
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i
+                  } else {
+                    pageNum = currentPage - 2 + i
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-2 text-sm font-medium rounded-md ${
+                        currentPage === pageNum
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                })}
+              </div>
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Sonraki
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

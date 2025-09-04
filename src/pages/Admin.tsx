@@ -261,9 +261,9 @@ export const Admin: React.FC = () => {
               </div>
 
               {users.length > 0 ? (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
                   <table className="min-w-full divide-y divide-gray-100">
-                    <thead className="bg-gray-50/60">
+                    <thead className="bg-gray-50/60 sticky top-0 z-10">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Kullanıcı</th>
                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Email</th>
@@ -312,7 +312,7 @@ export const Admin: React.FC = () => {
               ) : (
                 <div className="text-center text-gray-500 py-12">
                   <div className="text-lg font-medium mb-2">Henüz kullanıcı oluşturmadınız</div>
-                  <div className="text-sm">Yeni kullanıcı eklemek için sol paneldeki formu kullanın</div>
+                  <div className="text-sm">Yeni kullanıcı eklemek için "Yeni Kullanıcı Ekle" butonunu kullanın</div>
                 </div>
               )}
             </div>
