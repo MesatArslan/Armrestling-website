@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { AuthService } from '../services/authService'
 import type { Profile, CreateUserForm, AdminStats } from '../types/auth'
 import LoadingSpinner from '../components/UI/LoadingSpinner'
+import { EditUserModal } from '../components/admin/EditUserModal'
 
 export const Admin: React.FC = () => {
   const { user, signOut } = useAuth()
@@ -18,6 +19,8 @@ export const Admin: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [showEditUserModal, setShowEditUserModal] = useState(false)
+  const [editingUser, setEditingUser] = useState<Profile | null>(null)
 
   useEffect(() => {
     loadData()
@@ -88,6 +91,62 @@ export const Admin: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut()
+  }
+
+  const handleEditUserClick = (targetUser: Profile) => {
+    setEditingUser(targetUser)
+    setShowEditUserModal(true)
+  }
+
+  const handleUpdateUser = async (userId: string, formData: {
+    username: string
+    email: string
+  }) => {
+    setIsSubmitting(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const payload = { username: formData.username, email: formData.email }
+      const result = await AuthService.updateUser(userId, payload)
+      if (result.success) {
+        setSuccess('Kullanıcı başarıyla güncellendi!')
+        setShowEditUserModal(false)
+        setEditingUser(null)
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...formData, role: 'user' } : u))
+      } else {
+        setError(result.error || 'Kullanıcı güncellenirken hata oluştu')
+      }
+    } catch (error) {
+      setError('Beklenmeyen bir hata oluştu')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteUser = async (targetUser: Profile) => {
+    if (!user?.institution_id) return
+    if (!confirm(`${targetUser.username || targetUser.email} kullanıcısını silmek istediğinize emin misiniz?`)) return
+
+    setIsSubmitting(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const result = await AuthService.deleteUser(targetUser.id)
+      if (result.success) {
+        setSuccess('Kullanıcı başarıyla silindi!')
+        // Listeden kaldır ve istatistikleri tazele
+        setUsers(prev => prev.filter(u => u.id !== targetUser.id))
+        await loadData()
+      } else {
+        setError(result.error || 'Kullanıcı silinirken hata oluştu')
+      }
+    } catch (error) {
+      setError('Beklenmeyen bir hata oluştu')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const canCreateUser = stats ? stats.remainingQuota > 0 : false
@@ -349,6 +408,7 @@ export const Admin: React.FC = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oluşturulma Tarihi</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -376,6 +436,21 @@ export const Admin: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {new Date(user.created_at).toLocaleDateString('tr-TR')}
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 space-x-2">
+                            <button
+                              onClick={() => handleEditUserClick(user)}
+                              className="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded"
+                            >
+                              Düzenle
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user)}
+                              disabled={isSubmitting}
+                              className="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Sil
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -391,6 +466,19 @@ export const Admin: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        isOpen={showEditUserModal}
+        onClose={() => { setShowEditUserModal(false); setEditingUser(null) }}
+        onSubmit={handleUpdateUser}
+        isSubmitting={isSubmitting}
+        user={editingUser}
+        showExpiration={false}
+      />
     </div>
   )
 }
+
+// Edit modal
+;(() => {})

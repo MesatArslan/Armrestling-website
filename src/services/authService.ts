@@ -486,15 +486,19 @@ export class AuthService {
   // Super Admin için kullanıcı güncelle
   static async updateUser(userId: string, data: { username: string; email: string; expiration_date?: string }): Promise<ApiResponse<Profile>> {
     try {
+      const updatePayload: any = {
+        username: data.username,
+        email: data.email,
+        role: 'user',
+        updated_at: new Date().toISOString()
+      }
+      if (data.expiration_date && data.expiration_date.trim() !== '') {
+        updatePayload.expiration_date = data.expiration_date
+      }
+
       const { data: updatedUser, error } = await supabase
         .from('profiles')
-        .update({
-          username: data.username,
-          email: data.email,
-          role: 'user',
-          expiration_date: data.expiration_date,
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq('id', userId)
         .select()
         .single()

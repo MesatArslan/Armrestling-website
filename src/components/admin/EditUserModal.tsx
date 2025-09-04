@@ -8,10 +8,11 @@ interface EditUserModalProps {
   onSubmit: (userId: string, formData: {
     username: string
     email: string
-    expiration_date: string
+    expiration_date?: string
   }) => void
   isSubmitting: boolean
   user: Profile | null
+  showExpiration?: boolean
 }
 
 export const EditUserModal: React.FC<EditUserModalProps> = ({
@@ -19,12 +20,13 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
   onClose,
   onSubmit,
   isSubmitting,
-  user
+  user,
+  showExpiration = true
 }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    expiration_date: ''
+    expiration_date: '' as string | undefined
   })
 
   useEffect(() => {
@@ -114,24 +116,24 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
               />
             </div>
 
-            
-
+            {showExpiration && (
             <div>
               <label className="block text-sm font-medium text-gray-700">Son Kullanma Tarihi</label>
               <input
                 type="datetime-local"
                 name="expiration_date"
-                value={formData.expiration_date}
+                value={formData.expiration_date || ''}
                 onChange={handleInputChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
               />
-                              <div className="mt-2 flex flex-wrap gap-2">
-                  <button type="button" onClick={() => setEditUserExpirationInMonths(1)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">1 ay</button>
-                  <button type="button" onClick={() => setEditUserExpirationInMonths(3)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">3 ay</button>
-                  <button type="button" onClick={() => setEditUserExpirationInMonths(6)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">6 ay</button>
-                  <button type="button" onClick={() => setEditUserExpirationInMonths(12)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">12 ay</button>
-                </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button type="button" onClick={() => setEditUserExpirationInMonths(1)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">1 ay</button>
+                <button type="button" onClick={() => setEditUserExpirationInMonths(3)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">3 ay</button>
+                <button type="button" onClick={() => setEditUserExpirationInMonths(6)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">6 ay</button>
+                <button type="button" onClick={() => setEditUserExpirationInMonths(12)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">12 ay</button>
+              </div>
             </div>
+            )}
 
             <div className="flex justify-end space-x-3">
               <button
