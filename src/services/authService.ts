@@ -289,6 +289,8 @@ export class AuthService {
   // Admin İşlemleri
   static async createUser(data: CreateUserForm, institutionId: string): Promise<ApiResponse<Profile>> {
     try {
+      // Mevcut admin oturumunu sakla (signUp oturumu değiştirebilir)
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
       // 0. Kota kontrolü yap
       const { data: institution, error: institutionError } = await supabase
         .from('institutions')
@@ -316,7 +318,7 @@ export class AuthService {
         return { success: false, error: 'Kullanıcı kotanız dolmuş. Yeni kullanıcı oluşturamazsınız.' }
       }
 
-      // 1. Auth kullanıcısı oluştur
+      // 1. Auth kullanıcısı oluştur (bu işlem oturumu yeni kullanıcıya çevirebilir)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -380,6 +382,11 @@ export class AuthService {
 
       if (profileError) {
         return { success: false, error: `Kullanıcı profili oluşturulamadı: ${profileError.message}` }
+      }
+
+      // 3. Admin oturumunu geri yükle (yeni oluşturulan kullanıcıya geçilmesini engelle)
+      if (currentSession) {
+        await supabase.auth.setSession(currentSession)
       }
 
       return {
