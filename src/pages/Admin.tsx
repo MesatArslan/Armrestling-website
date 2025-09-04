@@ -1,26 +1,41 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { AuthService } from '../services/authService'
-import type { Profile, CreateUserForm, AdminStats } from '../types/auth'
+import type { Profile, AdminStats } from '../types/auth'
 import LoadingSpinner from '../components/UI/LoadingSpinner'
 import { EditUserModal } from '../components/admin/EditUserModal'
+import { DeleteConfirmationModal } from '../components/admin/DeleteConfirmationModal'
+import { AdminLayout } from '../components/admin/AdminLayout'
+import { CreateUserModal } from '../components/admin/CreateUserModal'
+import Toast from '../components/UI/Toast'
 
 export const Admin: React.FC = () => {
   const { user, signOut } = useAuth()
   const [users, setUsers] = useState<Profile[]>([])
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [formData, setFormData] = useState<CreateUserForm>({
-    username: '',
-    email: '',
-    password: ''
-  })
+  // Inline form removed; using modal instead
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [showEditUserModal, setShowEditUserModal] = useState(false)
   const [editingUser, setEditingUser] = useState<Profile | null>(null)
+  const [showDeleteUserModal, setShowDeleteUserModal] = useState(false)
+  const [deletingUser, setDeletingUser] = useState<Profile | null>(null)
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false)
+
+  // Auto-dismiss messages (align with SuperAdmin UX)
+  useEffect(() => {
+    if (!success) return
+    const t = setTimeout(() => setSuccess(''), 3000)
+    return () => clearTimeout(t)
+  }, [success])
+
+  useEffect(() => {
+    if (!error) return
+    const t = setTimeout(() => setError(''), 5000)
+    return () => clearTimeout(t)
+  }, [error])
 
   useEffect(() => {
     loadData()
@@ -31,17 +46,17 @@ export const Admin: React.FC = () => {
 
     setLoading(true)
     try {
-      const [usersResult, statsResult] = await Promise.all([
-        AuthService.getInstitutionUsersByAdmin(user.institution_id),
-        AuthService.getAdminStats(user.institution_id)
-      ])
+      const usersResult = await AuthService.getInstitutionUsersByAdmin(user.institution_id)
+      if (usersResult.success) setUsers(usersResult.data || [])
 
-      if (usersResult.success) {
-        setUsers(usersResult.data || [])
-      }
-
-      if (statsResult.success) {
-        setStats(statsResult.data || null)
+      // Stats'ı context'teki user.institution üzerinden hesapla
+      if (user.institution) {
+        const usedQuota = user.institution.users_created || 0
+        const remainingQuota = Math.max(0, (user.institution.user_quota || 0) - usedQuota)
+        const end = new Date(user.institution.subscription_end_date)
+        const now = new Date()
+        const subscriptionDaysLeft = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (1000*60*60*24)))
+        setStats({ totalUsers: usedQuota, usedQuota, remainingQuota, subscriptionDaysLeft })
       }
     } catch (error) {
       console.error('Data loading error:', error)
@@ -50,9 +65,7 @@ export const Admin: React.FC = () => {
     }
   }
 
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const handleCreateUser = async (payload: { email: string; password: string; username: string; expiration_date: string }) => {
     if (!user?.institution_id) {
       setError('Kurum bilgisi bulunamadı')
       return
@@ -63,16 +76,15 @@ export const Admin: React.FC = () => {
     setSuccess('')
 
     try {
-      const result = await AuthService.createUser(formData, user.institution_id)
+      const result = await AuthService.createUser({
+        email: payload.email,
+        password: payload.password,
+        username: payload.username
+      }, user.institution_id)
       
       if (result.success) {
         setSuccess('Kullanıcı başarıyla oluşturuldu!')
-        setShowCreateForm(false)
-        setFormData({
-          username: '',
-          email: '',
-          password: ''
-        })
+        setShowCreateUserModal(false)
         await loadData()
       } else {
         setError(result.error || 'Kullanıcı oluşturulurken hata oluştu')
@@ -84,10 +96,7 @@ export const Admin: React.FC = () => {
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+  // No inline inputs anymore
 
   const handleSignOut = async () => {
     await signOut()
@@ -124,20 +133,24 @@ export const Admin: React.FC = () => {
     }
   }
 
-  const handleDeleteUser = async (targetUser: Profile) => {
-    if (!user?.institution_id) return
-    if (!confirm(`${targetUser.username || targetUser.email} kullanıcısını silmek istediğinize emin misiniz?`)) return
+  const handleDeleteUserClick = (targetUser: Profile) => {
+    setDeletingUser(targetUser)
+    setShowDeleteUserModal(true)
+  }
 
+  const handleConfirmDeleteUser = async () => {
+    if (!user?.institution_id || !deletingUser) return
     setIsSubmitting(true)
     setError('')
     setSuccess('')
 
     try {
-      const result = await AuthService.deleteUser(targetUser.id)
+      const result = await AuthService.deleteUser(deletingUser.id)
       if (result.success) {
         setSuccess('Kullanıcı başarıyla silindi!')
-        // Listeden kaldır ve istatistikleri tazele
-        setUsers(prev => prev.filter(u => u.id !== targetUser.id))
+        setUsers(prev => prev.filter(u => u.id !== deletingUser.id))
+        setShowDeleteUserModal(false)
+        setDeletingUser(null)
         await loadData()
       } else {
         setError(result.error || 'Kullanıcı silinirken hata oluştu')
@@ -162,108 +175,50 @@ export const Admin: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Kurum Admin Panel</h1>
-              <p className="text-sm text-gray-600">
-                Hoş geldiniz, {user?.username || user?.email}
-              </p>
-              {user?.institution && (
-                <p className="text-sm text-gray-500">
-                  {user.institution.name}
-                </p>
-              )}
-            </div>
-            <button
-              onClick={handleSignOut}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-            >
-              Çıkış Yap
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <AdminLayout user={user} onSignOut={handleSignOut}>
+      <div className="max-w-7xl mx-auto relative">
         {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">T</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Toplam Kullanıcı</dt>
-                      <dd className="text-lg font-medium text-gray-900">{stats.totalUsers}</dd>
-                    </dl>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="p-5 flex items-center gap-4">
+                <div className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold">T</div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500">Toplam Kullanıcı</div>
+                  <div className="text-2xl font-semibold text-gray-900">{stats.totalUsers}</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">K</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Kalan Kota</dt>
-                      <dd className="text-lg font-medium text-gray-900">{stats.remainingQuota}</dd>
-                    </dl>
-                  </div>
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="p-5 flex items-center gap-4">
+                <div className="w-10 h-10 bg-green-600 text-white rounded-lg flex items-center justify-center font-bold">K</div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500">Kalan Kota</div>
+                  <div className="text-2xl font-semibold text-gray-900">{stats.remainingQuota}</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">U</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Kullanılan Kota</dt>
-                      <dd className="text-lg font-medium text-gray-900">{stats.usedQuota}</dd>
-                    </dl>
-                  </div>
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="p-5 flex items-center gap-4">
+                <div className="w-10 h-10 bg-yellow-500 text-white rounded-lg flex items-center justify-center font-bold">U</div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500">Kullanılan Kota</div>
+                  <div className="text-2xl font-semibold text-gray-900">{stats.usedQuota}</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      stats.subscriptionDaysLeft > 7 ? 'bg-green-500' : 
-                      stats.subscriptionDaysLeft > 0 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}>
-                      <span className="text-white text-sm font-bold">A</span>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Abonelik</dt>
-                      <dd className={`text-lg font-medium ${subscriptionColor}`}>
-                        {stats.subscriptionDaysLeft > 0 ? `${stats.subscriptionDaysLeft} gün` : subscriptionStatus}
-                      </dd>
-                    </dl>
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="p-5 flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-lg text-white flex items-center justify-center font-bold ${
+                  stats.subscriptionDaysLeft > 7 ? 'bg-green-600' : stats.subscriptionDaysLeft > 0 ? 'bg-yellow-500' : 'bg-red-600'
+                }`}>A</div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500">Abonelik</div>
+                  <div className={`text-2xl font-semibold ${subscriptionColor}`}>
+                    {stats.subscriptionDaysLeft > 0 ? `${stats.subscriptionDaysLeft} gün` : subscriptionStatus}
                   </div>
                 </div>
               </div>
@@ -284,172 +239,70 @@ export const Admin: React.FC = () => {
           </div>
         )}
 
-        {/* Messages */}
-        {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        )}
-        
-        {success && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-            {success}
-          </div>
-        )}
+        {/* Inline messages removed; using toasts */}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sol Panel - Kullanıcı Oluşturma */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+          {/* Kullanıcı Listesi */}
           <div className="lg:col-span-1">
-            <div className="bg-white shadow rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-medium text-gray-900">Kullanıcı Yönetimi</h2>
-              </div>
-
-              {canCreateUser && stats && stats.subscriptionDaysLeft > 0 ? (
-                <div>
-                  <button
-                    onClick={() => setShowCreateForm(!showCreateForm)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium mb-4"
-                  >
-                    {showCreateForm ? 'İptal Et' : 'Yeni Kullanıcı Ekle'}
-                  </button>
-
-                  {/* Kullanıcı Oluşturma Formu */}
-                  {showCreateForm && (
-                    <form onSubmit={handleCreateUser} className="space-y-4 border-t pt-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Kullanıcı Adı</label>
-                        <input
-                          type="text"
-                          name="username"
-                          required
-                          value={formData.username}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <input
-                          type="email"
-                          name="email"
-                          required
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Şifre</label>
-                        <input
-                          type="password"
-                          name="password"
-                          required
-                          minLength={6}
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isSubmitting ? <LoadingSpinner /> : 'Kullanıcı Oluştur'}
-                      </button>
-                    </form>
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Oluşturulan Kullanıcılar</h3>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500">Toplam: {users.length}</span>
+                  {canCreateUser && stats && stats.subscriptionDaysLeft > 0 && (
+                    <button
+                      onClick={() => setShowCreateUserModal(true)}
+                      className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-xs font-medium shadow"
+                    >
+                      Yeni Kullanıcı Ekle
+                    </button>
                   )}
                 </div>
-              ) : (
-                <div className="text-center text-gray-500 py-8">
-                  {stats && stats.subscriptionDaysLeft <= 0 
-                    ? 'Aboneliğinizin süresi dolduğu için yeni kullanıcı oluşturamazsınız.'
-                    : 'Kullanıcı kotanız dolmuş. Yeni kullanıcı oluşturamazsınız.'
-                  }
-                </div>
-              )}
-
-              {/* Kota Bilgisi */}
-              {stats && (
-                <div className="mt-6 pt-4 border-t">
-                  <div className="flex justify-between text-sm text-gray-600 mb-2">
-                    <span>Kullanılan Kota</span>
-                    <span>{stats.usedQuota} / {stats.usedQuota + stats.remainingQuota}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full" 
-                      style={{ 
-                        width: `${(stats.usedQuota / (stats.usedQuota + stats.remainingQuota)) * 100}%` 
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sağ Panel - Kullanıcı Listesi */}
-          <div className="lg:col-span-2">
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Oluşturulan Kullanıcılar</h3>
               </div>
-              
+
               {users.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className="min-w-full divide-y divide-gray-100">
+                    <thead className="bg-gray-50/60">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oluşturulma Tarihi</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Kullanıcı</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Email</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Oluşturulma</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">İşlemler</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white divide-y divide-gray-100">
                       {users.map((user) => (
-                        <tr key={user.id} className="hover:bg-gray-50">
+                        <tr key={user.id} className="hover:bg-gray-50/80 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 flex-shrink-0">
-                                <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-gray-700">
-                                    {(user.username || user.email).charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold">
+                                {(user.username || user.email).charAt(0).toUpperCase()}
                               </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {user.username || 'İsimsiz'}
-                                </div>
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{user.username || 'İsimsiz'}</div>
+                                <div className="text-xs text-gray-500">User</div>
                               </div>
                             </div>
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{user.email}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(user.created_at).toLocaleDateString('tr-TR')}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.email}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(user.created_at).toLocaleDateString('tr-TR')}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 space-x-2">
-                            <button
-                              onClick={() => handleEditUserClick(user)}
-                              className="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded"
-                            >
-                              Düzenle
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(user)}
-                              disabled={isSubmitting}
-                              className="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              Sil
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleEditUserClick(user)}
+                                className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mr-3 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded"
+                              >
+                                Düzenle
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUserClick(user)}
+                                disabled={isSubmitting}
+                                className="inline-flex items-center text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Sil
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -465,7 +318,17 @@ export const Admin: React.FC = () => {
             </div>
           </div>
         </div>
-      </main>
+      </div>
+
+      {/* Toasts (sağ üst) */}
+      <div className="pointer-events-none fixed top-4 right-4 z-[60] space-y-3">
+        {success && (
+          <Toast type="success" message={success} onClose={() => setSuccess('')} duration={3000} />
+        )}
+        {error && (
+          <Toast type="error" message={error} onClose={() => setError('')} duration={5000} />
+        )}
+      </div>
 
       {/* Edit User Modal */}
       <EditUserModal
@@ -476,7 +339,25 @@ export const Admin: React.FC = () => {
         user={editingUser}
         showExpiration={false}
       />
-    </div>
+
+      {/* Delete User Confirmation */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteUserModal}
+        onClose={() => { setShowDeleteUserModal(false); setDeletingUser(null) }}
+        onConfirm={handleConfirmDeleteUser}
+        isSubmitting={isSubmitting}
+        item={deletingUser}
+        itemType="user"
+      />
+
+      {/* Create User Modal */}
+      <CreateUserModal
+        isOpen={showCreateUserModal}
+        onClose={() => setShowCreateUserModal(false)}
+        onSubmit={handleCreateUser}
+        isSubmitting={isSubmitting}
+      />
+    </AdminLayout>
   )
 }
 

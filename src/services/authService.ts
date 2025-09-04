@@ -634,7 +634,7 @@ export class AuthService {
 
   static async getAdminStats(institutionId: string): Promise<ApiResponse<AdminStats>> {
     try {
-      // 1. Kurum bilgilerini al
+      // Kurum bilgilerini al
       const { data: institution, error: institutionError } = await supabase
         .from('institutions')
         .select('user_quota, users_created, subscription_end_date')
@@ -649,22 +649,12 @@ export class AuthService {
         return { success: false, error: 'Kurum bulunamadı' }
       }
 
-      // 2. Gerçek kullanıcı sayısını al (sadece 'user' rolündeki kullanıcılar)
-      const { data: users, error: usersError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('institution_id', institutionId)
-        .eq('role', 'user')
-
-      if (usersError) {
-        return { success: false, error: `Kullanıcı sayısı alınamadı: ${usersError.message}` }
-      }
-
-      const totalUsers = users?.length || 0
-      const usedQuota = totalUsers
+      // Kullanıcı sayısı artık institutions.users_created üzerinden takip ediliyor
+      const usedQuota = institution.users_created || 0
+      const totalUsers = usedQuota
       const remainingQuota = Math.max(0, institution.user_quota - usedQuota)
 
-      // 3. Abonelik günlerini hesapla
+      // Abonelik günlerini hesapla
       const subscriptionEndDate = new Date(institution.subscription_end_date)
       const now = new Date()
       const subscriptionDaysLeft = Math.ceil((subscriptionEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
