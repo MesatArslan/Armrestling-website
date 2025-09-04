@@ -44,6 +44,7 @@ export class AuthService {
           name: data.name,
           user_quota: data.user_quota,
           users_created: 0, // Başlangıçta 0 olacak, admin eklendikten sonra güncellenecek
+          subscription_start_date: data.subscription_start_date,
           subscription_end_date: data.subscription_end_date,
           created_by: authData.user.id
         })
@@ -483,14 +484,14 @@ export class AuthService {
   }
 
   // Super Admin için kullanıcı güncelle
-  static async updateUser(userId: string, data: { username: string; email: string; role: 'user' | 'admin'; expiration_date?: string }): Promise<ApiResponse<Profile>> {
+  static async updateUser(userId: string, data: { username: string; email: string; expiration_date?: string }): Promise<ApiResponse<Profile>> {
     try {
       const { data: updatedUser, error } = await supabase
         .from('profiles')
         .update({
           username: data.username,
           email: data.email,
-          role: data.role,
+          role: 'user',
           expiration_date: data.expiration_date,
           updated_at: new Date().toISOString()
         })

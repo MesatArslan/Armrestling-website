@@ -29,6 +29,19 @@ export const SuperAdmin: React.FC = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   
+  // Auto-dismiss messages
+  useEffect(() => {
+    if (!success) return
+    const timer = setTimeout(() => setSuccess(''), 3000)
+    return () => clearTimeout(timer)
+  }, [success])
+
+  useEffect(() => {
+    if (!error) return
+    const timer = setTimeout(() => setError(''), 5000)
+    return () => clearTimeout(timer)
+  }, [error])
+  
   // Modal states
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -313,7 +326,6 @@ export const SuperAdmin: React.FC = () => {
   const handleUpdateUser = async (userId: string, formData: {
     username: string
     email: string
-    role: 'user' | 'admin'
     expiration_date: string
   }) => {
     setIsSubmitting(true)
@@ -329,11 +341,10 @@ export const SuperAdmin: React.FC = () => {
         setEditingUser(null)
         
         // Sadece ilgili kullanıcıyı güncelle
-        setNonInstitutionUsers(prev => prev.map(user => 
-          user.id === userId 
-            ? { ...user, ...formData }
-            : user
-        ))
+        setNonInstitutionUsers(prev => prev.map(user => {
+          if (user.id !== userId) return user
+          return { ...user, ...formData, role: 'user' }
+        }))
       } else {
         setError(result.error || 'Kullanıcı güncellenirken hata oluştu')
       }

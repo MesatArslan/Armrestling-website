@@ -39,16 +39,21 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
     return { percent, label }
   }, [formData.password])
 
-  // Yeni kurum formu açıldığında varsayılan tarihleri ayarla
+  // Modal her açıldığında formu sıfırla ve varsayılan tarihleri ayarla
   useEffect(() => {
     if (isOpen) {
-      if (!formData.subscription_start_date) {
-        const now = new Date()
-        setFormData(prev => ({ ...prev, subscription_start_date: toDateTimeLocalString(now) }))
-      }
-      if (!formData.subscription_end_date) {
-        setCreateInstitutionEndInMonths(1)
-      }
+      const now = new Date()
+      const start = toDateTimeLocalString(now)
+      const end = toDateTimeLocalString(addMonths(now, 1))
+      setFormData({
+        email: '',
+        password: '',
+        name: '',
+        user_quota: 10,
+        subscription_start_date: start,
+        subscription_end_date: end
+      })
+      setShowPassword(false)
     }
   }, [isOpen])
 

@@ -8,7 +8,6 @@ interface EditUserModalProps {
   onSubmit: (userId: string, formData: {
     username: string
     email: string
-    role: 'user' | 'admin'
     expiration_date: string
   }) => void
   isSubmitting: boolean
@@ -25,7 +24,6 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    role: 'user' as 'user' | 'admin',
     expiration_date: ''
   })
 
@@ -34,13 +32,12 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
       setFormData({
         username: user.username || '',
         email: user.email,
-        role: user.role as 'user' | 'admin',
         expiration_date: user.expiration_date ? user.expiration_date.split('T')[0] + 'T' + user.expiration_date.split('T')[1]?.substring(0, 5) : ''
       })
     }
   }, [user, isOpen])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
@@ -117,18 +114,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Rol</label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
-              >
-                <option value="user">Kullanıcı</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
+            
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Son Kullanma Tarihi</label>
