@@ -8,6 +8,7 @@ import { DeleteConfirmationModal } from '../components/admin/DeleteConfirmationM
 import { AdminLayout } from '../components/admin/AdminLayout'
 import { CreateUserModal } from '../components/admin/CreateUserModal'
 import Toast from '../components/UI/Toast'
+import { DataTable, type Column } from '../components/UI/DataTable'
 
 export const Admin: React.FC = () => {
   const { user, signOut } = useAuth()
@@ -166,6 +167,77 @@ export const Admin: React.FC = () => {
   const subscriptionStatus = stats ? (stats.subscriptionDaysLeft > 0 ? 'Aktif' : 'Süresi Dolmuş') : 'Bilinmiyor'
   const subscriptionColor = stats ? (stats.subscriptionDaysLeft > 7 ? 'text-green-600' : stats.subscriptionDaysLeft > 0 ? 'text-yellow-600' : 'text-red-600') : 'text-gray-600'
 
+  // Table columns definition for users
+  const userColumns: Column<Profile>[] = [
+    {
+      key: 'order',
+      header: 'Sıra',
+      width: 'w-12',
+      align: 'center',
+      render: (_, index) => (
+        <span className="text-sm font-medium text-gray-900">
+          {index + 1}
+        </span>
+      )
+    },
+    {
+      key: 'user',
+      header: 'Kullanıcı',
+      render: (user) => (
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold">
+            {(user.username || user.email).charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div className="text-sm font-medium text-gray-900">{user.username || 'İsimsiz'}</div>
+            <div className="text-xs text-gray-500">User</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      render: (user) => (
+        <span className="text-sm text-gray-700">{user.email}</span>
+      )
+    },
+    {
+      key: 'created_at',
+      header: 'Oluşturulma',
+      render: (user) => (
+        <span className="text-sm text-gray-600">{new Date(user.created_at).toLocaleDateString('tr-TR')}</span>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'İşlemler',
+      render: (user) => (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleEditUserClick(user)
+            }}
+            className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mr-3 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded"
+          >
+            Düzenle
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDeleteUserClick(user)
+            }}
+            disabled={isSubmitting}
+            className="inline-flex items-center text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Sil
+          </button>
+        </div>
+      )
+    }
+  ]
+
   if (loading && !users.length) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -226,18 +298,6 @@ export const Admin: React.FC = () => {
           </div>
         )}
 
-        {/* Abonelik Uyarısı */}
-        {stats && stats.subscriptionDaysLeft <= 7 && stats.subscriptionDaysLeft > 0 && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
-            ⚠️ Aboneliğinizin süresi {stats.subscriptionDaysLeft} gün içinde dolacak!
-          </div>
-        )}
-
-        {stats && stats.subscriptionDaysLeft <= 0 && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            ❌ Aboneliğinizin süresi dolmuş! Yeni kullanıcı oluşturamazsınız.
-          </div>
-        )}
 
         {/* Inline messages removed; using toasts */}
 
@@ -245,76 +305,33 @@ export const Admin: React.FC = () => {
           {/* Kullanıcı Listesi */}
           <div className="lg:col-span-1">
             <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Oluşturulan Kullanıcılar</h3>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500">Toplam: {users.length}</span>
-                  {canCreateUser && stats && stats.subscriptionDaysLeft > 0 && (
+              <DataTable
+                data={users}
+                columns={userColumns}
+                searchPlaceholder="Kullanıcı adı veya email ara..."
+                searchKeys={['username', 'email']}
+                showSearch={true}
+                showPagination={true}
+                maxHeight="calc(100vh - 400px)"
+                emptyMessage="Henüz kullanıcı oluşturmadınız"
+                noResultsMessage="Aramanıza uygun kullanıcı bulunamadı"
+                filters={
+                  canCreateUser && stats && stats.subscriptionDaysLeft > 0 ? (
                     <button
                       onClick={() => setShowCreateUserModal(true)}
                       className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-xs font-medium shadow"
                     >
                       Yeni Kullanıcı Ekle
                     </button>
-                  )}
-                </div>
-              </div>
-
-              {users.length > 0 ? (
-                <div className="overflow-x-auto max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
-                  <table className="min-w-full divide-y divide-gray-100">
-                    <thead className="bg-gray-50/60 sticky top-0 z-10">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Kullanıcı</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Email</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Oluşturulma</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">İşlemler</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
-                      {users.map((user) => (
-                        <tr key={user.id} className="hover:bg-gray-50/80 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold">
-                                {(user.username || user.email).charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">{user.username || 'İsimsiz'}</div>
-                                <div className="text-xs text-gray-500">User</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{user.email}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(user.created_at).toLocaleDateString('tr-TR')}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleEditUserClick(user)}
-                                className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mr-3 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded"
-                              >
-                                Düzenle
-                              </button>
-                              <button
-                                onClick={() => handleDeleteUserClick(user)}
-                                disabled={isSubmitting}
-                                className="inline-flex items-center text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                Sil
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center text-gray-500 py-12">
-                  <div className="text-lg font-medium mb-2">Henüz kullanıcı oluşturmadınız</div>
-                  <div className="text-sm">Yeni kullanıcı eklemek için "Yeni Kullanıcı Ekle" butonunu kullanın</div>
-                </div>
-              )}
+                  ) : undefined
+                }
+                headerContent={
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Oluşturulan Kullanıcılar</h3>
+                    <span className="text-xs text-gray-500">Toplam: {users.length}</span>
+                  </div>
+                }
+              />
             </div>
           </div>
         </div>
