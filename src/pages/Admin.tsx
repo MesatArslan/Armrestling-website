@@ -7,6 +7,7 @@ import { EditUserModal } from '../components/admin/EditUserModal'
 import { DeleteConfirmationModal } from '../components/admin/DeleteConfirmationModal'
 import { AdminLayout } from '../components/admin/AdminLayout'
 import { CreateUserModal } from '../components/admin/CreateUserModal'
+import { FileManagement } from '../components/admin/FileManagement'
 import Toast from '../components/UI/Toast'
 import { DataTable, type Column } from '../components/UI/DataTable'
 
@@ -15,6 +16,7 @@ export const Admin: React.FC = () => {
   const [users, setUsers] = useState<Profile[]>([])
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [activeSection, setActiveSection] = useState<'users' | 'files'>('users')
   // Inline form removed; using modal instead
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -39,8 +41,10 @@ export const Admin: React.FC = () => {
   }, [error])
 
   useEffect(() => {
-    loadData()
-  }, [])
+    if (activeSection === 'users') {
+      loadData()
+    }
+  }, [activeSection])
 
   const loadData = async () => {
     if (!user?.institution_id) return
@@ -238,7 +242,7 @@ export const Admin: React.FC = () => {
     }
   ]
 
-  if (loading && !users.length) {
+  if (loading && activeSection === 'users' && !users.length) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
@@ -246,8 +250,12 @@ export const Admin: React.FC = () => {
     )
   }
 
-  return (
-    <AdminLayout user={user} onSignOut={handleSignOut}>
+  const renderContent = () => {
+    if (activeSection === 'files') {
+      return <FileManagement />
+    }
+
+    return (
       <div className="max-w-7xl mx-auto relative">
         {/* Stats */}
         {stats && (
@@ -336,6 +344,17 @@ export const Admin: React.FC = () => {
           </div>
         </div>
       </div>
+    )
+  }
+
+  return (
+    <AdminLayout 
+      user={user} 
+      onSignOut={handleSignOut}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+    >
+      {renderContent()}
 
       {/* Toasts (sağ üst) */}
       <div className="pointer-events-none fixed top-4 right-4 z-[60] space-y-3">

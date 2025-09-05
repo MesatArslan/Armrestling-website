@@ -5,9 +5,11 @@ interface AdminLayoutProps {
   user: (Profile & { institution?: Institution }) | null
   onSignOut: () => void
   children: React.ReactNode
+  activeSection?: 'users' | 'files'
+  onSectionChange?: (section: 'users' | 'files') => void
 }
 
-export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, children }) => {
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, children, activeSection, onSectionChange }) => {
   return (
     <div className="h-full bg-gray-50 flex overflow-hidden">
       {/* Sidebar */}
@@ -22,12 +24,34 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
           <nav>
             <ul className="space-y-2">
               <li>
-                <span className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-3 bg-white/20 text-white shadow-lg backdrop-blur">
+                <button
+                  onClick={() => onSectionChange?.('users')}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-3 transition-all duration-200 ${
+                    activeSection === 'users'
+                      ? 'bg-white/20 text-white shadow-lg backdrop-blur'
+                      : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   Kullanıcı Yönetimi
-                </span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onSectionChange?.('files')}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-3 transition-all duration-200 ${
+                    activeSection === 'files'
+                      ? 'bg-white/20 text-white shadow-lg backdrop-blur'
+                      : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                  Dosya Yönetimi
+                </button>
               </li>
             </ul>
           </nav>
