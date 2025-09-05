@@ -5,13 +5,13 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import type { Player as UIPlayer } from '../types';
 import type { Fixture, Tournament, WeightRange } from '../storage/schemas';
 import DeleteConfirmationModal from '../components/UI/DeleteConfirmationModal';
-import { PlayersStorage } from '../utils/playersStorage';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import ActiveFixturesNav from '../components/UI/ActiveFixturesNav';
 import { useMatches } from '../hooks/useMatches';
 import { MatchesStorage } from '../utils/matchesStorage';
 import { TournamentsStorage } from '../utils/tournamentsStorage';
 import { openFixturePreviewModal, generateFixturePDF } from '../utils/pdfGenerator';
+import { PlayersStorage, defaultColumns } from '../utils/playersStorage';
 
 
 // Import all double elimination components
@@ -64,6 +64,7 @@ const Matches = () => {
   const [includeRankingsForPDF, setIncludeRankingsForPDF] = useState<boolean>(true);
   const [includeCompletedForPDF, setIncludeCompletedForPDF] = useState<boolean>(true);
   const [rowsPerPageForPDF] = useState<number>(18);
+  const [selectedPlayerColumnsForPDF, setSelectedPlayerColumnsForPDF] = useState<string[]>(['name', 'surname', 'weight']);
   const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
   const [previewPages, setPreviewPages] = useState<string[]>([]);
   const [currentPreviewPage, setCurrentPreviewPage] = useState<number>(0);
@@ -101,6 +102,16 @@ const Matches = () => {
     try {
       const loadedPlayers = PlayersStorage.getPlayers();
       setPlayers(loadedPlayers);
+    } catch { }
+  }, []);
+
+  // Load player columns for PDF selection
+  useEffect(() => {
+    try {
+      const columns = PlayersStorage.getColumns();
+      const visibleColumns = columns.filter(col => col.visible);
+      const visibleColumnIds = visibleColumns.map(col => col.id);
+      setSelectedPlayerColumnsForPDF(visibleColumnIds);
     } catch { }
   }, []);
 
@@ -180,6 +191,11 @@ const Matches = () => {
         const fixtureNumber = existingForTournament.length + 1;
         const weightRangeName = state.weightRange.name || `${state.weightRange.min}-${state.weightRange.max} kg`;
         const now = new Date().toISOString();
+        
+        // Sadece görünür sütunları al
+        const visibleColumns = PlayersStorage.getColumns().filter(col => col.visible);
+        const visibleColumnIds = visibleColumns.map(col => col.id);
+        
         const newFixture = {
           id: `${state.tournament.id}-${state.weightRange.id}-${fixtureNumber}`,
           name: `${state.tournament.name} - ${weightRangeName}`,
@@ -188,7 +204,21 @@ const Matches = () => {
           weightRangeId: state.weightRange.id,
           weightRangeName,
           weightRange: { min: state.weightRange.min, max: state.weightRange.max },
-          players: eligiblePlayers.map(p => ({ id: p.id, name: p.name, surname: p.surname, weight: p.weight, gender: p.gender, handPreference: p.handPreference, birthday: p.birthday, city: p.city, opponents: [] })),
+          players: eligiblePlayers.map(p => {
+            const player: any = {
+              id: p.id, // id her zaman gerekli
+              opponents: [] // opponents her zaman gerekli
+            };
+            
+            // Sadece görünür sütunları kopyala
+            visibleColumnIds.forEach(columnId => {
+              if (p.hasOwnProperty(columnId)) {
+                player[columnId] = p[columnId];
+              }
+            });
+            
+            return player;
+          }),
           playerCount: eligiblePlayers.length,
           status: 'active' as const,
           createdAt: now,
@@ -494,19 +524,25 @@ const Matches = () => {
         const existingPlayerIds = new Set(existingPlayers.map(p => p.id));
         const playersToAdd: any[] = [];
         
+        // Sadece görünür sütunları al
+        const visibleColumns = PlayersStorage.getColumns().filter(col => col.visible);
+        const visibleColumnIds = visibleColumns.map(col => col.id);
+        
         processedPlayers.forEach((fixturePlayer: any) => {
           if (!existingPlayerIds.has(fixturePlayer.id)) {
             // Player doesn't exist in Players page, add them
-            const newPlayer = {
-              id: fixturePlayer.id,
-              name: fixturePlayer.name,
-              surname: fixturePlayer.surname,
-              weight: fixturePlayer.weight,
-              gender: fixturePlayer.gender,
-              handPreference: fixturePlayer.handPreference,
-              birthday: fixturePlayer.birthday,
-              city: fixturePlayer.city
+            // Sadece görünür sütunları kaydet
+            const newPlayer: any = {
+              id: fixturePlayer.id // id her zaman gerekli
             };
+            
+            // Sadece görünür sütunları kopyala
+            visibleColumnIds.forEach(columnId => {
+              if (fixturePlayer.hasOwnProperty(columnId)) {
+                newPlayer[columnId] = fixturePlayer[columnId];
+              }
+            });
+            
             playersToAdd.push(newPlayer);
           }
         });
@@ -1208,7 +1244,43 @@ const Matches = () => {
                 <span className="text-sm font-medium text-gray-700">{t('matches.tabCompleted')}</span>
               </label>
 
-              {/* Removed players-per-page control per request */}
+              {/* Player Columns Selection */}
+              <div className="border-t border-gray-200 pt-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">{t('players.manageColumns') || 'Oyuncu Kolonları'}</h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {(() => {
+                    const allColumns = PlayersStorage.getColumns();
+                    return allColumns.map((col) => (
+                      <label key={col.id} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
+                        <input
+                          type="checkbox"
+                          checked={selectedPlayerColumnsForPDF.includes(col.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedPlayerColumnsForPDF(prev => [...prev, col.id]);
+                            } else {
+                              setSelectedPlayerColumnsForPDF(prev => prev.filter(id => id !== col.id));
+                            }
+                          }}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <span className="text-sm text-gray-700">
+                          {(() => {
+                            // Check if this is a default column that has translation
+                            const isDefaultColumn = defaultColumns.some(dc => dc.id === col.id);
+                            if (isDefaultColumn) {
+                              return t(`players.${col.id}`) || col.name;
+                            } else {
+                              // For custom columns, use the column name directly
+                              return col.name;
+                            }
+                          })()}
+                        </span>
+                      </label>
+                    ));
+                  })()}
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end gap-3">
@@ -1224,7 +1296,8 @@ const Matches = () => {
                     activeFixture,
                     includeRankingsForPDF,
                     includeCompletedForPDF,
-                    rowsPerPageForPDF
+                    rowsPerPageForPDF,
+                    selectedPlayerColumnsForPDF
                   );
                   setPreviewPages(pages);
                   setCurrentPreviewPage(currentPage);
@@ -1269,6 +1342,7 @@ const Matches = () => {
                         includeRankingsForPDF,
                         includeCompletedForPDF,
                         rowsPerPageForPDF,
+                        selectedPlayerColumnsForPDF,
                         (p) => setPdfProgress(p)
                       );
                     } catch (e) {

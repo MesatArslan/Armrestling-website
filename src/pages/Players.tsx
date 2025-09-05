@@ -1,11 +1,13 @@
 import * as React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { PlusIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import * as XLSX from 'xlsx';
 import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import PlayersTable from '../components/UI/PlayersTable';
+import ImportNotificationModal from '../components/UI/ImportNotificationModal';
+import ConfirmationModal from '../components/UI/ConfirmationModal';
 import { PlayersStorage, type Column, type ExtendedPlayer, defaultColumns } from '../utils/playersStorage';
 import { usePlayers } from '../hooks/usePlayers';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -20,6 +22,28 @@ const Players = () => {
   const [isAddColumnModalOpen, setIsAddColumnModalOpen] = useState(false);
   const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
+  const [importModal, setImportModal] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
 
@@ -99,21 +123,26 @@ const Players = () => {
     if (defaultColumns.some((c) => c.id === columnId)) {
       return;
     }
-    if (!window.confirm(t('players.confirmDeleteColumn') || 'Sütunu silmek istediğinize emin misiniz?')) return;
-    const updatedColumns = normalizeColumns(PlayersStorage.deleteColumn(columnsState, columnId));
-    setColumnsState(updatedColumns);
-    
-    // Save the updated columns to the repository so column deletion persists
-    saveColumns(updatedColumns);
-    
-    // Remove this field from all players so that table doesn't render empty cells
-    setPlayersState(prev => prev.map((p) => {
-      const { [columnId]: _removed, ...rest } = p as any;
-      return rest as any;
-    }));
-    // Persist updated players without the removed field
-    setTimeout(() => {
-      savePlayers((playersState as unknown as Player[]).map(p => ({ ...p })));
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Sütunu Sil',
+      message: t('players.confirmDeleteColumn') || 'Sütunu silmek istediğinize emin misiniz?',
+      onConfirm: () => {
+        const updatedColumns = normalizeColumns(PlayersStorage.deleteColumn(columnsState, columnId));
+        setColumnsState(updatedColumns);
+        
+        // Save the updated columns to the repository so column deletion persists
+        saveColumns(updatedColumns);
+        
+        // Remove this field from all players so that table doesn't render empty cells
+        const updatedPlayers = playersState.map((p) => {
+          const { [columnId]: _removed, ...rest } = p as any;
+          return rest as any;
+        });
+        setPlayersState(updatedPlayers);
+        // Persist updated players without the removed field
+        savePlayers(updatedPlayers as unknown as Player[]);
+      }
     });
   };
 
@@ -134,13 +163,18 @@ const Players = () => {
   };
 
   const handleClearAllData = () => {
-    if (window.confirm(t('players.clearAllDataConfirm'))) {
-      try { clearPlayers(); } catch {}
-      try { clearColumns(); } catch {}
-      setPlayersState([]);
-      setColumnsState(defaultColumns);
-      setSearchTerm('');
-    }
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Tüm Verileri Temizle',
+      message: t('players.clearAllDataConfirm'),
+      onConfirm: () => {
+        try { clearPlayers(); } catch {}
+        try { clearColumns(); } catch {}
+        setPlayersState([]);
+        setColumnsState(defaultColumns);
+        setSearchTerm('');
+      }
+    });
   };
 
   // JSON Export
@@ -159,9 +193,19 @@ const Players = () => {
         const mergedPlayers = PlayersStorage.importPlayersFromJSON(jsonData, playersState);
         setPlayersState(mergedPlayers);
         savePlayers(mergedPlayers as unknown as Player[]);
-        alert(t('players.importSuccess'));
+        setImportModal({
+          isOpen: true,
+          type: 'success',
+          title: 'Başarılı!',
+          message: t('players.importSuccess')
+        });
       } catch (err: any) {
-        alert(t('players.importError', { error: err.message }));
+        setImportModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Hata!',
+          message: t('players.importError', { error: err.message })
+        });
       }
       // Aynı dosya tekrar yüklenirse de çalışsın diye input'u sıfırla
       if (e.target) e.target.value = '';
@@ -318,6 +362,10 @@ const Players = () => {
 
         cleanedHeaders.forEach(({ original }) => {
           if (headerToKeyMap[original]) return; // already mapped to a known field
+          
+          // Skip columns with empty or whitespace-only names
+          if (!original || original.trim() === '') return;
+          
           const newId = original.toLowerCase().trim().replace(/\s+/g, '_');
           if (!currentColumnIds.has(newId) && !currentColumnNames.has(original.toLowerCase())) {
             newColumnsToAdd.push({ id: newId, name: original, visible: true });
@@ -335,6 +383,9 @@ const Players = () => {
           .map((row) => {
             const obj: Record<string, any> = {};
             cleanedHeaders.forEach(({ original }, idx) => {
+              // Skip columns with empty or whitespace-only names
+              if (!original || original.trim() === '') return;
+              
               const key = headerToKeyMap[original];
               obj[key] = row[idx];
             });
@@ -379,15 +430,56 @@ const Players = () => {
         const updatedPlayers = [...playersState, ...importedPlayers];
         setPlayersState(updatedPlayers);
         savePlayers(updatedPlayers as unknown as Player[]);
-        alert(t('players.importSuccess'));
+        setImportModal({
+          isOpen: true,
+          type: 'success',
+          title: 'Başarılı!',
+          message: t('players.importSuccess')
+        });
       } catch (err: any) {
-        alert(t('players.importError', { error: err.message || String(err) }));
+        setImportModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Hata!',
+          message: t('players.importError', { error: err.message || String(err) })
+        });
       } finally {
         if (e.target) e.target.value = '';
       }
     };
     reader.readAsArrayBuffer(file);
   };
+
+  // Helper function to normalize Turkish characters
+  const normalizeTurkishText = (text: string): string => {
+    return text
+      .toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/Ğ/g, 'g')
+      .replace(/Ü/g, 'u')
+      .replace(/Ş/g, 's')
+      .replace(/I/g, 'i')
+      .replace(/İ/g, 'i')
+      .replace(/Ö/g, 'o')
+      .replace(/Ç/g, 'c');
+  };
+
+  const filteredPlayers = useMemo(() => {
+    if (!searchTerm) return playersState;
+    
+    const normalizedSearchTerm = normalizeTurkishText(searchTerm.trim());
+    
+    return playersState.filter(player => {
+      const fullName = `${player.name || ''} ${player.surname || ''}`;
+      const normalizedFullName = normalizeTurkishText(fullName.trim());
+      return normalizedFullName.includes(normalizedSearchTerm);
+    });
+  }, [playersState, searchTerm]);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
@@ -397,7 +489,7 @@ const Players = () => {
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-6 border-b border-gray-200">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('players.title')}</h1>
-              <p className="text-base text-gray-500 mt-1">{t('players.totalPlayers')}: {players.length}</p>
+              <p className="text-base text-gray-500 mt-1">{t('players.totalPlayers')}: {playersState.length}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <div className="relative shadow-md rounded-lg w-full sm:w-auto">
@@ -479,13 +571,13 @@ const Players = () => {
 
           {/* Players Table */}
           <PlayersTable
-            players={playersState}
+            players={filteredPlayers}
             onPlayersChange={(next) => {
               setPlayersState(next as ExtendedPlayer[]);
               savePlayers(next as unknown as Player[]);
             }}
             columns={columnsState}
-            onColumnsChange={(next) => setColumnsNormalized(next as Column[])}
+            onColumnsChange={setColumnsNormalized}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             showAddRow={true}
@@ -616,6 +708,25 @@ const Players = () => {
           </div>
         </div>
       )}
+
+      {/* Import Notification Modal */}
+      <ImportNotificationModal
+        isOpen={importModal.isOpen}
+        onClose={() => setImportModal(prev => ({ ...prev, isOpen: false }))}
+        type={importModal.type}
+        title={importModal.title}
+        message={importModal.message}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        onClose={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmationModal.onConfirm}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+        type="danger"
+      />
     </div>
   );
 };

@@ -9,6 +9,7 @@ export interface Player {
   birthday?: string;
   city?: string;
   opponents?: Array<{ playerId: string; matchDescription: string; result: 'win' | 'loss' }>;
+  [key: string]: any; // Allow additional fields for custom columns
 }
 
 // Turnuva ile ilgili tipler

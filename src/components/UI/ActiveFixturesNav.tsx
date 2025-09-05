@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Fixture } from '../../storage/schemas';
 
@@ -11,6 +11,18 @@ interface ActiveFixturesNavProps {
 
 const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtureSelect, onFixtureClose, activeFixtureId }) => {
   const { t } = useTranslation();
+  const activeFixtureRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (activeFixtureRef.current) {
+      activeFixtureRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }, [activeFixtureId]);
+
   const handleFixtureClose = (fixtureId: string) => {
     const fixture = fixtures.find(f => f.id === fixtureId);
     if (fixture) {
@@ -70,7 +82,11 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
             const status = statusConfig[fixture.status as keyof typeof statusConfig] || statusConfig.pending;
 
             return (
-              <div key={fixture.id} className="shrink-0 w-72 sm:w-80 md:w-96 snap-start">
+              <div 
+                key={fixture.id} 
+                ref={isActive ? activeFixtureRef : null}
+                className="shrink-0 w-72 sm:w-80 md:w-96 snap-start"
+              >
                 <div
                   onClick={() => onFixtureSelect(fixture.id)}
                   className={`group relative cursor-pointer overflow-hidden rounded-2xl transition-colors duration-200 ${

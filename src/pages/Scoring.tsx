@@ -279,18 +279,11 @@ const Scoring: React.FC = () => {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4">
-            <TrophyIcon className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">{t('scoring.title')}</h1>
-          <p className="text-lg text-gray-600">{t('scoring.subtitle')}</p>
-        </div>
+
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Settings Panel */}
-          <div className="xl:col-span-1">
+          <div className="xl:col-span-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6 sticky top-24">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
@@ -355,7 +348,7 @@ const Scoring: React.FC = () => {
           </div>
 
           {/* Main Content */}
-          <div className="xl:col-span-2 space-y-6">
+          <div className="xl:col-span-2 max-h-[calc(100vh-4rem)] overflow-y-auto space-y-6">
             {/* Tournament Selection */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6">
               <div className="flex items-center gap-3 mb-6">

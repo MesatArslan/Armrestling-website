@@ -14,7 +14,7 @@ export const PlayerSchema = z.object({
     matchDescription: z.string(),
     result: z.enum(['win', 'loss'])
   })).optional(), // Daha önce oynadığı rakiplerin ID'si, maç açıklaması ve sonucu
-});
+}).passthrough(); // Allow additional fields for custom columns
 
 export const WeightRangeSchema = z.object({
   id: z.string(),
@@ -47,7 +47,7 @@ export const FixtureSchema = z.object({
   weightRangeId: z.string(),
   weightRangeName: z.string(),
   weightRange: z.object({ min: z.number(), max: z.number() }),
-  players: z.array(PlayerSchema.partial().extend({ id: z.string() })),
+  players: z.array(PlayerSchema.partial().extend({ id: z.string() }).passthrough()),
   playerCount: z.number(),
   status: z.enum(['active', 'completed', 'paused']),
   createdAt: z.string(),

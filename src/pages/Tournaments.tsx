@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import TournamentCard from '../components/UI/TournamentCard';
+import TemplateSelectionModal from '../components/UI/TemplateSelectionModal';
+import ConfirmationModal from '../components/UI/ConfirmationModal';
 import type { Tournament as StorageTournament, WeightRange } from '../storage/schemas';
 import { type Column } from '../utils/playersStorage';
 import { openPreviewModal, generatePDF, generateCombinedPreviewPages, generateCombinedTournamentPDF } from '../utils/pdfGenerator';
 import { useTournaments } from '../hooks/useTournaments';
 import { usePlayers } from '../hooks/usePlayers';
 import { useMatches } from '../hooks/useMatches';
+import { createTournamentFromTemplate, type TournamentTemplate } from '../utils/tournamentTemplates';
 
 type UITournament = Omit<StorageTournament, 'isExpanded'> & { isExpanded: boolean };
 
@@ -74,6 +77,24 @@ const Tournaments = () => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const hideProgressTimer = React.useRef<number | null>(null);
 
+  // Template Selection Modal States
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+
+  // Confirmation Modal States
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'danger'
+  });
+
   // Toggle to disable all background sync effects (diagnostic/safe mode)
   const NO_BACKGROUND_SYNC = true;
   const [hasInitialSync, setHasInitialSync] = useState(false);
@@ -131,7 +152,7 @@ const Tournaments = () => {
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (isCreateModalOpen || isPDFPreviewModalOpen || isPDFColumnModalOpen || isBulkPDFModalOpen) {
+    if (isCreateModalOpen || isPDFPreviewModalOpen || isPDFColumnModalOpen || isBulkPDFModalOpen || isTemplateModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -140,7 +161,7 @@ const Tournaments = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isCreateModalOpen, isPDFPreviewModalOpen, isPDFColumnModalOpen, isBulkPDFModalOpen]);
+  }, [isCreateModalOpen, isPDFPreviewModalOpen, isPDFColumnModalOpen, isBulkPDFModalOpen, isTemplateModalOpen]);
 
   // Sync from repositories (guarded by stable snapshot to prevent loops)
   const lastRepoSnapshotRef = React.useRef<{
@@ -345,9 +366,45 @@ const Tournaments = () => {
   };
 
   const handleDeleteTournament = (tournamentId: string) => {
-    const updatedTournaments = tournaments.filter(t => t.id !== tournamentId);
-    setTournaments(updatedTournaments);
-    saveTournaments(updatedTournaments as any);
+    const tournament = tournaments.find(t => t.id === tournamentId);
+    if (!tournament) return;
+    
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Turnuvayı Sil',
+      message: t('tournamentCard.confirmDeleteTournament', { name: tournament.name }),
+      onConfirm: () => {
+        const updatedTournaments = tournaments.filter(t => t.id !== tournamentId);
+        setTournaments(updatedTournaments);
+        saveTournaments(updatedTournaments as any);
+      },
+      type: 'danger'
+    });
+  };
+
+  // Template selection handlers
+  const handleTemplateSelect = (template: TournamentTemplate, handPreference: 'left' | 'right') => {
+    const handPreferenceText = handPreference === 'left' ? t('players.leftHanded') : t('players.rightHanded');
+    const tournamentName = `${t(template.nameKey)} - ${handPreferenceText}`;
+    
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Turnuva Oluştur',
+      message: `"${tournamentName}" turnuvasını oluşturmak istiyor musunuz?`,
+      onConfirm: () => {
+        const newTournament = createTournamentFromTemplate(template, tournamentName);
+        // Apply hand preference filter to the tournament
+        newTournament.handPreferenceFilter = handPreference;
+        const updatedTournaments = [...tournaments, newTournament];
+        setTournaments(updatedTournaments);
+        saveTournaments(updatedTournaments as any);
+      },
+      type: 'info'
+    });
+  };
+
+  const handleOpenTemplateModal = () => {
+    setIsTemplateModalOpen(true);
   };
 
   const handleSaveEdit = () => {
@@ -452,15 +509,20 @@ const Tournaments = () => {
   
 
   const handleClearAllTournamentData = () => {
-    if (window.confirm('Are you sure you want to clear all tournament data? This will remove all tournaments, selections, and filters.')) {
-      clearAllTournamentData();
-      setTournaments([]);
-      setSelectedTournamentLocal(null);
-      setSelectedWeightRangeLocal(null);
-      setPlayerFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
-      setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
-      setShowFilteredPlayers(false);
-    }
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Tüm Turnuva Verilerini Temizle',
+      message: 'Tüm turnuva verilerini temizlemek istediğinizden emin misiniz? Bu işlem tüm turnuvaları, seçimleri ve filtreleri kaldıracaktır.',
+      onConfirm: () => {
+        clearAllTournamentData();
+        setTournaments([]);
+        setSelectedTournamentLocal(null);
+        setSelectedWeightRangeLocal(null);
+        setPlayerFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
+        setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
+        setShowFilteredPlayers(false);
+      }
+    });
   };
 
   const handleStartTournament = (tournamentId: string, weightRangeId: string) => {
@@ -595,6 +657,12 @@ const Tournaments = () => {
               {t('tournaments.clearAllData')}
             </button>
             <button
+              onClick={handleOpenTemplateModal}
+              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+            >
+              {t('tournaments.useTemplate')}
+            </button>
+            <button
               onClick={() => {
                 setIsEditMode(false);
                 setEditingTournamentId(null);
@@ -624,22 +692,30 @@ const Tournaments = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('tournaments.noTournamentsYet')}</h3>
                 <p className="text-gray-600 mb-6">{t('tournaments.createFirstTournament')}</p>
-                          <button
-                            onClick={() => {
-                    setIsEditMode(false);
-                    setEditingTournamentId(null);
-                    setNewTournamentName('');
-                    setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
-                    setCreateTournamentGenderFilter('male');
-                    setCreateTournamentHandPreferenceFilter(null);
-                    setCreateTournamentBirthYearMin(null);
-                    setCreateTournamentBirthYearMax(null);
-                    setIsCreateModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
-                >
-                  {t('tournaments.createFirstTournamentButton')}
-                          </button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={handleOpenTemplateModal}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow-lg hover:from-green-500 hover:to-green-700 transition-all duration-200 text-base font-semibold"
+                  >
+                    {t('tournaments.useTemplate')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditMode(false);
+                      setEditingTournamentId(null);
+                      setNewTournamentName('');
+                      setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
+                      setCreateTournamentGenderFilter('male');
+                      setCreateTournamentHandPreferenceFilter(null);
+                      setCreateTournamentBirthYearMin(null);
+                      setCreateTournamentBirthYearMax(null);
+                      setIsCreateModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
+                  >
+                    {t('tournaments.createFirstTournamentButton')}
+                  </button>
+                </div>
                         </div>
             ) : (
               tournaments.map((tournament) => (
@@ -1094,29 +1170,53 @@ const Tournaments = () => {
         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 overflow-hidden"
       >
         <div 
-          className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden transform-none"
+          className="bg-white rounded-xl shadow-2xl max-w-6xl w-full mx-4 max-h-[95vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
               {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex-shrink-0">
-                <h2 className="text-3xl font-bold text-white">
-                  {isEditMode ? t('tournaments.editTournament') : t('tournaments.createNewTournament')}
-                </h2>
-                <p className="text-blue-100 mt-2">
-                  {isEditMode ? t('tournaments.updateTournamentSettings') : t('tournaments.setupTournament')}
-                </p>
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-white/20 rounded-lg p-2">
+                      <UserGroupIcon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">
+                        {isEditMode ? t('tournaments.editTournament') : t('tournaments.createNewTournament')}
+                      </h2>
+                      <p className="text-blue-100 mt-1">
+                        {isEditMode ? t('tournaments.updateTournamentSettings') : t('tournaments.setupTournament')}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      setIsEditMode(false);
+                      setEditingTournamentId(null);
+                      setNewTournamentName('');
+                      setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
+                      setCreateTournamentGenderFilter('male');
+                      setCreateTournamentHandPreferenceFilter(null);
+                      setPlayerFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
+                      setAppliedFilters({gender: null, handPreference: null, weightMin: null, weightMax: null});
+                    }}
+                    className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
               </div>
               
-              {/* Content Area - Scrollable */}
-              <div className="flex-1 p-8 overflow-y-auto">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Left Column - Basic Info */}
+              <div className="flex h-[calc(95vh-120px)]">
+                {/* Left Column - Tournament Details and Filters */}
+                <div className="w-1/2 border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-6 overflow-y-auto">
                   <div className="space-y-6">
                     {/* Tournament Name */}
                     <div className="bg-gray-50 rounded-lg p-6">
                       <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                         <span className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">1</span>
-                        {t('tournaments.details')}
+                        {t('tournaments.tournamentName')}
                       </h3>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1213,8 +1313,10 @@ const Tournaments = () => {
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Right Column - Weight Ranges */}
+                {/* Right Column - Weight Ranges */}
+                <div className="flex-1 p-8 overflow-y-auto bg-gray-50">
                   <div className="space-y-6">
                     <div className="bg-gray-50 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-6">
@@ -1302,14 +1404,8 @@ const Tournaments = () => {
                 </div>
               </div>
 
-              {/* Footer - Always visible */}
-              <div className="bg-gray-50 px-8 py-6 border-t border-gray-200 flex justify-between items-center flex-shrink-0">
-                <div className="text-sm text-gray-600">
-                  {newTournamentName.trim() && weightRanges.filter(r => r.name.trim() && r.min > 0 && r.max > 0).length > 0 
-                    ? (isEditMode ? t('tournaments.readyToSave') : t('tournaments.readyToCreate'))
-                    : t('tournaments.completeAllFields')
-                  }
-                </div>
+              {/* Footer */}
+              <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
                 <div className="flex space-x-3">
                   <button
                     onClick={() => {
@@ -1339,6 +1435,23 @@ const Tournaments = () => {
             </div>
           </div>
         )}
+
+        {/* Template Selection Modal */}
+        <TemplateSelectionModal
+          isOpen={isTemplateModalOpen}
+          onClose={() => setIsTemplateModalOpen(false)}
+          onTemplateSelect={handleTemplateSelect}
+        />
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={confirmationModal.isOpen}
+          onClose={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmationModal.onConfirm}
+          title={confirmationModal.title}
+          message={confirmationModal.message}
+          type={confirmationModal.type || 'danger'}
+        />
     </>
   );
 };
