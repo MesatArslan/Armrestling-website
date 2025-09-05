@@ -57,6 +57,38 @@ export const SuperAdmin: React.FC = () => {
 
   // Active section
   const [activeSection, setActiveSection] = useState<'institutions' | 'nonInstitutionUsers'>('institutions')
+  const [inInstitutionDetail, setInInstitutionDetail] = useState(false)
+  const [savedInstitution, setSavedInstitution] = useState<Institution | null>(null)
+
+  // Section değiştiğinde institution detail'i sıfırla
+  const handleSectionChange = (section: 'institutions' | 'nonInstitutionUsers') => {
+    setActiveSection(section)
+    setInInstitutionDetail(false) // Section değiştiğinde detail view'ı sıfırla
+    // LocalStorage'a kaydet
+    localStorage.setItem('superAdminActiveSection', section)
+    localStorage.setItem('superAdminInDetail', 'false')
+  }
+
+  // Sayfa yüklendiğinde localStorage'dan durumu yükle
+  useEffect(() => {
+    const savedSection = localStorage.getItem('superAdminActiveSection') as 'institutions' | 'nonInstitutionUsers' | null
+    const savedInDetail = localStorage.getItem('superAdminInDetail') === 'true'
+    const savedInstitution = localStorage.getItem('superAdminSelectedInstitution')
+    
+    if (savedSection) {
+      setActiveSection(savedSection)
+    }
+    if (savedInDetail && savedInstitution) {
+      try {
+        const institution = JSON.parse(savedInstitution)
+        setInInstitutionDetail(true)
+        setSavedInstitution(institution)
+      } catch (error) {
+        console.error('Saved institution parse error:', error)
+        localStorage.removeItem('superAdminSelectedInstitution')
+      }
+    }
+  }, [])
 
   useEffect(() => {
     // Kullanıcının super_admin rolünde olup olmadığını kontrol et
@@ -326,14 +358,20 @@ export const SuperAdmin: React.FC = () => {
   const handleUpdateUser = async (userId: string, formData: {
     username: string
     email: string
-    expiration_date: string
+    expiration_date?: string
   }) => {
     setIsSubmitting(true)
     setError('')
     setSuccess('')
 
     try {
-      const result = await AuthService.updateUser(userId, formData)
+      // expiration_date undefined ise boş string olarak gönder
+      const updateData = {
+        ...formData,
+        expiration_date: formData.expiration_date || ''
+      }
+      
+      const result = await AuthService.updateUser(userId, updateData)
       
       if (result.success) {
         setSuccess('Kullanıcı başarıyla güncellendi!')
@@ -454,11 +492,14 @@ export const SuperAdmin: React.FC = () => {
     <SuperAdminLayout
       user={user}
       activeSection={activeSection}
-      onSectionChange={setActiveSection}
+      onSectionChange={handleSectionChange}
       onSignOut={handleSignOut}
+      hideStats={inInstitutionDetail}
     >
         {/* Stats */}
-      <StatsDashboard stats={stats} />
+        {!inInstitutionDetail && (
+          <StatsDashboard stats={stats} />
+        )}
 
         {/* Messages */}
         {error && (
@@ -505,6 +546,11 @@ export const SuperAdmin: React.FC = () => {
             onEditInstitution={handleEditInstitution}
             onDeleteInstitution={handleDeleteInstitutionClick}
             onCreateInstitution={() => setShowCreateForm(true)}
+            onEditUser={handleEditUserClick}
+            onDeleteUser={handleDeleteUserClick}
+            onCreateUser={() => setShowCreateUserModal(true)}
+            onDetailViewChange={setInInstitutionDetail}
+            initialSelectedInstitution={savedInstitution}
           />
         )}
 

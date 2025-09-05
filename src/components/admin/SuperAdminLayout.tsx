@@ -6,6 +6,7 @@ interface SuperAdminLayoutProps {
   activeSection: 'institutions' | 'nonInstitutionUsers'
   onSectionChange: (section: 'institutions' | 'nonInstitutionUsers') => void
   onSignOut: () => void
+  hideStats?: boolean
   children: React.ReactNode
 }
 
