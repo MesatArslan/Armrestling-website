@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
-import { UserIcon, ArrowRightOnRectangleIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { UserIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import LanguageSwitcher from './LanguageSwitcher';
 import { AuthModal } from './AuthModal';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Navbar = () => {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -31,10 +31,6 @@ const Navbar = () => {
     };
   }, []);
 
-  const handleSignOut = async () => {
-    await signOut();
-    setIsOpen(false);
-  };
 
   const openAuthModal = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
@@ -75,6 +71,14 @@ const Navbar = () => {
                 {user.role === 'admin' ? (
                   <Link
                     to="/admin"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-gray-50"
+                  >
+                    <UserIcon className="h-5 w-5" />
+                    <span className="text-sm">{user.email}</span>
+                  </Link>
+                ) : user.role === 'user' ? (
+                  <Link
+                    to="/user"
                     className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-gray-50"
                   >
                     <UserIcon className="h-5 w-5" />
@@ -165,6 +169,15 @@ const Navbar = () => {
                   className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
                 >
                   Kurum Paneli
+                </Link>
+              )}
+              {user.role === 'user' && (
+                <Link
+                  to="/user"
+                  onClick={() => setIsOpen(false)}
+                  className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  Kullanıcı Paneli
                 </Link>
               )}
             </div>

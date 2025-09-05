@@ -1,4 +1,6 @@
 export { SuperAdminLayout } from './SuperAdminLayout'
+export { AdminLayout } from './AdminLayout'
+export { UserLayout } from './UserLayout'
 export { StatsDashboard } from './StatsDashboard'
 export { InstitutionsSection } from './InstitutionsSection'
 export { NonInstitutionUsersSection } from './NonInstitutionUsersSection'

@@ -55,9 +55,14 @@ export const FileManagement: React.FC = () => {
 
   const loadUserLimits = async () => {
     try {
+      console.log('FileManagement: Limit bilgileri yükleniyor...')
       const result = await fileManager.getUserLimits()
+      console.log('FileManagement: Limit sonucu:', result)
       if (result.success && result.data) {
         setUserLimits(result.data)
+        console.log('FileManagement: Limit state güncellendi:', result.data)
+      } else {
+        console.error('FileManagement: Limit yüklenemedi:', result.error)
       }
     } catch (err) {
       console.error('Limit bilgileri yüklenirken hata:', err)

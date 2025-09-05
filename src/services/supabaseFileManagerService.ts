@@ -319,7 +319,7 @@ export class SupabaseFileManagerService {
   }
 
 
-  // Kullanıcı limit bilgilerini getir
+  // Kurum bazında limit bilgilerini getir (tüm kullanıcılar aynı storage'ı kullanır)
   async getUserLimits(): Promise<{
     success: boolean
     data?: {
@@ -338,11 +338,31 @@ export class SupabaseFileManagerService {
         return { success: false, error: 'Kullanıcı bulunamadı' }
       }
 
-      // Kullanıcının toplam dosya boyutunu hesapla
+      console.log('=== KURUM LİMİT DEBUG ===')
+      console.log('Kullanıcı ID:', user.id)
+      console.log('Kullanıcı Email:', user.email)
+
+      // Önce kullanıcının kurum bilgisini al
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('institution_id')
+        .eq('id', user.id)
+        .single()
+
+      console.log('Profil sorgusu sonucu:', { profile, profileError })
+
+      if (profileError || !profile?.institution_id) {
+        console.error('Kurum bilgisi bulunamadı:', profileError)
+        return { success: false, error: 'Kurum bilgisi bulunamadı' }
+      }
+
+      // Kurumun tüm kullanıcılarının dosyalarını hesapla
       const { data: files, error } = await supabase
         .from('saved_files')
-        .select('file_size')
-        .eq('user_id', user.id)
+        .select('file_size, name, type, user_id')
+        .eq('institution_id', profile.institution_id)
+
+      console.log('Kurum dosya sorgusu sonucu:', { files, error })
 
       if (error) {
         console.error('Limit bilgileri alınırken hata:', error)
@@ -355,6 +375,17 @@ export class SupabaseFileManagerService {
       const totalLimit = 104857600 // 100MB
       const remainingSpace = Math.max(0, totalLimit - usedSpace)
       const percentage = Math.round((usedSpace / totalLimit) * 100)
+
+      console.log('Hesaplanan kurum limitleri:', {
+        institutionId: profile.institution_id,
+        usedSpace,
+        fileCount,
+        singleFileLimit,
+        totalLimit,
+        remainingSpace,
+        percentage
+      })
+      console.log('========================')
 
       return {
         success: true,

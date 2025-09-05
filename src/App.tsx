@@ -7,6 +7,7 @@ import Scoring from './pages/Scoring';
 import { Login } from './pages/Login';
 import { SuperAdmin } from './pages/SuperAdmin';
 import { Admin } from './pages/Admin';
+import { User } from './pages/User';
 import { AuthDebug } from './pages/AuthDebug';
 import './i18n';
 import Navbar from './components/UI/Navbar';
@@ -17,8 +18,9 @@ import { RouteGuard } from './components/auth/RouteGuard';
 const Layout = () => {
   const location = useLocation();
   const isAdminPage = location.pathname === '/admin';
+  const isUserPage = location.pathname === '/user';
 
-  if (isAdminPage) {
+  if (isAdminPage || isUserPage) {
     return (
       <div className="h-screen bg-gray-50 overflow-hidden">
         <Navbar />
@@ -67,6 +69,14 @@ const App = () => {
               element={
                 <RouteGuard allowedRoles={['admin']}>
                   <Admin />
+                </RouteGuard>
+              } 
+            />
+            <Route 
+              path="user" 
+              element={
+                <RouteGuard allowedRoles={['user']}>
+                  <User />
                 </RouteGuard>
               } 
             />
