@@ -51,13 +51,13 @@ export const StorageManagement: React.FC = () => {
   }, [error])
 
   useEffect(() => {
-    loadStorageStats()
+    // İlk yüklemede kurum verilerini yükle (varsayılan tab)
+    loadInstitutionStats()
   }, [])
 
-  const loadStorageStats = async () => {
+  const loadInstitutionStats = async () => {
     setLoading(true)
     try {
-      // Kurum istatistiklerini yükle
       const { data: institutionData, error: institutionError } = await supabase
         .from('institution_storage_stats')
         .select('*')
@@ -69,7 +69,18 @@ export const StorageManagement: React.FC = () => {
         return
       }
 
-      // Bireysel kullanıcı istatistiklerini yükle
+      setInstitutionStats(institutionData || [])
+    } catch (error) {
+      console.error('Kurum storage istatistikleri yüklenirken hata:', error)
+      setError('Bilinmeyen hata oluştu')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadUserStats = async () => {
+    setLoading(true)
+    try {
       const { data: userData, error: userError } = await supabase
         .from('user_storage_stats')
         .select('*')
@@ -81,13 +92,31 @@ export const StorageManagement: React.FC = () => {
         return
       }
 
-      setInstitutionStats(institutionData || [])
       setUserStats(userData || [])
     } catch (error) {
-      console.error('Storage istatistikleri yüklenirken hata:', error)
+      console.error('Kullanıcı storage istatistikleri yüklenirken hata:', error)
       setError('Bilinmeyen hata oluştu')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadStorageStats = async () => {
+    if (activeTab === 'institutions') {
+      await loadInstitutionStats()
+    } else {
+      await loadUserStats()
+    }
+  }
+
+  const handleTabChange = async (tab: 'institutions' | 'users') => {
+    setActiveTab(tab)
+    
+    // Tab değiştiğinde ilgili verileri yükle
+    if (tab === 'institutions' && institutionStats.length === 0) {
+      await loadInstitutionStats()
+    } else if (tab === 'users' && userStats.length === 0) {
+      await loadUserStats()
     }
   }
 
@@ -351,7 +380,7 @@ export const StorageManagement: React.FC = () => {
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 px-6">
             <button
-              onClick={() => setActiveTab('institutions')}
+              onClick={() => handleTabChange('institutions')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'institutions'
                   ? 'border-blue-500 text-blue-600'
@@ -361,7 +390,7 @@ export const StorageManagement: React.FC = () => {
               Kurumlar ({institutionStats.length})
             </button>
             <button
-              onClick={() => setActiveTab('users')}
+              onClick={() => handleTabChange('users')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'users'
                   ? 'border-blue-500 text-blue-600'

@@ -62,9 +62,15 @@ export const SuperAdmin: React.FC = () => {
   const [savedInstitution, setSavedInstitution] = useState<Institution | null>(null)
 
   // Section değiştiğinde institution detail'i sıfırla
-  const handleSectionChange = (section: 'institutions' | 'nonInstitutionUsers' | 'storageManagement') => {
+  const handleSectionChange = async (section: 'institutions' | 'nonInstitutionUsers' | 'storageManagement') => {
     setActiveSection(section)
     setInInstitutionDetail(false) // Section değiştiğinde detail view'ı sıfırla
+    
+    // Kullanıcı yönetimi sayfasına geçildiğinde kullanıcı verilerini yükle
+    if (section === 'nonInstitutionUsers' && nonInstitutionUsers.length === 0) {
+      await loadNonInstitutionUsers()
+    }
+    
     // LocalStorage'a kaydet
     localStorage.setItem('superAdminActiveSection', section)
     localStorage.setItem('superAdminInDetail', 'false')
@@ -78,6 +84,11 @@ export const SuperAdmin: React.FC = () => {
     
     if (savedSection) {
       setActiveSection(savedSection)
+      
+      // Eğer kullanıcı yönetimi sayfasındaysa ve kullanıcı verileri yüklenmemişse yükle
+      if (savedSection === 'nonInstitutionUsers' && nonInstitutionUsers.length === 0) {
+        loadNonInstitutionUsers()
+      }
     }
     if (savedInDetail && savedInstitution) {
       try {
@@ -113,24 +124,15 @@ export const SuperAdmin: React.FC = () => {
     }
     setError('')
     try {
-      // Sadece institutions'ı çağır, stats'i ayrıca çağırmaya gerek yok
+      // Sadece institutions'ı çağır
       const institutionsResult = await AuthService.getInstitutions()
 
       if (institutionsResult.success) {
         const institutionsData = institutionsResult.data || []
         setInstitutions(institutionsData)
 
-        // Kurumu olmayan kullanıcıları da yükle (tek sefer)
-        let nonInstitutionUsersCount = 0
-        const nonInstitutionUsersResult = await AuthService.getNonInstitutionUsers()
-        if (nonInstitutionUsersResult.success) {
-          const list = nonInstitutionUsersResult.data || []
-          setNonInstitutionUsers(list)
-          nonInstitutionUsersCount = list.length
-        }
-
-        // Stats'i institutions verilerinden hesapla (tekrar fetch etmeden)
-        const stats = await calculateStatsFromInstitutions(institutionsData, nonInstitutionUsersCount)
+        // Stats'i sadece institutions verilerinden hesapla (kullanıcı sayısı için sadece kurum içi kullanıcıları say)
+        const stats = await calculateStatsFromInstitutions(institutionsData, 0)
         setStats(stats)
       } else {
         const errorMessage = institutionsResult.error || 'Bilinmeyen hata'
@@ -146,6 +148,30 @@ export const SuperAdmin: React.FC = () => {
       setError('Veri yüklenirken beklenmeyen bir hata oluştu')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Kurumu olmayan kullanıcıları yükle
+  const loadNonInstitutionUsers = async () => {
+    try {
+      const nonInstitutionUsersResult = await AuthService.getNonInstitutionUsers()
+      if (nonInstitutionUsersResult.success) {
+        const list = nonInstitutionUsersResult.data || []
+        setNonInstitutionUsers(list)
+        
+        // Stats'i güncelle
+        if (stats) {
+          setStats(prev => prev ? {
+            ...prev,
+            totalUsers: prev.totalUsers + list.length,
+            nonInstitutionUsers: list.length
+          } : null)
+        }
+      } else {
+        console.error('Non-institution users loading error:', nonInstitutionUsersResult.error)
+      }
+    } catch (error) {
+      console.error('Non-institution users loading error:', error)
     }
   }
 
@@ -337,13 +363,13 @@ export const SuperAdmin: React.FC = () => {
         if (result.data) {
           setNonInstitutionUsers(prev => [result.data!, ...prev])
         
-        // Stats'i de güncelle
-        if (stats) {
-          setStats(prev => prev ? {
-            ...prev,
+          // Stats'i de güncelle
+          if (stats) {
+            setStats(prev => prev ? {
+              ...prev,
               totalUsers: prev.totalUsers + 1,
               nonInstitutionUsers: prev.nonInstitutionUsers + 1
-          } : null)
+            } : null)
           }
         }
       } else {
@@ -412,13 +438,13 @@ export const SuperAdmin: React.FC = () => {
         // Sadece ilgili kullanıcıyı listeden kaldır
         setNonInstitutionUsers(prev => prev.filter(user => user.id !== deletingUser.id))
           
-          // Stats'i de güncelle
-          if (stats) {
-            setStats(prev => prev ? {
-              ...prev,
+        // Stats'i de güncelle
+        if (stats) {
+          setStats(prev => prev ? {
+            ...prev,
             totalUsers: prev.totalUsers - 1,
             nonInstitutionUsers: prev.nonInstitutionUsers - 1
-            } : null)
+          } : null)
         }
       } else {
         setError(result.error || 'Kullanıcı silinirken hata oluştu')
