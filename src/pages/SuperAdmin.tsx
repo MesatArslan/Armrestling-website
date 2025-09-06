@@ -13,7 +13,8 @@ import {
   DeleteConfirmationModal,
   CreateUserModal,
   EditUserModal,
-  InstitutionUsersModal
+  InstitutionUsersModal,
+  StorageManagement
 } from '../components/admin'
 
 export const SuperAdmin: React.FC = () => {
@@ -56,12 +57,12 @@ export const SuperAdmin: React.FC = () => {
   const [showInstitutionUsersModal, setShowInstitutionUsersModal] = useState(false)
 
   // Active section
-  const [activeSection, setActiveSection] = useState<'institutions' | 'nonInstitutionUsers'>('institutions')
+  const [activeSection, setActiveSection] = useState<'institutions' | 'nonInstitutionUsers' | 'storageManagement'>('institutions')
   const [inInstitutionDetail, setInInstitutionDetail] = useState(false)
   const [savedInstitution, setSavedInstitution] = useState<Institution | null>(null)
 
   // Section değiştiğinde institution detail'i sıfırla
-  const handleSectionChange = (section: 'institutions' | 'nonInstitutionUsers') => {
+  const handleSectionChange = (section: 'institutions' | 'nonInstitutionUsers' | 'storageManagement') => {
     setActiveSection(section)
     setInInstitutionDetail(false) // Section değiştiğinde detail view'ı sıfırla
     // LocalStorage'a kaydet
@@ -563,6 +564,11 @@ export const SuperAdmin: React.FC = () => {
             onCreateUser={() => setShowCreateUserModal(true)}
           />
         )}
+
+        {/* Storage Yönetimi */}
+          {activeSection === 'storageManagement' && (
+            <StorageManagement />
+          )}
             </div>
             
       {/* Modals */}

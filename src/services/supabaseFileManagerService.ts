@@ -152,7 +152,7 @@ export class SupabaseFileManagerService {
       // JSON olarak indir
       const dataStr = JSON.stringify(file.file_data, null, 2)
       const dataBlob = new Blob([dataStr], { type: 'application/json' })
-      
+
       const url = URL.createObjectURL(dataBlob)
       const link = document.createElement('a')
       link.href = url
@@ -172,7 +172,7 @@ export class SupabaseFileManagerService {
   async updateFile(fileId: string, updates: Partial<Pick<SavedFile, 'name' | 'description' | 'file_data'>>): Promise<{ success: boolean; error?: string }> {
     try {
       const updateData: any = { ...updates }
-      
+
       if (updates.file_data) {
         updateData.file_size = this.formatFileSize(updates.file_data)
       }
@@ -351,18 +351,31 @@ export class SupabaseFileManagerService {
 
       console.log('Profil sorgusu sonucu:', { profile, profileError })
 
-      if (profileError || !profile?.institution_id) {
-        console.error('Kurum bilgisi bulunamadı:', profileError)
-        return { success: false, error: 'Kurum bilgisi bulunamadı' }
+      if (profileError) {
+        console.error('Profil bilgisi bulunamadı:', profileError)
+        return { success: false, error: 'Profil bilgisi bulunamadı' }
       }
 
-      // Kurumun tüm kullanıcılarının dosyalarını hesapla
-      const { data: files, error } = await supabase
-        .from('saved_files')
-        .select('file_size, name, type, user_id')
-        .eq('institution_id', profile.institution_id)
+      // Dosyaları hesapla (kurumlu kullanıcılar için kurum dosyaları, bireysel kullanıcılar için kendi dosyaları)
+      let filesQuery
+      if (profile.institution_id) {
+        // Kurumlu kullanıcılar için kurumun tüm dosyalarını al
+        filesQuery = supabase
+          .from('saved_files')
+          .select('file_size, name, type, user_id')
+          .eq('institution_id', profile.institution_id)
+      } else {
+        // Bireysel kullanıcılar için sadece kendi dosyalarını al
+        filesQuery = supabase
+          .from('saved_files')
+          .select('file_size, name, type, user_id')
+          .eq('user_id', user.id)
+          .is('institution_id', null)
+      }
+      
+      const { data: files, error } = await filesQuery
 
-      console.log('Kurum dosya sorgusu sonucu:', { files, error })
+      console.log('Dosya sorgusu sonucu:', { files, error, institutionId: profile.institution_id })
 
       if (error) {
         console.error('Limit bilgileri alınırken hata:', error)
@@ -372,12 +385,35 @@ export class SupabaseFileManagerService {
       const usedSpace = files?.reduce((total, file) => total + (file.file_size || 0), 0) || 0
       const fileCount = files?.length || 0
       const singleFileLimit = 10485760 // 10MB
-      const totalLimit = 104857600 // 100MB
+      
+      let totalLimit = 104857600 // Default 100MB
+      
+      if (profile.institution_id) {
+        // Kurumlu kullanıcılar için kurum limitini al
+        const { data: institution } = await supabase
+          .from('institutions')
+          .select('storage_limit')
+          .eq('id', profile.institution_id)
+          .single()
+        
+        totalLimit = institution?.storage_limit || 104857600
+      } else {
+        // Bireysel kullanıcılar için kendi limitini al
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('storage_limit')
+          .eq('id', user.id)
+          .single()
+        
+        totalLimit = userProfile?.storage_limit || 10485760 // Default 10MB
+      }
       const remainingSpace = Math.max(0, totalLimit - usedSpace)
       const percentage = Math.round((usedSpace / totalLimit) * 100)
 
-      console.log('Hesaplanan kurum limitleri:', {
+      console.log('Hesaplanan storage limitleri:', {
+        userId: user.id,
         institutionId: profile.institution_id,
+        isIndividual: !profile.institution_id,
         usedSpace,
         fileCount,
         singleFileLimit,

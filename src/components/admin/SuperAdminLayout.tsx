@@ -3,8 +3,8 @@ import type { Profile } from '../../types/auth'
 
 interface SuperAdminLayoutProps {
   user: Profile | null
-  activeSection: 'institutions' | 'nonInstitutionUsers'
-  onSectionChange: (section: 'institutions' | 'nonInstitutionUsers') => void
+  activeSection: 'institutions' | 'nonInstitutionUsers' | 'storageManagement'
+  onSectionChange: (section: 'institutions' | 'nonInstitutionUsers' | 'storageManagement') => void
   onSignOut: () => void
   hideStats?: boolean
   children: React.ReactNode
@@ -51,6 +51,18 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                   </svg>
                   Kullanıcı Yönetimi
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onSectionChange('storageManagement')}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-3 transition-all duration-200 ${activeSection === 'storageManagement' ? 'bg-white/20 text-white shadow-lg backdrop-blur' : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                  </svg>
+                  Storage Yönetimi
                 </button>
               </li>
             </ul>
