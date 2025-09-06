@@ -4,7 +4,6 @@ import Players from './pages/Players';
 import Tournaments from './pages/Tournaments';
 import Matches from './pages/Matches';
 import Scoring from './pages/Scoring';
-import { Login } from './pages/Login';
 import { SuperAdmin } from './pages/SuperAdmin';
 import { Admin } from './pages/Admin';
 import { User } from './pages/User';
@@ -48,7 +47,6 @@ const App = () => {
       <Router basename={import.meta.env.BASE_URL}>
         <Routes>
           {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
           <Route path="/debug" element={<AuthDebug />} />
           
           {/* Super Admin Routes */}

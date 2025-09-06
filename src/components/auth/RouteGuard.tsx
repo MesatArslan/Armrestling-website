@@ -7,7 +7,7 @@ import LoadingSpinner from '../UI/LoadingSpinner'
 export const RouteGuard: React.FC<RouteGuardProps> = ({ 
   children, 
   allowedRoles, 
-  redirectTo = '/login' 
+  redirectTo = '/' 
 }) => {
   const { user, loading } = useAuth()
   const location = useLocation()
@@ -35,7 +35,7 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
       case 'user':
         return <Navigate to="/" replace />
       default:
-        return <Navigate to="/login" replace />
+        return <Navigate to="/" replace />
     }
   }
 

@@ -477,7 +477,7 @@ export const SuperAdmin: React.FC = () => {
                 Sayfayı Yenile
               </button>
               <button
-                onClick={() => window.location.href = '/login'}
+                onClick={() => window.location.href = '/'}
                 className="w-full inline-flex items-center justify-center bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium shadow focus:outline-none focus:ring-2 focus:ring-gray-300"
               >
                 Giriş Sayfasına Git
