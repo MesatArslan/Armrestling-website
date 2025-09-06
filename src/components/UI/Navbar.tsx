@@ -105,13 +105,13 @@ const Navbar = () => {
                 {loginDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
                     <button
-                      onClick={() => openAuthModal('login')}
+                      onClick={() => openAuthModal('signup')}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                     >
                       Bireysel Girişi
                     </button>
                     <button
-                      onClick={() => openAuthModal('signup')}
+                      onClick={() => openAuthModal('login')}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                     >
                       Kurum Girişi
@@ -184,13 +184,13 @@ const Navbar = () => {
           ) : (
             <div className="pt-2 border-t border-gray-100 space-y-2">
               <button
-                onClick={() => openAuthModal('login')}
+                onClick={() => openAuthModal('signup')}
                 className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
               >
                 Bireysel Girişi
               </button>
               <button
-                onClick={() => openAuthModal('signup')}
+                onClick={() => openAuthModal('login')}
                 className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
               >
                 Kurum Girişi

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { XMarkIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, EyeIcon, EyeSlashIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../contexts/AuthContext'
 
 interface AuthModalProps {
@@ -22,12 +22,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -65,10 +62,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return false
     }
     
-    if (mode === 'signup' && password !== confirmPassword) {
-      setError(t('auth.passwordsDoNotMatch'))
-      return false
-    }
     
     return true
   }
@@ -80,23 +73,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     
     setLoading(true)
     setError('')
-    setMessage('')
     
     try {
-      const roleType = mode === 'login' ? 'user' : 'admin'
+      const roleType = mode === 'login' ? 'admin' : 'user'
       const { error } = await signIn(email, password, roleType)
       if (error) {
         setError(error || t('auth.signInError'))
+        setLoading(false)
       } else {
-        setMessage(t('auth.welcomeBack'))
-        resetForm()
-        setTimeout(() => {
-          onClose()
-        }, 1000)
+        // Başarılı giriş - modal'ı hemen kapat
+        onClose()
       }
     } catch (err) {
       setError(t('auth.signInError'))
-    } finally {
       setLoading(false)
     }
   }
@@ -104,11 +93,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const resetForm = () => {
     setEmail('')
     setPassword('')
-    setConfirmPassword('')
     setShowPassword(false)
-    setShowConfirmPassword(false)
     setError('')
-    setMessage('')
   }
 
   const handleClose = () => {
@@ -149,7 +135,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Modal content */}
         <div className="px-6 py-8">
           <h3 className="text-2xl font-bold text-center text-gray-900 mb-6">
-            {mode === 'login' ? 'Bireysel Girişi' : 'Kurum Girişi'}
+            {mode === 'login' ? 'Kurum Girişi' : 'Bireysel Girişi'}
           </h3>
 
           {error && (
@@ -158,11 +144,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {message && (
-            <div className="mb-4 rounded-md bg-green-50 p-4 border border-green-200">
-              <div className="text-sm text-green-700">{message}</div>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -212,56 +193,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             </div>
 
-            {mode === 'signup' && (
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.confirmPassword')}
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    required
-                    className="w-full px-3 py-2 pr-10 bg-gray-50 border border-gray-200 rounded-md shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white"
-                    placeholder={t('auth.enterConfirmPassword')}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
 
             <div className="space-y-3 pt-2">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? t('auth.loading') : (mode === 'login' ? 'Bireysel Girişi' : 'Kurum Girişi')}
+                {loading ? (
+                  <>
+                    <ArrowPathIcon className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                    {t('auth.loading')}
+                  </>
+                ) : (
+                  mode === 'login' ? 'Kurum Girişi' : 'Bireysel Girişi'
+                )}
               </button>
 
               <div className="text-center pt-4 border-t border-gray-200">
                 <span className="text-sm text-gray-600">
-                  {mode === 'login' ? 'Kurum hesabınız mı var?' : 'Bireysel hesabınız mı var?'}{' '}
+                  {mode === 'login' ? 'Bireysel hesabınız mı var?' : 'Kurum hesabınız mı var?'}{' '}
                   <button
                     type="button"
                     onClick={() => onModeChange(mode === 'login' ? 'signup' : 'login')}
                     className="font-medium text-indigo-600 hover:text-indigo-500"
                   >
-                    {mode === 'login' ? 'Kurum Girişi' : 'Bireysel Girişi'}
+                    {mode === 'login' ? 'Bireysel Girişi' : 'Kurum Girişi'}
                   </button>
                 </span>
               </div>
