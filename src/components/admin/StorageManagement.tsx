@@ -351,22 +351,6 @@ export const StorageManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Storage Yönetimi</h2>
-            <p className="text-gray-600 mt-1">Kurumların ve bireysel kullanıcıların depolama limitlerini yönetin</p>
-          </div>
-          <button
-            onClick={loadStorageStats}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Yenile
-          </button>
-        </div>
-      </div>
-
       {/* Error/Success Messages */}
       {error && (
         <Toast type="error" message={error} onClose={() => setError('')} />
@@ -381,34 +365,59 @@ export const StorageManagement: React.FC = () => {
           <nav className="-mb-px flex space-x-8 px-6">
             <button
               onClick={() => handleTabChange('institutions')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                 activeTab === 'institutions'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600 bg-blue-50'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
-              Kurumlar ({institutionStats.length})
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span>Kurumlar</span>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  activeTab === 'institutions'
+                    ? 'bg-blue-100 text-blue-600'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {institutionStats.length}
+                </span>
+              </div>
             </button>
             <button
               onClick={() => handleTabChange('users')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                 activeTab === 'users'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600 bg-blue-50'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
-              Bireysel Kullanıcılar ({userStats.length})
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span>Bireysel Kullanıcılar</span>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  activeTab === 'users'
+                    ? 'bg-blue-100 text-blue-600'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {userStats.length}
+                </span>
+              </div>
             </button>
           </nav>
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="p-4">
           {activeTab === 'institutions' && (
             <DataTable
               data={institutionStats}
               columns={institutionColumns}
               emptyMessage="Henüz hiç kurum bulunmuyor"
+              maxHeight="calc(100vh - 300px)"
             />
           )}
           {activeTab === 'users' && (
@@ -416,6 +425,7 @@ export const StorageManagement: React.FC = () => {
               data={userStats}
               columns={userColumns}
               emptyMessage="Henüz hiç bireysel kullanıcı bulunmuyor"
+              maxHeight="calc(100vh - 300px)"
             />
           )}
         </div>

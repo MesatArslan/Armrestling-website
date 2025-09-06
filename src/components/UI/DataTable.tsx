@@ -127,7 +127,7 @@ export function DataTable<T extends { id?: string | number }>({
               {columns.map((column, index) => (
                 <th
                   key={column.key}
-                  className={`px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider ${
+                  className={`px-4 py-1 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider ${
                     column.width || ''
                   } ${
                     index < columns.length - 1 ? 'border-r border-gray-200' : ''
@@ -159,7 +159,7 @@ export function DataTable<T extends { id?: string | number }>({
                 {columns.map((column, colIndex) => (
                   <td
                     key={column.key}
-                    className={`px-4 py-3 whitespace-nowrap text-sm ${
+                    className={`px-4 py-1.5 whitespace-nowrap text-sm ${
                       colIndex < columns.length - 1 ? 'border-r border-gray-200' : ''
                     } ${
                       column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
@@ -176,7 +176,7 @@ export function DataTable<T extends { id?: string | number }>({
 
       {/* Pagination */}
       {showPagination && (
-        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
+        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-700">

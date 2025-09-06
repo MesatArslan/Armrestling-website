@@ -524,7 +524,7 @@ export const SuperAdmin: React.FC = () => {
       hideStats={inInstitutionDetail}
     >
         {/* Stats */}
-        {!inInstitutionDetail && (
+        {!inInstitutionDetail && activeSection !== 'storageManagement' && (
           <StatsDashboard stats={stats} />
         )}
 

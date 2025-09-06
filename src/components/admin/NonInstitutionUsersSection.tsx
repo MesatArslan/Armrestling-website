@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React from 'react'
 import type { Profile } from '../../types/auth'
 import { DataTable, type Column } from '../UI/DataTable'
 
