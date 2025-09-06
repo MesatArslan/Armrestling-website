@@ -40,41 +40,27 @@ export class SupabaseFileManagerService {
     data: any
   }): Promise<{ success: boolean; error?: string; fileId?: string }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        return { success: false, error: 'Kullanıcı oturumu bulunamadı' }
-      }
-
-      // Kullanıcının kurum bilgisini al
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('institution_id')
-        .eq('id', user.id)
-        .single()
-
-      const fileSize = this.formatFileSize(fileData.data)
-
-
-      const { data, error } = await supabase
-        .from('saved_files')
-        .insert({
-          user_id: user.id,
-          institution_id: profile?.institution_id || null,
-          name: fileData.name,
-          type: fileData.type,
-          description: fileData.description,
-          file_data: fileData.data,
-          file_size: fileSize
-        })
-        .select('id')
-        .single()
+      // Tek RPC çağrısı ile tüm işlemleri yap (3 istek yerine 1 istek)
+      const { data, error } = await supabase.rpc('save_file_optimized', {
+        p_name: fileData.name,
+        p_type: fileData.type,
+        p_file_data: fileData.data,
+        p_description: fileData.description || null
+      })
 
       if (error) {
         console.error('Dosya kaydedilirken hata:', error)
         return { success: false, error: error.message }
       }
 
-      return { success: true, fileId: data.id }
+      // RPC fonksiyonu JSONB döndürüyor
+      const result = data as { success: boolean; error?: string; fileId?: string }
+      
+      if (!result.success) {
+        return { success: false, error: result.error || 'Dosya kaydedilemedi' }
+      }
+
+      return { success: true, fileId: result.fileId }
     } catch (error) {
       console.error('Dosya kaydedilirken hata:', error)
       return { success: false, error: 'Dosya kaydedilemedi' }

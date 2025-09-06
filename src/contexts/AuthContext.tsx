@@ -260,7 +260,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Rol kontrolü
       if (roleType) {
-        const isValidRole = (roleType === 'admin' && profileData.role === 'admin') ||
+        const isValidRole = (roleType === 'admin' && (profileData.role === 'admin' || profileData.role === 'super_admin')) ||
                            (roleType === 'user' && profileData.role === 'user')
         
         if (!isValidRole) {

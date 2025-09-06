@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { XMarkIcon, EyeIcon, EyeSlashIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -19,6 +20,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const { t } = useTranslation()
   const { signIn } = useAuth()
+  const navigate = useNavigate()
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -82,13 +84,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     
     try {
       const roleType = mode === 'login' ? 'admin' : 'user'
-      const { error } = await signIn(email, password, roleType)
+      const { error, data } = await signIn(email, password, roleType)
       if (error) {
         setError(error || t('auth.signInError'))
         setLoading(false)
       } else {
         // Başarılı giriş - modal'ı hemen kapat
         onClose()
+        
+        // Rol bazlı yönlendirme
+        if (data?.role === 'super_admin') {
+          navigate('/superadmin')
+        } else if (data?.role === 'admin') {
+          navigate('/admin')
+        } else if (data?.role === 'user') {
+          navigate('/')
+        }
       }
     } catch (err) {
       setError(t('auth.signInError'))
