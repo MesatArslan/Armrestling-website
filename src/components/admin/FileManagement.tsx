@@ -37,35 +37,26 @@ export const FileManagement: React.FC = () => {
   }, [error])
 
   useEffect(() => {
-    loadFiles()
     loadUserLimits()
   }, [])
 
-  const loadFiles = async () => {
-    setLoading(true)
-    try {
-      const savedFiles = await fileManager.getAllFiles()
-      setFiles(savedFiles)
-    } catch (err) {
-      setError('Dosyalar yüklenirken hata oluştu')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const loadUserLimits = async () => {
+    setLoading(true)
     try {
-      console.log('FileManagement: Limit bilgileri yükleniyor...')
       const result = await fileManager.getUserLimits()
-      console.log('FileManagement: Limit sonucu:', result)
       if (result.success && result.data) {
         setUserLimits(result.data)
-        console.log('FileManagement: Limit state güncellendi:', result.data)
+        setFiles(result.data.files) // Dosya listesini de set et
       } else {
         console.error('FileManagement: Limit yüklenemedi:', result.error)
+        setError('Dosyalar yüklenirken hata oluştu')
       }
     } catch (err) {
       console.error('Limit bilgileri yüklenirken hata:', err)
+      setError('Dosyalar yüklenirken hata oluştu')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -84,8 +75,7 @@ export const FileManagement: React.FC = () => {
       if (result.success) {
         setSuccess('Dosya başarıyla kaydedildi!')
         setShowUploadModal(false)
-        loadFiles()
-        loadUserLimits() // Limit bilgilerini yenile
+        loadUserLimits() // Limit bilgilerini ve dosya listesini yenile
       } else {
         setError(result.error || 'Dosya kaydedilirken hata oluştu')
       }
@@ -116,8 +106,7 @@ export const FileManagement: React.FC = () => {
       const result = await fileManager.deleteFile(fileId)
       if (result.success) {
         setSuccess('Dosya başarıyla silindi!')
-        loadFiles()
-        loadUserLimits() // Limit bilgilerini yenile
+        loadUserLimits() // Limit bilgilerini ve dosya listesini yenile
       } else {
         setError(result.error || 'Dosya silinirken hata oluştu')
       }

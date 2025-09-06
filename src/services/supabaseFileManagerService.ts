@@ -319,7 +319,7 @@ export class SupabaseFileManagerService {
   }
 
 
-  // Kurum bazında limit bilgilerini getir (tüm kullanıcılar aynı storage'ı kullanır)
+  // Kurum bazında limit bilgilerini ve dosya listesini getir (tek çağrıda tüm bilgiler)
   async getUserLimits(): Promise<{
     success: boolean
     data?: {
@@ -329,99 +329,45 @@ export class SupabaseFileManagerService {
       remainingSpace: number
       fileCount: number
       percentage: number
+      files: SavedFile[]
     }
     error?: string
   }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        return { success: false, error: 'Kullanıcı bulunamadı' }
-      }
-
-      console.log('=== KURUM LİMİT DEBUG ===')
-      console.log('Kullanıcı ID:', user.id)
-      console.log('Kullanıcı Email:', user.email)
-
-      // Önce kullanıcının kurum bilgisini al
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('institution_id')
-        .eq('id', user.id)
-        .single()
-
-      console.log('Profil sorgusu sonucu:', { profile, profileError })
-
-      if (profileError) {
-        console.error('Profil bilgisi bulunamadı:', profileError)
-        return { success: false, error: 'Profil bilgisi bulunamadı' }
-      }
-
-      // Dosyaları hesapla (kurumlu kullanıcılar için kurum dosyaları, bireysel kullanıcılar için kendi dosyaları)
-      let filesQuery
-      if (profile.institution_id) {
-        // Kurumlu kullanıcılar için kurumun tüm dosyalarını al
-        filesQuery = supabase
-          .from('saved_files')
-          .select('file_size, name, type, user_id')
-          .eq('institution_id', profile.institution_id)
-      } else {
-        // Bireysel kullanıcılar için sadece kendi dosyalarını al
-        filesQuery = supabase
-          .from('saved_files')
-          .select('file_size, name, type, user_id')
-          .eq('user_id', user.id)
-          .is('institution_id', null)
-      }
+      // Tek çağrıda tüm bilgileri al: profil + kurum + dosya bilgileri + dosya listesi
+      const { data, error } = await supabase.rpc('get_user_storage_info')
       
-      const { data: files, error } = await filesQuery
-
-      console.log('Dosya sorgusu sonucu:', { files, error, institutionId: profile.institution_id })
-
       if (error) {
-        console.error('Limit bilgileri alınırken hata:', error)
+        console.error('Storage bilgileri alınırken hata:', error)
         return { success: false, error: error.message }
       }
 
-      const usedSpace = files?.reduce((total, file) => total + (file.file_size || 0), 0) || 0
-      const fileCount = files?.length || 0
-      const singleFileLimit = 10485760 // 10MB
-      
-      let totalLimit = 104857600 // Default 100MB
-      
-      if (profile.institution_id) {
-        // Kurumlu kullanıcılar için kurum limitini al
-        const { data: institution } = await supabase
-          .from('institutions')
-          .select('storage_limit')
-          .eq('id', profile.institution_id)
-          .single()
-        
-        totalLimit = institution?.storage_limit || 104857600
-      } else {
-        // Bireysel kullanıcılar için kendi limitini al
-        const { data: userProfile } = await supabase
-          .from('profiles')
-          .select('storage_limit')
-          .eq('id', user.id)
-          .single()
-        
-        totalLimit = userProfile?.storage_limit || 10485760 // Default 10MB
+      if (!data || data.length === 0) {
+        return { success: false, error: 'Veri bulunamadı' }
       }
+
+      const result = data[0]
+      const {
+        institution_id,
+        storage_limit,
+        institution_storage_limit,
+        used_space,
+        file_count,
+        files
+      } = result
+
+      const singleFileLimit = 10485760 // 10MB
+      const totalLimit = institution_id 
+        ? (institution_storage_limit || 104857600) // Kurum limiti
+        : (storage_limit || 10485760) // Bireysel limit
+      
+      const usedSpace = used_space || 0
+      const fileCount = file_count || 0
       const remainingSpace = Math.max(0, totalLimit - usedSpace)
       const percentage = Math.round((usedSpace / totalLimit) * 100)
 
-      console.log('Hesaplanan storage limitleri:', {
-        userId: user.id,
-        institutionId: profile.institution_id,
-        isIndividual: !profile.institution_id,
-        usedSpace,
-        fileCount,
-        singleFileLimit,
-        totalLimit,
-        remainingSpace,
-        percentage
-      })
-      console.log('========================')
+      // Dosya listesini SavedFile formatına çevir
+      const filesList: SavedFile[] = files || []
 
       return {
         success: true,
@@ -431,7 +377,8 @@ export class SupabaseFileManagerService {
           usedSpace,
           remainingSpace,
           fileCount,
-          percentage
+          percentage,
+          files: filesList
         }
       }
     } catch (error) {

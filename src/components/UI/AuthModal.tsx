@@ -26,10 +26,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Prevent body scroll when modal is open
+  // Prevent body scroll when modal is open and reset form state
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
+      // Modal açıldığında state'leri sıfırla
+      setLoading(false)
+      setError('')
+      setEmail('')
+      setPassword('')
+      setShowPassword(false)
     } else {
       document.body.style.overflow = 'unset'
     }

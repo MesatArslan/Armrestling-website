@@ -38,10 +38,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 5000) // 5 saniye timeout
     
     try {
-      // Önce profiles tablosundan profil bilgilerini al
+      // Tek çağrıda profil + kurum bilgilerini al
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          institutions!institution_id (*)
+        `)
         .eq('id', userId)
         .single()
 
@@ -95,19 +98,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return mockProfile
       }
 
-      // Eğer institution_id varsa, institution bilgilerini de al
-      let institution: Institution | undefined
-      if (profile.institution_id) {
-        const { data: instData, error: instError } = await supabase
-          .from('institutions')
-          .select('*')
-          .eq('id', profile.institution_id)
-          .single()
-
-        if (!instError && instData) {
-          institution = instData
-        }
-      }
+      // Kurum bilgilerini al (join ile geldi)
+      const institution = (profile.institutions as any) || undefined
 
       const result = {
         ...profile,
