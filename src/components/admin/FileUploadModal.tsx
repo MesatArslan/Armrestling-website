@@ -192,7 +192,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                       setSelectedData(null)
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                   required
                 >
                   <option value="">Seçiniz...</option>
@@ -226,7 +226,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 id="fileName"
                 value={fileName}
                 onChange={(e) => setFileName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
                 placeholder="Örn: Şampiyonluk Turnuvası Oyuncuları"
                 required
               />
@@ -242,7 +242,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
                 placeholder="Bu dosya hakkında kısa bir açıklama..."
               />
             </div>
