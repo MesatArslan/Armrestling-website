@@ -10,6 +10,132 @@ import type {
 } from '../types/auth'
 
 export class AuthService {
+  // Session Management
+  static async login(email: string, password: string): Promise<ApiResponse<{ session: any; sessionToken?: string; user?: any }>> {
+    try {
+      // 1. Önce mevcut session'ı temizle (eski token'ları geçersiz kıl)
+      await supabase.auth.signOut()
+      
+      // 2. Supabase ile giriş yap
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (authError) {
+        return { success: false, error: `Giriş yapılamadı: ${authError.message}` }
+      }
+
+      if (!authData.user || !authData.session) {
+        return { success: false, error: 'Giriş yapılamadı' }
+      }
+
+      // 3. Device bilgilerini topla
+      const deviceInfo = {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        timestamp: new Date().toISOString()
+      }
+
+      // 4. Yeni session oluştur (eski session'ları geçersiz kıl)
+      const { data: sessionData, error: sessionError } = await supabase.rpc('create_single_user_session', {
+        p_user_id: authData.user.id,
+        p_device_info: deviceInfo,
+        p_ip_address: null, // Client-side'da IP alınamaz
+        p_user_agent: navigator.userAgent
+      })
+
+      if (sessionError) {
+        console.warn('Session oluşturulamadı:', sessionError.message)
+        // Session oluşturulamasa bile giriş başarılı sayılır
+      }
+
+      // 5. Custom session token'ı localStorage'a kaydet
+      if (sessionData) {
+        localStorage.setItem('custom_session_token', sessionData)
+      }
+
+      return { 
+        success: true, 
+        data: { 
+          session: authData.session, // Supabase session'ını da döndür
+          sessionToken: sessionData || null,
+          user: authData.user
+        } 
+      }
+    } catch (error) {
+      return { success: false, error: `Giriş hatası: ${error}` }
+    }
+  }
+
+  static async logout(): Promise<ApiResponse<null>> {
+    try {
+      // 1. Custom session token'ı localStorage'dan al
+      const sessionToken = localStorage.getItem('custom_session_token')
+      
+      if (sessionToken) {
+        // 2. Custom session'ı geçersiz kıl
+        const { error: sessionError } = await supabase.rpc('invalidate_user_session', {
+          p_session_token: sessionToken
+        })
+
+        if (sessionError) {
+          console.warn('Session geçersiz kılınamadı:', sessionError.message)
+        }
+
+        // 3. Custom session token'ı localStorage'dan sil
+        localStorage.removeItem('custom_session_token')
+      }
+
+      // 4. Supabase'den çıkış yap
+      const { error: authError } = await supabase.auth.signOut()
+
+      if (authError) {
+        return { success: false, error: `Çıkış yapılamadı: ${authError.message}` }
+      }
+
+      return { success: true, data: null }
+    } catch (error) {
+      return { success: false, error: `Çıkış hatası: ${error}` }
+    }
+  }
+
+  static async validateSession(): Promise<ApiResponse<{ isValid: boolean, userId?: string }>> {
+    try {
+      // 1. Custom session token'ı localStorage'dan al
+      const sessionToken = localStorage.getItem('custom_session_token')
+      
+      if (!sessionToken) {
+        return { success: true, data: { isValid: false } }
+      }
+
+      // 2. Custom session doğrulama
+      const { data: validationData, error: validationError } = await supabase.rpc('validate_user_session', {
+        p_session_token: sessionToken
+      })
+
+      if (validationError) {
+        console.warn('Session doğrulanamadı:', validationError.message)
+        // Session geçersizse localStorage'dan sil
+        localStorage.removeItem('custom_session_token')
+        return { success: true, data: { isValid: false } }
+      }
+
+      const isValid = validationData?.[0]?.is_valid || false
+      const userId = validationData?.[0]?.user_id
+
+      if (!isValid) {
+        // Session geçersizse localStorage'dan sil
+        localStorage.removeItem('custom_session_token')
+      }
+
+      return { success: true, data: { isValid, userId } }
+    } catch (error) {
+      return { success: false, error: `Session doğrulama hatası: ${error}` }
+    }
+  }
+
   // Super Admin İşlemleri
   static async createInstitution(data: CreateInstitutionForm): Promise<ApiResponse<Institution>> {
     try {

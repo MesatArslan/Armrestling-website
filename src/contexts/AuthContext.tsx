@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { AuthService } from '../services/authService'
 import type { AuthContextType, Profile, Institution, ApiResponse, AuthUser } from '../types/auth'
 import { clearAuthTokens } from '../utils/authUtils'
 
@@ -23,6 +24,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
   const [profileCache, setProfileCache] = useState<Map<string, Profile & { institution?: Institution }>>(new Map())
+  const [sessionCheckInterval, setSessionCheckInterval] = useState<NodeJS.Timeout | null>(null)
+
+  // Session kontrol fonksiyonu
+  const checkSessionValidity = async () => {
+    try {
+      const sessionToken = localStorage.getItem('custom_session_token')
+      
+      if (!sessionToken) {
+        // Custom session token yoksa Supabase session'ını da temizle
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          console.log('Custom session token yok, Supabase session temizleniyor')
+          await supabase.auth.signOut()
+          // localStorage'daki tüm Supabase token'larını da temizle
+          clearAuthTokens()
+          setUser(null)
+          setProfile(null)
+        }
+        return
+      }
+
+      // Custom session token varsa doğrula
+      const validationResult = await AuthService.validateSession()
+      
+      if (!validationResult.success || !validationResult.data?.isValid) {
+        console.log('Custom session geçersiz, tüm session\'lar temizleniyor')
+        localStorage.removeItem('custom_session_token')
+        await supabase.auth.signOut()
+        // localStorage'daki tüm Supabase token'larını da temizle
+        clearAuthTokens()
+        setUser(null)
+        setProfile(null)
+      }
+    } catch (error) {
+      console.warn('Session kontrol hatası:', error)
+    }
+  }
 
   // Profil bilgilerini getir
   const fetchProfile = async (userId: string): Promise<(Profile & { institution?: Institution }) | null> => {
@@ -183,6 +221,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         if (session?.user) {
+          // Custom session token kontrolü
+          const sessionToken = localStorage.getItem('custom_session_token')
+          if (sessionToken) {
+            const validationResult = await AuthService.validateSession()
+            
+            if (!validationResult.success || !validationResult.data?.isValid) {
+              // Custom session geçersizse localStorage'dan sil ve Supabase session'ını da temizle
+              localStorage.removeItem('custom_session_token')
+              await supabase.auth.signOut()
+              clearAuthTokens()
+              setUser(null)
+              setProfile(null)
+              return
+            }
+          } else {
+            // Custom session token yoksa Supabase session'ını da temizle
+            console.log('Initialization: Custom session token yok, Supabase session temizleniyor')
+            await supabase.auth.signOut()
+            clearAuthTokens()
+            setUser(null)
+            setProfile(null)
+            return
+          }
+
           const profileData = await fetchProfile(session.user.id)
           if (profileData) {
             setProfile(profileData)
@@ -216,6 +278,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       try {
         if (session?.user) {
+          // Custom session token kontrolü
+          const sessionToken = localStorage.getItem('custom_session_token')
+          if (sessionToken) {
+            const validationResult = await AuthService.validateSession()
+            
+            if (!validationResult.success || !validationResult.data?.isValid) {
+              // Custom session geçersizse localStorage'dan sil ve Supabase session'ını da temizle
+              localStorage.removeItem('custom_session_token')
+              await supabase.auth.signOut()
+              clearAuthTokens()
+              setUser(null)
+              setProfile(null)
+              return
+            }
+          } else {
+            // Custom session token yoksa Supabase session'ını da temizle
+            console.log('Auth state change: Custom session token yok, Supabase session temizleniyor')
+            await supabase.auth.signOut()
+            clearAuthTokens()
+            setUser(null)
+            setProfile(null)
+            return
+          }
+
           const profileData = await fetchProfile(session.user.id)
           if (profileData) {
             setProfile(profileData)
@@ -235,26 +321,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Saatte bir session kontrolü
+  useEffect(() => {
+    if (isInitialized) {
+      // İlk kontrol
+      checkSessionValidity()
+      
+      // Saatte bir kontrol et (3600000 ms = 1 saat)
+      const interval = setInterval(checkSessionValidity, 3600000)
+      setSessionCheckInterval(interval)
+      
+      return () => {
+        if (interval) {
+          clearInterval(interval)
+        }
+      }
+    }
+  }, [isInitialized])
+
   const signIn = async (email: string, password: string, roleType?: 'admin' | 'user'): Promise<ApiResponse<AuthUser>> => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        return { success: false, error: error.message }
+      // AuthService ile giriş yap (session management ile)
+      const loginResult = await AuthService.login(email, password)
+      
+      if (!loginResult.success || !loginResult.data?.session) {
+        return { success: false, error: loginResult.error || 'Giriş yapılamadı' }
       }
 
-      if (!data.user) {
-        return { success: false, error: 'Giriş başarısız' }
+      const { sessionToken, user } = loginResult.data as { session: any; sessionToken: string; user: any }
+
+      // Custom session token'ı localStorage'a kaydet
+      if (sessionToken) {
+        localStorage.setItem('custom_session_token', sessionToken)
       }
 
       // Profil bilgilerini getir
-      const profileData = await fetchProfile(data.user.id)
+      const profileData = await fetchProfile(user.id)
       
       if (!profileData) {
-        await supabase.auth.signOut()
+        await AuthService.logout()
         return { success: false, error: 'Profil bilgileri bulunamadı' }
       }
 
@@ -264,7 +369,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                            (roleType === 'user' && profileData.role === 'user')
         
         if (!isValidRole) {
-          await supabase.auth.signOut()
+          await AuthService.logout()
           return { success: false, error: 'Bu rol ile giriş yapmaya yetkiniz yok' }
         }
       }
@@ -277,6 +382,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setProfile(profileData)
       setUser(authUser)
 
+      // Session kontrol interval'ını başlat
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval)
+      }
+      const interval = setInterval(checkSessionValidity, 3600000) // Saatte bir kontrol
+      setSessionCheckInterval(interval)
+
       return { success: true, data: authUser }
     } catch (error) {
       return { success: false, error: 'Beklenmeyen bir hata oluştu' }
@@ -285,10 +397,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signOut = async (): Promise<ApiResponse<void>> => {
     try {
-      const { error } = await supabase.auth.signOut()
+      // AuthService ile çıkış yap (session management ile)
+      const logoutResult = await AuthService.logout()
       
-      if (error) {
-        return { success: false, error: error.message }
+      if (!logoutResult.success) {
+        return { success: false, error: logoutResult.error || 'Çıkış yapılamadı' }
       }
 
       // Clear all Supabase authentication tokens from localStorage
@@ -298,6 +411,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null)
       setProfile(null)
       setProfileCache(new Map()) // Cache'i temizle
+      
+      // Session kontrol interval'ını temizle
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval)
+        setSessionCheckInterval(null)
+      }
       
       return { success: true }
     } catch (error) {
