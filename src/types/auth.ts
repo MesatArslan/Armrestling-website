@@ -73,6 +73,7 @@ export interface AuthContextType {
   signOut: () => Promise<ApiResponse<void>>;
   refreshProfile: () => Promise<void>;
   createProfile: (userId: string, email: string, role?: string) => Promise<Profile | null>;
+  sessionExpiryTime: Date | null;
 }
 
 // Route Protection Types

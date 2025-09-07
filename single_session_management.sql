@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '30 days')
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '5 hours')
 );
 
 -- 2. Index'ler oluştur
@@ -51,7 +51,7 @@ BEGIN
     
     -- Yeni session token oluştur
     v_session_token := encode(gen_random_bytes(32), 'base64');
-    v_expires_at := NOW() + INTERVAL '30 days';
+    v_expires_at := NOW() + INTERVAL '5 hours';
     
     -- Yeni session kaydı oluştur
     INSERT INTO user_sessions (

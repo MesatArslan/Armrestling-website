@@ -25,6 +25,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false)
   const [profileCache, setProfileCache] = useState<Map<string, Profile & { institution?: Institution }>>(new Map())
   const [sessionCheckInterval, setSessionCheckInterval] = useState<NodeJS.Timeout | null>(null)
+  const [sessionExpiryTime, setSessionExpiryTime] = useState<Date | null>(null)
 
   // Session kontrol fonksiyonu
   const checkSessionValidity = async () => {
@@ -41,6 +42,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           clearAuthTokens()
           setUser(null)
           setProfile(null)
+          setSessionExpiryTime(null)
         }
         return
       }
@@ -56,6 +58,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         clearAuthTokens()
         setUser(null)
         setProfile(null)
+        setSessionExpiryTime(null)
+      } else {
+        // Session geçerli, süresini kontrol et
+        const now = new Date()
+        if (sessionExpiryTime && now >= sessionExpiryTime) {
+          console.log('Session süresi doldu, otomatik çıkış yapılıyor')
+          localStorage.removeItem('custom_session_token')
+          await supabase.auth.signOut()
+          clearAuthTokens()
+          setUser(null)
+          setProfile(null)
+          setSessionExpiryTime(null)
+        }
       }
     } catch (error) {
       console.warn('Session kontrol hatası:', error)
@@ -321,14 +336,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Saatte bir session kontrolü
+  // 10 saniyede bir session kontrolü (test için)
   useEffect(() => {
     if (isInitialized) {
       // İlk kontrol
       checkSessionValidity()
       
-      // Saatte bir kontrol et (3600000 ms = 1 saat)
-      const interval = setInterval(checkSessionValidity, 3600000)
+      // 10 saniyede bir kontrol et (10000 ms = 10 saniye)
+      const interval = setInterval(checkSessionValidity, 10000)
       setSessionCheckInterval(interval)
       
       return () => {
@@ -382,11 +397,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setProfile(profileData)
       setUser(authUser)
 
+      // Session süresini ayarla (20 saniye - test için)
+      const expiryTime = new Date()
+      expiryTime.setSeconds(expiryTime.getSeconds() + 20)
+      setSessionExpiryTime(expiryTime)
+
       // Session kontrol interval'ını başlat
       if (sessionCheckInterval) {
         clearInterval(sessionCheckInterval)
       }
-      const interval = setInterval(checkSessionValidity, 3600000) // Saatte bir kontrol
+      const interval = setInterval(checkSessionValidity, 10000) // 10 saniyede bir kontrol
       setSessionCheckInterval(interval)
 
       return { success: true, data: authUser }
@@ -411,6 +431,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null)
       setProfile(null)
       setProfileCache(new Map()) // Cache'i temizle
+      setSessionExpiryTime(null) // Session süresini temizle
       
       // Session kontrol interval'ını temizle
       if (sessionCheckInterval) {
@@ -432,6 +453,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signOut,
     refreshProfile,
     createProfile,
+    sessionExpiryTime,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
