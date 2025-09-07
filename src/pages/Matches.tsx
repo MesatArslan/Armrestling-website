@@ -377,61 +377,74 @@ const Matches = () => {
         throw new Error('Dosya geçerli bir JSON formatında değil. Lütfen doğru fixtür dosyasını seçtiğinizden emin olun.');
       }
 
-      // Detailed validation with specific error messages
-      if (!importData.version) {
-        // Check if this might be an old format file and try to handle it
-        if (importData.fixture && importData.tournament && importData.weightRange) {
-          importData.version = '1.0.0'; // Add missing version
-        } else {
-          throw new Error('Fixtür dosyasında version bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
+      // Check if this is a pending fixture (new format)
+      const isPendingFixture = importData.isPending && importData.fixture && importData.readyToStart;
+      
+      if (isPendingFixture) {
+        // Başlamayı bekleyen fikstür formatı
+        if (!importData.fixture.id || !importData.fixture.name || !importData.fixture.players) {
+          throw new Error('Başlamayı bekleyen fikstür bilgileri eksik veya bozuk (id, name veya players eksik).');
         }
-      }
-      
-      if (!importData.fixture) {
-        throw new Error('Fixtür dosyasında fixture bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
-      }
-      
-      if (!importData.tournament) {
-        throw new Error('Fixtür dosyasında tournament bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
-      }
-      
-      if (!importData.weightRange) {
-        throw new Error('Fixtür dosyasında weightRange bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
-      }
+      } else {
+        // Normal fikstür formatı (eski format)
+        if (!importData.version) {
+          // Check if this might be an old format file and try to handle it
+          if (importData.fixture && importData.tournament && importData.weightRange) {
+            importData.version = '1.0.0'; // Add missing version
+          } else {
+            throw new Error('Fixtür dosyasında version bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
+          }
+        }
+        
+        if (!importData.fixture) {
+          throw new Error('Fixtür dosyasında fixture bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
+        }
+        
+        if (!importData.tournament) {
+          throw new Error('Fixtür dosyasında tournament bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
+        }
+        
+        if (!importData.weightRange) {
+          throw new Error('Fixtür dosyasında weightRange bilgisi eksik. Bu geçerli bir fixtür dosyası değil.');
+        }
 
-      // Additional validation for critical fixture fields
-      if (!importData.fixture.id || !importData.fixture.name || !importData.fixture.players) {
-        throw new Error('Fixtür bilgileri eksik veya bozuk (id, name veya players eksik).');
+        // Additional validation for critical fixture fields
+        if (!importData.fixture.id || !importData.fixture.name || !importData.fixture.players) {
+          throw new Error('Fixtür bilgileri eksik veya bozuk (id, name veya players eksik).');
+        }
       }
 
       // İçe aktarılan veri yapısı doğrulandı
 
-      const existingTournaments = TournamentsStorage.getTournaments();
-      let tournament = existingTournaments.find(t => t.id === importData.tournament.id);
-      
-      if (!tournament) {
-        const newTournament = {
-          id: importData.tournament.id,
-          name: importData.tournament.name,
-          weightRanges: importData.tournament.weightRanges || [],
-          isExpanded: false,
-          genderFilter: importData.tournament.genderFilter || null,
-          handPreferenceFilter: importData.tournament.handPreferenceFilter || null,
-          birthYearMin: importData.tournament.birthYearMin || null,
-          birthYearMax: importData.tournament.birthYearMax || null
-        };
+      // Turnuva işleme (sadece normal fikstürler için)
+      if (!isPendingFixture) {
+        const existingTournaments = TournamentsStorage.getTournaments();
+        let tournament = existingTournaments.find(t => t.id === importData.tournament.id);
         
-        const updatedTournaments = [...existingTournaments, newTournament];
-        TournamentsStorage.saveTournaments(updatedTournaments);
-      } else {
-        const existingWeightRange = tournament.weightRanges.find(wr => wr.id === importData.weightRange.id);
-        
-        if (!existingWeightRange) {
-          tournament.weightRanges.push(importData.weightRange);
-          const updatedTournaments = existingTournaments.map(t => 
-            t.id === tournament!.id ? tournament! : t
-          );
+        if (!tournament) {
+          const newTournament = {
+            id: importData.tournament.id,
+            name: importData.tournament.name,
+            weightRanges: importData.tournament.weightRanges || [],
+            isExpanded: false,
+            genderFilter: importData.tournament.genderFilter || null,
+            handPreferenceFilter: importData.tournament.handPreferenceFilter || null,
+            birthYearMin: importData.tournament.birthYearMin || null,
+            birthYearMax: importData.tournament.birthYearMax || null
+          };
+          
+          const updatedTournaments = [...existingTournaments, newTournament];
           TournamentsStorage.saveTournaments(updatedTournaments);
+        } else {
+          const existingWeightRange = tournament.weightRanges.find(wr => wr.id === importData.weightRange.id);
+          
+          if (!existingWeightRange) {
+            tournament.weightRanges.push(importData.weightRange);
+            const updatedTournaments = existingTournaments.map(t => 
+              t.id === tournament!.id ? tournament! : t
+            );
+            TournamentsStorage.saveTournaments(updatedTournaments);
+          }
         }
       }
 
@@ -512,11 +525,27 @@ const Matches = () => {
 
   // Perform the actual fixture import (extracted from handleImportFixture)
   const performFixtureImport = async (importData: any, processedPlayers: any[], addedPlayersCount: number) => {
-    const fixtureToImport = {
-      ...importData.fixture,
-      players: processedPlayers,
-      lastUpdated: new Date().toISOString()
-    } as Fixture;
+    // Check if this is a pending fixture
+    const isPendingFixture = importData.isPending && importData.fixture && importData.readyToStart;
+    
+    let fixtureToImport: Fixture;
+    
+    if (isPendingFixture) {
+      // Başlamayı bekleyen fikstür için özel işlem
+      fixtureToImport = {
+        ...importData.fixture,
+        players: processedPlayers,
+        status: 'active' as const, // Başlamayı bekleyen fikstürü aktif olarak işaretle
+        lastUpdated: new Date().toISOString()
+      } as Fixture;
+    } else {
+      // Normal fikstür için standart işlem
+      fixtureToImport = {
+        ...importData.fixture,
+        players: processedPlayers,
+        lastUpdated: new Date().toISOString()
+      } as Fixture;
+    }
 
     // Check and add missing players to Players page
       try {
@@ -586,6 +615,10 @@ const Matches = () => {
 
       // Create success message with player info
       let successMessage = `Fixtür başarıyla içe aktarıldı: ${importData.fixture.name}`;
+      
+      if (isPendingFixture) {
+        successMessage += ' (Başlamayı bekleyen fikstür aktif hale getirildi)';
+      }
       
       if (addedPlayersCount > 0) {
         successMessage += ` (${addedPlayersCount} yeni oyuncu Players sayfasına eklendi)`;

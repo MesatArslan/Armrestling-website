@@ -26,15 +26,152 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const [description, setDescription] = useState('')
   const [selectedData, setSelectedData] = useState<any>(null)
   const [availableData, setAvailableData] = useState<any[]>([])
+  const [dataCounts, setDataCounts] = useState<{
+    players: number
+    tournaments: number
+    fixtures: number
+  }>({
+    players: 0,
+    tournaments: 0,
+    fixtures: 0
+  })
 
   const playersRepo = new PlayersRepository()
   const tournamentsRepo = new TournamentsRepository()
   const matchesRepo = new MatchesRepository()
 
+  // Tüm fikstürleri yükle (hem başlamış hem de başlamayı bekleyen)
+  const loadAllFixtures = async () => {
+    try {
+      // Başlamış fikstürleri al
+      const fixtureIds = matchesRepo.getIndex()
+      const activeFixtures = fixtureIds.map(id => matchesRepo.getFixture(id)).filter(Boolean)
+      
+      // Turnuvaları al
+      const tournaments = tournamentsRepo.getAll()
+      
+      // Her turnuva için başlamayı bekleyen fikstürleri oluştur
+      const pendingFixtures = []
+      
+      for (const tournament of tournaments) {
+        for (const weightRange of tournament.weightRanges) {
+          // Bu turnuva ve ağırlık aralığı için aktif fikstür var mı kontrol et
+          const existingFixture = activeFixtures.find(f => 
+            f.tournamentId === tournament.id && f.weightRangeId === weightRange.id
+          )
+          
+          // Eğer aktif fikstür yoksa, başlamayı bekleyen fikstür oluştur
+          if (!existingFixture) {
+            // Bu ağırlık aralığına uygun oyuncuları bul
+            const eligiblePlayers = playersRepo.getAll().filter(player => {
+              const withinWeightRange = player.weight >= weightRange.min && player.weight <= weightRange.max
+              const notExcluded = !weightRange.excludedPlayerIds?.includes(player.id)
+              const genderMatch = !tournament.genderFilter || player.gender === tournament.genderFilter
+              const handMatch = !tournament.handPreferenceFilter ||
+                player.handPreference === tournament.handPreferenceFilter ||
+                player.handPreference === 'both'
+              let birthYearMatch = true
+              if (player.birthday && (tournament.birthYearMin || tournament.birthYearMax)) {
+                const birthYear = new Date(player.birthday).getFullYear()
+                if (tournament.birthYearMin && birthYear < tournament.birthYearMin) {
+                  birthYearMatch = false
+                }
+                if (tournament.birthYearMax && birthYear > tournament.birthYearMax) {
+                  birthYearMatch = false
+                }
+              }
+              return withinWeightRange && notExcluded && genderMatch && handMatch && birthYearMatch
+            })
+            
+            // Eğer uygun oyuncu varsa, başlamayı bekleyen fikstür oluştur
+            if (eligiblePlayers.length > 0) {
+              const weightRangeName = weightRange.name || `${weightRange.min}-${weightRange.max} kg`
+              const now = new Date().toISOString()
+              
+              // Sadece görünür sütunları al
+              const visibleColumns = playersRepo.getColumns().filter(col => col.visible)
+              const visibleColumnIds = visibleColumns.map(col => col.id)
+              
+              const pendingFixture = {
+                id: `pending-${tournament.id}-${weightRange.id}`,
+                name: `${tournament.name} - ${weightRangeName}`,
+                tournamentId: tournament.id,
+                tournamentName: tournament.name,
+                weightRangeId: weightRange.id,
+                weightRangeName,
+                weightRange: { min: weightRange.min, max: weightRange.max },
+                players: eligiblePlayers.map(p => {
+                  const player: any = {
+                    id: p.id,
+                    opponents: [] // Başlamayı bekleyen fikstürlerde opponents boş
+                  }
+                  
+                  // Sadece görünür sütunları kopyala
+                  visibleColumnIds.forEach(columnId => {
+                    if (p.hasOwnProperty(columnId)) {
+                      player[columnId] = p[columnId]
+                    }
+                  })
+                  
+                  return player
+                }),
+                playerCount: eligiblePlayers.length,
+                status: 'pending' as const, // Başlamayı bekleyen durumu
+                createdAt: now,
+                lastUpdated: now,
+                activeTab: 'active' as const,
+                isPending: true // Bu bir başlamayı bekleyen fikstür olduğunu belirt
+              }
+              
+              pendingFixtures.push(pendingFixture)
+            }
+          }
+        }
+      }
+      
+      // Hem aktif hem de başlamayı bekleyen fikstürleri birleştir
+      return [...activeFixtures, ...pendingFixtures]
+    } catch (error) {
+      console.error('Fikstürler yüklenirken hata:', error)
+      return []
+    }
+  }
+
   React.useEffect(() => {
     if (!isOpen) return
+    loadAllDataCounts()
     loadAvailableData()
   }, [isOpen, selectedType])
+
+  // Tüm türler için sayıları yükle
+  const loadAllDataCounts = async () => {
+    try {
+      // Oyuncular sayısı
+      const players = playersRepo.getAll()
+      const playersCount = players.length
+
+      // Turnuvalar sayısı
+      const tournaments = tournamentsRepo.getAll()
+      const tournamentsCount = tournaments.length
+
+      // Fikstürler sayısı
+      const allFixtures = await loadAllFixtures()
+      const fixturesCount = allFixtures.length
+
+      setDataCounts({
+        players: playersCount,
+        tournaments: tournamentsCount,
+        fixtures: fixturesCount
+      })
+    } catch (error) {
+      console.error('Sayılar yüklenirken hata:', error)
+      setDataCounts({
+        players: 0,
+        tournaments: 0,
+        fixtures: 0
+      })
+    }
+  }
 
   const loadAvailableData = async () => {
     try {
@@ -58,9 +195,9 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           setAvailableData(tournaments)
           break
         case 'fixtures':
-          const fixtureIds = matchesRepo.getIndex()
-          const fixtures = fixtureIds.map(id => matchesRepo.getFixture(id)).filter(Boolean)
-          setAvailableData(fixtures)
+          // Hem başlamış hem de başlamayı bekleyen fikstürleri al
+          const allFixtures = await loadAllFixtures()
+          setAvailableData(allFixtures)
           break
       }
     } catch (error) {
@@ -91,7 +228,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       case 'tournaments':
         return `${data.name || 'İsimsiz Turnuva'} - ${data.weightRanges?.length || 0} kategori`
       case 'fixtures':
-        return `${data.name || 'İsimsiz Fixtür'} - ${data.matches?.length || 0} maç`
+        const statusText = data.isPending ? ' (Başlamayı Bekliyor)' : ' (Aktif)'
+        return `${data.name || 'İsimsiz Fixtür'} - ${data.playerCount || 0} oyuncu${statusText}`
       default:
         return JSON.stringify(data).substring(0, 100) + '...'
     }
@@ -105,6 +243,22 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     let dataToSave = selectedData
     if (selectedType === 'players' && selectedData.id === 'all_players') {
       dataToSave = selectedData.data // Tüm oyuncu listesini al
+    }
+
+    // Fikstürler için özel data hazırlama
+    if (selectedType === 'fixtures') {
+      if (selectedData.isPending) {
+        // Başlamayı bekleyen fikstür için özel format
+        dataToSave = {
+          fixture: selectedData,
+          isPending: true,
+          // Maç başlatıldığında nasıl görünüyorsa o formatta hazırla
+          readyToStart: true
+        }
+      } else {
+        // Aktif fikstür için normal format
+        dataToSave = selectedData
+      }
     }
 
     const fileData = {
@@ -157,6 +311,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                     onClick={() => {
                       setSelectedType(type)
                       setSelectedData(null)
+                      setFileName('') // Tür değiştirildiğinde dosya adını da temizle
                     }}
                     className={`p-4 rounded-lg border-2 transition-all ${
                       selectedType === type
@@ -167,9 +322,9 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                     <div className="text-center">
                       <div className="text-lg font-medium">{getTypeLabel(type)}</div>
                       <div className="text-xs mt-1">
-                        {type === 'players' && (availableData.length > 0 ? `${availableData[0]?.count || 0} oyuncu` : '0 oyuncu')}
-                        {type === 'tournaments' && `${availableData.length} turnuva`}
-                        {type === 'fixtures' && `${availableData.length} fixtür`}
+                        {type === 'players' && `${dataCounts.players} oyuncu`}
+                        {type === 'tournaments' && `${dataCounts.tournaments} turnuva`}
+                        {type === 'fixtures' && `${dataCounts.fixtures} fixtür`}
                       </div>
                     </div>
                   </button>
@@ -187,9 +342,20 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                   value={selectedData ? JSON.stringify(selectedData) : ''}
                   onChange={(e) => {
                     if (e.target.value) {
-                      setSelectedData(JSON.parse(e.target.value))
+                      const selectedItem = JSON.parse(e.target.value)
+                      setSelectedData(selectedItem)
+                      
+                      // Dosya adını otomatik olarak input'a yaz
+                      if (selectedType === 'players' && selectedItem.id === 'all_players') {
+                        setFileName('Tüm Oyuncular')
+                      } else if (selectedType === 'tournaments') {
+                        setFileName(selectedItem.name || 'İsimsiz Turnuva')
+                      } else if (selectedType === 'fixtures') {
+                        setFileName(selectedItem.name || 'İsimsiz Fixtür')
+                      }
                     } else {
                       setSelectedData(null)
+                      setFileName('') // Seçim kaldırıldığında dosya adını da temizle
                     }
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
@@ -260,6 +426,13 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                         <div className="font-medium">Tüm Oyuncular ({selectedData.count} oyuncu)</div>
                         <div className="text-xs text-gray-500 mt-1">
                           Tüm oyuncu listesi JSON formatında kaydedilecek
+                        </div>
+                      </div>
+                    ) : selectedType === 'fixtures' && selectedData.isPending ? (
+                      <div>
+                        <div className="font-medium">{selectedData.name} ({selectedData.playerCount} oyuncu)</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Başlamayı bekleyen fikstür - Maç başlatıldığında nasıl görünüyorsa o formatta kaydedilecek
                         </div>
                       </div>
                     ) : (
