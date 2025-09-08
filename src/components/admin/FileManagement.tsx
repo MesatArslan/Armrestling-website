@@ -65,19 +65,35 @@ export const FileManagement: React.FC = () => {
     type: 'players' | 'tournaments' | 'fixtures'
     description?: string
     data: any
-  }) => {
+  } | Array<{
+    name: string
+    type: 'players' | 'tournaments' | 'fixtures'
+    description?: string
+    data: any
+  }>) => {
     setIsSubmitting(true)
     setError('')
     setSuccess('')
 
     try {
-      const result = await fileManager.saveFile(fileData)
-      if (result.success) {
-        setSuccess('Dosya başarıyla kaydedildi!')
+      const payloads = Array.isArray(fileData) ? fileData : [fileData]
+      let successCount = 0
+      let lastError = ''
+      for (const payload of payloads) {
+        const result = await fileManager.saveFile(payload)
+        if (result.success) {
+          successCount++
+        } else {
+          lastError = result.error || 'Dosya kaydedilirken hata oluştu'
+        }
+      }
+      if (successCount > 0) {
+        setSuccess(successCount > 1 ? `${successCount} dosya başarıyla kaydedildi!` : 'Dosya başarıyla kaydedildi!')
         setShowUploadModal(false)
-        loadUserLimits() // Limit bilgilerini ve dosya listesini yenile
-      } else {
-        setError(result.error || 'Dosya kaydedilirken hata oluştu')
+        loadUserLimits()
+      }
+      if (payloads.length > successCount) {
+        setError(lastError || 'Bazı dosyalar kaydedilemedi')
       }
     } catch (err) {
       setError('Beklenmeyen bir hata oluştu')

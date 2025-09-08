@@ -132,7 +132,7 @@ const Tournaments = () => {
     });
   };
 
-  // One-shot initial sync on page entry to show saved data
+  // One-shot initial sync on page entry to show saved data (pending fixtures import support handled in Matches import logic)
   useEffect(() => {
     if (isLoading || hasInitialSync) return;
     // players
