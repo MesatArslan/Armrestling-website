@@ -161,16 +161,11 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     if (!scrollToPlayerId) return;
     const container = scrollContainerRef.current;
     if (!container) return;
-    // Ensure we land at the very bottom so the newly added row is fully visible
-    // Use a two-step approach in case virtualization delays rendering
-    const t1 = window.setTimeout(() => {
-      container.scrollTo({ top: container.scrollHeight, behavior: 'auto' });
-      const t2 = window.setTimeout(() => {
-        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-      }, 60);
-      return () => window.clearTimeout(t2);
-    }, 60);
-    return () => window.clearTimeout(t1);
+    // Smoothly scroll to bottom so the newly added row is fully visible
+    const timer = window.setTimeout(() => {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    }, 80);
+    return () => window.clearTimeout(timer);
   }, [scrollToPlayerId]);
 
   // Persist custom weight ranges to localStorage
