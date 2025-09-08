@@ -668,7 +668,32 @@ const Players = () => {
           <div className="backdrop-blur-md bg-white/90 p-6 rounded-2xl w-full max-w-lg mx-4 shadow-2xl border border-gray-200">
             <div className="mb-4">
               <h2 className="text-2xl font-bold text-gray-900">{t('players.importExcel')}</h2>
-              <p className="mt-2 text-sm text-gray-600 whitespace-pre-line">{t('players.importExcelNote')}</p>
+              <div className="mt-3 text-sm text-gray-700 space-y-3">
+                <p className="text-gray-600">Excel dosyanızdaki başlıkları şu alanlarla eşleştiriyoruz:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Ad → <span className="font-semibold">Ad</span></li>
+                  <li>Soyad → <span className="font-semibold">Soyad</span></li>
+                  <li>Kilo → <span className="font-semibold">Kilo</span> (ondalık kabul edilir: 70,5 gibi)</li>
+                  <li>Kol Tercihi → <span className="font-semibold">Kol Tercihi</span> (sağ / sol / sağ,sol → Sağ,Sol)</li>
+                  <li>Cinsiyet → <span className="font-semibold">Cinsiyet</span> (Erkek/Kadın)</li>
+                  <li>Doğum Tarihi → <span className="font-semibold">Doğum Tarihi</span> (yyyy-aa-gg, gg.aa.yyyy veya Excel tarih)</li>
+                  <li>Adı ve Soyadı → <span className="font-semibold">Ad</span> ve <span className="font-semibold">Soyad</span> olarak otomatik ayrılır.</li>
+                </ul>
+                <p className="text-gray-600">Tanımadığımız başlıklar otomatik olarak yeni bir sütun olarak eklenir. Boş satırlar atlanır.</p>
+                <div className="rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-600">
+                  <div className="font-semibold text-gray-800 mb-1">Örnek başlık satırı</div>
+                  <div className="overflow-x-auto">
+                    <div className="inline-grid grid-cols-6 gap-2">
+                      <span className="px-2 py-1 bg-gray-50 rounded">Ad</span>
+                      <span className="px-2 py-1 bg-gray-50 rounded">Soyad</span>
+                      <span className="px-2 py-1 bg-gray-50 rounded">Kilo</span>
+                      <span className="px-2 py-1 bg-gray-50 rounded">Kol Tercihi</span>
+                      <span className="px-2 py-1 bg-gray-50 rounded">Cinsiyet</span>
+                      <span className="px-2 py-1 bg-gray-50 rounded">Doğum Tarihi</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="mt-5 flex justify-end gap-3">
               <button

@@ -55,6 +55,18 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   allPlayers = []
 }) => {
   const { t } = useTranslation();
+  const normalizeForFilter = (text: string): string =>
+    (text || '')
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, ' ');
   const [editingCell, setEditingCell] = useState<{ id: string; column: string } | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const [isWeightFilterOpen, setIsWeightFilterOpen] = useState(false);
@@ -145,33 +157,31 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   }, [customWeightRanges]);
 
   const getUniqueValues = (columnId: string) => {
-      let values = players
-        .map(player => player[columnId])
-        .filter((value): value is string | number => value !== undefined && value !== null)
-        .map(String)
-        .map(value => value.trim())
-        .filter(value => value !== '');
-    // Gender için çeviri uygula
-      if (columnId === 'gender') {
-        values = values.map(value => t(`players.${value}`));
-      }
-    // HandPreference için çeviri uygula
-      if (columnId === 'handPreference') {
-        values = values.map(value => t(`players.${value}`));
-      }
-    return [t('players.all'), ...Array.from(new Set(values))];
+    const map = new Map<string, string>(); // normalized -> display
+    for (const player of players) {
+      let raw = player[columnId];
+      if (raw === undefined || raw === null) continue;
+      let display = String(raw).trim();
+      if (!display) continue;
+      if (columnId === 'gender') display = t(`players.${display}`);
+      if (columnId === 'handPreference') display = t(`players.${display}`);
+      const norm = normalizeForFilter(display);
+      if (!map.has(norm)) map.set(norm, display);
+    }
+    return [t('players.all'), ...Array.from(map.values())];
   };
 
   // Build counts for values shown in the filter menu
   const getValueCounts = (columnId: string) => {
-    const counts = new Map<string, number>();
+    const counts = new Map<string, number>(); // normalized -> count
     for (const p of players) {
       let raw: any = p[columnId];
       if (raw === undefined || raw === null || String(raw).trim() === '') continue;
-      let key = String(raw).trim();
-      if (columnId === 'gender') key = t(`players.${key}`);
-      if (columnId === 'handPreference') key = t(`players.${key}`);
-      counts.set(key, (counts.get(key) || 0) + 1);
+      let display = String(raw).trim();
+      if (columnId === 'gender') display = t(`players.${display}`);
+      if (columnId === 'handPreference') display = t(`players.${display}`);
+      const norm = normalizeForFilter(display);
+      counts.set(norm, (counts.get(norm) || 0) + 1);
     }
     return counts;
   };
@@ -183,20 +193,25 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
 
   const handleFilterChange = (columnId: string, value: string) => {
     // Gender ve handPreference için ters çeviri
-    let filterValue = value;
+    if (value === t('players.all')) {
+      setColumnFilters(prev => ({ ...prev, [columnId]: null }));
+      return;
+    }
     if (columnId === 'gender') {
-      if (value === t('players.male')) filterValue = 'male';
-      if (value === t('players.female')) filterValue = 'female';
+      const code = value === t('players.male') ? 'male' : value === t('players.female') ? 'female' : null;
+      setColumnFilters(prev => ({ ...prev, [columnId]: code }));
+      return;
     }
     if (columnId === 'handPreference') {
-      if (value === t('players.left')) filterValue = 'left';
-      if (value === t('players.right')) filterValue = 'right';
-      if (value === t('players.both')) filterValue = 'both';
+      let code: any = null;
+      if (value === t('players.left')) code = 'left';
+      else if (value === t('players.right')) code = 'right';
+      else if (value === t('players.both')) code = 'both';
+      setColumnFilters(prev => ({ ...prev, [columnId]: code }));
+      return;
     }
-    setColumnFilters(prev => ({
-      ...prev,
-      [columnId]: filterValue === t('players.all') ? null : filterValue.trim()
-    }));
+    // Other columns: store normalized value for case-insensitive filtering
+    setColumnFilters(prev => ({ ...prev, [columnId]: normalizeForFilter(value) }));
   };
 
   const handleDeletePlayer = useCallback((playerId: string) => {
@@ -422,7 +437,10 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
 
       const matchesColumnFilters = Object.entries(columnFilters).every(([columnId, filterValue]) => {
         if (filterValue === null) return true;
-        return String(player[columnId]).trim() === filterValue;
+        if (columnId === 'gender' || columnId === 'handPreference') {
+          return String(player[columnId]).trim() === String(filterValue);
+        }
+        return normalizeForFilter(String(player[columnId])) === String(filterValue);
       });
 
       return matchesSearch && matchesWeight && matchesColumnFilters;
@@ -681,6 +699,27 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     return 'table-cell';
   };
 
+  const getColumnWidthClass = (columnId: string) => {
+    switch (columnId) {
+      case 'name':
+        return 'w-56 min-w-[14rem]';
+      case 'surname':
+        return 'w-48 min-w-[12rem]';
+      case 'city':
+        return 'w-48 min-w-[12rem]';
+      case 'birthday':
+        return 'w-40 min-w-[10rem]';
+      case 'handPreference':
+        return 'w-44 min-w-[11rem]';
+      case 'gender':
+        return 'w-40 min-w-[10rem]';
+      case 'weight':
+        return 'w-28 min-w-[7rem]';
+      default:
+        return 'w-44 min-w-[11rem]';
+    }
+  };
+
   return (
     <div
       ref={scrollContainerRef}
@@ -708,7 +747,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             style={getDragOffsetStyle(provided.draggableProps.style as React.CSSProperties | undefined, snapshot)}
-                            className={`p-3 w-48 bg-white border-b border-r ${snapshot.isDragging ? 'border-blue-500 border-2' : 'border-gray-100'} ${responsiveCls} sticky top-0 z-20`}
+                            className={`p-3 ${getColumnWidthClass(column.id)} bg-white border-b border-r ${snapshot.isDragging ? 'border-blue-500 border-2' : 'border-gray-100'} ${responsiveCls} sticky top-0 z-20`}
                           >
                               {column.visible && (
                                 <div className="flex flex-col">
@@ -763,7 +802,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                                   if (e.key === 'Escape') setOpenFilter(null);
                                                 }}
                                                 placeholder="Search options..."
-                                                className="w-full px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                                className="w-full px-3 py-2 text-sm text-gray-800 placeholder-gray-500 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                               />
                                             </div>
                                             <div className="py-2 max-h-64 overflow-y-auto">
@@ -787,7 +826,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                                   currentDisplay = String(stored);
                                                 }
                                                 const isSelected = currentDisplay === value;
-                                                  const count = value === allLabel ? players.length : (counts.get(value) || 0);
+                                                  const count = value === allLabel ? players.length : (counts.get(normalizeForFilter(value)) || 0);
                                                 return (
                                                   <button
                                                     key={value}
@@ -851,7 +890,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                         <div className="flex items-center justify-between mb-2">
                                           <div className="text-sm font-semibold text-gray-800">Weight range</div>
                                           <div className="text-xs text-gray-600">
-                                            {currentWeightMatches} matches
+                                            {currentWeightMatches} oyuncu
                                           </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
@@ -1055,7 +1094,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                 return (
                   <td
                     key={column.id}
-                    className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls}`}
+                    className={`px-3 py-2 whitespace-nowrap text-sm sm:text-base border-r border-gray-100 bg-white/70 ${responsiveCls} ${getColumnWidthClass(column.id)}`}
                     onClick={() => handleCellClick(player.id, column.id, player[column.id])}
                   >
                     {renderCellContent(player, column)}
