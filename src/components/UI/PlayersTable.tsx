@@ -483,7 +483,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleHandPreferenceChange(player.id, 'left')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all duration-200 ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md font-medium text-sm transition-all duration-200 ${
                 isLeftSelected
                   ? 'bg-blue-500 text-white shadow-md hover:bg-blue-600'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
@@ -502,7 +502,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
             </button>
             <button
               onClick={() => handleHandPreferenceChange(player.id, 'right')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all duration-200 ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md font-medium text-sm transition-all duration-200 ${
                 isRightSelected
                   ? 'bg-green-500 text-white shadow-md hover:bg-green-600'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'

@@ -5,6 +5,7 @@ import { XMarkIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import TournamentCard from '../components/UI/TournamentCard';
+import ActionsMenu from '../components/UI/ActionsMenu';
 import TemplateSelectionModal from '../components/UI/TemplateSelectionModal';
 import ConfirmationModal from '../components/UI/ConfirmationModal';
 import type { Tournament as StorageTournament, WeightRange } from '../storage/schemas';
@@ -743,42 +744,28 @@ const Tournaments = () => {
               <p className="text-base text-gray-500 mt-1">{t('tournaments.totalTournaments')}: {tournaments.length}</p>
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
-            <button
-              onClick={() => setIsImportModalOpen(true)}
-              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-            >
-              Turnuva İçe Aktar
-            </button>
-              
-            <button
-              onClick={handleClearAllTournamentData}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-            >
-              {t('tournaments.clearAllData')}
-            </button>
-            <button
-              onClick={handleOpenTemplateModal}
-              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-            >
-              {t('tournaments.useTemplate')}
-            </button>
-            <button
-              onClick={() => {
-                setIsEditMode(false);
-                setEditingTournamentId(null);
-                setNewTournamentName('');
-                setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
-                setCreateTournamentGenderFilter('male');
-                setCreateTournamentHandPreferenceFilter(null);
-                setCreateTournamentBirthYearMin(null);
-                setCreateTournamentBirthYearMax(null);
-                setIsCreateModalOpen(true);
-              }}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-            >
-              {t('tournaments.createTournament')}
-            </button>
-          </div>
+              <ActionsMenu
+                items={[
+                  { id: 'import', label: 'Turnuva İçe Aktar', onClick: () => setIsImportModalOpen(true) },
+                  { id: 'use-template', label: t('tournaments.useTemplate'), onClick: handleOpenTemplateModal },
+                  { id: 'create', label: t('tournaments.createTournament'), onClick: () => {
+                    setIsEditMode(false);
+                    setEditingTournamentId(null);
+                    setNewTournamentName('');
+                    setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
+                    setCreateTournamentGenderFilter('male');
+                    setCreateTournamentHandPreferenceFilter(null);
+                    setCreateTournamentBirthYearMin(null);
+                    setCreateTournamentBirthYearMax(null);
+                    setIsCreateModalOpen(true);
+                  } },
+                  { id: 'clear-all', label: t('tournaments.clearAllData'), onClick: handleClearAllTournamentData },
+                ]}
+                buttonLabel={t('common.actions') ?? 'Actions'}
+                iconOnly={true}
+                ariaLabel={t('common.actions') ?? 'Actions'}
+              />
+            </div>
         </div>
         
         {/* Tournaments List */}

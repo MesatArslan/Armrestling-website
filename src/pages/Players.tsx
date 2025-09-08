@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { PlusIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+// Removed specific heroicon button icons after consolidating actions into a menu
 import * as XLSX from 'xlsx';
 import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
 import type { Player } from '../types';
 import PlayersTable from '../components/UI/PlayersTable';
+import ActionsMenu from '../components/UI/ActionsMenu';
 import ImportNotificationModal from '../components/UI/ImportNotificationModal';
 import ConfirmationModal from '../components/UI/ConfirmationModal';
 import { PlayersStorage, type Column, type ExtendedPlayer, defaultColumns } from '../utils/playersStorage';
@@ -19,7 +20,6 @@ const Players = () => {
   const [playersState, setPlayersState] = useState<ExtendedPlayer[]>([]);
   const [columnsState, setColumnsState] = useState<Column[]>(defaultColumns);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isAddColumnModalOpen, setIsAddColumnModalOpen] = useState(false);
   const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
   const [importModal, setImportModal] = useState<{
@@ -46,6 +46,7 @@ const Players = () => {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
+  const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
 
   const stableEqual = (a: any, b: any) => {
     try { return JSON.stringify(a) === JSON.stringify(b); } catch { return false; }
@@ -110,7 +111,6 @@ const Players = () => {
       const updatedColumns = PlayersStorage.addColumn(columnsState, newColumn);
       setColumnsNormalized(updatedColumns);
       setNewColumnName('');
-      setIsAddColumnModalOpen(false);
       
       // Save the updated columns to the repository so they persist
       saveColumns(updatedColumns);
@@ -506,44 +506,19 @@ const Players = () => {
                   </svg>
                 </div>
               </div>
-              <button
-                onClick={handleAddTestPlayers}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-              >
-                <UserPlusIcon className="w-5 h-5" />
-                {t('players.addTestPlayers')}
-              </button>
-              <button
-                onClick={handleClearAllData}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-              >
-                {t('players.clearAllData')}
-              </button>
-              <button
-                onClick={() => setIsAddColumnModalOpen(true)}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-              >
-                <PlusIcon className="w-5 h-5" />
-                {t('players.addColumn')}
-              </button>
-              <button
-                onClick={() => setIsManageColumnsOpen(true)}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-400 to-indigo-600 text-white rounded-lg shadow hover:from-indigo-500 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-              >
-                {t('players.manageColumns')}
-              </button>
-              <button
-                onClick={handleExportJSON}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-lg shadow hover:from-purple-500 hover:to-purple-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-              >
-                {t('players.exportJSON')}
-              </button>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-lg shadow hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200 text-sm sm:text-base font-semibold"
-              >
-                {t('players.importJSON')}
-              </button>
+              <ActionsMenu
+                items={[
+                  { id: 'add-test', label: t('players.addTestPlayers'), onClick: handleAddTestPlayers },
+                  { id: 'clear', label: t('players.clearAllData'), onClick: handleClearAllData },
+                  { id: 'manage-col', label: t('players.manageColumns'), onClick: () => setIsManageColumnsOpen(true) },
+                  { id: 'export-json', label: t('players.exportJSON'), onClick: handleExportJSON },
+                  { id: 'import-json', label: t('players.importJSON'), onClick: () => fileInputRef.current?.click() },
+                  { id: 'import-excel', label: t('players.importExcel'), onClick: () => setIsExcelImportOpen(true) },
+                ]}
+                buttonLabel={t('common.actions') ?? 'Actions'}
+                iconOnly={true}
+                ariaLabel={t('common.actions') ?? 'Actions'}
+              />
               <input
                 ref={fileInputRef}
                 type="file"
@@ -551,13 +526,6 @@ const Players = () => {
                 style={{ display: 'none' }}
                 onChange={handleImportJSON}
               />
-              <button
-                onClick={() => excelInputRef.current?.click()}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-teal-400 to-teal-600 text-white rounded-lg shadow hover:from-teal-500 hover:to-teal-700 transition-all duration-200 text-sm sm:text-base font-semibold"
-                title={t('players.importExcelNote')}
-              >
-                {t('players.importExcel')}
-              </button>
               <input
                 ref={excelInputRef}
                 type="file"
@@ -566,7 +534,6 @@ const Players = () => {
                 onChange={handleImportExcelChange}
               />
             </div>
-            <p className="mt-1 text-xs text-gray-500 italic">{t('players.importExcelNote')}</p>
           </div>
 
           {/* Players Table */}
@@ -611,36 +578,6 @@ const Players = () => {
         </div>
       </div>
 
-      {/* Add Column Modal */}
-      {isAddColumnModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="backdrop-blur-lg bg-white/90 p-8 rounded-2xl w-full max-w-sm mx-4 shadow-2xl border border-gray-200">
-            <h2 className="text-2xl font-bold mb-6 text-gray-900">{t('players.addNewColumn')}</h2>
-            <input
-              type="text"
-              value={newColumnName}
-              onChange={(e) => setNewColumnName(e.target.value)}
-              placeholder={t('players.columnName')}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-base text-gray-700 placeholder-gray-400 transition-all duration-200 mb-4 shadow"
-            />
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setIsAddColumnModalOpen(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 text-base font-semibold rounded-lg"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={handleAddColumn}
-                className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-base font-semibold"
-              >
-                {t('common.add')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Manage Columns Modal */}
       {isManageColumnsOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -648,6 +585,22 @@ const Players = () => {
             <div className="mb-4">
               <h2 className="text-2xl font-bold text-gray-900">{t('players.manageColumns')}</h2>
               <p className="mt-1 text-sm text-gray-500">{t('players.manageColumnsDescription')}</p>
+            </div>
+            <div className="mb-4 flex gap-2 items-center">
+              <input
+                type="text"
+                value={newColumnName}
+                onChange={(e) => setNewColumnName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddColumn(); }}
+                placeholder={t('players.columnName')}
+                className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm text-gray-700 placeholder-gray-400 transition-all duration-200"
+              />
+              <button
+                onClick={handleAddColumn}
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
+              >
+                {t('players.addNewColumn')}
+              </button>
             </div>
             <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
               {columns
@@ -703,6 +656,35 @@ const Players = () => {
                 className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-base font-semibold rounded-lg"
               >
                 {t('common.close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Excel Modal */}
+      {isExcelImportOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="backdrop-blur-md bg-white/90 p-6 rounded-2xl w-full max-w-lg mx-4 shadow-2xl border border-gray-200">
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">{t('players.importExcel')}</h2>
+              <p className="mt-2 text-sm text-gray-600 whitespace-pre-line">{t('players.importExcelNote')}</p>
+            </div>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => setIsExcelImportOpen(false)}
+                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-base font-semibold rounded-lg"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={() => {
+                  setIsExcelImportOpen(false);
+                  excelInputRef.current?.click();
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg shadow hover:from-teal-600 hover:to-teal-700 transition-all duration-200 text-base font-semibold"
+              >
+                {t('players.importExcel')}
               </button>
             </div>
           </div>
