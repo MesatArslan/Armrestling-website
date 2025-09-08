@@ -195,6 +195,49 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     loadAvailableData()
   }, [isOpen, selectedType])
 
+  // Auto filename for fixtures selection (bundle naming)
+  React.useEffect(() => {
+    if (selectedType !== 'fixtures') return
+    const count = selectedFixtures.length
+    if (count === 0) {
+      setFileName('')
+      return
+    }
+    if (count === 1) {
+      const fx = selectedFixtures[0]
+      setFileName((fx?.name || 'İsimsiz Fixtür').toString())
+      return
+    }
+    try {
+      const date = new Date()
+      const yyyy = date.getFullYear()
+      const mm = String(date.getMonth() + 1).padStart(2, '0')
+      const dd = String(date.getDate()).padStart(2, '0')
+      const dateStr = `${yyyy}-${mm}-${dd}`
+
+      // If all fixtures belong to same tournament, use its name; else generic label
+      const tournamentNames = Array.from(new Set(selectedFixtures.map((f: any) => f.tournamentName || '')))
+      const sameTournament = tournamentNames.length === 1 && tournamentNames[0]
+      const tournamentName = sameTournament ? tournamentNames[0] : 'Fixtür Paketi'
+
+      // Derive weight names and sort
+      const weightNames = selectedFixtures
+        .map((f: any) => f.weightRangeName || (f.weightRange ? `${f.weightRange.min}-${f.weightRange.max} kg` : ''))
+        .filter((n: string) => n && n.trim().length > 0)
+      const uniqueWeights = Array.from(new Set(weightNames))
+      uniqueWeights.sort((a: string, b: string) => a.localeCompare(b, 'tr'))
+      const firstWeight = uniqueWeights[0] || ''
+      const lastWeight = uniqueWeights[uniqueWeights.length - 1] || ''
+
+      const middle = firstWeight && lastWeight ? `(${firstWeight} … ${lastWeight})` : ''
+      const name = `${tournamentName} – ${middle} – ${count} fikstür – ${dateStr}`.replace(/\s+–\s+\s*/g, ' – ').trim()
+      setFileName(name)
+    } catch {
+      // Fallback generic name
+      setFileName(`Fixtür Paketi (${selectedFixtures.length})`)
+    }
+  }, [selectedType, selectedFixtures])
+
   // Tüm türler için sayıları yükle
   const loadAllDataCounts = async () => {
     try {
@@ -291,20 +334,51 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedType === 'fixtures') {
-      // Multiple fixture support
+      // Multiple fixture support (auto-behavior)
       const fixturesToSave = selectedFixtures.length > 0 ? selectedFixtures : (selectedData ? [selectedData] : [])
       if (fixturesToSave.length === 0) return
 
-      const payloads = fixturesToSave.map((fixture: any) => {
+      if (fixturesToSave.length > 1) {
+        // Save as single bundle file automatically
+        const normalized = fixturesToSave.map((fixture: any) => {
+          const tournamentMeta = getTournamentMeta(fixture.tournamentId, fixture.tournamentName)
+          const base = {
+            fixture,
+            tournament: tournamentMeta,
+            weightRange: fixture.weightRangeId ? {
+              id: fixture.weightRangeId,
+              name: fixture.weightRangeName || '',
+              min: fixture.weightRange?.min,
+              max: fixture.weightRange?.max
+            } : undefined
+          }
+          if (fixture.isPending) {
+            return { ...base, isPending: true, readyToStart: true }
+          }
+          return base
+        })
+
+        const payload = {
+          name: (fileName.trim() || `Fixtür Paketi (${fixturesToSave.length})`),
+          type: 'fixtures' as const,
+          description: description.trim() || undefined,
+          data: {
+            bundle: true,
+            fixtures: normalized,
+          }
+        }
+        onSubmit(payload)
+        return
+      } else {
+        // Single fixture save
+        const fixture = fixturesToSave[0]
         const tournamentMeta = getTournamentMeta(fixture.tournamentId, fixture.tournamentName)
-        // Fikstürler için özel data hazırlama
         let dataToSave: any
         if (fixture.isPending) {
           dataToSave = {
             fixture,
             isPending: true,
             readyToStart: true,
-            // Importer'ın turnuvayı oluşturabilmesi için metadata ekle
             tournament: tournamentMeta,
             weightRange: fixture.weightRangeId ? {
               id: fixture.weightRangeId,
@@ -326,16 +400,15 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           }
         }
 
-        return {
+        const payload = {
           name: (fixture?.name || fileName || 'İsimsiz Fixtür').toString().trim(),
           type: 'fixtures' as const,
           description: description.trim() || undefined,
           data: dataToSave,
         }
-      })
-
-      onSubmit(payloads)
-      return
+        onSubmit(payload)
+        return
+      }
     }
 
     if (!fileName.trim() || !selectedData) return
@@ -344,6 +417,90 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     let dataToSave = selectedData
     if (selectedType === 'players' && selectedData.id === 'all_players') {
       dataToSave = selectedData.data // Tüm oyuncu listesini al
+    }
+
+    // Turnuvalar için: turnuva + bu turnuvaya ait fixtürler + bu fixtürlerdeki oyuncular
+    if (selectedType === 'tournaments') {
+      try {
+        const allFixtureIds = matchesRepo.getIndex()
+        const allFixtures = allFixtureIds.map(id => matchesRepo.getFixture(id)).filter(Boolean) as any[]
+        const tournamentFixtures = allFixtures.filter(f => f.tournamentId === selectedData.id)
+
+        // Oyuncuları topla (görünür kolonlarla)
+        const visibleColumns = playersRepo.getColumns().filter((col: any) => col.visible)
+        const visibleColumnIds = visibleColumns.map((col: any) => col.id)
+        const playerMap = new Map<string, any>()
+        // 1) Aktif fixtürlerdeki oyuncular
+        tournamentFixtures.forEach(fx => {
+          (fx.players || []).forEach((p: any) => {
+            if (!playerMap.has(p.id)) {
+              const newPlayer: any = { id: p.id }
+              visibleColumnIds.forEach((columnId: string) => {
+                if (p.hasOwnProperty(columnId)) newPlayer[columnId] = p[columnId]
+              })
+              playerMap.set(p.id, newPlayer)
+            }
+          })
+        })
+        // 2) Turnuva kurallarına göre HENÜZ BAŞLAMAMIŞ (potansiyel) oyuncular
+        try {
+          const allPlayers = playersRepo.getAll()
+          const genderFilter = selectedData.genderFilter || null
+          const handFilter = selectedData.handPreferenceFilter || null
+          const birthYearMin = selectedData.birthYearMin || null
+          const birthYearMax = selectedData.birthYearMax || null
+          const ranges = Array.isArray(selectedData.weightRanges) ? selectedData.weightRanges : []
+          for (const wr of ranges) {
+            const excluded: string[] = wr.excludedPlayerIds || []
+            const eligible = allPlayers.filter((pl: any) => {
+              if (excluded.includes(pl.id)) return false
+              const w = Number(pl.weight || 0)
+              const within = w >= Number(wr.min || 0) && w <= Number(wr.max || 0)
+              const genderOk = !genderFilter || pl.gender === genderFilter
+              const handOk = !handFilter || pl.handPreference === handFilter || pl.handPreference === 'both'
+              let birthOk = true
+              if (pl.birthday && (birthYearMin || birthYearMax)) {
+                const y = new Date(pl.birthday).getFullYear()
+                if (birthYearMin && y < birthYearMin) birthOk = false
+                if (birthYearMax && y > birthYearMax) birthOk = false
+              }
+              return within && genderOk && handOk && birthOk
+            })
+            eligible.forEach((p: any) => {
+              if (!playerMap.has(p.id)) {
+                const np: any = { id: p.id }
+                visibleColumnIds.forEach((cid: string) => { if (p.hasOwnProperty(cid)) np[cid] = p[cid] })
+                playerMap.set(p.id, np)
+              }
+            })
+          }
+        } catch {}
+
+        dataToSave = {
+          version: '1.0.0',
+          exportDate: new Date().toISOString(),
+          tournament: selectedData,
+          players: Array.from(playerMap.values()),
+          fixtures: tournamentFixtures.map(fx => ({
+            id: fx.id,
+            name: fx.name,
+            tournamentId: fx.tournamentId,
+            tournamentName: fx.tournamentName,
+            weightRangeId: fx.weightRangeId,
+            weightRangeName: fx.weightRangeName,
+            weightRange: fx.weightRange,
+            players: fx.players || [],
+            playerCount: fx.playerCount,
+            status: fx.status,
+            createdAt: fx.createdAt,
+            lastUpdated: fx.lastUpdated,
+            activeTab: fx.activeTab,
+          }))
+        }
+      } catch (e) {
+        // Fallback: sadece turnuvayı kaydet
+        dataToSave = selectedData
+      }
     }
 
     // Fikstürler için özel data hazırlama
@@ -372,41 +529,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     onSubmit(fileData)
   }
 
-  const handleSaveFixturesAsBundle = () => {
-    if (selectedType !== 'fixtures') return
-    const fixturesToSave = selectedFixtures.length > 0 ? selectedFixtures : (selectedData ? [selectedData] : [])
-    if (fixturesToSave.length === 0) return
-
-    const normalized = fixturesToSave.map((fixture: any) => {
-      const tournamentMeta = getTournamentMeta(fixture.tournamentId, fixture.tournamentName)
-      const base = {
-        fixture,
-        tournament: tournamentMeta,
-        weightRange: fixture.weightRangeId ? {
-          id: fixture.weightRangeId,
-          name: fixture.weightRangeName || '',
-          min: fixture.weightRange?.min,
-          max: fixture.weightRange?.max
-        } : undefined
-      }
-      if (fixture.isPending) {
-        return { ...base, isPending: true, readyToStart: true }
-      }
-      return base
-    })
-
-    const payload = {
-      name: (fileName.trim() || `Fixtür Paketi (${fixturesToSave.length})`),
-      type: 'fixtures' as const,
-      description: description.trim() || undefined,
-      data: {
-        bundle: true,
-        fixtures: normalized,
-      }
-    }
-
-    onSubmit(payload)
-  }
+  // handleSaveFixturesAsBundle removed; auto behavior handled in handleSubmit
 
   const handleClose = () => {
     setFileName('')
@@ -484,7 +607,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                         <label key={index} className="flex items-center gap-2 text-sm text-gray-700">
                           <input
                             type="checkbox"
-                            className="h-4 w-4"
+                            className="appearance-none w-4 h-4 rounded-full border border-gray-300 checked:bg-blue-600 checked:border-blue-600 focus:ring-2 focus:ring-blue-500"
                             checked={checked}
                             onChange={(e) => {
                               if (e.target.checked) {
@@ -504,34 +627,65 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                     })}
                   </div>
                 ) : (
-                  <select
-                    value={selectedData ? JSON.stringify(selectedData) : ''}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        const selectedItem = JSON.parse(e.target.value)
-                        setSelectedData(selectedItem)
-                        
-                        // Dosya adını otomatik olarak input'a yaz
-                        if (selectedType === 'players' && selectedItem.id === 'all_players') {
-                          setFileName('Tüm Oyuncular')
-                        } else if (selectedType === 'tournaments') {
-                          setFileName(selectedItem.name || 'İsimsiz Turnuva')
-                        }
-                      } else {
-                        setSelectedData(null)
-                        setFileName('') // Seçim kaldırıldığında dosya adını da temizle
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                    required
-                  >
-                    <option value="">Seçiniz...</option>
-                    {availableData.map((item, index) => (
-                      <option key={index} value={JSON.stringify(item)}>
-                        {getDataPreview(item)}
-                      </option>
-                    ))}
-                  </select>
+                  <>
+                    {selectedType === 'players' ? (
+                      <div className="space-y-2 max-h-64 overflow-auto border border-gray-200 rounded-md p-2">
+                        {availableData.length === 0 ? (
+                          <div className="text-sm text-gray-500">Seçilebilir oyuncu verisi yok</div>
+                        ) : (
+                          availableData.map((item, index) => {
+                            const checked = Boolean(selectedData && (selectedData.id === item.id))
+                            return (
+                              <label key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                                <input
+                                  type="checkbox"
+                                  className="appearance-none w-4 h-4 rounded-full border border-gray-300 checked:bg-blue-600 checked:border-blue-600 focus:ring-2 focus:ring-blue-500"
+                                  checked={checked}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedData(item)
+                                      const count = typeof item.count === 'number' ? item.count : Array.isArray(item.data) ? item.data.length : 0
+                                      setFileName(`Tüm Oyuncular (${count} oyuncu)`)
+                                    } else {
+                                      setSelectedData(null)
+                                      setFileName('')
+                                    }
+                                  }}
+                                />
+                                <span>{getDataPreview(item)}</span>
+                              </label>
+                            )
+                          })
+                        )}
+                      </div>
+                    ) : (
+                      // tournaments - single select (radio) but visually similar to fixtures list
+                      <div className="space-y-2 max-h-64 overflow-auto border border-gray-200 rounded-md p-2">
+                        {availableData.length === 0 ? (
+                          <div className="text-sm text-gray-500">Seçilebilir turnuva yok</div>
+                        ) : (
+                          availableData.map((item, index) => {
+                            const checked = Boolean(selectedData && selectedData.id === item.id)
+                            return (
+                              <label key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                                <input
+                                  type="radio"
+                                  name="tournament_select"
+                                  className="appearance-none w-4 h-4 rounded-full border border-gray-300 checked:bg-blue-600 checked:border-blue-600 focus:ring-2 focus:ring-blue-500"
+                                  checked={checked}
+                                  onChange={() => {
+                                    setSelectedData(item)
+                                    setFileName(item.name || 'İsimsiz Turnuva')
+                                  }}
+                                />
+                                <span>{getDataPreview(item)}</span>
+                              </label>
+                            )
+                          })
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ) : (
@@ -550,7 +704,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             {/* Dosya Adı */}
             <div>
               <label htmlFor="fileName" className="block text-sm font-medium text-gray-700 mb-2">
-                Dosya Adı *
+                Dosya Adı (zorunlu)
               </label>
               <input
                 type="text"
@@ -563,37 +717,17 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               />
             </div>
 
-            {/* Açıklama */}
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                Açıklama (İsteğe bağlı)
-              </label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
-                placeholder="Bu dosya hakkında kısa bir açıklama..."
-              />
-            </div>
+            {/* Açıklama alanı kaldırıldı (kullanıcıya gösterilmiyor) */}
 
-            {/* Önizleme */}
-            {selectedData && (
+            {/* Önizleme - sadece fixtürler için göster */}
+            {selectedType === 'fixtures' && selectedData && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Seçilen Veri Önizlemesi
                 </label>
                 <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
                   <div className="text-sm text-gray-600">
-                    {selectedType === 'players' && selectedData.id === 'all_players' ? (
-                      <div>
-                        <div className="font-medium">Tüm Oyuncular ({selectedData.count} oyuncu)</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          Tüm oyuncu listesi JSON formatında kaydedilecek
-                        </div>
-                      </div>
-                    ) : selectedType === 'fixtures' && selectedData.isPending ? (
+                    {selectedData.isPending ? (
                       <div>
                         <div className="font-medium">{selectedData.name} ({selectedData.playerCount} oyuncu)</div>
                         <div className="text-xs text-gray-500 mt-1">
@@ -609,17 +743,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             )}
 
             {/* Butonlar */}
-            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
-              {selectedType === 'fixtures' && (
-                <button
-                  type="button"
-                  onClick={handleSaveFixturesAsBundle}
-                  disabled={isSubmitting || selectedFixtures.length === 0}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center order-2 sm:order-1"
-                >
-                  Hepsini Tek Dosyada Kaydet
-                </button>
-              )}
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
               <button
                 type="button"
                 onClick={handleClose}
@@ -639,7 +763,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 }
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center order-1 sm:order-2"
               >
-                {isSubmitting ? 'Kaydediliyor...' : (selectedType === 'fixtures' ? 'Seçilenleri Ayrı Ayrı Kaydet' : 'Dosyayı Kaydet')}
+                {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
               </button>
             </div>
           </form>

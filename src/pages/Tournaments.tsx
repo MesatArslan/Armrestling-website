@@ -14,6 +14,8 @@ import { useTournaments } from '../hooks/useTournaments';
 import { usePlayers } from '../hooks/usePlayers';
 import { useMatches } from '../hooks/useMatches';
 import { createTournamentFromTemplate, type TournamentTemplate } from '../utils/tournamentTemplates';
+import { PlayersStorage } from '../utils/playersStorage';
+import { MatchesStorage } from '../utils/matchesStorage';
 
 type UITournament = Omit<StorageTournament, 'isExpanded'> & { isExpanded: boolean };
 
@@ -79,6 +81,12 @@ const Tournaments = () => {
 
   // Template Selection Modal States
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+
+  // Import Tournament Package Modal
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Confirmation Modal States
   const [confirmationModal, setConfirmationModal] = useState<{
@@ -303,6 +311,92 @@ const Tournaments = () => {
   // JSON Export
 
   // JSON Import
+  const resetImportState = () => {
+    setIsImportModalOpen(false);
+    setImportFile(null);
+    setIsImporting(false);
+    setImportMessage(null);
+  };
+
+  const handleImportTournamentPackage = async () => {
+    if (!importFile) return;
+    setIsImporting(true);
+    setImportMessage(null);
+    try {
+      const text = await importFile.text();
+      const pkg = JSON.parse(text);
+      if (!pkg || !pkg.tournament) throw new Error('Geçersiz turnuva paketi');
+
+      // Merge players
+      try {
+        const existing = PlayersStorage.getPlayers();
+        const byId = new Map(existing.map((p: any) => [p.id, p]));
+        const cols = PlayersStorage.getColumns().filter((c: any) => c.visible).map((c: any) => c.id);
+        const incoming = Array.isArray(pkg.players) ? pkg.players : [];
+        for (const p of incoming) {
+          if (!byId.has(p.id)) {
+            const np: any = { id: p.id };
+            cols.forEach((cid: string) => { if (p.hasOwnProperty(cid)) np[cid] = p[cid]; });
+            byId.set(p.id, np);
+          }
+        }
+        PlayersStorage.savePlayers(Array.from(byId.values()));
+      } catch {}
+
+      // Merge tournament
+      const baseTournaments = (repoTournaments as StorageTournament[]) as any[];
+      const exists = baseTournaments.find(t => t.id === pkg.tournament.id);
+      let merged: any[];
+      if (!exists) {
+        const tNew = {
+          id: pkg.tournament.id,
+          name: pkg.tournament.name,
+          weightRanges: (pkg.tournament.weightRanges || []).map((wr: any) => ({
+            id: wr.id, name: wr.name, min: wr.min, max: wr.max, excludedPlayerIds: [],
+          })),
+          genderFilter: pkg.tournament.genderFilter ?? null,
+          handPreferenceFilter: pkg.tournament.handPreferenceFilter ?? null,
+          birthYearMin: pkg.tournament.birthYearMin ?? null,
+          birthYearMax: pkg.tournament.birthYearMax ?? null,
+          isExpanded: false,
+        };
+        merged = [...baseTournaments, tNew];
+      } else {
+        exists.genderFilter = pkg.tournament.genderFilter ?? exists.genderFilter ?? null;
+        exists.handPreferenceFilter = pkg.tournament.handPreferenceFilter ?? exists.handPreferenceFilter ?? null;
+        exists.birthYearMin = pkg.tournament.birthYearMin ?? exists.birthYearMin ?? null;
+        exists.birthYearMax = pkg.tournament.birthYearMax ?? exists.birthYearMax ?? null;
+        const wrIds = new Set(exists.weightRanges.map((wr: any) => wr.id));
+        for (const wr of (pkg.tournament.weightRanges || [])) {
+          if (!wrIds.has(wr.id)) exists.weightRanges.push({ ...wr, excludedPlayerIds: [] });
+        }
+        merged = baseTournaments.map(t => t.id === exists.id ? exists : t);
+      }
+      saveTournaments(merged as any);
+
+      // Import fixtures (pending: kept as pending; active: add to Matches)
+      try {
+        const list = Array.isArray(pkg.fixtures) ? pkg.fixtures : [];
+        for (const fx of list) {
+          // Normalize to entry format used by Matches importer
+          const entry = { fixture: fx, tournament: pkg.tournament, weightRange: { id: fx.weightRangeId, name: fx.weightRangeName, min: fx.weightRange?.min, max: fx.weightRange?.max } };
+          // If active, add to Matches; if not, leave for Tournaments
+          if (fx.status === 'active' || fx.status === 'paused') {
+            const existing = MatchesStorage.getFixtureById(fx.id);
+            if (!existing) {
+              MatchesStorage.addFixture({ ...fx } as any);
+            }
+          }
+        }
+      } catch {}
+
+      setImportMessage({ type: 'success', text: 'Turnuva paketi içe aktarıldı' });
+    } catch (e: any) {
+      setImportMessage({ type: 'error', text: e?.message || 'Turnuva paketi içe aktarılamadı' });
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   const handleCreateTournament = () => {
     if (!newTournamentName.trim()) return;
@@ -649,6 +743,12 @@ const Tournaments = () => {
               <p className="text-base text-gray-500 mt-1">{t('tournaments.totalTournaments')}: {tournaments.length}</p>
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-lg shadow hover:from-green-500 hover:to-green-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+            >
+              Turnuva İçe Aktar
+            </button>
               
             <button
               onClick={handleClearAllTournamentData}
@@ -763,6 +863,44 @@ const Tournaments = () => {
         </div>
       </div>
     </div>
+
+    {/* Import Tournament Modal */}
+    {isImportModalOpen && (
+      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9998] overflow-hidden" onClick={() => setIsImportModalOpen(false)}>
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg max-h-[85vh] overflow-y-auto mx-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Turnuva İçe Aktar</h3>
+              <p className="text-sm text-gray-600">Turnuva paketi JSON dosyasını seçin</p>
+            </div>
+            <button onClick={() => setIsImportModalOpen(false)} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200">
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+          </div>
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Turnuva Paketi (.json)</label>
+              <input type="file" accept=".json" onChange={(e) => setImportFile(e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer border border-gray-300 rounded-lg" />
+            </div>
+            {importFile && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800"><span className="font-semibold">Seçilen dosya:</span> {importFile.name}</p>
+                <p className="text-xs text-blue-600 mt-1">Boyut: {(importFile.size / 1024).toFixed(2)} KB</p>
+              </div>
+            )}
+            {importMessage && (
+              <div className={`p-3 rounded-lg border ${importMessage.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+                <p className="text-sm">{importMessage.text}</p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-3">
+            <button onClick={resetImportState} className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm font-semibold rounded-lg" disabled={isImporting}>İptal</button>
+            <button onClick={handleImportTournamentPackage} disabled={!importFile || isImporting} className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2">{isImporting ? 'İçe Aktarılıyor...' : 'İçe Aktar'}</button>
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* Top-right export progress indicator */}
     {isExporting && (

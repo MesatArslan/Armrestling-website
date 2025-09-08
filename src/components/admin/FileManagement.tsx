@@ -4,6 +4,9 @@ import LoadingSpinner from '../UI/LoadingSpinner'
 import Toast from '../UI/Toast'
 import { FileUploadModal } from './FileUploadModal'
 import { SupabaseFileManagerService, type SavedFile } from '../../services/supabaseFileManagerService'
+import { PlayersStorage } from '../../utils/playersStorage'
+import { TournamentsStorage } from '../../utils/tournamentsStorage'
+import { MatchesStorage } from '../../utils/matchesStorage'
 
 export const FileManagement: React.FC = () => {
   const [files, setFiles] = useState<SavedFile[]>([])
@@ -131,6 +134,183 @@ export const FileManagement: React.FC = () => {
     }
   }
 
+  const handleImportFile = async (file: SavedFile) => {
+    try {
+      setError('')
+      setSuccess('')
+      // Normalize file data (handle legacy/empty/string cases)
+      let raw: any = file.file_data
+      if (raw == null) {
+        try {
+          const fresh = await fileManager.getFile(file.id)
+          raw = fresh?.file_data ?? null
+        } catch {}
+      }
+      if (typeof raw === 'string') {
+        try { raw = JSON.parse(raw) } catch {}
+      }
+      // Some records may wrap payload under `data`
+      let data: any = raw && raw.data != null ? raw.data : raw
+      if (data == null) {
+        setError('Dosya verisi boş')
+        return
+      }
+
+      // Helpers
+      const ensureTournament = (entry: any) => {
+        try {
+          const tournaments = TournamentsStorage.getTournaments()
+          const tId = entry?.tournament?.id || entry?.fixture?.tournamentId
+          const tName = entry?.tournament?.name || entry?.fixture?.tournamentName || 'Turnuva'
+          const wrId = entry?.weightRange?.id || entry?.fixture?.weightRangeId
+          const wrName = entry?.weightRange?.name || entry?.fixture?.weightRangeName || ''
+          const wrMin = entry?.weightRange?.min ?? entry?.fixture?.weightRange?.min ?? 0
+          const wrMax = entry?.weightRange?.max ?? entry?.fixture?.weightRange?.max ?? 0
+          const birthYearMin = entry?.tournament?.birthYearMin ?? null
+          const birthYearMax = entry?.tournament?.birthYearMax ?? null
+          const genderFilter = entry?.tournament?.genderFilter ?? null
+          const handPreferenceFilter = entry?.tournament?.handPreferenceFilter ?? null
+          if (!tId || !wrId) return
+          let t = tournaments.find((x: any) => x.id === tId)
+          if (!t) {
+            t = {
+              id: tId,
+              name: tName,
+              weightRanges: [{ id: wrId, name: wrName, min: wrMin, max: wrMax, excludedPlayerIds: [] }],
+              birthYearMin, birthYearMax, genderFilter, handPreferenceFilter,
+              isExpanded: false,
+            }
+            TournamentsStorage.saveTournaments([...tournaments, t] as any)
+          } else {
+            let changed = false
+            if (!t.weightRanges.some((wr: any) => wr.id === wrId)) {
+              t.weightRanges.push({ id: wrId, name: wrName, min: wrMin, max: wrMax, excludedPlayerIds: [] })
+              changed = true
+            }
+            if (birthYearMin !== null) { t.birthYearMin = birthYearMin; changed = true }
+            if (birthYearMax !== null) { t.birthYearMax = birthYearMax; changed = true }
+            if (genderFilter !== null) { t.genderFilter = genderFilter; changed = true }
+            if (handPreferenceFilter !== null) { t.handPreferenceFilter = handPreferenceFilter; changed = true }
+            if (changed) {
+              TournamentsStorage.saveTournaments(tournaments.map((x: any) => x.id === t!.id ? t! : x) as any)
+            }
+          }
+        } catch {}
+      }
+
+      const addMissingPlayers = (players: any[]) => {
+        try {
+          const existing = PlayersStorage.getPlayers()
+          const existingIds = new Set(existing.map((p: any) => p.id))
+          const cols = PlayersStorage.getColumns().filter((c: any) => c.visible).map((c: any) => c.id)
+          const toAdd: any[] = []
+          for (const p of players || []) {
+            if (!existingIds.has(p.id)) {
+              const np: any = { id: p.id }
+              cols.forEach((cid: string) => { if (p.hasOwnProperty(cid)) np[cid] = p[cid] })
+              toAdd.push(np)
+            }
+          }
+          if (toAdd.length > 0) {
+            PlayersStorage.savePlayers([...existing, ...toAdd])
+          }
+        } catch {}
+      }
+
+      if (file.type === 'players') {
+        // data is an array of players
+        addMissingPlayers(Array.isArray(data) ? data : [])
+        setSuccess('Oyuncular içe aktarıldı')
+        return
+      }
+
+      if (file.type === 'tournaments') {
+        // Expect tournament package: { tournament, players, fixtures }
+        if (Array.isArray(data.players)) addMissingPlayers(data.players)
+        if (data.tournament) {
+          const tournaments = TournamentsStorage.getTournaments()
+          const exists = tournaments.find((t: any) => t.id === data.tournament.id)
+          if (!exists) {
+            const tNew = {
+              id: data.tournament.id,
+              name: data.tournament.name,
+              weightRanges: (data.tournament.weightRanges || []).map((wr: any) => ({ id: wr.id, name: wr.name, min: wr.min, max: wr.max, excludedPlayerIds: [] })),
+              genderFilter: data.tournament.genderFilter ?? null,
+              handPreferenceFilter: data.tournament.handPreferenceFilter ?? null,
+              birthYearMin: data.tournament.birthYearMin ?? null,
+              birthYearMax: data.tournament.birthYearMax ?? null,
+              isExpanded: false,
+            }
+            TournamentsStorage.saveTournaments([...tournaments, tNew] as any)
+          } else {
+            let changed = false
+            const wrIds = new Set(exists.weightRanges.map((wr: any) => wr.id))
+            for (const wr of (data.tournament.weightRanges || [])) {
+              if (!wrIds.has(wr.id)) { exists.weightRanges.push({ ...wr, excludedPlayerIds: [] }); changed = true }
+            }
+            const fields = ['genderFilter','handPreferenceFilter','birthYearMin','birthYearMax'] as const
+            for (const f of fields) { if (data.tournament[f] != null && exists[f] !== data.tournament[f]) { (exists as any)[f] = data.tournament[f]; changed = true } }
+            if (changed) TournamentsStorage.saveTournaments(tournaments.map((t: any) => t.id === exists.id ? exists : t) as any)
+          }
+        }
+        if (Array.isArray(data.fixtures)) {
+          for (const fx of data.fixtures) {
+            const entry = { fixture: fx, tournament: data.tournament, weightRange: { id: fx.weightRangeId, name: fx.weightRangeName, min: fx.weightRange?.min, max: fx.weightRange?.max } }
+            ensureTournament(entry)
+            if (fx.status === 'active' || fx.status === 'paused') {
+              const existing = MatchesStorage.getFixtureById(fx.id)
+              if (!existing) MatchesStorage.addFixture({ ...fx } as any)
+            }
+          }
+        }
+        setSuccess('Turnuva paketi içe aktarıldı')
+        return
+      }
+
+      if (file.type === 'fixtures') {
+        // fixtures can be bundle or single
+        const entries: any[] = []
+        if (data && data.bundle && Array.isArray(data.fixtures)) {
+          for (const raw of data.fixtures) {
+            if (raw && raw.fixture) entries.push(raw)
+            else if (raw && raw.id && raw.name && raw.players) entries.push({ fixture: raw })
+            else if (raw && raw.version && raw.fixture) entries.push(raw)
+          }
+        } else if (data && data.fixture) {
+          entries.push(data)
+        } else if (data && data.id && data.name && data.players) {
+          entries.push({ fixture: data })
+        } else {
+          entries.push(data)
+        }
+
+        // Add missing players from fixtures
+        try {
+          const allPlayers: any[] = []
+          for (const e of entries) { (e.fixture?.players || []).forEach((p: any) => allPlayers.push(p)) }
+          addMissingPlayers(allPlayers)
+        } catch {}
+
+        for (const entry of entries) {
+          ensureTournament(entry)
+          const isPending = entry.isPending && entry.fixture && entry.readyToStart
+          if (!isPending) {
+            const fx = entry.fixture
+            if (!MatchesStorage.getFixtureById(fx.id)) {
+              MatchesStorage.addFixture({ ...fx } as any)
+            }
+          }
+        }
+        setSuccess('Fixtür(ler) içe aktarıldı')
+        return
+      }
+
+      setError('Bilinmeyen dosya türü')
+    } catch (e: any) {
+      setError(e?.message || 'İçe aktarma başarısız')
+    }
+  }
+
   const getTypeLabel = (type: string) => {
     switch (type) {
       case 'players': return 'Oyuncular'
@@ -210,6 +390,18 @@ export const FileManagement: React.FC = () => {
       header: 'İşlemler',
       render: (file) => (
         <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleImportFile(file)
+            }}
+            className="inline-flex items-center text-green-600 hover:text-green-700 hover:underline mr-3 focus:outline-none focus:ring-2 focus:ring-green-300 rounded"
+          >
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            İçe Aktar
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation()
