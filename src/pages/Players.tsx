@@ -47,6 +47,8 @@ const Players = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
   const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
+  const [scrollKey, setScrollKey] = useState(0);
+  const [lastAddedId, setLastAddedId] = useState<string | null>(null);
 
   const stableEqual = (a: any, b: any) => {
     try { return JSON.stringify(a) === JSON.stringify(b); } catch { return false; }
@@ -547,8 +549,10 @@ const Players = () => {
             onColumnsChange={setColumnsNormalized}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            showAddRow={true}
+            showAddRow={false}
             showDeleteColumn={true}
+            scrollToBottomTrigger={scrollKey}
+            scrollToPlayerId={lastAddedId || undefined}
           />
         </div>
         
@@ -556,8 +560,9 @@ const Players = () => {
         <div className="mt-6 flex justify-start">
           <button
             onClick={() => {
+              const newId = uuidv4();
               const newPlayer: Player = {
-                id: uuidv4(),
+                id: newId,
                 name: '',
                 surname: '',
                 weight: 0,
@@ -569,6 +574,8 @@ const Players = () => {
               const next = [...playersState, newPlayer];
               setPlayersState(next);
               savePlayers(next as unknown as Player[]);
+              setScrollKey((k) => k + 1);
+              setLastAddedId(newId);
             }}
             className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-full hover:from-blue-500 hover:to-blue-700 transition-all duration-200 shadow-lg font-bold text-2xl"
             title={t('players.addRow')}

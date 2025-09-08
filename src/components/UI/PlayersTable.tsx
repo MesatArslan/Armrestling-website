@@ -39,6 +39,8 @@ interface PlayersTableProps {
   className?: string;
   showFilters?: boolean;
   allPlayers?: Array<{ id: string; name: string; surname: string }>;
+  scrollToBottomTrigger?: number;
+  scrollToPlayerId?: string;
 }
 
 const PlayersTable: React.FC<PlayersTableProps> = ({
@@ -52,7 +54,9 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   onDeletePlayer,
   className = "",
   showFilters = true,
-  allPlayers = []
+  allPlayers = [],
+  scrollToBottomTrigger,
+  scrollToPlayerId
 }) => {
   const { t } = useTranslation();
   const normalizeForFilter = (text: string): string =>
@@ -139,6 +143,35 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     window.addEventListener('resize', setSize);
     return () => window.removeEventListener('resize', setSize);
   }, []);
+
+  // Smooth scroll to bottom when triggered by parent (e.g., after adding a new row)
+  useEffect(() => {
+    if (scrollToBottomTrigger == null) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    // Delay to ensure new row is rendered
+    const id = window.setTimeout(() => {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    }, 50);
+    return () => window.clearTimeout(id);
+  }, [scrollToBottomTrigger]);
+
+  // Scroll to a specific player row when requested
+  useEffect(() => {
+    if (!scrollToPlayerId) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    // Ensure we land at the very bottom so the newly added row is fully visible
+    // Use a two-step approach in case virtualization delays rendering
+    const t1 = window.setTimeout(() => {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'auto' });
+      const t2 = window.setTimeout(() => {
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+      }, 60);
+      return () => window.clearTimeout(t2);
+    }, 60);
+    return () => window.clearTimeout(t1);
+  }, [scrollToPlayerId]);
 
   // Persist custom weight ranges to localStorage
   useEffect(() => {
@@ -1087,7 +1120,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
           {virtualPlayers.map((player, i) => {
             const globalIndex = startIndex + i;
             return (
-              <tr key={player.id} className="hover:bg-blue-50/60 transition-all duration-200 rounded-xl shadow-md" style={{ height: ROW_HEIGHT }}>
+              <tr id={`player-row-${player.id}`} key={player.id} className="hover:bg-blue-50/60 transition-all duration-200 rounded-xl shadow-md" style={{ height: ROW_HEIGHT }}>
                 <td className="w-8 px-1 py-2 text-sm sm:text-base font-semibold text-gray-700 bg-white/80 border-r border-gray-100 text-center rounded-l-xl">{globalIndex + 1}</td>
               {visibleColumns.map((column, visibleBodyIndex) => {
                 const responsiveCls = getResponsiveVisibilityClass(visibleBodyIndex);
