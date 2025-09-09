@@ -104,7 +104,7 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
                   setDraggingIdx(index);
                   e.dataTransfer.setData('text/plain', String(index));
                 }}
-                onDragEnter={(e) => {
+                onDragEnter={() => {
                   if (draggingIdx === null || draggingIdx === index) return;
                   // Swap positions in local order for smooth placeholder effect
                   setOrderIds(prev => {

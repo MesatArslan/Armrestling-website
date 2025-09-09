@@ -23,6 +23,7 @@ export interface FileStats {
 export class SupabaseFileManagerService {
   private formatFileSize(data: any): number {
     try {
+      // Use the same formatting as downloadFile to ensure consistent size calculation
       const jsonString = JSON.stringify(data, null, 2)
       const blob = new Blob([jsonString], { type: 'application/json' })
       return blob.size
@@ -40,12 +41,21 @@ export class SupabaseFileManagerService {
     data: any
   }): Promise<{ success: boolean; error?: string; fileId?: string }> {
     try {
+      // Calculate file size on client side to ensure consistency with download size
+      const calculatedFileSize = this.formatFileSize(fileData.data)
+      
+      // Check file size limit before sending to database
+      if (calculatedFileSize > 10485760) { // 10MB
+        return { success: false, error: 'Dosya boyutu 10MB limitini aşıyor' }
+      }
+
       // Tek RPC çağrısı ile tüm işlemleri yap (3 istek yerine 1 istek)
       const { data, error } = await supabase.rpc('save_file_optimized', {
         p_name: fileData.name,
         p_type: fileData.type,
         p_file_data: fileData.data,
-        p_description: fileData.description || null
+        p_description: fileData.description || null,
+        p_file_size: calculatedFileSize
       })
 
       if (error) {
@@ -160,7 +170,15 @@ export class SupabaseFileManagerService {
       const updateData: any = { ...updates }
 
       if (updates.file_data) {
-        updateData.file_size = this.formatFileSize(updates.file_data)
+        // Use consistent file size calculation
+        const calculatedFileSize = this.formatFileSize(updates.file_data)
+        
+        // Check file size limit
+        if (calculatedFileSize > 10485760) { // 10MB
+          return { success: false, error: 'Dosya boyutu 10MB limitini aşıyor' }
+        }
+        
+        updateData.file_size = calculatedFileSize
       }
 
       const { error } = await supabase
