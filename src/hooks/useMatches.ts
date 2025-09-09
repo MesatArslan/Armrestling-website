@@ -65,6 +65,11 @@ export function useMatches() {
     try { matchesRepo.removeFixture(id); } catch {}
   }, [matchesRepo]);
 
+  const reorderFixtures = useCallback((nextIds: string[]) => {
+    setState(prev => ({ ...prev, fixtureIds: [...nextIds] }));
+    try { matchesRepo.setIndex(nextIds); } catch {}
+  }, [matchesRepo]);
+
   const setActiveFixtureId = useCallback((id: string | null) => {
     setState(prev => ({ ...prev, activeFixtureId: id }));
     try { matchesRepo.setActiveFixtureId(id); } catch {}
@@ -93,7 +98,8 @@ export function useMatches() {
     setActiveFixtureId,
     setMatchStatus,
     getMatchStatus,
-  }), [state, upsertFixture, removeFixture, setActiveFixtureId, setMatchStatus, getMatchStatus]);
+    reorderFixtures,
+  }), [state, upsertFixture, removeFixture, setActiveFixtureId, setMatchStatus, getMatchStatus, reorderFixtures]);
 }
 
 

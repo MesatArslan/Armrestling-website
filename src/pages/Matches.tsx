@@ -45,7 +45,7 @@ const Matches = () => {
   const [searchParams] = useSearchParams();
   const processedSearchRef = useRef<string | null>(null);
   const [players, setPlayers] = useState<UIPlayer[]>([]);
-  const { fixtureIds, fixtures: fixturesMap, activeFixtureId, isLoading, upsertFixture, removeFixture, setActiveFixtureId } = useMatches();
+  const { fixtureIds, fixtures: fixturesMap, activeFixtureId, isLoading, upsertFixture, removeFixture, setActiveFixtureId, reorderFixtures } = useMatches();
   const fixtures: Fixture[] = fixtureIds.map(id => fixturesMap[id]).filter(Boolean) as Fixture[];
   const activeFixture: Fixture | null = activeFixtureId ? (fixturesMap[activeFixtureId] as Fixture) : null;
   const [desiredTab, setDesiredTab] = useState<'active' | 'completed' | 'rankings' | null>(null);
@@ -1227,6 +1227,7 @@ const Matches = () => {
                 onFixtureSelect={handleFixtureSelect}
                 onFixtureClose={handleFixtureClose}
                 activeFixtureId={activeFixture?.id}
+                onReorder={(ids) => reorderFixtures(ids)}
               />
               <div className="mt-4 flex justify-end gap-3">
                 {/* İçe Aktar butonu her zaman görünür */}

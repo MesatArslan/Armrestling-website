@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Fixture } from '../../storage/schemas';
 
@@ -7,11 +7,15 @@ interface ActiveFixturesNavProps {
   onFixtureSelect: (fixtureId: string) => void;
   onFixtureClose: (fixtureId: string, fixtureName: string) => void;
   activeFixtureId?: string | null;
+  onReorder?: (nextIds: string[]) => void;
 }
 
-const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtureSelect, onFixtureClose, activeFixtureId }) => {
+const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtureSelect, onFixtureClose, activeFixtureId, onReorder }) => {
   const { t } = useTranslation();
   const activeFixtureRef = useRef<HTMLDivElement | null>(null);
+  const [orderIds, setOrderIds] = useState<string[]>([]);
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   useEffect(() => {
     if (activeFixtureRef.current) {
@@ -22,6 +26,11 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
       });
     }
   }, [activeFixtureId]);
+
+  // Sync local order with incoming fixtures
+  useEffect(() => {
+    setOrderIds(fixtures.map(f => f.id));
+  }, [fixtures.map(f => f.id).join('|')]);
 
   const handleFixtureClose = (fixtureId: string) => {
     const fixture = fixtures.find(f => f.id === fixtureId);
@@ -71,8 +80,12 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
 
       {/* Modern Cards Grid */}
       <div className="-mx-2 mt-2 sm:mt-3">
-        <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth px-2">
-          {fixtures.map((fixture) => {
+        <div
+          className={`flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth px-2 ${draggingIdx !== null ? 'cursor-grabbing' : ''}`}
+          onDragOver={(e) => e.preventDefault()}
+        >
+          {orderIds.map((id, index) => {
+            const fixture = fixtures.find(f => f.id === id)!;
             const isActive = activeFixtureId === fixture.id;
             const statusConfig = {
               completed: { bg: 'from-green-400 to-emerald-500' },
@@ -85,7 +98,36 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
               <div 
                 key={fixture.id} 
                 ref={isActive ? activeFixtureRef : null}
-                className="shrink-0 w-72 sm:w-80 md:w-96 snap-start"
+                className={`shrink-0 w-72 sm:w-80 md:w-96 snap-start transform-gpu will-change-transform transition-transform duration-300 ease-in-out ${draggingIdx === index ? 'opacity-90 scale-[0.98]' : ''} ${dragOverIdx === index && draggingIdx !== null ? 'translate-x-0.5' : ''}`}
+                draggable={Boolean(onReorder)}
+                onDragStart={(e) => {
+                  setDraggingIdx(index);
+                  e.dataTransfer.setData('text/plain', String(index));
+                }}
+                onDragEnter={(e) => {
+                  if (draggingIdx === null || draggingIdx === index) return;
+                  // Swap positions in local order for smooth placeholder effect
+                  setOrderIds(prev => {
+                    const next = [...prev];
+                    const [moved] = next.splice(draggingIdx, 1);
+                    next.splice(index, 0, moved);
+                    setDraggingIdx(index);
+                    setDragOverIdx(index);
+                    return next;
+                  });
+                }}
+                onDragEnd={() => {
+                  if (onReorder) onReorder(orderIds);
+                  setDraggingIdx(null);
+                  setDragOverIdx(null);
+                }}
+                onDrop={(e) => {
+                  if (!onReorder) return;
+                  e.preventDefault();
+                  setDraggingIdx(null);
+                  setDragOverIdx(null);
+                  onReorder(orderIds);
+                }}
               >
                 <div
                   onClick={() => onFixtureSelect(fixture.id)}
