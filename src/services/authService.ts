@@ -659,7 +659,18 @@ export class AuthService {
   // Super Admin için kullanıcı sil
   static async deleteUser(userId: string): Promise<ApiResponse<void>> {
     try {
-      // Önce kullanıcıyı profiles tablosundan sil
+      // 1. Kullanıcının dosyalarını sil (kurumu olmayan kullanıcılar için)
+      const { error: deleteFilesError } = await supabase
+        .from('saved_files')
+        .delete()
+        .eq('user_id', userId)
+        .is('institution_id', null) // Sadece kurumu olmayan kullanıcıların dosyalarını sil
+
+      if (deleteFilesError) {
+        return { success: false, error: `Kullanıcı dosyaları silinemedi: ${deleteFilesError.message}` }
+      }
+
+      // 2. Kullanıcıyı profiles tablosundan sil
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
@@ -669,7 +680,7 @@ export class AuthService {
         return { success: false, error: `Kullanıcı profili silinemedi: ${profileError.message}` }
       }
 
-      // Auth kullanıcısını da sil (trigger otomatik olarak silecek)
+      // 3. Auth kullanıcısını da sil (trigger otomatik olarak silecek)
       return { success: true }
     } catch (error) {
       console.error('Delete user error:', error)

@@ -56,6 +56,10 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
           <span className="text-red-600 font-medium">
             Bu işlem geri alınamaz!
           </span>
+          <br />
+          <span className="text-orange-600 font-medium">
+            Kullanıcıya ait tüm dosyalar da silinecektir!
+          </span>
         </>
       )
     }
