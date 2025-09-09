@@ -8,7 +8,6 @@ interface CreateUserModalProps {
     email: string
     password: string
     username: string
-    expiration_date: string
   }) => void
   isSubmitting: boolean
 }
@@ -22,17 +21,18 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    username: '',
-    expiration_date: ''
+    username: ''
   })
   const [showPassword, setShowPassword] = useState(false)
 
-  // Non-institution user modal defaults
+  // Modal açıldığında formu sıfırla
   useEffect(() => {
     if (isOpen) {
-      if (!formData.expiration_date) {
-        setCreateUserExpirationInMonths(1)
-      }
+      setFormData({
+        email: '',
+        password: '',
+        username: ''
+      })
     }
   }, [isOpen])
 
@@ -49,41 +49,6 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     onSubmit(formData)
   }
 
-  // Tarih yardımcıları
-  const toDateTimeLocalString = (date: Date): string => {
-    const pad = (n: number) => `${n}`.padStart(2, '0')
-    const y = date.getFullYear()
-    const m = pad(date.getMonth() + 1)
-    const d = pad(date.getDate())
-    const hh = pad(date.getHours())
-    const mm = pad(date.getMinutes())
-    return `${y}-${m}-${d}T${hh}:${mm}`
-  }
-
-  const addMonths = (base: Date, months: number): Date => {
-    const d = new Date(base)
-    const day = d.getDate()
-    d.setMonth(d.getMonth() + months)
-    // Ay sonu taşmalarını düzelt
-    if (d.getDate() < day) {
-      d.setDate(0)
-    }
-    return d
-  }
-
-  const setCreateUserExpirationInMonths = (months: number) => {
-    const base = new Date()
-    const newExp = addMonths(base, months)
-    setFormData(prev => ({ ...prev, expiration_date: toDateTimeLocalString(newExp) }))
-  }
-
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('tr-TR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
 
   if (!isOpen) return null
 
@@ -153,18 +118,14 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             </div>
 
             <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-gray-700">Son Kullanma Tarihi</label>
-              <div className="mt-1">
-                                    <div className="flex flex-wrap gap-2">
-                      <button type="button" onClick={() => setCreateUserExpirationInMonths(1)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">+1 ay</button>
-                      <button type="button" onClick={() => setCreateUserExpirationInMonths(3)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">+3 ay</button>
-                      <button type="button" onClick={() => setCreateUserExpirationInMonths(6)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">+6 ay</button>
-                      <button type="button" onClick={() => setCreateUserExpirationInMonths(12)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">+12 ay</button>
-                    </div>
-                <div className="mt-3 text-sm">
-                  <div className="text-gray-500">Seçilen son kullanma tarihi</div>
-                  <div className="mt-0.5 font-medium text-gray-900">
-                    {formData.expiration_date ? formatDate(formData.expiration_date) : '-'}
+              <div className="mt-1 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-sm text-blue-800">
+                    <div className="font-medium">Kurum Aboneliği</div>
+                    <div className="text-blue-600">Bu kullanıcının son kullanma tarihi kurumunuzun abonelik süresi ile belirlenir.</div>
                   </div>
                 </div>
               </div>

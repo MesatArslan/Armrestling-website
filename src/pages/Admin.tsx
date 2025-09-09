@@ -70,7 +70,7 @@ export const Admin: React.FC = () => {
     }
   }
 
-  const handleCreateUser = async (payload: { email: string; password: string; username: string; expiration_date: string }) => {
+  const handleCreateUser = async (payload: { email: string; password: string; username: string }) => {
     if (!user?.institution_id) {
       setError('Kurum bilgisi bulunamadı')
       return

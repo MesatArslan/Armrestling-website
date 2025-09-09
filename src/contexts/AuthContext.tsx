@@ -60,6 +60,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setProfile(null)
         setSessionExpiryTime(null)
       } else {
+        // Abonelik süresi kontrolü
+        const { subscriptionExpired, userExpired } = validationResult.data
+        if (subscriptionExpired || userExpired) {
+          console.log('Abonelik süresi doldu, otomatik çıkış yapılıyor')
+          localStorage.removeItem('custom_session_token')
+          await supabase.auth.signOut()
+          clearAuthTokens()
+          setUser(null)
+          setProfile(null)
+          setSessionExpiryTime(null)
+          return
+        }
+
         // Session geçerli, süresini kontrol et
         const now = new Date()
         if (sessionExpiryTime && now >= sessionExpiryTime) {
@@ -300,6 +313,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             
             if (!validationResult.success || !validationResult.data?.isValid) {
               // Custom session geçersizse localStorage'dan sil ve Supabase session'ını da temizle
+              localStorage.removeItem('custom_session_token')
+              await supabase.auth.signOut()
+              clearAuthTokens()
+              setUser(null)
+              setProfile(null)
+              return
+            }
+
+            // Abonelik süresi kontrolü
+            const { subscriptionExpired, userExpired } = validationResult.data
+            if (subscriptionExpired || userExpired) {
+              console.log('Auth state change: Abonelik süresi doldu, session temizleniyor')
               localStorage.removeItem('custom_session_token')
               await supabase.auth.signOut()
               clearAuthTokens()

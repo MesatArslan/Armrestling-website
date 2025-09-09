@@ -41,6 +41,42 @@ export class SupabaseFileManagerService {
     data: any
   }): Promise<{ success: boolean; error?: string; fileId?: string }> {
     try {
+      // Önce abonelik durumunu kontrol et
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { success: false, error: 'Kullanıcı oturumu bulunamadı' }
+      }
+
+      // Kullanıcı profilini al ve Super Admin kontrolü yap
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError) {
+        return { success: false, error: 'Kullanıcı profili alınamadı' }
+      }
+
+      // Super Admin için abonelik kontrolü yapma
+      if (profileData?.role === 'super_admin') {
+        // Super Admin için direkt devam et
+      } else {
+        // Diğer kullanıcılar için abonelik durumunu kontrol et
+        const { data: statusData, error: statusError } = await supabase.rpc('check_user_subscription_status', {
+          p_user_id: user.id
+        })
+
+        if (statusError) {
+          return { success: false, error: 'Abonelik durumu kontrol edilemedi' }
+        }
+
+        const isActive = statusData?.[0]?.is_active || false
+        if (!isActive) {
+          return { success: false, error: 'Aboneliğinizin süresi dolmuş. Dosya kaydedemezsiniz.' }
+        }
+      }
+
       // Calculate file size on client side to ensure consistency with download size
       const calculatedFileSize = this.formatFileSize(fileData.data)
       

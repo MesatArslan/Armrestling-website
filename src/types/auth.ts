@@ -40,7 +40,6 @@ export interface CreateUserForm {
   username: string;
   email: string;
   password: string;
-  expiration_date?: string;
 }
 
 export interface LoginForm {

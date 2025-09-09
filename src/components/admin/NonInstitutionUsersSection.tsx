@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useMemo } from 'react'
 import type { Profile } from '../../types/auth'
 import { DataTable, type Column } from '../UI/DataTable'
 
@@ -15,6 +15,24 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
   onDeleteUser,
   onCreateUser
 }) => {
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expired'>('all')
+
+  // Kullanıcıları duruma göre filtrele
+  const filteredUsers = useMemo(() => {
+    const now = new Date()
+    return users.filter(user => {
+      const isExpired = user.expiration_date ? new Date(user.expiration_date) < now : false
+      
+      switch (statusFilter) {
+        case 'active':
+          return !isExpired
+        case 'expired':
+          return isExpired
+        default:
+          return true
+      }
+    })
+  }, [users, statusFilter])
   // Tarih yardımcıları
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('tr-TR', {
@@ -106,6 +124,22 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
       )
     },
     {
+      key: 'status',
+      header: 'Durum',
+      render: (user) => {
+        const isExpired = user.expiration_date ? new Date(user.expiration_date) < new Date() : false
+        return (
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            isExpired 
+              ? 'bg-red-100 text-red-800' 
+              : 'bg-green-100 text-green-800'
+          }`}>
+            {isExpired ? 'Süresi Dolmuş' : 'Aktif'}
+          </span>
+        )
+      }
+    },
+    {
       key: 'created_at',
       header: 'Oluşturulma Tarihi',
       render: (user) => (
@@ -142,20 +176,36 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
     }
   ]
 
-  // Create user button filter
-  const createUserFilter = (
-    <button
-      onClick={onCreateUser}
-      className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow focus:outline-none focus:ring-2 focus:ring-green-300"
-    >
-      Yeni Kullanıcı Ekle
-    </button>
+  // Status filter component (kurum kısmındaki gibi)
+  const statusFilters = (
+    <div className="inline-flex bg-gray-100 rounded-lg p-1 self-start">
+      <button
+        type="button"
+        onClick={() => setStatusFilter('all')}
+        className={`px-3 py-1.5 text-xs rounded-md ${statusFilter === 'all' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+      >Tümü</button>
+      <button
+        type="button"
+        onClick={() => setStatusFilter('active')}
+        className={`px-3 py-1.5 text-xs rounded-md ${statusFilter === 'active' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+      >Aktif</button>
+      <button
+        type="button"
+        onClick={() => setStatusFilter('expired')}
+        className={`px-3 py-1.5 text-xs rounded-md ${statusFilter === 'expired' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+      >Süresi Dolmuş</button>
+      <button
+        type="button"
+        onClick={onCreateUser}
+        className="ml-2 inline-flex items-center px-3 py-1.5 text-xs rounded-md bg-green-600 text-white hover:bg-green-700"
+      >Yeni Kullanıcı Ekle</button>
+    </div>
   )
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
       <DataTable
-        data={users}
+        data={filteredUsers}
         columns={columns}
         searchPlaceholder="İsim veya email ara..."
         searchKeys={['username', 'email']}
@@ -164,12 +214,12 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
         maxHeight="calc(100vh - 350px)"
         emptyMessage="Bu sayfada kullanıcı bulunamadı"
         noResultsMessage="Aramanıza uygun kullanıcı bulunamadı"
-        filters={createUserFilter}
+        filters={statusFilters}
         headerContent={
           <div className="flex items-center gap-4">
             <h3 className="text-lg font-medium text-gray-900">Bireysel Kullanıcılar</h3>
             <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-              {users.length} kullanıcı
+              {filteredUsers.length} kullanıcı
             </span>
           </div>
         }

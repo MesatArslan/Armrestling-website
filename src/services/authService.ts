@@ -101,7 +101,7 @@ export class AuthService {
     }
   }
 
-  static async validateSession(): Promise<ApiResponse<{ isValid: boolean, userId?: string }>> {
+  static async validateSession(): Promise<ApiResponse<{ isValid: boolean, userId?: string, subscriptionExpired?: boolean, userExpired?: boolean }>> {
     try {
       // 1. Custom session token'ı localStorage'dan al
       const sessionToken = localStorage.getItem('custom_session_token')
@@ -110,8 +110,8 @@ export class AuthService {
         return { success: true, data: { isValid: false } }
       }
 
-      // 2. Custom session doğrulama
-      const { data: validationData, error: validationError } = await supabase.rpc('validate_user_session', {
+      // 2. Enhanced session doğrulama (abonelik kontrolü ile)
+      const { data: validationData, error: validationError } = await supabase.rpc('validate_user_session_with_subscription', {
         p_session_token: sessionToken
       })
 
@@ -124,15 +124,38 @@ export class AuthService {
 
       const isValid = validationData?.[0]?.is_valid || false
       const userId = validationData?.[0]?.user_id
+      const subscriptionExpired = validationData?.[0]?.subscription_expired || false
+      const userExpired = validationData?.[0]?.user_expired || false
 
       if (!isValid) {
         // Session geçersizse localStorage'dan sil
         localStorage.removeItem('custom_session_token')
       }
 
-      return { success: true, data: { isValid, userId } }
+      return { success: true, data: { isValid, userId, subscriptionExpired, userExpired } }
     } catch (error) {
       return { success: false, error: `Session doğrulama hatası: ${error}` }
+    }
+  }
+
+  // Kullanıcı abonelik durumunu kontrol et
+  static async checkUserSubscriptionStatus(userId: string): Promise<ApiResponse<{ isActive: boolean, subscriptionExpired: boolean, userExpired: boolean }>> {
+    try {
+      const { data: statusData, error: statusError } = await supabase.rpc('check_user_subscription_status', {
+        p_user_id: userId
+      })
+
+      if (statusError) {
+        return { success: false, error: `Abonelik durumu kontrol edilemedi: ${statusError.message}` }
+      }
+
+      const isActive = statusData?.[0]?.is_active || false
+      const subscriptionExpired = statusData?.[0]?.subscription_expired || false
+      const userExpired = statusData?.[0]?.user_expired || false
+
+      return { success: true, data: { isActive, subscriptionExpired, userExpired } }
+    } catch (error) {
+      return { success: false, error: `Abonelik durumu kontrol hatası: ${error}` }
     }
   }
 
