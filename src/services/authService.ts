@@ -296,7 +296,7 @@ export class AuthService {
 
   static async deleteInstitution(id: string): Promise<ApiResponse<void>> {
     try {
-      // Önce bu kuruma ait kullanıcıları kontrol et
+      // 1. Önce bu kuruma ait kullanıcıları kontrol et
       const { data: users, error: usersError } = await supabase
         .from('profiles')
         .select('id, email')
@@ -306,9 +306,18 @@ export class AuthService {
         return { success: false, error: `Kullanıcılar kontrol edilemedi: ${usersError.message}` }
       }
 
-      // Cascade delete: Önce kullanıcıları sil, sonra kurumu sil
+      // 2. Kuruma ait dosyaları sil
+      const { error: deleteFilesError } = await supabase
+        .from('saved_files')
+        .delete()
+        .eq('institution_id', id)
+
+      if (deleteFilesError) {
+        return { success: false, error: `Kurum dosyaları silinemedi: ${deleteFilesError.message}` }
+      }
+
+      // 3. Cascade delete: Kullanıcıları sil (trigger otomatik olarak auth.users'dan da silecek)
       if (users && users.length > 0) {
-        // Profiles tablosundan kullanıcıları sil (trigger otomatik olarak auth.users'dan da silecek)
         const { error: deleteUsersError } = await supabase
           .from('profiles')
           .delete()
@@ -319,7 +328,7 @@ export class AuthService {
         }
       }
 
-      // Kurumu sil
+      // 4. Kurumu sil
       const { error } = await supabase
         .from('institutions')
         .delete()

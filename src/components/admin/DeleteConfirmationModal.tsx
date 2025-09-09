@@ -44,7 +44,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
           </span>
           <br />
           <span className="text-orange-600 font-medium">
-            Kuruma ait tüm kullanıcılar da silinecektir!
+            Kuruma ait tüm kullanıcılar ve dosyalar da silinecektir!
           </span>
         </>
       )
