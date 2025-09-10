@@ -221,12 +221,12 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     <div className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 min-h-[100px] ${className}`}>
       {/* Tournament Header */}
       <div
-        className="p-4 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 transition-all duration-200 rounded-t-2xl min-h-[80px]"
+        className="p-6 cursor-pointer flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 transition-all duration-200 rounded-t-2xl min-h-[100px]"
         onClick={handleTournamentCardClick}
       >
         <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-            <UserGroupIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+            <UserGroupIcon className="w-6 h-6 text-white" />
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">{tournament.name}</h2>
@@ -235,13 +235,13 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-3 sm:gap-3">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onOpenBulkPDF && onOpenBulkPDF(tournament);
             }}
-            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
             title={t('tournamentCard.downloadPDF')}
           >
             {t('tournamentCard.downloadPDF')}
@@ -251,26 +251,26 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
               e.stopPropagation();
               onEdit(tournament);
             }}
-            className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
+            className="p-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
             title={t('tournamentCard.editTournament')}
           >
-            <PencilIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-200" />
+            <PencilIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(tournament.id);
             }}
-            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 group"
+            className="p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 group"
             title={t('tournamentCard.deleteTournament')}
           >
-            <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-200" />
+            <TrashIcon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
           </button>
           <div className="text-gray-400 transition-transform duration-200">
             {tournament.isExpanded ? (
-              <ChevronDownIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              <ChevronDownIcon className="w-6 h-6" />
             ) : (
-              <ChevronRightIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              <ChevronRightIcon className="w-6 h-6" />
             )}
           </div>
         </div>
@@ -278,7 +278,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
 
       {/* Expanded Content */}
       {tournament.isExpanded && (
-        <div className="border-t border-gray-200/50 p-4 sm:p-6 bg-gradient-to-br from-gray-50/50 to-white/50">
+        <div className="border-t border-gray-200/50 p-6 bg-gradient-to-br from-gray-50/50 to-white/50">
           {/* All devices: horizontal scroll list */}
           <div className="-mx-4 px-4">
             <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth">
@@ -467,7 +467,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
 
   return (
     <div
-      className={`relative bg-white/80 backdrop-blur-sm rounded-xl p-6 pb-8 border-2 transition-all duration-300 hover:shadow-lg cursor-pointer h-[300px] flex flex-col ${isSelected
+      className={`relative bg-white/80 backdrop-blur-sm rounded-xl p-6 pb-8 border-2 transition-all duration-300 hover:shadow-lg cursor-pointer h-[320px] flex flex-col ${isSelected
           ? 'border-blue-500 shadow-lg bg-blue-50/30'
           : 'border-gray-200/50 hover:border-blue-300/50'
         }`}
@@ -506,7 +506,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
             e.stopPropagation();
             onManagePlayers(weightRange.id);
           }}
-          className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${isSelected
+          className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 text-sm ${isSelected
               ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg'
               : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
             }`}
@@ -523,7 +523,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
               onStartTournament(tournament.id, weightRange.id);
             }}
             disabled={availablePlayers === 0}
-            className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${availablePlayers === 0
+            className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-sm ${availablePlayers === 0
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl'
               }`}
@@ -540,7 +540,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
             nav({ pathname: '/matches', search: `?tab=rankings&fixture=${existingFixture.id}` });
           }
             }}
-            className="w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl"
+            className="w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-sm bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl"
           >
             <TrophyIcon className="w-5 h-5" />
             {t('tournamentCard.showResults')}
@@ -554,7 +554,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
             nav({ pathname: '/matches', search: `?tab=active&fixture=${existingFixture.id}` });
           }
             }}
-            className="w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl"
+            className="w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl"
           >
             <PlayIcon className="w-5 h-5" />
             {t('tournamentCard.continueTournament')}
