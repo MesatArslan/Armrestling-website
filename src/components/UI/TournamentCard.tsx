@@ -283,7 +283,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           <div className="-mx-4 px-4">
             <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth">
               {tournament.weightRanges.map((weightRange) => (
-                <div key={weightRange.id} className="shrink-0 w-80 lg:w-96 snap-start">
+                <div key={weightRange.id} className="shrink-0 w-[295px] lg:w-96 snap-start">
                   <WeightRangeCard
                     weightRange={weightRange}
                     tournament={tournament}
@@ -467,7 +467,7 @@ const WeightRangeCard: React.FC<WeightRangeCardProps> = ({
 
   return (
     <div
-      className={`relative bg-white/80 backdrop-blur-sm rounded-xl p-6 pb-8 border-2 transition-all duration-300 hover:shadow-lg cursor-pointer h-[320px] flex flex-col ${isSelected
+      className={`relative bg-white/80 backdrop-blur-sm rounded-xl p-6 pb-8 border-2 transition-all duration-300 hover:shadow-lg cursor-pointer h-[295px] lg:h-[320px] flex flex-col ${isSelected
           ? 'border-blue-500 shadow-lg bg-blue-50/30'
           : 'border-gray-200/50 hover:border-blue-300/50'
         }`}
