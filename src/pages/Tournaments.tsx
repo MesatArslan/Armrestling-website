@@ -380,7 +380,6 @@ const Tournaments = () => {
         const list = Array.isArray(pkg.fixtures) ? pkg.fixtures : [];
         for (const fx of list) {
           // Normalize to entry format used by Matches importer
-          const entry = { fixture: fx, tournament: pkg.tournament, weightRange: { id: fx.weightRangeId, name: fx.weightRangeName, min: fx.weightRange?.min, max: fx.weightRange?.max } };
           // If active, add to Matches; if not, leave for Tournaments
           if (fx.status === 'active' || fx.status === 'paused') {
             const existing = MatchesStorage.getFixtureById(fx.id);
@@ -738,33 +737,68 @@ const Tournaments = () => {
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="backdrop-blur-md bg-white/80 rounded-2xl border border-gray-200 shadow-2xl p-4 sm:p-6 transition-all duration-300">
           {/* Header */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('tournaments.title')}</h1>
-              <p className="text-base text-gray-500 mt-1">{t('tournaments.totalTournaments')}: {tournaments.length}</p>
+          <div className="mb-8">
+            {/* Mobile: Full width row with title and kebab menu */}
+            <div className="flex items-center justify-between lg:hidden w-full">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('tournaments.title')}</h1>
+                <p className="text-base text-gray-500 mt-1">{t('tournaments.totalTournaments')}: {tournaments.length}</p>
+              </div>
+              {/* Mobile kebab menu - positioned at the very end of the row */}
+              <div className="flex-shrink-0">
+                <ActionsMenu
+                  items={[
+                    { id: 'import', label: 'Turnuva İçe Aktar', onClick: () => setIsImportModalOpen(true) },
+                    { id: 'use-template', label: t('tournaments.useTemplate'), onClick: handleOpenTemplateModal },
+                    { id: 'create', label: t('tournaments.createTournament'), onClick: () => {
+                      setIsEditMode(false);
+                      setEditingTournamentId(null);
+                      setNewTournamentName('');
+                      setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
+                      setCreateTournamentGenderFilter('male');
+                      setCreateTournamentHandPreferenceFilter(null);
+                      setCreateTournamentBirthYearMin(null);
+                      setCreateTournamentBirthYearMax(null);
+                      setIsCreateModalOpen(true);
+                    } },
+                    { id: 'clear-all', label: t('tournaments.clearAllData'), onClick: handleClearAllTournamentData },
+                  ]}
+                  buttonLabel={t('common.actions') ?? 'Actions'}
+                  iconOnly={true}
+                  ariaLabel={t('common.actions') ?? 'Actions'}
+                />
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              <ActionsMenu
-                items={[
-                  { id: 'import', label: 'Turnuva İçe Aktar', onClick: () => setIsImportModalOpen(true) },
-                  { id: 'use-template', label: t('tournaments.useTemplate'), onClick: handleOpenTemplateModal },
-                  { id: 'create', label: t('tournaments.createTournament'), onClick: () => {
-                    setIsEditMode(false);
-                    setEditingTournamentId(null);
-                    setNewTournamentName('');
-                    setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
-                    setCreateTournamentGenderFilter('male');
-                    setCreateTournamentHandPreferenceFilter(null);
-                    setCreateTournamentBirthYearMin(null);
-                    setCreateTournamentBirthYearMax(null);
-                    setIsCreateModalOpen(true);
-                  } },
-                  { id: 'clear-all', label: t('tournaments.clearAllData'), onClick: handleClearAllTournamentData },
-                ]}
-                buttonLabel={t('common.actions') ?? 'Actions'}
-                iconOnly={true}
-                ariaLabel={t('common.actions') ?? 'Actions'}
-              />
+            
+            {/* Desktop: Original layout */}
+            <div className="hidden lg:flex lg:flex-row justify-between items-start lg:items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('tournaments.title')}</h1>
+                <p className="text-base text-gray-500 mt-1">{t('tournaments.totalTournaments')}: {tournaments.length}</p>
+              </div>
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                <ActionsMenu
+                  items={[
+                    { id: 'import', label: 'Turnuva İçe Aktar', onClick: () => setIsImportModalOpen(true) },
+                    { id: 'use-template', label: t('tournaments.useTemplate'), onClick: handleOpenTemplateModal },
+                    { id: 'create', label: t('tournaments.createTournament'), onClick: () => {
+                      setIsEditMode(false);
+                      setEditingTournamentId(null);
+                      setNewTournamentName('');
+                      setWeightRanges([{ id: uuidv4(), name: '', min: 0, max: 0 }]);
+                      setCreateTournamentGenderFilter('male');
+                      setCreateTournamentHandPreferenceFilter(null);
+                      setCreateTournamentBirthYearMin(null);
+                      setCreateTournamentBirthYearMax(null);
+                      setIsCreateModalOpen(true);
+                    } },
+                    { id: 'clear-all', label: t('tournaments.clearAllData'), onClick: handleClearAllTournamentData },
+                  ]}
+                  buttonLabel={t('common.actions') ?? 'Actions'}
+                  iconOnly={true}
+                  ariaLabel={t('common.actions') ?? 'Actions'}
+                />
+              </div>
             </div>
         </div>
         
