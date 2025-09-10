@@ -489,12 +489,12 @@ const Players = () => {
         <div className="backdrop-blur-md bg-white/80 rounded-2xl border border-gray-200 shadow-2xl p-2 sm:p-6 transition-all duration-300">
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-6 border-b border-gray-200">
-            <div>
+            <div className="w-full lg:w-auto">
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('players.title')}</h1>
               <p className="text-base text-gray-500 mt-1">{t('players.totalPlayers')}: {playersState.length}</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <div className="flex items-center gap-2 flex-1">
+            <div className="w-full lg:w-auto lg:min-w-0">
+              <div className="flex items-center gap-2 w-full">
                 <div className="relative shadow-md rounded-lg flex-1">
                   <input
                     type="text"
