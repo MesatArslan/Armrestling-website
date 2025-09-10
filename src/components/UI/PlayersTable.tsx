@@ -201,6 +201,35 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
 
   // Build counts for values shown in the filter menu
   const getValueCounts = (columnId: string) => {
+    // Special inclusive logic for handPreference: 
+    // right => right + both, left => left + both, both => both only
+    if (columnId === 'handPreference') {
+      const rightLabel = t('players.right');
+      const leftLabel = t('players.left');
+      const bothLabel = t('players.both');
+      let rightCount = 0;
+      let leftCount = 0;
+      let bothCount = 0;
+      for (const p of players) {
+        const pref = String(p.handPreference || '').trim();
+        if (!pref) continue;
+        if (pref === 'right') {
+          rightCount += 1;
+        } else if (pref === 'left') {
+          leftCount += 1;
+        } else if (pref === 'both') {
+          rightCount += 1;
+          leftCount += 1;
+          bothCount += 1;
+        }
+      }
+      const counts = new Map<string, number>();
+      counts.set(normalizeForFilter(rightLabel), rightCount);
+      counts.set(normalizeForFilter(leftLabel), leftCount);
+      counts.set(normalizeForFilter(bothLabel), bothCount);
+      return counts;
+    }
+
     const counts = new Map<string, number>(); // normalized -> count
     for (const p of players) {
       let raw: any = p[columnId];
@@ -465,8 +494,15 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
 
       const matchesColumnFilters = Object.entries(columnFilters).every(([columnId, filterValue]) => {
         if (filterValue === null) return true;
-        if (columnId === 'gender' || columnId === 'handPreference') {
-          return String(player[columnId]).trim() === String(filterValue);
+        if (columnId === 'gender') {
+          return String(player.gender).trim() === String(filterValue);
+        }
+        if (columnId === 'handPreference') {
+          const pref = String(player.handPreference).trim();
+          if (filterValue === 'left') return pref === 'left' || pref === 'both';
+          if (filterValue === 'right') return pref === 'right' || pref === 'both';
+          if (filterValue === 'both') return pref === 'both';
+          return true;
         }
         return normalizeForFilter(String(player[columnId])) === String(filterValue);
       });
@@ -706,6 +742,16 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
         if (!matchesSearch) continue;
         const matchesColumnFilters = Object.entries(columnFilters).every(([columnId, filterValue]) => {
           if (filterValue === null) return true;
+          if (columnId === 'gender') {
+            return String(player.gender).trim() === String(filterValue);
+          }
+          if (columnId === 'handPreference') {
+            const pref = String(player.handPreference).trim();
+            if (filterValue === 'left') return pref === 'left' || pref === 'both';
+            if (filterValue === 'right') return pref === 'right' || pref === 'both';
+            if (filterValue === 'both') return pref === 'both';
+            return true;
+          }
           return String(player[columnId]).trim() === filterValue;
         });
         if (!matchesColumnFilters) continue;
