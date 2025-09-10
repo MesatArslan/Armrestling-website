@@ -740,7 +740,7 @@ const Tournaments = () => {
           <div className="mb-8">
             {/* Mobile: Full width row with title and kebab menu */}
             <div className="flex items-center justify-between lg:hidden w-full">
-              <div>
+              <div className="pl-2">
                 <h1 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm">{t('tournaments.title')}</h1>
                 <p className="text-base text-gray-500 mt-1">{t('tournaments.totalTournaments')}: {tournaments.length}</p>
               </div>
