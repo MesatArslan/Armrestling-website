@@ -82,9 +82,23 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   const weightFilterRef = useRef<HTMLDivElement>(null);
   const [filterSearch, setFilterSearch] = useState('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [scrollTop, setScrollTop] = useState(0);
+  const [scrollTop, setScrollTop] = useState(() => {
+    try {
+      const saved = localStorage.getItem('playersTable.scrollTop');
+      return saved ? parseInt(saved, 10) : 0;
+    } catch {
+      return 0;
+    }
+  });
   const [viewportHeight, setViewportHeight] = useState(0);
-  const [loadedCount, setLoadedCount] = useState(300);
+  const [loadedCount, setLoadedCount] = useState(() => {
+    try {
+      const saved = localStorage.getItem('playersTable.loadedCount');
+      return saved ? parseInt(saved, 10) : 300;
+    } catch {
+      return 300;
+    }
+  });
   const [customWeightRanges, setCustomWeightRanges] = useState<Array<{ id: string; min: number | null; max: number | null }>>([]);
   const [newWeightRange, setNewWeightRange] = useState<{ min: string; max: string }>({ min: '', max: '' });
   const [showAddRangeForm, setShowAddRangeForm] = useState(false);
@@ -144,6 +158,19 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
     return () => window.removeEventListener('resize', setSize);
   }, []);
 
+  // Restore scroll position on component mount
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || scrollTop === 0) return;
+    
+    // Wait for the table to be fully rendered
+    const timer = setTimeout(() => {
+      container.scrollTop = scrollTop;
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [scrollTop]);
+
   // Smooth scroll to bottom when triggered by parent (e.g., after adding a new row)
   useEffect(() => {
     if (scrollToBottomTrigger == null) return;
@@ -183,6 +210,19 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
       localStorage.setItem('playersTable.customWeightRanges', JSON.stringify(customWeightRanges));
     } catch {}
   }, [customWeightRanges]);
+
+  // Persist scroll position and loaded count to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('playersTable.scrollTop', scrollTop.toString());
+    } catch {}
+  }, [scrollTop]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('playersTable.loadedCount', loadedCount.toString());
+    } catch {}
+  }, [loadedCount]);
 
   const getUniqueValues = (columnId: string) => {
     const map = new Map<string, string>(); // normalized -> display
