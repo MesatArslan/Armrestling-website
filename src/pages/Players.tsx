@@ -494,33 +494,35 @@ const Players = () => {
               <p className="text-base text-gray-500 mt-1">{t('players.totalPlayers')}: {playersState.length}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <div className="relative shadow-md rounded-lg w-full sm:w-auto">
-                <input
-                  type="text"
-                  placeholder={t('players.searchPlayers')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full sm:w-64 px-4 py-2 pl-10 bg-white/80 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm sm:text-base text-gray-700 placeholder-gray-400 transition-all duration-200 shadow-sm"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+              <div className="flex items-center gap-2 flex-1">
+                <div className="relative shadow-md rounded-lg flex-1">
+                  <input
+                    type="text"
+                    placeholder={t('players.searchPlayers')}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-4 py-2 pl-10 bg-white/80 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm sm:text-base text-gray-700 placeholder-gray-400 transition-all duration-200 shadow-sm"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
                 </div>
+                <ActionsMenu
+                  items={[
+                    { id: 'add-test', label: t('players.addTestPlayers'), onClick: handleAddTestPlayers },
+                    { id: 'clear', label: t('players.clearAllData'), onClick: handleClearAllData },
+                    { id: 'manage-col', label: t('players.manageColumns'), onClick: () => setIsManageColumnsOpen(true) },
+                    { id: 'export-json', label: t('players.exportJSON'), onClick: handleExportJSON },
+                    { id: 'import-json', label: t('players.importJSON'), onClick: () => fileInputRef.current?.click() },
+                    { id: 'import-excel', label: t('players.importExcel'), onClick: () => setIsExcelImportOpen(true) },
+                  ]}
+                  buttonLabel={t('common.actions') ?? 'Actions'}
+                  iconOnly={true}
+                  ariaLabel={t('common.actions') ?? 'Actions'}
+                />
               </div>
-              <ActionsMenu
-                items={[
-                  { id: 'add-test', label: t('players.addTestPlayers'), onClick: handleAddTestPlayers },
-                  { id: 'clear', label: t('players.clearAllData'), onClick: handleClearAllData },
-                  { id: 'manage-col', label: t('players.manageColumns'), onClick: () => setIsManageColumnsOpen(true) },
-                  { id: 'export-json', label: t('players.exportJSON'), onClick: handleExportJSON },
-                  { id: 'import-json', label: t('players.importJSON'), onClick: () => fileInputRef.current?.click() },
-                  { id: 'import-excel', label: t('players.importExcel'), onClick: () => setIsExcelImportOpen(true) },
-                ]}
-                buttonLabel={t('common.actions') ?? 'Actions'}
-                iconOnly={true}
-                ariaLabel={t('common.actions') ?? 'Actions'}
-              />
               <input
                 ref={fileInputRef}
                 type="file"

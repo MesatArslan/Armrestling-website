@@ -158,17 +158,13 @@ const Navbar = () => {
           {/* Mobile Auth */}
           {user ? (
             <div className="pt-2 border-t border-gray-100 space-y-2">
-              <div className="flex items-center justify-center space-x-2 text-gray-600">
-                <UserIcon className="h-5 w-5" />
-                <span className="text-sm">{user.email}</span>
-              </div>
               {user.role === 'admin' && (
                 <Link
                   to="/admin"
                   onClick={() => setIsOpen(false)}
                   className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
                 >
-                  Kurum Paneli
+                  {user.email}
                 </Link>
               )}
               {user.role === 'user' && (
