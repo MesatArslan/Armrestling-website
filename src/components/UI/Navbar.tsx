@@ -14,14 +14,25 @@ const Navbar = () => {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   
   const toggleMenu = () => setIsOpen(prev => !prev);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Close login dropdown when clicking outside
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setLoginDropdownOpen(false);
+      }
+      
+      // Close mobile menu when clicking outside
+      if (isOpen && mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        // Check if the click is not on the mobile menu button
+        const mobileMenuButton = document.querySelector('[aria-label="Toggle navigation menu"]');
+        if (mobileMenuButton && !mobileMenuButton.contains(event.target as Node)) {
+          setIsOpen(false);
+        }
       }
     };
 
@@ -29,7 +40,7 @@ const Navbar = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isOpen]);
 
 
   const openAuthModal = (mode: 'login' | 'signup') => {
@@ -140,7 +151,7 @@ const Navbar = () => {
       </div>
 
       {/* Mobile/Tablet menu */}
-      <div className={`${isOpen ? 'opacity-100 max-h-[70vh]' : 'opacity-0 max-h-0 pointer-events-none'} md:hidden transition-all duration-300 overflow-hidden absolute left-0 right-0 top-16 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-100 shadow-lg`}> 
+      <div ref={mobileMenuRef} className={`${isOpen ? 'opacity-100 max-h-[70vh]' : 'opacity-0 max-h-0 pointer-events-none'} md:hidden transition-all duration-300 overflow-hidden absolute left-0 right-0 top-16 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-100 shadow-lg`}> 
         <div className="px-4 py-3 space-y-2 max-h-[70vh] overflow-auto">
           <Link to="/players" onClick={() => setIsOpen(false)} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
             {t('navigation.players')}
