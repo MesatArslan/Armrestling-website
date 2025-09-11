@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ROUND_DESCRIPTIONS } from '../../utils/roundDescriptions';
 import { MatchesStorage, type MatchPlayStatus } from '../../utils/matchesStorage';
-import PlayerInfoModal from './PlayerInfoModal';
+import PlayerInfoModal from './PlayerInfoModal.tsx';
 import type { Player } from '../../types';
 
 interface MatchCardProps {
@@ -55,6 +55,13 @@ const MatchCard: React.FC<MatchCardProps> = ({
   const [triggerElement, setTriggerElement] = React.useState<HTMLElement | null>(null);
 
   const openPlayerInfo = (player: Player, element: HTMLElement) => {
+    // Toggle behavior: if same player is already open, close it
+    if (isModalOpen && selectedPlayer && selectedPlayer.id === player.id) {
+      setIsModalOpen(false);
+      setSelectedPlayer(null);
+      setTriggerElement(null);
+      return;
+    }
     setSelectedPlayer(player);
     setTriggerElement(element);
     setIsModalOpen(true);
@@ -242,6 +249,10 @@ const MatchCard: React.FC<MatchCardProps> = ({
             {/* Information Button */}
             {player1 && (
               <button
+                type="button"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   openPlayerInfo(player1, e.currentTarget);
@@ -307,6 +318,10 @@ const MatchCard: React.FC<MatchCardProps> = ({
             {/* Information Button */}
             {player2 && (
               <button
+                type="button"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   openPlayerInfo(player2, e.currentTarget);
