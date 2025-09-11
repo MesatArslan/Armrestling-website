@@ -51,7 +51,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 shadow-sm border-b border-gray-100">
+    <nav className="fixed top-0 left-0 right-0 z-[60] bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 shadow-sm border-b border-gray-100">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
@@ -151,7 +151,7 @@ const Navbar = () => {
       </div>
 
       {/* Mobile/Tablet menu */}
-      <div ref={mobileMenuRef} className={`${isOpen ? 'opacity-100 max-h-[70vh]' : 'opacity-0 max-h-0 pointer-events-none'} md:hidden transition-all duration-300 overflow-hidden absolute left-0 right-0 top-16 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-100 shadow-lg`}> 
+      <div ref={mobileMenuRef} className={`${isOpen ? 'opacity-100 max-h-[70vh]' : 'opacity-0 max-h-0 pointer-events-none'} md:hidden transition-all duration-300 overflow-hidden absolute left-0 right-0 top-16 z-[70] bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-100 shadow-lg`}> 
         <div className="px-4 py-3 space-y-2 max-h-[70vh] overflow-auto">
           <Link to="/players" onClick={() => setIsOpen(false)} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
             {t('navigation.players')}
