@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { ExtendedPlayer } from '../../utils/playersStorage';
@@ -16,6 +16,7 @@ const PlayerInfoModalComponent: React.FC<PlayerInfoModalProps> = ({ player, isOp
   useTranslation();
   const { columns: allColumns, players: allPlayers } = usePlayers();
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const [arrowLeftPx, setArrowLeftPx] = useState<number>(0);
 
   const fullPlayer = player ? allPlayers.find(p => p.id === player.id) || player : null;
 
@@ -36,6 +37,13 @@ const PlayerInfoModalComponent: React.FC<PlayerInfoModalProps> = ({ player, isOp
     tooltip.style.left = `${clampedLeft}px`;
     tooltip.style.top = `${top}px`;
     tooltip.style.width = `${tooltipWidth}px`;
+
+    // Position the arrow to point at the trigger center relative to tooltip
+    const triggerCenter = rect.left + (rect.width / 2);
+    const arrowLeft = triggerCenter - clampedLeft; // relative within tooltip
+    // Clamp arrow within tooltip bounds with small padding
+    const clampedArrowLeft = Math.max(12, Math.min(arrowLeft, tooltipWidth - 12));
+    setArrowLeftPx(clampedArrowLeft);
   };
 
   useEffect(() => {
@@ -148,7 +156,10 @@ const PlayerInfoModalComponent: React.FC<PlayerInfoModalProps> = ({ player, isOp
         minWidth: '280px'
       }}
     >
-      <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45" style={{ zIndex: -1 }} />
+      <div
+        className="absolute -top-2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45"
+        style={{ zIndex: -1, left: `${arrowLeftPx - 8}px` }}
+      />
 
       <div className="border-b border-gray-100 pb-3 mb-3">
         <div className="flex items-center gap-3">
