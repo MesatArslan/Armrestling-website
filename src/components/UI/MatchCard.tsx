@@ -182,7 +182,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
   };
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 w-full max-w-md mx-auto md:max-w-md lg:max-w-full flex flex-col h-full">
+    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden md:hover:shadow-2xl transition-all duration-300 w-full max-w-md mx-auto md:max-w-md lg:max-w-full flex flex-col h-full">
       {/* Header */}
       <div className={`text-white p-3 md:p-3 lg:p-4 ${
         bracket === 'loser' 
@@ -196,10 +196,10 @@ const MatchCard: React.FC<MatchCardProps> = ({
           {/* Maç Durumu Butonu - başlığın altında */}
           <button
             onClick={togglePlay}
-            className={`mx-auto px-2 py-1 md:px-2 md:py-1.5 lg:md:px-3 lg:md:py-2 rounded-lg text-xs font-bold transition-all duration-300 shadow-md hover:shadow-lg ${
+            className={`mx-auto px-2 py-1 md:px-2 md:py-1.5 lg:md:px-3 lg:md:py-2 rounded-lg text-xs font-bold transition-all duration-300 shadow-md md:hover:shadow-lg ${
               isPlaying 
                 ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg' 
-                : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-300 border border-gray-300'
+                : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 md:hover:from-gray-200 md:hover:to-gray-300 border border-gray-300'
             }`}
             type="button"
           >
@@ -235,7 +235,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 ? 'bg-green-100 border-2 border-green-400 shadow-lg ring-2 ring-green-300' 
                 : currentSelectedWinner === player1Id 
                 ? 'bg-green-50 border-2 border-green-300 shadow-md ring-2 ring-green-200' 
-                : 'bg-white border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 hover:shadow-sm'
+                : 'bg-white border-2 border-gray-200 md:hover:border-green-300 md:hover:bg-green-50 md:hover:shadow-sm'
             }`}
             onClick={() => onWinnerSelect(player1Id)}
           >
@@ -246,7 +246,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                   e.stopPropagation();
                   openPlayerInfo(player1, e.currentTarget);
                 }}
-                className="absolute top-1 right-1 w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 shadow-md hover:shadow-lg z-10"
+                className="absolute top-1 right-1 w-6 h-6 bg-blue-500 md:hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 shadow-md md:hover:shadow-lg z-10"
                 title={t('players.viewPlayerInfo')}
               >
                 i
@@ -300,7 +300,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 ? 'bg-green-100 border-2 border-green-400 shadow-lg ring-2 ring-green-300' 
                 : currentSelectedWinner === player2Id 
                 ? 'bg-green-50 border-2 border-green-300 shadow-md ring-2 ring-green-200' 
-                : 'bg-white border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 hover:shadow-sm'
+                : 'bg-white border-2 border-gray-200 md:hover:border-green-300 md:hover:bg-green-50 md:hover:shadow-sm'
             }`}
             onClick={() => onWinnerSelect(player2Id)}
           >
@@ -311,7 +311,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                   e.stopPropagation();
                   openPlayerInfo(player2, e.currentTarget);
                 }}
-                className="absolute top-1 right-1 w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 shadow-md hover:shadow-lg z-10"
+                className="absolute top-1 right-1 w-6 h-6 bg-blue-500 md:hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200 shadow-md md:hover:shadow-lg z-10"
                 title={t('players.viewPlayerInfo')}
               >
                 i
@@ -368,7 +368,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 disabled={!currentSelectedWinner}
                 className={`py-2 px-4 md:py-2 md:px-5 lg:md:py-3 lg:md:px-6 rounded-xl text-xs md:text-sm font-bold transition-all duration-200 shadow-lg transform ${
                   currentSelectedWinner 
-                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-xl hover:scale-105 cursor-pointer' 
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white md:hover:from-green-600 md:hover:to-green-700 md:hover:shadow-xl md:hover:scale-105 cursor-pointer' 
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
