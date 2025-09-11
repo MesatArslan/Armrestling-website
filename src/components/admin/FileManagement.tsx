@@ -444,67 +444,134 @@ export const FileManagement: React.FC = () => {
 
       {/* Limit Bilgileri */}
       {userLimits && (
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Tek Dosya Limiti */}
-          <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">Tek Dosya Limiti</h3>
-                <p className="text-2xl font-bold text-blue-600">{fileManager.formatLimitDisplay(userLimits.singleFileLimit)}</p>
+        <>
+          {/* Mobile: Horizontal scrollable KPI cards */}
+          <div className="mb-6 -mx-4 px-4 sm:hidden">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-4 scroll-smooth pb-2">
+              {/* Tek Dosya Limiti */}
+              <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">Tek Dosya Limiti</h3>
+                    <p className="text-2xl font-bold text-blue-600">{fileManager.formatLimitDisplay(userLimits.singleFileLimit)}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                </div>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+
+              {/* Toplam Limit */}
+              <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">Toplam Limit</h3>
+                    <p className="text-2xl font-bold text-green-600">{fileManager.formatLimitDisplay(userLimits.totalLimit)}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Kullanım Durumu */}
+              <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">Kullanım Durumu</h3>
+                    <p className="text-2xl font-bold text-purple-600">{userLimits.percentage}%</p>
+                    <p className="text-xs text-gray-500">
+                      {fileManager.formatLimitDisplay(userLimits.usedSpace)} / {fileManager.formatLimitDisplay(userLimits.totalLimit)}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        userLimits.percentage > 80 ? 'bg-red-500' : 
+                        userLimits.percentage > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                      }`}
+                      style={{ width: `${Math.min(userLimits.percentage, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Toplam Limit */}
-          <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">Toplam Limit</h3>
-                <p className="text-2xl font-bold text-green-600">{fileManager.formatLimitDisplay(userLimits.totalLimit)}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
+          {/* Tablet/Desktop: Grid KPI cards */}
+          <div className="hidden sm:grid mb-6 grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Tek Dosya Limiti */}
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Tek Dosya Limiti</h3>
+                  <p className="text-2xl font-bold text-blue-600">{fileManager.formatLimitDisplay(userLimits.singleFileLimit)}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Kullanım Durumu */}
-          <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">Kullanım Durumu</h3>
-                <p className="text-2xl font-bold text-purple-600">{userLimits.percentage}%</p>
-                <p className="text-xs text-gray-500">
-                  {fileManager.formatLimitDisplay(userLimits.usedSpace)} / {fileManager.formatLimitDisplay(userLimits.totalLimit)}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+            {/* Toplam Limit */}
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Toplam Limit</h3>
+                  <p className="text-2xl font-bold text-green-600">{fileManager.formatLimitDisplay(userLimits.totalLimit)}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </div>
               </div>
             </div>
-            {/* Progress Bar */}
-            <div className="mt-3">
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    userLimits.percentage > 80 ? 'bg-red-500' : 
-                    userLimits.percentage > 60 ? 'bg-yellow-500' : 'bg-green-500'
-                  }`}
-                  style={{ width: `${Math.min(userLimits.percentage, 100)}%` }}
-                ></div>
+
+            {/* Kullanım Durumu */}
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Kullanım Durumu</h3>
+                  <p className="text-2xl font-bold text-purple-600">{userLimits.percentage}%</p>
+                  <p className="text-xs text-gray-500">
+                    {fileManager.formatLimitDisplay(userLimits.usedSpace)} / {fileManager.formatLimitDisplay(userLimits.totalLimit)}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+              </div>
+              {/* Progress Bar */}
+              <div className="mt-3">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      userLimits.percentage > 80 ? 'bg-red-500' : 
+                      userLimits.percentage > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                    style={{ width: `${Math.min(userLimits.percentage, 100)}%` }}
+                  ></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
