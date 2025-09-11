@@ -259,8 +259,8 @@ export const Admin: React.FC = () => {
       <div className="max-w-7xl mx-auto relative">
         {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex md:grid flex-nowrap md:flex-nowrap md:grid-cols-4 gap-6 mb-8 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pb-2">
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow min-w-[240px] md:min-w-0 flex-shrink-0 md:flex-shrink">
               <div className="p-5 flex items-center gap-4">
                 <div className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold">T</div>
                 <div>
@@ -270,7 +270,7 @@ export const Admin: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow min-w-[240px] md:min-w-0 flex-shrink-0 md:flex-shrink">
               <div className="p-5 flex items-center gap-4">
                 <div className="w-10 h-10 bg-green-600 text-white rounded-lg flex items-center justify-center font-bold">K</div>
                 <div>
@@ -280,7 +280,7 @@ export const Admin: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow min-w-[240px] md:min-w-0 flex-shrink-0 md:flex-shrink">
               <div className="p-5 flex items-center gap-4">
                 <div className="w-10 h-10 bg-yellow-500 text-white rounded-lg flex items-center justify-center font-bold">U</div>
                 <div>
@@ -290,7 +290,7 @@ export const Admin: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow min-w-[240px] md:min-w-0 flex-shrink-0 md:flex-shrink">
               <div className="p-5 flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-lg text-white flex items-center justify-center font-bold ${
                   stats.subscriptionDaysLeft > 7 ? 'bg-green-600' : stats.subscriptionDaysLeft > 0 ? 'bg-yellow-500' : 'bg-red-600'
