@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect, useDeferredValue } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { v4 as uuidv4 } from 'uuid';
 import type { Player } from '../../types';
