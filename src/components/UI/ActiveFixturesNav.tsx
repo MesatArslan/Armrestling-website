@@ -29,7 +29,14 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
 
   // Sync local order with incoming fixtures
   useEffect(() => {
-    setOrderIds(fixtures.map(f => f.id));
+    const fixtureIds = fixtures.map(f => f.id);
+    setOrderIds(prevOrderIds => {
+      // Filter out any IDs that no longer exist in fixtures
+      const validOrderIds = prevOrderIds.filter(id => fixtureIds.includes(id));
+      // Add any new fixture IDs that aren't in the current order
+      const newIds = fixtureIds.filter(id => !validOrderIds.includes(id));
+      return [...validOrderIds, ...newIds];
+    });
   }, [fixtures.map(f => f.id).join('|')]);
 
   const handleFixtureClose = (fixtureId: string) => {
@@ -85,7 +92,8 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
           onDragOver={(e) => e.preventDefault()}
         >
           {orderIds.map((id, index) => {
-            const fixture = fixtures.find(f => f.id === id)!;
+            const fixture = fixtures.find(f => f.id === id);
+            if (!fixture) return null; // Skip rendering if fixture not found
             const isActive = activeFixtureId === fixture.id;
             const statusConfig = {
               completed: { bg: 'from-green-400 to-emerald-500' },
