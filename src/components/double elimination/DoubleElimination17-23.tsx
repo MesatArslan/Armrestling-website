@@ -498,12 +498,15 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
         newRankings.fifth = winnerId;
         newRankings.sixth = match.player1Id === winnerId ? match.player2Id : match.player1Id;
       }
-      if (match.id === 'lb_final') {
-        newRankings.third = winnerId;
+      if (match.id === 'lb_r6') {
         newRankings.fourth = match.player1Id === winnerId ? match.player2Id : match.player1Id;
       }
+      if (match.id === 'lb_final') {
+        newRankings.third = match.player1Id === winnerId ? match.player2Id : match.player1Id;
+        // 4th place already set from lb_r6
+      }
       if (match.id === 'yari_final') {
-        // Yarı final kaybedeni 4. olabilir, ama 3. ve 4. kesin lb_final ile belirleniyor
+        // Yarı final kaybedeni lb_final'a gider, 3. ve 4. lb_final ile belirleniyor
         // Burada bir şey yapmaya gerek yok
       }
       if (match.id === 'final' || match.id === 'grand_final') {
