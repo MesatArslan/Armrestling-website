@@ -963,6 +963,7 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
     const currentSelectedWinner = selectedWinner[match.id] || null;
     return (
       <MatchCard
+        key={match.id}
         matchId={match.id}
         fixtureId={fixtureId}
         player1Name={player1Name}

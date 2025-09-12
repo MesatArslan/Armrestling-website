@@ -908,6 +908,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
     if (match.id === 'grand_final') {
       return (
         <MatchCard
+          key={match.id}
           matchId={match.id}
           player1Name={player2Name}
           player2Name={player1Name}
@@ -932,6 +933,7 @@ const DoubleElimination17_23: React.FC<DoubleEliminationProps> = ({ players, onM
     
     return (
       <MatchCard
+        key={match.id}
         matchId={match.id}
         fixtureId={fixtureId}
         player1Name={player1Name}

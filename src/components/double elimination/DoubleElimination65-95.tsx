@@ -1037,6 +1037,7 @@ const DoubleElimination65_95: React.FC<DoubleElimination65_95Props> = ({ players
     const currentSelectedWinner = selectedWinner[match.id] || null;
     return (
       <MatchCard
+        key={match.id}
         matchId={match.id}
         fixtureId={fixtureId}
         player1Name={player1Name}
