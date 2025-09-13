@@ -1246,23 +1246,6 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
           {fixtureId ? (MatchesStorage.getFixtureById(fixtureId)?.name || '') : ''}
         </h2>
         <div className="flex gap-4">
-          <button
-            onClick={() => {
-              if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
-                clearTournamentState();
-                initializeTournament();
-                setSelectedWinner({});
-                setCompletedOrder([]);
-              }
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Turnuvayı Sıfırla
-          </button>
-          
           {/* Undo Last Match Button */}
           {completedOrder.length > 0 && (
             <button
@@ -1350,7 +1333,31 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
         </>
       )}
       {activeTab === 'rankings' && (
-        <RankingsTable rankings={calculateRankings(matches)} players={players} getPlayerName={getPlayerName} />
+        <div>
+          <div className="flex justify-center gap-4 mb-6">
+            <button
+              onClick={() => {
+                if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+                  clearTournamentState();
+                  initializeTournament();
+                  setSelectedWinner({});
+                  setCompletedOrder([]);
+                  // Fikstürü aktif hale getir
+                  if (fixtureId) {
+                    MatchesStorage.activateFixture(fixtureId);
+                  }
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Turnuvayı Sıfırla
+            </button>
+          </div>
+          <RankingsTable rankings={calculateRankings(matches)} players={players} getPlayerName={getPlayerName} />
+        </div>
       )}
     </div>
   );
