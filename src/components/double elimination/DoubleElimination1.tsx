@@ -30,7 +30,7 @@ const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatch
       
       setHasAutoCompleted(true);
     }
-  }, [winner.id, onMatchResult, onTournamentComplete, hasAutoCompleted]);
+  }, []); // Empty dependency array - runs only once on mount
 
   // Persist rankings for 1-player case immediately
   React.useEffect(() => {
@@ -56,29 +56,61 @@ const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatch
         />
       </div>
       
-      <div className="max-w-md mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-6 border-2 border-green-300">
-          <div className="text-center">
-            <div className="text-6xl mb-4">🏆</div>
-            <h3 className="text-xl font-bold text-green-700 mb-2">CHAMPION</h3>
-            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4">
-              <div className="text-lg font-semibold text-gray-800">
-                {winner.name} {winner.surname}
+      <div className="max-w-lg mx-auto">
+        <div className="relative overflow-hidden bg-gradient-to-br from-yellow-50 via-white to-yellow-50 rounded-2xl shadow-2xl border-4 border-yellow-400">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-200/30 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-yellow-200/30 to-transparent rounded-full translate-y-12 -translate-x-12"></div>
+          
+          <div className="relative p-8">
+            <div className="text-center">
+              {/* Sports medal icon */}
+              <div className="text-8xl mb-6">🏅</div>
+              
+              {/* Champion title */}
+              <div className="mb-6">
+                <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-yellow-800 mb-2">
+                  ŞAMPİYON
+                </h3>
+                <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto rounded-full"></div>
               </div>
-              <div className="text-sm text-gray-600 mt-1">
-                Weight: {winner.weight} kg
-              </div>
-              <div className="text-sm text-gray-600">
-                {winner.gender === 'male' ? 'Male' : 'Female'} • {winner.handPreference} hand
-              </div>
-              {winner.birthday && (
-                <div className="text-sm text-gray-600">
-                  Born: {new Date(winner.birthday).toLocaleDateString()}
+              
+              {/* Winner card */}
+              <div className="bg-gradient-to-br from-white to-yellow-50 rounded-xl p-6 shadow-lg border-2 border-yellow-200">
+                <div className="text-2xl font-bold text-gray-800 mb-2">
+                  {winner.name} {winner.surname}
                 </div>
-              )}
-            </div>
-            <div className="mt-4 text-sm text-gray-500">
-              Automatic winner by default
+                
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="font-semibold">Ağırlık:</span>
+                    <span className="bg-yellow-100 px-2 py-1 rounded-full">{winner.weight} kg</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="font-semibold">Cinsiyet:</span>
+                    <span className="bg-blue-100 px-2 py-1 rounded-full">
+                      {winner.gender === 'male' ? 'Erkek' : 'Kadın'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="font-semibold">El Tercihi:</span>
+                    <span className="bg-green-100 px-2 py-1 rounded-full">
+                      {winner.handPreference === 'left' ? 'Sol' : winner.handPreference === 'right' ? 'Sağ' : 'Her İki El'}
+                    </span>
+                  </div>
+                  
+                  {winner.birthday && (
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="font-semibold">Doğum:</span>
+                      <span className="bg-purple-100 px-2 py-1 rounded-full">
+                        {new Date(winner.birthday).toLocaleDateString('tr-TR')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
