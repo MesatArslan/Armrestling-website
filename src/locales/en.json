@@ -296,7 +296,9 @@
     "match": "Match",
     "vs": "VS",
     "bye": "BYE",
-    "loser": "Loser"
+    "loser": "Loser",
+    "resetTournament": "Reset Fixture",
+    "resetTournamentConfirm": "Are you sure you want to reset the fixture? This action cannot be undone."
   },
   "matchCounter": {
     "title": "Match Count",

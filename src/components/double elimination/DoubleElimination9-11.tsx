@@ -11,6 +11,7 @@ import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
+import { useTranslation } from 'react-i18next';
 
 const ROUND_ORDER = [
   'WB1', 'WB2', 'LB1', 'LB2', 'WB3', 'LB3', 'WB4', 'LB4', '7-8', 'LB5', '5-6', 'Final', 'GrandFinal'
@@ -19,6 +20,7 @@ const ROUND_ORDER = [
 type RoundKey = typeof ROUND_ORDER[number];
 
 const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
+  const { t } = useTranslation();
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -989,7 +991,7 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players, onMa
           <div className="flex justify-center gap-4 mb-6">
             <button
               onClick={() => {
-                if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+                if (window.confirm(t('matches.resetTournamentConfirm'))) {
                   clearTournamentState();
                   initializeTournament();
                   setSelectedWinner({});
@@ -1005,7 +1007,7 @@ const DoubleElimination9_11: React.FC<DoubleEliminationProps> = ({ players, onMa
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Turnuvayı Sıfırla
+              {t('matches.resetTournament')}
             </button>
           </div>
           <RankingsTable rankings={rankings} players={players} getPlayerName={getPlayerName} />

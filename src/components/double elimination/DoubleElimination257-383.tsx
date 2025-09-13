@@ -10,6 +10,7 @@ import MatchCounter from '../UI/MatchCounter';
 import { DoubleEliminationStorage } from '../../utils/localStorage';
 import { TabManager } from '../../utils/tabManager';
 import { RoundDescriptionUtils } from '../../utils/roundDescriptions';
+import { useTranslation } from 'react-i18next';
 
 const ROUND_ORDER = [
   'WB1', 'WB2', 'LB1', 'LB2', 'WB3', 'LB3', 'LB4', 'WB4', 'LB5', 'LB6', 'WB5', 'LB7', 'LB8', 'WB6', 'LB9', 'LB10', 'WB7', 'LB11', 'LB12', 'WB8', 'LB13', 'YariFinal', 'LB14', '7-8', 'LBFinal', '5-6', 'Final', 'GrandFinal'
@@ -22,6 +23,7 @@ interface DoubleElimination257_383Props extends DoubleEliminationProps {
 }
 
 const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
+  const { t } = useTranslation();
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
   const [tournamentComplete, setTournamentComplete] = useState(false);
@@ -1320,7 +1322,7 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
           <div className="flex justify-center gap-4 mb-6">
             <button
               onClick={() => {
-                if (window.confirm('Turnuvayı sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+                if (window.confirm(t('matches.resetTournamentConfirm'))) {
                   clearTournamentState();
                   initializeTournament();
                   setSelectedWinner({});
@@ -1336,7 +1338,7 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Turnuvayı Sıfırla
+              {t('matches.resetTournament')}
             </button>
           </div>
           <RankingsTable rankings={calculateRankings(matches)} players={players} getPlayerName={getPlayerName} />
