@@ -355,8 +355,8 @@
     "resetTournament": "Fikstürü Sıfırla",
     "resetTournamentConfirm": "Fikstürü sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.",
     "undoLastMatch": "Bir Önceki Maç",
-    "tournamentCompleted": "Turnuva Tamamlandı!",
-    "viewResultsMessage": "Sonuçları ve sıralamaları görmek için aşağıdaki butona tıklayın.",
+    "tournamentCompleted": "Fikstür Tamamlandı!",
+    "viewResultsMessage": "Sonuçları ve sıralamaları görmek için aşağıdan sıralama sekmesine gidin.",
     "goToRankings": "Sıralama Sekmesine Git"
   },
   "matchCounter": {
