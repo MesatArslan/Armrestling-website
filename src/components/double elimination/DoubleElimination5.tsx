@@ -832,6 +832,10 @@ const DoubleElimination5: React.FC<DoubleEliminationProps> = ({ players, onMatch
                   initializeTournament();
                   setSelectedWinner({});
                   setCompletedOrder([]);
+                  // Fikstürü aktif hale getir
+                  if (fixtureId) {
+                    MatchesStorage.activateFixture(fixtureId);
+                  }
                 }
               }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"

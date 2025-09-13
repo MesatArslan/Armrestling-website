@@ -353,6 +353,10 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
       initializeTournament();
       setSelectedWinner({});
       setCompletedOrder([]);
+      // Fikstürü aktif hale getir
+      if (fixtureId) {
+        MatchesStorage.activateFixture(fixtureId);
+      }
     }
   };
 
