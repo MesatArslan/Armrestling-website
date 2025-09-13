@@ -1108,30 +1108,6 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
         {showLb1ByeMessage ? 'LB R1\'de herkes bye geçti, WB R2\ye geçiliyor...' : 'Tüm oyuncular bye geçti, bir sonraki tur başlatılıyor...'}
       </div>
     )}
-    {/* Turnuva ilerlemesi göstergesi */}
-    {!tournamentComplete && activeTab === 'active' && (
-      <div className="mt-6 text-center">
-        <div className="text-sm text-gray-600">
-          {(() => {
-            const nonByeMatches = matches.filter(m => !m.isBye);
-            const completedCount = nonByeMatches.filter(m => m.winnerId).length;
-            const totalMatches = nonByeMatches.length;
-            return `${completedCount} / ${totalMatches} maç tamamlandı`;
-          })()}
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2 mt-2 max-w-xs mx-auto">
-          <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-            style={{ width: `${(() => {
-              const nonByeMatches = matches.filter(m => !m.isBye);
-              const completedCount = nonByeMatches.filter(m => m.winnerId).length;
-              const totalMatches = nonByeMatches.length;
-              return totalMatches > 0 ? (completedCount / totalMatches) * 100 : 0;
-            })()}%` }}
-          ></div>
-        </div>
-      </div>
-    )}
   </div>
 );
 }
