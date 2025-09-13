@@ -299,7 +299,10 @@
     "loser": "Loser",
     "resetTournament": "Reset Fixture",
     "resetTournamentConfirm": "Are you sure you want to reset the fixture? This action cannot be undone.",
-    "undoLastMatch": "Previous Match"
+    "undoLastMatch": "Previous Match",
+    "tournamentCompleted": "Tournament Completed!",
+    "viewResultsMessage": "Click the button below to view results and rankings.",
+    "goToRankings": "Go to Rankings Tab"
   },
   "matchCounter": {
     "title": "Match Count",

@@ -354,7 +354,10 @@
     "loser": "Kaybeden",
     "resetTournament": "Fikstürü Sıfırla",
     "resetTournamentConfirm": "Fikstürü sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-    "undoLastMatch": "Bir Önceki Maç"
+    "undoLastMatch": "Bir Önceki Maç",
+    "tournamentCompleted": "Turnuva Tamamlandı!",
+    "viewResultsMessage": "Sonuçları ve sıralamaları görmek için aşağıdaki butona tıklayın.",
+    "goToRankings": "Sıralama Sekmesine Git"
   },
   "matchCounter": {
     "title": "Maç Sayısı",
