@@ -733,7 +733,7 @@ const Tournaments = () => {
 
   return (
     <>
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start pt-24 pb-8 px-2">
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="backdrop-blur-md bg-white/80 rounded-2xl border border-gray-200 shadow-2xl p-4 sm:p-6 transition-all duration-300">
           {/* Header */}
@@ -1326,10 +1326,10 @@ const Tournaments = () => {
     {/* Create Tournament Modal - Moved outside main content */}
         {isCreateModalOpen && (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 overflow-hidden"
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[100] overflow-hidden"
       >
         <div 
-          className="bg-white rounded-xl shadow-2xl max-w-6xl w-full mx-4 max-h-[95vh] overflow-hidden"
+          className="bg-white rounded-xl shadow-2xl max-w-6xl w-full mx-4 max-h-[95vh] flex flex-col overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
               {/* Header */}
@@ -1367,9 +1367,9 @@ const Tournaments = () => {
                 </div>
               </div>
               
-              <div className="flex h-[calc(95vh-120px)]">
+              <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
                 {/* Left Column - Tournament Details and Filters */}
-                <div className="w-1/2 border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-6 overflow-y-auto">
+                <div className="w-full lg:w-1/2 border-r-0 lg:border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-4 lg:p-6 overflow-y-auto">
                   <div className="space-y-6">
                     {/* Tournament Name */}
                     <div className="bg-gray-50 rounded-lg p-6">
@@ -1475,7 +1475,7 @@ const Tournaments = () => {
                 </div>
 
                 {/* Right Column - Weight Ranges */}
-                <div className="flex-1 p-8 overflow-y-auto bg-gray-50">
+                <div className="flex-1 p-4 lg:p-8 overflow-y-auto bg-gray-50">
                   <div className="space-y-6">
                     <div className="bg-gray-50 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-6">
@@ -1564,7 +1564,7 @@ const Tournaments = () => {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+              <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0">
                 <div className="flex space-x-3">
                   <button
                     onClick={() => {
