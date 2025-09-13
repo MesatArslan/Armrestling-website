@@ -1,8 +1,9 @@
 import * as React from 'react';
 import type { DoubleEliminationProps } from '../../types';
 import MatchCounter from '../UI/MatchCounter';
+import { MatchesStorage } from '../../utils/matchesStorage';
 
-const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete }) => {
+const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, fixtureId }) => {
   if (players.length !== 1) {
     return (
       <div className="p-4 text-center text-gray-600">
@@ -34,15 +35,17 @@ const DoubleElimination1: React.FC<DoubleEliminationProps> = ({ players, onMatch
   // Persist rankings for 1-player case immediately
   React.useEffect(() => {
     try {
-      // No fixtureId prop in this component; persistence handled by parent Matches flow if needed
+      // Persistence handled by parent Matches flow
     } catch {}
   }, []);
 
   return (
     <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-center mb-6 text-blue-500">
-        Single Player Tournament
-      </h2>
+      {fixtureId && (
+        <h2 className="text-2xl font-bold text-center mb-6 text-gray-900">
+          {MatchesStorage.getFixtureById(fixtureId)?.name || ''}
+        </h2>
+      )}
       
       {/* Match Counter */}
       <div className="max-w-4xl mx-auto mb-6">
