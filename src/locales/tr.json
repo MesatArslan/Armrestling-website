@@ -353,7 +353,8 @@
     "bye": "BAY",
     "loser": "Kaybeden",
     "resetTournament": "Fikstürü Sıfırla",
-    "resetTournamentConfirm": "Fikstürü sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz."
+    "resetTournamentConfirm": "Fikstürü sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "undoLastMatch": "Bir Önceki Maç"
   },
   "matchCounter": {
     "title": "Maç Sayısı",

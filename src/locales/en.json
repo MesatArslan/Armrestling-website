@@ -298,7 +298,8 @@
     "bye": "BYE",
     "loser": "Loser",
     "resetTournament": "Reset Fixture",
-    "resetTournamentConfirm": "Are you sure you want to reset the fixture? This action cannot be undone."
+    "resetTournamentConfirm": "Are you sure you want to reset the fixture? This action cannot be undone.",
+    "undoLastMatch": "Previous Match"
   },
   "matchCounter": {
     "title": "Match Count",
@@ -504,15 +505,6 @@
     "noFixturesForTournament": "No fixtures found for this tournament.",
     "resultsNotReady": "Results are not available yet",
     "unknown": "Unknown"
-  }
-  ,
-  "matchCounter": {
-    "title": "Match Count",
-    "total": "Total Matches",
-    "includesGrandFinal": "Includes Grand Final",
-    "completed": "Completed",
-    "remaining": "Remaining",
-    "progress": "Progress"
   }
 }
 
