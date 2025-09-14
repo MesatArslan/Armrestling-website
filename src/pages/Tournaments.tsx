@@ -733,7 +733,7 @@ const Tournaments = () => {
 
   return (
     <>
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start pt-24 pb-8 px-2">
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start pt-8 pb-8 px-2">
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="backdrop-blur-md bg-white/80 rounded-2xl border border-gray-200 shadow-2xl p-4 sm:p-6 transition-all duration-300">
           {/* Header */}
