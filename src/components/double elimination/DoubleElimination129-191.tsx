@@ -35,14 +35,10 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
   );
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [completedOrder, setCompletedOrder] = useState<string[]>([]);
-  const [autoSelecting, setAutoSelecting] = useState<boolean>(false);
-  const autoSelectingRef = useRef<boolean>(false);
-  const intervalRef = useRef<number | null>(null);
   const matchesRef = useRef<Match[]>(matches);
   const currentRoundKeyRef = useRef<RoundKey>(currentRoundKey);
   const tournamentCompleteRef = useRef<boolean>(tournamentComplete);
   const completedOrderRef = useRef<string[]>(completedOrder);
-  const autoRoundKeyRef = useRef<RoundKey | null>(null);
 
   // Save tournament state using utility
   const saveTournamentState = (
@@ -197,55 +193,21 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
 
   // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
-  // Start/Stop auto selecting helpers
-  const stopAutoSelecting = () => {
-    if (intervalRef.current !== null) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+  // Complete one match automatically
+  const completeOneMatch = () => {
+    if (tournamentCompleteRef.current) return;
+    
+    const currentMatches = matchesRef.current;
+    const activeMatches = currentMatches.filter(m => getMatchRoundKey(m) === currentRoundKeyRef.current);
+    const pendingMatches = activeMatches.filter(m => !m.isBye && !m.winnerId);
+    
+    if (pendingMatches.length > 0) {
+      // Pick deterministically: by round then matchNumber
+      const nextMatch = [...pendingMatches].sort((a, b) => (a.round - b.round) || (a.matchNumber - b.matchNumber))[0];
+      const winnerId = Math.random() < 0.5 ? nextMatch.player1Id : nextMatch.player2Id;
+      if (winnerId) handleMatchResult(nextMatch.id, winnerId);
     }
-    autoSelectingRef.current = false;
-    setAutoSelecting(false);
-    autoRoundKeyRef.current = null;
   };
-
-  const startAutoSelecting = () => {
-    if (autoSelectingRef.current) return;
-    autoSelectingRef.current = true;
-    setAutoSelecting(true);
-    // Lock to the current round; we will advance only when round key actually changes
-    autoRoundKeyRef.current = currentRoundKeyRef.current;
-    intervalRef.current = window.setInterval(() => {
-      if (!autoSelectingRef.current) return;
-      if (tournamentCompleteRef.current) {
-        stopAutoSelecting();
-        return;
-      }
-      // Work on locked round first to avoid oscillation
-      const lockedKey = autoRoundKeyRef.current || currentRoundKeyRef.current;
-      const currentMatches = matchesRef.current;
-      const activeLocked = currentMatches.filter(m => getMatchRoundKey(m) === lockedKey);
-      const pendingLocked = activeLocked.filter(m => !m.isBye && !m.winnerId);
-      if (pendingLocked.length > 0) {
-        // Pick deterministically: by round then matchNumber
-        const nextMatch = [...pendingLocked].sort((a, b) => (a.round - b.round) || (a.matchNumber - b.matchNumber))[0];
-        const winnerId = Math.random() < 0.5 ? nextMatch.player1Id : nextMatch.player2Id;
-        if (winnerId) handleMatchResult(nextMatch.id, winnerId);
-        return;
-      }
-      // No pending in locked round; if UI advanced to a new round, follow it
-      if (currentRoundKeyRef.current !== lockedKey) {
-        autoRoundKeyRef.current = currentRoundKeyRef.current;
-      }
-      // Otherwise wait until next round is generated
-    }, 600);
-  };
-
-  // Cleanup on unmount
-  React.useEffect(() => {
-    return () => {
-      stopAutoSelecting();
-    };
-  }, []);
 
   const isRoundComplete = (roundKey: RoundKey, matchList: Match[]) => {
     const roundMatches = matchList.filter(m => getMatchRoundKey(m) === roundKey);
@@ -877,9 +839,6 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
   };
 
   const undoLastMatch = () => {
-    if (autoSelectingRef.current) {
-      stopAutoSelecting();
-    }
     const stack = completedOrder.length > 0 ? completedOrder : [...matches]
       .filter(m => m.winnerId && !m.isBye)
       .sort((a, b) => {
@@ -1185,22 +1144,16 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
             </button>
           )}
           
-          {/* Auto-select Winners Toggle Button */}
+          {/* Complete One Match Button */}
           {!tournamentComplete && (
             <button
-              onClick={() => {
-                if (autoSelectingRef.current) {
-                  stopAutoSelecting();
-                } else {
-                  startAutoSelecting();
-                }
-              }}
-              className={`inline-flex items-center gap-2 px-4 py-2 ${autoSelecting ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700' : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'} text-white rounded-lg shadow transition-all duration-200 text-sm font-semibold`}
+              onClick={completeOneMatch}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow transition-all duration-200 text-sm font-semibold"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              {autoSelecting ? 'Otomatik Seçmeyi Durdur' : 'Bu Turun Kazananlarını Otomatik Seç'}
+              Bir Maçı Tamamla
             </button>
           )}
         </div>
