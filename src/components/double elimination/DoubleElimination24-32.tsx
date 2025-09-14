@@ -24,7 +24,7 @@ interface DoubleElimination24_32Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
+const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, onClearAllOpponents, fixtureId }) => {
   const { t } = useTranslation();
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
@@ -1079,18 +1079,22 @@ const DoubleElimination24_32: React.FC<DoubleElimination24_32Props> = ({ players
       <div>
         <div className="flex justify-center gap-4 mb-6">
           <button
-            onClick={() => {
-              if (window.confirm(t('matches.resetTournamentConfirm'))) {
-                clearTournamentState();
-                initializeTournament();
-                setSelectedWinner({});
-                setCompletedOrder([]);
-                // Fikstürü aktif hale getir
-                if (fixtureId) {
-                  MatchesStorage.activateFixture(fixtureId);
+              onClick={() => {
+                if (window.confirm(t('matches.resetTournamentConfirm'))) {
+                  clearTournamentState();
+                  initializeTournament();
+                  setSelectedWinner({});
+                  setCompletedOrder([]);
+                  // Fikstürü aktif hale getir
+                  if (fixtureId) {
+                    MatchesStorage.activateFixture(fixtureId);
+                  }
+                  // Tüm oyuncuların opponents listesini temizle
+                  if (onClearAllOpponents) {
+                    onClearAllOpponents();
+                  }
                 }
-              }
-            }}
+              }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

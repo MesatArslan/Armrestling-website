@@ -797,6 +797,20 @@ const Matches = () => {
         const updatedFixture = { ...activeFixture, players: updatedPlayers } as Fixture;
         upsertFixture(updatedFixture);
       },
+      onClearAllOpponents: () => {
+        // Tüm oyuncuların opponents listesini temizle
+        const updatedPlayers = activeFixture.players.map(p => ({
+          ...p,
+          opponents: []
+        }));
+        const updatedFixture = { 
+          ...activeFixture, 
+          players: updatedPlayers,
+          status: 'active' as const,
+          lastUpdated: new Date().toISOString()
+        };
+        upsertFixture(updatedFixture);
+      },
       fixtureId: activeFixture.id
     };
 

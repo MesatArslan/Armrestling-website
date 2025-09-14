@@ -23,7 +23,7 @@ interface DoubleElimination384_512Props extends DoubleEliminationProps {
   resetKey?: number;
 }
 
-const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
+const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ players, resetKey, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, onClearAllOpponents, fixtureId }) => {
   const { t } = useTranslation();
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<Ranking>({});
@@ -1327,6 +1327,10 @@ const DoubleElimination384_512: React.FC<DoubleElimination384_512Props> = ({ pla
                   // Fikstürü aktif hale getir
                   if (fixtureId) {
                     MatchesStorage.activateFixture(fixtureId);
+                  }
+                  // Tüm oyuncuların opponents listesini temizle
+                  if (onClearAllOpponents) {
+                    onClearAllOpponents();
                   }
                 }
               }}

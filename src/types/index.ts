@@ -76,6 +76,7 @@ export interface DoubleEliminationProps {
   onTournamentComplete?: (rankings: { first?: string; second?: string; third?: string; fourth?: string }) => void;
   onUpdateOpponents?: (player1Id: string, player2Id: string, matchDescription: string, winnerId: string) => void;
   onRemoveOpponents?: (player1Id: string, player2Id: string, matchDescription: string) => void;
+  onClearAllOpponents?: () => void;
   initialTab?: 'active' | 'completed' | 'rankings';
   fixtureId?: string;
 }

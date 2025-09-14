@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 const ROUND_ORDER = ['WB1', 'WB2', 'LB1', 'Final', 'GrandFinal'] as const;
 type RoundKey = typeof ROUND_ORDER[number];
 
-const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, fixtureId }) => {
+const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatchResult, onTournamentComplete, onUpdateOpponents, onRemoveOpponents, onClearAllOpponents, fixtureId }) => {
   const { t } = useTranslation();
   const [matches, setMatches] = useState<Match[]>([]);
   const [rankings, setRankings] = useState<{
@@ -359,6 +359,10 @@ const DoubleElimination3: React.FC<DoubleEliminationProps> = ({ players, onMatch
       // Fikstürü aktif hale getir
       if (fixtureId) {
         MatchesStorage.activateFixture(fixtureId);
+      }
+      // Tüm oyuncuların opponents listesini temizle
+      if (onClearAllOpponents) {
+        onClearAllOpponents();
       }
     }
   };
