@@ -116,8 +116,8 @@ button {
 .tab-switcher-btn-right {
   border-radius: 0 0.75rem 0.75rem 0;
 }
-/* default hover (fallback) */
-.tab-switcher-btn:hover {
+/* default hover (fallback) - only for non-active buttons */
+.tab-switcher-btn:not(.tab-switcher-btn-active):hover {
   background: #e0e7ff;
 }
 /* active styles */
