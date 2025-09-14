@@ -140,7 +140,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
         
         <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
           {/* Left Column - Tournament Details and Filters */}
-          <div className="w-full lg:w-1/2 border-r-0 lg:border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-3 sm:p-4 lg:p-6 overflow-y-auto">
+          <div className="w-full lg:w-1/2 border-r-0 lg:border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-3 sm:p-4 lg:p-6 overflow-y-auto flex-shrink-0 lg:flex-shrink max-h-[40vh] lg:max-h-none">
             <div className="space-y-4 sm:space-y-6">
               {/* Tournament Name */}
               <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
@@ -234,7 +234,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
           </div>
 
           {/* Right Column - Weight Ranges */}
-          <div className="flex-1 p-3 sm:p-4 lg:p-8 overflow-y-auto bg-gray-50">
+          <div className="flex-1 p-3 sm:p-4 lg:p-8 overflow-y-auto bg-gray-50 min-h-0">
             <div className="space-y-4 sm:space-y-6">
               <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
@@ -251,7 +251,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                   </button>
                 </div>
                 
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3 sm:space-y-4 max-h-[55vh] sm:max-h-[60vh] overflow-y-auto">
                   {weightRanges.map((range, index) => (
                     <div key={range.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm">
                       <div className="flex items-center justify-between mb-3">
