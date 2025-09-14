@@ -191,6 +191,7 @@
     "createPDF": "PDF Oluştur",
     "closePlayerManagement": "Yarışmacı yönetimini kapat",
     "availablePlayers": "Mevcut Yarışmacılar ({{count}})",
+    "searchPlayers": "Yarışmacı ara...",
     "excludedPlayers": "Hariç Tutulan Yarışmacılar ({{count}})",
     "excludedPlayersDescription": "Bu yarışmacılar bu sıklet aralığından hariç tutulmuş ancak ana yarışmacı listesinde hala mevcut",
     "playersAvailable": "yarışmacı mevcut",

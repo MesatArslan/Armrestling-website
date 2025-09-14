@@ -419,6 +419,7 @@
     "createPDF": "Create PDF",
     "closePlayerManagement": "Close player management",
     "availablePlayers": "Available Players ({{count}})",
+    "searchPlayers": "Search players...",
     "excludedPlayers": "Excluded Players ({{count}})",
     "excludedPlayersDescription": "These players are excluded from this weight range but still exist in the main players list",
     "playersAvailable": "players available",

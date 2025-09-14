@@ -86,6 +86,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
     weightMax: null as number | null,
   });
   const [isPlayerManagementOpen, setIsPlayerManagementOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   // Bulk PDF state handled by parent
 
 
@@ -353,9 +354,30 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
 
                 {/* Available Players Table */}
                 <div className="mb-8 flex-1 min-h-0">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                    {t('tournamentCard.availablePlayers', { count: getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length })}
-                  </h4>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-800">
+                      {t('tournamentCard.availablePlayers', { count: getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).length })}
+                    </h4>
+                  </div>
+                  
+                  {/* Search Input */}
+                  <div className="mb-4">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder={t('tournamentCard.searchPlayers')}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="h-96 overflow-y-auto">
                     <PlayersTable
                       players={getFilteredPlayers(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!).map(player => ({
@@ -372,8 +394,8 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                         { id: 'opponents', name: t('opponentsModal.opponents'), visible: hasStartedMatches(tournament.weightRanges.find(wr => wr.id === selectedWeightRange)!) },
                       ]}
                       onColumnsChange={() => { }} // Read-only
-                      searchTerm=""
-                      onSearchChange={() => { }} // Read-only
+                      searchTerm={searchTerm}
+                      onSearchChange={setSearchTerm}
                       showAddRow={false}
                       showDeleteColumn={true}
                       onDeletePlayer={handleExcludePlayer}
