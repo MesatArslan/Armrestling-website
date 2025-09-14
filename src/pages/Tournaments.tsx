@@ -877,152 +877,224 @@ const Tournaments = () => {
       </div>
     )}
 
-    {/* PDF Column Selection Modal - Moved outside main content */}
+    {/* Template-Style PDF Download Form Modal */}
     {isBulkPDFModalOpen && currentTournamentForPDF && (
-      <div 
-        className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9998] overflow-hidden"
-        onClick={() => setIsBulkPDFModalOpen(false)}
-      >
-        <div 
-          className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-3xl max-h-[85vh] overflow-y-auto mx-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('tournamentCard.pdfPreview')}</h3>
-              <p className="text-sm text-gray-600">{currentTournamentForPDF.name} — Fikstürleri seçin, kolonları belirleyin.</p>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-2 sm:p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
+          {/* Header - Template Style */}
+          <div className="bg-gradient-to-r from-red-600 to-pink-600 px-4 sm:px-8 py-4 sm:py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="bg-white/20 rounded-lg p-1.5 sm:p-2">
+                  <svg className="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-2xl font-bold text-white">
+                    {t('tournamentCard.pdfPreview')}
+                  </h2>
+                  <p className="text-red-100 mt-1 text-xs sm:text-sm">
+                    {currentTournamentForPDF.name} - PDF Ayarları
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const selectedRanges = currentTournamentForPDF!.weightRanges.filter(wr => selectedBulkRanges[wr.id]);
+                    if (selectedRanges.length === 0) return;
+                    const pages = generateCombinedPreviewPages(
+                      currentTournamentForPDF!,
+                      selectedRanges,
+                      selectedPDFColumns,
+                      bulkPlayersPerPage,
+                      availablePDFColumns,
+                      (wr) => {
+                        return players.filter((player) => {
+                          if (wr.excludedPlayerIds?.includes(player.id)) return false;
+                          const matchesWeight = Number(player.weight || 0) >= wr.min && Number(player.weight || 0) <= wr.max;
+                          const matchesTournamentGender = !currentTournamentForPDF?.genderFilter || player.gender === currentTournamentForPDF?.genderFilter;
+                          const matchesTournamentHand = !currentTournamentForPDF?.handPreferenceFilter || player.handPreference === currentTournamentForPDF?.handPreferenceFilter || player.handPreference === 'both';
+                          let matchesBirthYear = true;
+                          if ((currentTournamentForPDF?.birthYearMin || currentTournamentForPDF?.birthYearMax) && player.birthday) {
+                            const y = new Date(player.birthday).getFullYear();
+                            matchesBirthYear = (!currentTournamentForPDF?.birthYearMin || y >= currentTournamentForPDF?.birthYearMin) && (!currentTournamentForPDF?.birthYearMax || y <= currentTournamentForPDF?.birthYearMax);
+                          }
+                          return matchesWeight && matchesTournamentGender && matchesTournamentHand && matchesBirthYear;
+                        });
+                      }
+                    );
+                    setPreviewPages(pages);
+                    setCurrentPreviewPage(0);
+                    setIsBulkPreviewMode(true);
+                    setIsBulkPDFModalOpen(false);
+                    setIsPDFPreviewModalOpen(true);
+                  }}
+                  className="px-3 py-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-200 text-sm font-semibold flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {t('tournamentCard.openPreview')}
+                </button>
+                <button
+                  onClick={() => setIsBulkPDFModalOpen(false)}
+                  className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => setIsBulkPDFModalOpen(false)}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
-            >
-              <XMarkIcon className="w-6 h-6" />
-            </button>
           </div>
 
-          {/* Select fixtures */}
-          <div className="mb-6">
-            <h4 className="text-sm font-semibold text-gray-800 mb-2">Fikstür Seçimi</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {currentTournamentForPDF.weightRanges.map(wr => (
-                <label key={wr.id} className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition">
+          <div className="h-[calc(95vh-120px)]">
+            {/* Main Content - Selection Areas */}
+            <div className="p-3 sm:p-6 overflow-y-auto bg-gray-50 h-full">
+              {/* Players Per Page - Top Right */}
+              <div className="flex justify-end mb-6">
+                <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                    <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    {t('tournamentCard.playersPerPage')}
+                  </h4>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.min')}: 1</span>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.max')}: 40</span>
+                  </div>
                   <input
-                    type="checkbox"
-                    checked={!!selectedBulkRanges[wr.id]}
-                    onChange={(e) => setSelectedBulkRanges(prev => ({ ...prev, [wr.id]: e.target.checked }))}
-                  />
-                  <span className="text-sm text-gray-800 truncate">{wr.name}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Select columns */}
-          <div className="mb-6">
-            <h4 className="text-sm font-semibold text-gray-800 mb-2">PDF Kolonları</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {availablePDFColumns.map((column) => (
-                <label key={column.id} className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
-                  <input
-                    type="checkbox"
-                    checked={selectedPDFColumns.includes(column.id)}
+                    type="text"
+                    value={bulkPlayersPerPage || ''}
                     onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedPDFColumns([...selectedPDFColumns, column.id]);
+                      const v = e.target.value;
+                      if (v === '') {
+                        setBulkPlayersPerPage(0);
                       } else {
-                        setSelectedPDFColumns(selectedPDFColumns.filter(id => id !== column.id));
+                        const n = parseInt(v);
+                        if (n >= 1 && n <= 40) setBulkPlayersPerPage(n);
                       }
                     }}
-                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    onBlur={(e) => {
+                      if (!e.target.value || parseInt(e.target.value) < 1) setBulkPlayersPerPage(33);
+                    }}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-center text-sm font-semibold text-gray-900 outline-none"
+                    placeholder="33"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                   />
-                  <span className="text-sm font-medium text-gray-700">{
-                    ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'].includes(column.id)
-                      ? t(`players.${column.id}`)
-                      : column.name
-                  }</span>
-                </label>
-              ))}
-            </div>
-          </div>
+                </div>
+              </div>
 
-          {/* Players per page for bulk generation */}
-          <div className="mb-6">
-            <h4 className="text-sm font-semibold text-gray-800 mb-2">{t('tournamentCard.playersPerPage')}</h4>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.min')}: 1</span>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.max')}: 40</span>
-            </div>
-            <input
-              type="number"
-              min={1}
-              max={40}
-              value={bulkPlayersPerPage || ''}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === '') {
-                  setBulkPlayersPerPage(0);
-                } else {
-                  const n = parseInt(v);
-                  if (n >= 1 && n <= 40) setBulkPlayersPerPage(n);
-                }
-              }}
-              onBlur={(e) => {
-                if (!e.target.value || parseInt(e.target.value) < 1) setBulkPlayersPerPage(33);
-              }}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-base sm:text-lg font-semibold"
-              placeholder="33"
-            />
-          </div>
+              {/* Weight Range Selection */}
+              <div className="mb-6 sm:mb-8">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-2">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-lg">Gösterilecek Fikstürler</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {currentTournamentForPDF.weightRanges.map(wr => (
+                    <div
+                      key={wr.id}
+                      className={`border-2 rounded-lg p-2 transition-all duration-200 ${
+                        selectedBulkRanges[wr.id] 
+                          ? 'bg-white hover:border-blue-500 hover:shadow-md cursor-pointer border-blue-500' 
+                          : 'bg-white hover:border-blue-400 hover:shadow-md cursor-pointer border-gray-200'
+                      }`}
+                      onClick={() => setSelectedBulkRanges(prev => ({ ...prev, [wr.id]: !prev[wr.id] }))}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded p-1">
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h4 className="font-semibold text-gray-900 text-xs">{wr.name}</h4>
+                        </div>
+                        {selectedBulkRanges[wr.id] && (
+                          <div className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-xs font-semibold">
+                            Seçili
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="mb-1">
+                        <div className="inline-block bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 text-xs px-1.5 py-0.5 rounded font-medium border border-blue-200">
+                          {wr.min} - {wr.max} kg
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setIsBulkPDFModalOpen(false)}
-              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm font-semibold rounded-lg"
-            >
-              {t('common.close')}
-            </button>
-              <button
-              onClick={() => {
-                const selectedRanges = currentTournamentForPDF!.weightRanges.filter(wr => selectedBulkRanges[wr.id]);
-                if (selectedRanges.length === 0) return;
-                const pages = generateCombinedPreviewPages(
-                  currentTournamentForPDF!,
-                  selectedRanges,
-                  selectedPDFColumns,
-                  bulkPlayersPerPage,
-                  availablePDFColumns,
-                  (wr) => {
-                    return players.filter((player) => {
-                      if (wr.excludedPlayerIds?.includes(player.id)) return false;
-                      const matchesWeight = Number(player.weight || 0) >= wr.min && Number(player.weight || 0) <= wr.max;
-                      const matchesTournamentGender = !currentTournamentForPDF?.genderFilter || player.gender === currentTournamentForPDF?.genderFilter;
-                      const matchesTournamentHand = !currentTournamentForPDF?.handPreferenceFilter || player.handPreference === currentTournamentForPDF?.handPreferenceFilter || player.handPreference === 'both';
-                      let matchesBirthYear = true;
-                      if ((currentTournamentForPDF?.birthYearMin || currentTournamentForPDF?.birthYearMax) && player.birthday) {
-                        const y = new Date(player.birthday).getFullYear();
-                        matchesBirthYear = (!currentTournamentForPDF?.birthYearMin || y >= currentTournamentForPDF?.birthYearMin) && (!currentTournamentForPDF?.birthYearMax || y <= currentTournamentForPDF?.birthYearMax);
-                      }
-                      return matchesWeight && matchesTournamentGender && matchesTournamentHand && matchesBirthYear;
-                    });
-                  }
-                );
-                setPreviewPages(pages);
-                setCurrentPreviewPage(0);
-                setIsBulkPreviewMode(true);
-                setIsBulkPDFModalOpen(false);
-                setIsPDFPreviewModalOpen(true);
-              }}
-              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
-            >
-              {t('tournamentCard.openPreview')}
-            </button>
+              {/* Column Selection */}
+              <div className="mb-6 sm:mb-8">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-2">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-lg">Gösterilecek PDF Kolonları</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {availablePDFColumns.map((column) => (
+                    <div
+                      key={column.id}
+                      className={`border-2 rounded-lg p-3 transition-all duration-200 ${
+                        selectedPDFColumns.includes(column.id)
+                          ? 'bg-white hover:border-green-500 hover:shadow-md cursor-pointer border-green-500' 
+                          : 'bg-white hover:border-green-400 hover:shadow-md cursor-pointer border-gray-200'
+                      }`}
+                      onClick={() => {
+                        if (selectedPDFColumns.includes(column.id)) {
+                          setSelectedPDFColumns(selectedPDFColumns.filter(id => id !== column.id));
+                        } else {
+                          setSelectedPDFColumns([...selectedPDFColumns, column.id]);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded p-1.5">
+                            <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h4 className="font-semibold text-gray-900 text-sm">
+                            {['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'].includes(column.id)
+                              ? t(`players.${column.id}`)
+                              : column.name
+                            }
+                          </h4>
+                        </div>
+                        {selectedPDFColumns.includes(column.id) && (
+                          <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">
+                            Seçili
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     )}
+    {/* Modern Individual PDF Column Selection Modal */}
     {isPDFColumnModalOpen && (
       <div 
-        className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9998] overflow-hidden"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9998] overflow-hidden animate-in fade-in duration-300"
         onClick={() => {
           setIsPDFColumnModalOpen(false);
           setCurrentTournamentForPDF(null);
@@ -1030,82 +1102,130 @@ const Tournaments = () => {
         }}
       >
         <div 
-          className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md sm:max-w-lg max-h-[85vh] overflow-y-auto mx-2"
+          className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto mx-2 animate-in slide-in-from-bottom-4 duration-300"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('tournamentCard.pdfColumnSelection')}</h3>
-              <p className="text-sm text-gray-600">{t('tournamentCard.selectColumnsForPDF')}</p>
+          {/* Header with modern styling */}
+          <div className="flex justify-between items-start mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{t('tournamentCard.pdfColumnSelection')}</h3>
+                <p className="text-sm text-gray-600">{t('tournamentCard.selectColumnsForPDF')}</p>
+              </div>
             </div>
             <button
               onClick={() => setIsPDFColumnModalOpen(false)}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+              className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-2xl transition-all duration-200 group"
             >
-              <XMarkIcon className="w-6 h-6" />
+              <XMarkIcon className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" />
             </button>
           </div>
           
-          <div className="mb-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Column Selection */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h4 className="text-lg font-bold text-gray-900">PDF Kolonları</h4>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">PDF'de görüntülenecek oyuncu bilgilerini seçin</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {availablePDFColumns.map((column) => (
-                <label key={column.id} className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
-                  <input
-                    type="checkbox"
-                    checked={selectedPDFColumns.includes(column.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedPDFColumns([...selectedPDFColumns, column.id]);
-                      } else {
-                        setSelectedPDFColumns(selectedPDFColumns.filter(id => id !== column.id));
-                      }
-                    }}
-                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <span className="text-sm font-medium text-gray-700">{
-  ['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'].includes(column.id)
-    ? t(`players.${column.id}`)
-    : column.name
-}</span>
+                <label key={column.id} className="group cursor-pointer">
+                  <div className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 ${
+                    selectedPDFColumns.includes(column.id)
+                      ? 'border-green-500 bg-green-50 shadow-md' 
+                      : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={selectedPDFColumns.includes(column.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedPDFColumns([...selectedPDFColumns, column.id]);
+                        } else {
+                          setSelectedPDFColumns(selectedPDFColumns.filter(id => id !== column.id));
+                        }
+                      }}
+                      className="w-5 h-5 text-green-600 bg-white border-2 border-gray-300 rounded focus:ring-green-500 focus:ring-2 transition-all duration-200"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-semibold text-gray-800 block">
+                        {['name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'].includes(column.id)
+                          ? t(`players.${column.id}`)
+                          : column.name
+                        }
+                      </span>
+                    </div>
+                    {selectedPDFColumns.includes(column.id) && (
+                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              {t('tournamentCard.playersPerPage')}
-            </label>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.min')}: 1</span>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.max')}: 40</span>
+          {/* Players Per Page */}
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h4 className="text-lg font-bold text-gray-900">{t('tournamentCard.playersPerPage')}</h4>
             </div>
-            <input
-              type="number"
-              min="1"
-              max="40"
-              value={playersPerPage || ''}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === '') {
-                  setPlayersPerPage(0);
-                } else {
-                  const numValue = parseInt(value);
-                  if (numValue >= 1 && numValue <= 40) {
-                    setPlayersPerPage(numValue);
+            <p className="text-sm text-gray-600 mb-4">Sayfa başına gösterilecek oyuncu sayısını belirleyin</p>
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-lg font-medium">{t('tournamentCard.min')}: 1</span>
+              <span className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-lg font-medium">{t('tournamentCard.max')}: 40</span>
+              <span className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-lg font-medium">Önerilen: 33</span>
+            </div>
+            <div className="relative">
+              <input
+                type="number"
+                min="1"
+                max="40"
+                value={playersPerPage || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '') {
+                    setPlayersPerPage(0);
+                  } else {
+                    const numValue = parseInt(value);
+                    if (numValue >= 1 && numValue <= 40) {
+                      setPlayersPerPage(numValue);
+                    }
                   }
-                }
-              }}
-              onBlur={(e) => {
-                if (!e.target.value || parseInt(e.target.value) < 1) {
-                  setPlayersPerPage(33);
-                }
-              }}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-base sm:text-lg font-semibold"
-              placeholder="33"
-            />
+                }}
+                onBlur={(e) => {
+                  if (!e.target.value || parseInt(e.target.value) < 1) {
+                    setPlayersPerPage(33);
+                  }
+                }}
+                className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-center text-lg font-bold bg-white transition-all duration-200"
+                placeholder="33"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-4">
+                <span className="text-sm text-gray-400 font-medium">oyuncu</span>
+              </div>
+            </div>
           </div>
           
+          {/* Action Button */}
           <div className="flex justify-center">
             <button
               onClick={() => {
@@ -1118,8 +1238,12 @@ const Tournaments = () => {
                   handleShowPDFPreview(currentTournamentForPDF, currentWeightRangeForPDF);
                 }
               }}
-              className="px-6 sm:px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm sm:text-base font-semibold"
+              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-base font-semibold flex items-center gap-2"
             >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
               {t('tournamentCard.openPreview')}
             </button>
           </div>
@@ -1127,10 +1251,10 @@ const Tournaments = () => {
       </div>
     )}
 
-    {/* PDF Preview Modal - Moved outside main content */}
+    {/* Modern PDF Preview Modal */}
     {isPDFPreviewModalOpen && (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-2 sm:p-4 z-[9999] overflow-hidden"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-[9999] overflow-hidden animate-in fade-in duration-300"
         onClick={() => {
           setIsPDFPreviewModalOpen(false);
           setCurrentTournamentForPDF(null);
@@ -1140,11 +1264,22 @@ const Tournaments = () => {
         }}
       >
         <div 
-          className="bg-white rounded-lg sm:rounded-2xl shadow-2xl p-2 sm:p-4 md:p-6 w-full max-w-xs sm:max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[98vh] sm:max-h-[95vh] overflow-y-auto mx-1 sm:mx-2"
+          className="bg-white rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 w-full max-w-xs sm:max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[98vh] sm:max-h-[95vh] overflow-y-auto mx-1 sm:mx-2 animate-in slide-in-from-bottom-4 duration-300"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">{t('tournamentCard.pdfPreview')}</h3>
+          {/* Modern Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{t('tournamentCard.pdfPreview')}</h3>
+                <p className="text-sm text-gray-600">PDF önizlemesi</p>
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button
                 onClick={async () => {
@@ -1191,8 +1326,11 @@ const Tournaments = () => {
                     await handleExportPDF();
                   }
                 }}
-                className="px-3 sm:px-4 py-2 sm:py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold flex-1 sm:flex-none"
+                className="px-4 sm:px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl shadow-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-semibold flex items-center gap-2 justify-center flex-1 sm:flex-none"
               >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
                 {t('tournamentCard.downloadPDF')}
               </button>
               <button
@@ -1204,44 +1342,57 @@ const Tournaments = () => {
                     handleShowPDFColumnModal(currentTournamentForPDF, currentWeightRangeForPDF);
                   }
                 }}
-                className="px-3 sm:px-4 py-2 sm:py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-xs sm:text-sm font-semibold flex-1 sm:flex-none"
+                className="px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold flex items-center gap-2 justify-center flex-1 sm:flex-none"
               >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
                 {t('tournamentCard.returnToColumnSelection')}
               </button>
               <button
                 onClick={() => setIsPDFPreviewModalOpen(false)}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200 self-end sm:self-auto"
+                className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 self-end sm:self-auto"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
           </div>
           
-          <div className="bg-gray-50 p-2 sm:p-4 md:p-8 rounded-lg sm:rounded-xl border-2 border-dashed border-gray-300 overflow-x-auto">
+          {/* Modern Preview Container */}
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 md:p-8 rounded-2xl border-2 border-dashed border-gray-300 overflow-x-auto">
 
-            {/* Page Navigation - Fixed Position */}
+            {/* Modern Page Navigation */}
             {previewPages.length > 1 && (
-              <div className="sticky top-0 z-10 bg-white border-b border-gray-200 py-2 sm:py-3 mb-3 sm:mb-4 rounded-t-lg">
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
-                  <div className="flex gap-2 sm:gap-4">
+              <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border border-gray-200 py-4 sm:py-6 mb-4 sm:mb-6 rounded-2xl shadow-lg">
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6">
+                  <div className="flex gap-3 sm:gap-4">
                     <button
                       onClick={() => setCurrentPreviewPage(Math.max(0, currentPreviewPage - 1))}
                       disabled={currentPreviewPage === 0}
-                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm touch-manipulation"
+                      className="px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-sm flex items-center gap-2"
                     >
-                      ← {t('tournamentCard.previousPage')}
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      {t('tournamentCard.previousPage')}
                     </button>
                     <button
                       onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
                       disabled={currentPreviewPage === previewPages.length - 1}
-                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm touch-manipulation"
+                      className="px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-sm flex items-center gap-2"
                     >
-                      {t('tournamentCard.nextPage')} →
+                      {t('tournamentCard.nextPage')}
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </button>
                   </div>
-                  <span className="text-xs sm:text-sm font-semibold text-gray-700 bg-gray-100 px-3 sm:px-4 py-1 sm:py-2 rounded-lg">
-                    {t('tournamentCard.page')} {currentPreviewPage + 1} / {previewPages.length}
-                  </span>
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl border border-blue-200">
+                    <span className="text-sm sm:text-base font-bold text-blue-800">
+                      {t('tournamentCard.page')} {currentPreviewPage + 1} / {previewPages.length}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -1254,10 +1405,12 @@ const Tournaments = () => {
             </div>
           </div>
           
-          <div className="mt-4 sm:mt-6 text-center px-2">
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Bu, PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki "PDF İndir" butonunu kullanabilirsiniz.
-            </p>
+          <div className="mt-6 sm:mt-8 text-center px-2">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+              <p className="text-sm sm:text-base text-blue-800 leading-relaxed font-medium">
+                Bu, PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki "PDF İndir" butonunu kullanabilirsiniz.
+              </p>
+            </div>
           </div>
         </div>
       </div>
