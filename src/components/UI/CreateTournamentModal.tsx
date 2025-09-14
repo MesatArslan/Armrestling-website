@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { XMarkIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
@@ -51,6 +51,18 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
   const [birthYearMax, setBirthYearMax] = useState<number | null>(
     initialData?.birthYearMax || null
   );
+
+  // Update form state when initialData changes (for edit mode)
+  useEffect(() => {
+    if (isEditMode && initialData) {
+      setNewTournamentName(initialData.name || '');
+      setWeightRanges(initialData.weightRanges || [{ id: uuidv4(), name: '', min: 0, max: 0 }]);
+      setGenderFilter(initialData.genderFilter || 'male');
+      setHandPreferenceFilter(initialData.handPreferenceFilter || null);
+      setBirthYearMin(initialData.birthYearMin || null);
+      setBirthYearMax(initialData.birthYearMax || null);
+    }
+  }, [isEditMode, initialData]);
 
   const handleAddWeightRange = () => {
     setWeightRanges([...weightRanges, { id: uuidv4(), name: '', min: 0, max: 0 }]);
