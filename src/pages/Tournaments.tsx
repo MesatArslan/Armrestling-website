@@ -1130,7 +1130,7 @@ const Tournaments = () => {
     {/* PDF Preview Modal - Moved outside main content */}
     {isPDFPreviewModalOpen && (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[9999] overflow-hidden"
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-2 sm:p-4 z-[9999] overflow-hidden"
         onClick={() => {
           setIsPDFPreviewModalOpen(false);
           setCurrentTournamentForPDF(null);
@@ -1140,12 +1140,12 @@ const Tournaments = () => {
         }}
       >
         <div 
-          className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-5xl max-h-[95vh] overflow-y-auto mx-2"
+          className="bg-white rounded-lg sm:rounded-2xl shadow-2xl p-2 sm:p-4 md:p-6 w-full max-w-xs sm:max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[98vh] sm:max-h-[95vh] overflow-y-auto mx-1 sm:mx-2"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('tournamentCard.pdfPreview')}</h3>
-            <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">{t('tournamentCard.pdfPreview')}</h3>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button
                 onClick={async () => {
                   setIsPDFPreviewModalOpen(false);
@@ -1191,7 +1191,7 @@ const Tournaments = () => {
                     await handleExportPDF();
                   }
                 }}
-                className="px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
+                className="px-3 sm:px-4 py-2 sm:py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold flex-1 sm:flex-none"
               >
                 {t('tournamentCard.downloadPDF')}
               </button>
@@ -1204,53 +1204,58 @@ const Tournaments = () => {
                     handleShowPDFColumnModal(currentTournamentForPDF, currentWeightRangeForPDF);
                   }
                 }}
-                className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
+                className="px-3 sm:px-4 py-2 sm:py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-xs sm:text-sm font-semibold flex-1 sm:flex-none"
               >
                 {t('tournamentCard.returnToColumnSelection')}
               </button>
               <button
                 onClick={() => setIsPDFPreviewModalOpen(false)}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200 self-end sm:self-auto"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
           </div>
           
-          <div className="bg-gray-50 p-8 rounded-xl border-2 border-dashed border-gray-300">
+          <div className="bg-gray-50 p-2 sm:p-4 md:p-8 rounded-lg sm:rounded-xl border-2 border-dashed border-gray-300 overflow-x-auto">
 
             {/* Page Navigation - Fixed Position */}
             {previewPages.length > 1 && (
-              <div className="sticky top-0 z-10 bg-white border-b border-gray-200 py-3 mb-4 rounded-t-lg">
-                <div className="flex justify-center items-center gap-4">
-                  <button
-                    onClick={() => setCurrentPreviewPage(Math.max(0, currentPreviewPage - 1))}
-                    disabled={currentPreviewPage === 0}
-                    className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
-                  >
-                    ← {t('tournamentCard.previousPage')}
-                  </button>
-                  <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">
+              <div className="sticky top-0 z-10 bg-white border-b border-gray-200 py-2 sm:py-3 mb-3 sm:mb-4 rounded-t-lg">
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
+                  <div className="flex gap-2 sm:gap-4">
+                    <button
+                      onClick={() => setCurrentPreviewPage(Math.max(0, currentPreviewPage - 1))}
+                      disabled={currentPreviewPage === 0}
+                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm touch-manipulation"
+                    >
+                      ← {t('tournamentCard.previousPage')}
+                    </button>
+                    <button
+                      onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
+                      disabled={currentPreviewPage === previewPages.length - 1}
+                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm touch-manipulation"
+                    >
+                      {t('tournamentCard.nextPage')} →
+                    </button>
+                  </div>
+                  <span className="text-xs sm:text-sm font-semibold text-gray-700 bg-gray-100 px-3 sm:px-4 py-1 sm:py-2 rounded-lg">
                     {t('tournamentCard.page')} {currentPreviewPage + 1} / {previewPages.length}
                   </span>
-                  <button
-                    onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
-                    disabled={currentPreviewPage === previewPages.length - 1}
-                    className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
-                  >
-                    {t('tournamentCard.nextPage')} →
-                  </button>
                 </div>
               </div>
             )}
             
-            <div className="flex justify-center">
-              <div dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }} />
+            <div className="flex justify-center overflow-x-auto">
+              <div 
+                className="pdf-preview-content"
+                dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }} 
+              />
             </div>
           </div>
           
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+          <div className="mt-4 sm:mt-6 text-center px-2">
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
               Bu, PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki "PDF İndir" butonunu kullanabilirsiniz.
             </p>
           </div>

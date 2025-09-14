@@ -196,6 +196,48 @@ button {
   margin: 0 auto;
 }
 
+/* PDF Preview Mobile Optimization */
+.pdf-preview-content {
+  min-width: 210mm;
+  max-width: 210mm;
+}
+
+@media (max-width: 640px) {
+  .pdf-preview-content {
+    transform: scale(0.4) !important;
+    transform-origin: top center !important;
+    width: 250% !important;
+    margin-bottom: -60%;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .pdf-preview-content {
+    transform: scale(0.6) !important;
+    transform-origin: top center !important;
+    width: 167% !important;
+    margin-bottom: -40%;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pdf-preview-content {
+    transform: scale(0.7) !important;
+    transform-origin: top center !important;
+    width: 143% !important;
+    margin-bottom: -30%;
+  }
+}
+
+@media (min-width: 1025px) {
+  .pdf-preview-content {
+    transform: scale(0.8) !important;
+    transform-origin: top center !important;
+    width: 125% !important;
+    margin-bottom: -20%;
+  }
+}
+
 /* Ekran önizlemesi için A4 çerçevesi (isteğe bağlı) */
 .a4-preview-wrapper {
   display: flex;
