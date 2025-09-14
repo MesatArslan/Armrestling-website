@@ -36,7 +36,7 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
   );
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [completedOrder, setCompletedOrder] = useState<string[]>([]);
-  const [autoSelecting, setAutoSelecting] = useState<boolean>(false);
+  const [, setAutoSelecting] = useState<boolean>(false);
   const autoSelectingRef = useRef<boolean>(false);
   const intervalRef = useRef<number | null>(null);
   const matchesRef = useRef<Match[]>(matches);
@@ -198,6 +198,22 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
 
   // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
+  // Complete one match automatically
+  const completeOneMatch = () => {
+    if (tournamentCompleteRef.current) return;
+    
+    const currentMatches = matchesRef.current;
+    const activeMatches = currentMatches.filter(m => getMatchRoundKey(m) === currentRoundKeyRef.current);
+    const pendingMatches = activeMatches.filter(m => !m.isBye && !m.winnerId);
+    
+    if (pendingMatches.length > 0) {
+      // Pick deterministically: by round then matchNumber
+      const nextMatch = [...pendingMatches].sort((a, b) => (a.round - b.round) || (a.matchNumber - b.matchNumber))[0];
+      const winnerId = Math.random() < 0.5 ? nextMatch.player1Id : nextMatch.player2Id;
+      if (winnerId) handleMatchResult(nextMatch.id, winnerId);
+    }
+  };
+
   // Auto-select control
   const stopAutoSelecting = () => {
     if (intervalRef.current !== null) {
@@ -209,32 +225,6 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
     autoRoundKeyRef.current = null;
   };
 
-  const startAutoSelecting = () => {
-    if (autoSelectingRef.current) return;
-    autoSelectingRef.current = true;
-    setAutoSelecting(true);
-    autoRoundKeyRef.current = currentRoundKeyRef.current;
-    intervalRef.current = window.setInterval(() => {
-      if (!autoSelectingRef.current) return;
-      if (tournamentCompleteRef.current) {
-        stopAutoSelecting();
-        return;
-      }
-      const lockedKey = autoRoundKeyRef.current || currentRoundKeyRef.current;
-      const currentMatches = matchesRef.current;
-      const activeLocked = currentMatches.filter(m => getMatchRoundKey(m) === lockedKey);
-      const pendingLocked = activeLocked.filter(m => !m.isBye && !m.winnerId);
-      if (pendingLocked.length > 0) {
-        const nextMatch = [...pendingLocked].sort((a, b) => (a.round - b.round) || (a.matchNumber - b.matchNumber))[0];
-        const winnerId = Math.random() < 0.5 ? nextMatch.player1Id : nextMatch.player2Id;
-        if (winnerId) handleMatchResult(nextMatch.id, winnerId);
-        return;
-      }
-      if (currentRoundKeyRef.current !== lockedKey) {
-        autoRoundKeyRef.current = currentRoundKeyRef.current;
-      }
-    }, 600);
-  };
 
   // Cleanup interval on unmount
   React.useEffect(() => () => { stopAutoSelecting(); }, []);
@@ -1201,24 +1191,19 @@ const DoubleElimination192_256: React.FC<DoubleElimination192_256Props> = ({ pla
             </button>
           )}
 
-          {/* Auto-select Winners Toggle Button */}
+          {/* Complete One Match Button */}
           {!tournamentComplete && (
             <button
-              onClick={() => {
-                if (autoSelectingRef.current) {
-                  stopAutoSelecting();
-                } else {
-                  startAutoSelecting();
-                }
-              }}
-              className={`inline-flex items-center gap-2 px-4 py-2 ${autoSelecting ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700' : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'} text-white rounded-lg shadow transition-all duration-200 text-sm font-semibold`}
+              onClick={completeOneMatch}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow transition-all duration-200 text-sm font-semibold"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              {autoSelecting ? 'Otomatik Seçmeyi Durdur' : 'Bu Turun Kazananlarını Otomatik Seç'}
+              Bir Maçı Tamamla
             </button>
           )}
+
         </div>
       )}
       {activeTab === 'active' && (
