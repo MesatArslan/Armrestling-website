@@ -880,7 +880,7 @@ const Tournaments = () => {
     {/* Template-Style PDF Download Form Modal */}
     {isBulkPDFModalOpen && currentTournamentForPDF && (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-2 sm:p-4">
-        <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
+        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden">
           {/* Header - Template Style */}
           <div className="bg-gradient-to-r from-red-600 to-pink-600 px-4 sm:px-8 py-4 sm:py-6">
             <div className="flex items-center justify-between">
@@ -949,44 +949,9 @@ const Tournaments = () => {
             </div>
           </div>
 
-          <div className="h-[calc(95vh-120px)]">
+          <div className="h-[calc(85vh-120px)]">
             {/* Main Content - Selection Areas */}
             <div className="p-3 sm:p-6 overflow-y-auto bg-gray-50 h-full">
-              {/* Players Per Page - Top Right */}
-              <div className="flex justify-end mb-6">
-                <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                  <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                    <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    {t('tournamentCard.playersPerPage')}
-                  </h4>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.min')}: 1</span>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.max')}: 40</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={bulkPlayersPerPage || ''}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (v === '') {
-                        setBulkPlayersPerPage(0);
-                      } else {
-                        const n = parseInt(v);
-                        if (n >= 1 && n <= 40) setBulkPlayersPerPage(n);
-                      }
-                    }}
-                    onBlur={(e) => {
-                      if (!e.target.value || parseInt(e.target.value) < 1) setBulkPlayersPerPage(33);
-                    }}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-center text-sm font-semibold text-gray-900 outline-none"
-                    placeholder="33"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                  />
-                </div>
-              </div>
 
               {/* Weight Range Selection */}
               <div className="mb-6 sm:mb-8">
@@ -1084,6 +1049,44 @@ const Tournaments = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Players Per Page - After PDF Columns */}
+              <div className="mb-6 sm:mb-8">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg p-2">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-lg">{t('tournamentCard.playersPerPage')}</h3>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.min')}: 1</span>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.max')}: 40</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={bulkPlayersPerPage || ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === '') {
+                        setBulkPlayersPerPage(0);
+                      } else {
+                        const n = parseInt(v);
+                        if (n >= 1 && n <= 40) setBulkPlayersPerPage(n);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (!e.target.value || parseInt(e.target.value) < 1) setBulkPlayersPerPage(33);
+                    }}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-center text-sm font-semibold text-gray-900 outline-none"
+                    placeholder="33"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                  />
                 </div>
               </div>
             </div>
