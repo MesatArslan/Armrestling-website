@@ -14,8 +14,8 @@ const PDFSettingsShell: React.FC<PDFSettingsShellProps> = ({ isOpen, titleSuffix
   const { t } = useTranslation();
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-2 sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-1 sm:p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl max-w-full sm:max-w-4xl w-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="bg-gradient-to-r from-red-600 to-pink-600 px-4 sm:px-8 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
@@ -32,7 +32,7 @@ const PDFSettingsShell: React.FC<PDFSettingsShellProps> = ({ isOpen, titleSuffix
             <div className="flex items-center gap-2">
               <button
                 onClick={onOpenPreview}
-                className="px-3 py-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-200 text-sm font-semibold flex items-center gap-2 text-white"
+                className="px-2 sm:px-3 py-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-200 text-xs sm:text-sm font-semibold flex items-center gap-2 text-white"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -47,8 +47,8 @@ const PDFSettingsShell: React.FC<PDFSettingsShellProps> = ({ isOpen, titleSuffix
           </div>
         </div>
 
-        <div className="h-[calc(85vh-120px)]">
-          <div className="p-3 sm:p-6 overflow-y-auto bg-gray-50 h-full">
+        <div className="h-[calc(90vh-120px)] sm:h-[calc(85vh-120px)]">
+          <div className="p-2 sm:p-6 overflow-y-auto bg-gray-50 h-full">
             {children}
           </div>
         </div>

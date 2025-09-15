@@ -1007,8 +1007,8 @@ const Tournaments = () => {
                       key={wr.id}
                       className={`border-2 rounded-lg p-2 transition-all duration-200 ${
                         selectedBulkRanges[wr.id] 
-                          ? 'bg-white hover:border-blue-500 hover:shadow-md cursor-pointer border-blue-500' 
-                          : 'bg-white hover:border-blue-400 hover:shadow-md cursor-pointer border-gray-200'
+                          ? 'bg-white sm:hover:border-blue-500 sm:hover:shadow-md cursor-pointer border-blue-500' 
+                          : 'bg-white sm:hover:border-blue-400 sm:hover:shadow-md cursor-pointer border-gray-200'
                       }`}
                       onClick={() => setSelectedBulkRanges(prev => ({ ...prev, [wr.id]: !prev[wr.id] }))}
                     >
@@ -1054,8 +1054,8 @@ const Tournaments = () => {
                       key={column.id}
                       className={`border-2 rounded-lg p-3 transition-all duration-200 ${
                         selectedPDFColumns.includes(column.id)
-                          ? 'bg-white hover:border-green-500 hover:shadow-md cursor-pointer border-green-500' 
-                          : 'bg-white hover:border-green-400 hover:shadow-md cursor-pointer border-gray-200'
+                          ? 'bg-white sm:hover:border-green-500 sm:hover:shadow-md cursor-pointer border-green-500' 
+                          : 'bg-white sm:hover:border-green-400 sm:hover:shadow-md cursor-pointer border-gray-200'
                       }`}
                       onClick={() => {
                         if (selectedPDFColumns.includes(column.id)) {

@@ -1416,8 +1416,8 @@ const Matches = () => {
               <div
                 className={`border-2 rounded-lg p-3 transition-all duration-200 ${
                   includeRankingsForPDF
-                    ? 'bg-white hover:border-blue-500 hover:shadow-md cursor-pointer border-blue-500'
-                    : 'bg-white hover:border-blue-400 hover:shadow-md cursor-pointer border-gray-200'
+                    ? 'bg-white sm:hover:border-blue-500 sm:hover:shadow-md cursor-pointer border-blue-500'
+                    : 'bg-white sm:hover:border-blue-400 sm:hover:shadow-md cursor-pointer border-gray-200'
                 }`}
                 onClick={() => setIncludeRankingsForPDF(!includeRankingsForPDF)}
                 role="button"
@@ -1441,8 +1441,8 @@ const Matches = () => {
               <div
                 className={`border-2 rounded-lg p-3 transition-all duration-200 ${
                   includeCompletedForPDF
-                    ? 'bg-white hover:border-blue-500 hover:shadow-md cursor-pointer border-blue-500'
-                    : 'bg-white hover:border-blue-400 hover:shadow-md cursor-pointer border-gray-200'
+                    ? 'bg-white sm:hover:border-blue-500 sm:hover:shadow-md cursor-pointer border-blue-500'
+                    : 'bg-white sm:hover:border-blue-400 sm:hover:shadow-md cursor-pointer border-gray-200'
                 }`}
                 onClick={() => setIncludeCompletedForPDF(!includeCompletedForPDF)}
                 role="button"
@@ -1483,8 +1483,8 @@ const Matches = () => {
                     key={col.id}
                     className={`border-2 rounded-lg p-3 transition-all duration-200 ${
                       selectedPlayerColumnsForPDF.includes(col.id)
-                        ? 'bg-white hover:border-green-500 hover:shadow-md cursor-pointer border-green-500'
-                        : 'bg-white hover:border-green-400 hover:shadow-md cursor-pointer border-gray-200'
+                        ? 'bg-white sm:hover:border-green-500 sm:hover:shadow-md cursor-pointer border-green-500'
+                        : 'bg-white sm:hover:border-green-400 sm:hover:shadow-md cursor-pointer border-gray-200'
                     }`}
                     onClick={() => {
                       if (selectedPlayerColumnsForPDF.includes(col.id)) {
