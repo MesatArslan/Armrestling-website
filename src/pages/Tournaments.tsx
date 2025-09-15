@@ -74,6 +74,8 @@ const Tournaments = () => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const hideProgressTimer = React.useRef<number | null>(null);
   const previewContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const previewContentRef = React.useRef<HTMLDivElement | null>(null);
+  const [previewLeftPad, setPreviewLeftPad] = useState<number>(0);
 
   // Handle wheel and gesture zoom inside preview
   useEffect(() => {
@@ -85,13 +87,23 @@ const Tournaments = () => {
     const onWheel = (e: WheelEvent) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const delta = e.deltaY;
+        const rect = el.getBoundingClientRect();
+        const pointerOffsetX = e.clientX - rect.left;
+        const pointerOffsetY = e.clientY - rect.top;
+        const oldZoom = previewZoom;
         const step = 0.1;
-        if (delta < 0) {
-          setPreviewZoom(z => clamp(Math.round((z + step) * 10) / 10));
-        } else if (delta > 0) {
-          setPreviewZoom(z => clamp(Math.round((z - step) * 10) / 10));
-        }
+        const nextZoom = clamp(
+          Math.round(((e.deltaY < 0 ? oldZoom + step : oldZoom - step)) * 10) / 10
+        );
+        if (nextZoom === oldZoom) return;
+        const ratio = nextZoom / oldZoom;
+        const newScrollLeft = (el.scrollLeft + pointerOffsetX) * ratio - pointerOffsetX;
+        const newScrollTop = (el.scrollTop + pointerOffsetY) * ratio - pointerOffsetY;
+        setPreviewZoom(nextZoom);
+        requestAnimationFrame(() => {
+          el.scrollLeft = newScrollLeft;
+          el.scrollTop = newScrollTop;
+        });
       }
     };
 
@@ -117,6 +129,22 @@ const Tournaments = () => {
       el.removeEventListener('gesturechange', onGestureChange as any);
     };
   }, [previewZoom, isPDFPreviewModalOpen]);
+
+  // Center scroll position horizontally so user can pan both left and right
+  useEffect(() => {
+    if (!isPDFPreviewModalOpen) return;
+    const el = previewContainerRef.current;
+    const content = previewContentRef.current;
+    if (!el || !content) return;
+    requestAnimationFrame(() => {
+      const scaledWidth = content.offsetWidth * previewZoom;
+      const pad = Math.max(0, Math.floor((el.clientWidth - scaledWidth) / 2));
+      setPreviewLeftPad(pad);
+      if (pad > 0) {
+        el.scrollLeft = 0;
+      }
+    });
+  }, [isPDFPreviewModalOpen, currentPreviewPage, previewZoom]);
 
   // Template Selection Modal States
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
@@ -1455,18 +1483,21 @@ const Tournaments = () => {
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 md:p-8 rounded-2xl border-2 border-dashed border-gray-300 overflow-auto">
                 {/* Navigation moved above; keep container clean */}
 
-                <div className="flex justify-center" ref={previewContainerRef as any}>
+                <div className="flex justify-start overflow-auto" ref={previewContainerRef as any}>
+                  {/* dynamic left spacer to keep centered when content narrower than viewport */}
+                  <div style={{ width: `${previewLeftPad}px`, flex: '0 0 auto' }} />
                   <div
                     className="flex-none"
                     style={{
                       transform: `scale(${previewZoom})`,
-                      transformOrigin: 'top center',
+                      transformOrigin: 'top left',
                       width: 'fit-content',
                       willChange: 'transform'
                     }}
                   >
                     <div
                       className="pdf-preview-content"
+                      ref={previewContentRef as any}
                       dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }}
                     />
                   </div>
