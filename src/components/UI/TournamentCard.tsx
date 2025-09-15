@@ -74,7 +74,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   selectedWeightRange,
   selectedTournament,
   className = "",
-  onShowPDFColumnModal,
+  // onShowPDFColumnModal removed usage
   onOpenBulkPDF,
   fixtures = []
 }) => {
@@ -329,19 +329,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
                     >
                       {t('tournamentCard.exportJSON')}
                     </button>
-                    <button
-                      onClick={() => {
-                        if (onShowPDFColumnModal) {
-                          const weightRange = tournament.weightRanges.find(wr => wr.id === selectedWeightRange);
-                          if (weightRange) {
-                            onShowPDFColumnModal(tournament, weightRange);
-                          }
-                        }
-                      }}
-                      className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
-                    >
-                      {t('tournamentCard.createPDF')}
-                    </button>
+                    {/* PDF oluştur button removed per request */}
                     <button
                       onClick={handleClosePlayerManagement}
                       className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
