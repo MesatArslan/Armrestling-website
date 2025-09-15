@@ -57,6 +57,7 @@ const Tournaments = () => {
   const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
   const [previewPages, setPreviewPages] = useState<string[]>([]);
   const [currentPreviewPage, setCurrentPreviewPage] = useState<number>(0);
+  const [previewZoom, setPreviewZoom] = useState<number>(1);
   const [selectedPDFColumns, setSelectedPDFColumns] = useState<string[]>([
     'name', 'surname', 'weight', 'gender', 'handPreference', 'birthday'
   ]);
@@ -72,6 +73,50 @@ const Tournaments = () => {
   const [pdfProgress, setPdfProgress] = useState<number>(0);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const hideProgressTimer = React.useRef<number | null>(null);
+  const previewContainerRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Handle wheel and gesture zoom inside preview
+  useEffect(() => {
+    const el = previewContainerRef.current;
+    if (!el || !isPDFPreviewModalOpen) return;
+
+    const clamp = (v: number) => Math.min(2, Math.max(0.5, v));
+
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY;
+        const step = 0.1;
+        if (delta < 0) {
+          setPreviewZoom(z => clamp(Math.round((z + step) * 10) / 10));
+        } else if (delta > 0) {
+          setPreviewZoom(z => clamp(Math.round((z - step) * 10) / 10));
+        }
+      }
+    };
+
+    // Safari pinch gestures
+    let baseZoom = previewZoom;
+    const onGestureStart = (e: any) => {
+      e.preventDefault();
+      baseZoom = previewZoom;
+    };
+    const onGestureChange = (e: any) => {
+      e.preventDefault();
+      const scale = e?.scale || 1;
+      const next = clamp(baseZoom * scale);
+      setPreviewZoom(next);
+    };
+
+    el.addEventListener('wheel', onWheel as any, { passive: false } as any);
+    el.addEventListener('gesturestart', onGestureStart as any, { passive: false } as any);
+    el.addEventListener('gesturechange', onGestureChange as any, { passive: false } as any);
+    return () => {
+      el.removeEventListener('wheel', onWheel as any);
+      el.removeEventListener('gesturestart', onGestureStart as any);
+      el.removeEventListener('gesturechange', onGestureChange as any);
+    };
+  }, [previewZoom, isPDFPreviewModalOpen]);
 
   // Template Selection Modal States
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
@@ -1407,14 +1452,24 @@ const Tournaments = () => {
               )}
 
               {/* Modern Preview Container */}
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 md:p-8 rounded-2xl border-2 border-dashed border-gray-300 overflow-x-auto">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 md:p-8 rounded-2xl border-2 border-dashed border-gray-300 overflow-auto">
                 {/* Navigation moved above; keep container clean */}
 
-                <div className="flex justify-center overflow-x-auto">
-                  <div 
-                    className="pdf-preview-content"
-                    dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }} 
-                  />
+                <div className="flex justify-center" ref={previewContainerRef as any}>
+                  <div
+                    className="flex-none"
+                    style={{
+                      transform: `scale(${previewZoom})`,
+                      transformOrigin: 'top center',
+                      width: 'fit-content',
+                      willChange: 'transform'
+                    }}
+                  >
+                    <div
+                      className="pdf-preview-content"
+                      dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }}
+                    />
+                  </div>
                 </div>
               </div>
 
