@@ -6,6 +6,7 @@ import { PlayersStorage, type Column as PlayersColumn } from '../utils/playersSt
 import { TournamentsStorage, type Tournament as StoredTournament } from '../utils/tournamentsStorage';
 import { MatchesStorage, type Fixture } from '../utils/matchesStorage';
 import { openScoringPreviewModal, generateScoringPDF } from '../utils/pdfGenerator';
+import PDFPreviewModal from '../components/UI/PDFPreviewModal';
 import { DoubleEliminationRepository } from '../storage/DoubleEliminationRepository';
 
 type PlacementKey = 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'seventh' | 'eighth';
@@ -239,7 +240,7 @@ const Scoring: React.FC = () => {
     if (aggregatedScores.length === 0) return;
     
     const groupFieldName = availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy;
-    const { pages } = openScoringPreviewModal(aggregatedScores, config, groupFieldName);
+    const { pages } = openScoringPreviewModal(aggregatedScores, groupFieldName);
     
     setPreviewPages(pages);
     setCurrentPreviewPage(0);
@@ -255,12 +256,7 @@ const Scoring: React.FC = () => {
       
       const groupFieldName = availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy;
       
-      await generateScoringPDF(
-        aggregatedScores,
-        config,
-        groupFieldName,
-        (p) => setPdfProgress(p)
-      );
+      await generateScoringPDF(aggregatedScores, groupFieldName, (p) => setPdfProgress(p));
       
       // Show success message
       alert(t('scoring.pdfSuccessMessage', {
@@ -559,85 +555,18 @@ const Scoring: React.FC = () => {
         </div>
       </div>
 
-      {/* PDF Preview Modal */}
-      {isPDFPreviewModalOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[9999] overflow-hidden"
-          onClick={() => {
-            setIsPDFPreviewModalOpen(false);
-            setPreviewPages([]);
-            setCurrentPreviewPage(0);
-          }}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-5xl max-h-[95vh] overflow-y-auto mx-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('scoring.pdfPreview')}</h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleExportPDF}
-                  disabled={isExporting}
-                  className="px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isExporting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      {pdfProgress}%
-                    </div>
-                  ) : (
-                    t('scoring.downloadPDF')
-                  )}
-                </button>
-                <button
-                  onClick={() => setIsPDFPreviewModalOpen(false)}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="bg-gray-50 p-8 rounded-xl border-2 border-dashed border-gray-300">
-              {/* Page Navigation */}
-              {previewPages.length > 1 && (
-                <div className="sticky top-0 z-10 bg-white border-b border-gray-200 py-3 mb-4 rounded-t-lg">
-                  <div className="flex justify-center items-center gap-4">
-                    <button
-                      onClick={() => setCurrentPreviewPage(Math.max(0, currentPreviewPage - 1))}
-                      disabled={currentPreviewPage === 0}
-                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
-                    >
-                      ← {t('scoring.previousPage')}
-                    </button>
-                    <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-full">
-                      {t('scoring.page')} {currentPreviewPage + 1} / {previewPages.length}
-                    </span>
-                    <button
-                      onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
-                      disabled={currentPreviewPage === previewPages.length - 1}
-                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
-                    >
-                      {t('scoring.nextPage')} →
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex justify-center">
-                <div dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }} />
-              </div>
-            </div>
-            
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                {t('scoring.previewDescription')}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      <PDFPreviewModal
+        isOpen={isPDFPreviewModalOpen}
+        pages={previewPages}
+        currentPage={currentPreviewPage}
+        onChangePage={(i) => setCurrentPreviewPage(i)}
+        onClose={() => {
+          setIsPDFPreviewModalOpen(false);
+          setPreviewPages([]);
+          setCurrentPreviewPage(0);
+        }}
+        onDownloadClick={handleExportPDF}
+      />
     </div>
   );
 };
