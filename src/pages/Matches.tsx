@@ -63,7 +63,7 @@ const Matches = () => {
   const [isMatchPDFModalOpen, setIsMatchPDFModalOpen] = useState(false);
   const [includeRankingsForPDF, setIncludeRankingsForPDF] = useState<boolean>(true);
   const [includeCompletedForPDF, setIncludeCompletedForPDF] = useState<boolean>(true);
-  const [rowsPerPageForPDF] = useState<number>(18);
+  const [rowsPerPageForPDF, setRowsPerPageForPDF] = useState<number>(18);
   const [selectedPlayerColumnsForPDF, setSelectedPlayerColumnsForPDF] = useState<string[]>(['name', 'surname', 'weight']);
   const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
   const [previewPages, setPreviewPages] = useState<string[]>([]);
@@ -1320,214 +1320,362 @@ const Matches = () => {
       {/* Matches PDF Create Modal */}
       {isMatchPDFModalOpen && activeFixture && (
         <div
-          className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9998] overflow-hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-2 sm:p-4"
           onClick={() => setIsMatchPDFModalOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md sm:max-w-lg max-h-[85vh] overflow-y-auto mx-2"
+            className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('tournamentCard.pdfColumnSelection')}</h3>
-                <p className="text-sm text-gray-600">{activeFixture.name}</p>
-              </div>
-              <button
-                onClick={() => setIsMatchPDFModalOpen(false)}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
-              >
-                <XMarkIcon className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
-                <input
-                  type="checkbox"
-                  checked={includeRankingsForPDF}
-                  onChange={(e) => setIncludeRankingsForPDF(e.target.checked)}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <span className="text-sm font-medium text-gray-700">{t('matches.tabRankings')}</span>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
-                <input
-                  type="checkbox"
-                  checked={includeCompletedForPDF}
-                  onChange={(e) => setIncludeCompletedForPDF(e.target.checked)}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <span className="text-sm font-medium text-gray-700">{t('matches.tabCompleted')}</span>
-              </label>
-
-              {/* Player Columns Selection */}
-              <div className="border-t border-gray-200 pt-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">{t('players.manageColumns') || 'Oyuncu Kolonları'}</h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {(() => {
-                    const allColumns = PlayersStorage.getColumns();
-                    return allColumns.map((col) => (
-                      <label key={col.id} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
-                        <input
-                          type="checkbox"
-                          checked={selectedPlayerColumnsForPDF.includes(col.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedPlayerColumnsForPDF(prev => [...prev, col.id]);
-                            } else {
-                              setSelectedPlayerColumnsForPDF(prev => prev.filter(id => id !== col.id));
-                            }
-                          }}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                        />
-                        <span className="text-sm text-gray-700">
-                          {(() => {
-                            // Check if this is a default column that has translation
-                            const isDefaultColumn = defaultColumns.some(dc => dc.id === col.id);
-                            if (isDefaultColumn) {
-                              return t(`players.${col.id}`) || col.name;
-                            } else {
-                              // For custom columns, use the column name directly
-                              return col.name;
-                            }
-                          })()}
-                        </span>
-                      </label>
-                    ));
-                  })()}
+            {/* Header - Template Style (match tournaments) */}
+            <div className="bg-gradient-to-r from-red-600 to-pink-600 px-4 sm:px-8 py-4 sm:py-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <div className="bg-white/20 rounded-lg p-1.5 sm:p-2">
+                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-2xl font-bold text-white">{t('tournamentCard.pdfPreview')}</h2>
+                    <p className="text-red-100 mt-1 text-xs sm:text-sm">{activeFixture.name} - PDF Ayarları</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const { pages, currentPage } = openFixturePreviewModal(
+                        activeFixture,
+                        includeRankingsForPDF,
+                        includeCompletedForPDF,
+                        rowsPerPageForPDF,
+                        selectedPlayerColumnsForPDF
+                      );
+                      setPreviewPages(pages);
+                      setCurrentPreviewPage(currentPage);
+                      setIsMatchPDFModalOpen(false);
+                      setIsPDFPreviewModalOpen(true);
+                    }}
+                    className="px-3 py-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-200 text-sm font-semibold flex items-center gap-2 text-white"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    {t('tournamentCard.openPreview')}
+                  </button>
+                  <button
+                    onClick={() => setIsMatchPDFModalOpen(false)}
+                    className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setIsMatchPDFModalOpen(false)}
-                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm font-semibold rounded-lg"
-              >
-                {t('common.close')}
-              </button>
-              <button
-                onClick={() => {
-                  const { pages, currentPage } = openFixturePreviewModal(
-                    activeFixture,
-                    includeRankingsForPDF,
-                    includeCompletedForPDF,
-                    rowsPerPageForPDF,
-                    selectedPlayerColumnsForPDF
-                  );
-                  setPreviewPages(pages);
-                  setCurrentPreviewPage(currentPage);
-                  setIsMatchPDFModalOpen(false);
-                  setIsPDFPreviewModalOpen(true);
-                }}
-                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
-              >
-                {t('tournamentCard.openPreview')}
-              </button>
+            {/* Content area matching tournaments form */}
+            <div className="h-[calc(85vh-120px)]">
+              <div className="p-3 sm:p-6 overflow-y-auto bg-gray-50 h-full">
+                {/* Include Sections */}
+                <div className="mb-6 sm:mb-8">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-2">
+                      <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-lg">Dahil Edilecek Bölümler</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div
+                      className={`border-2 rounded-lg p-3 transition-all duration-200 ${
+                        includeRankingsForPDF
+                          ? 'bg-white hover:border-blue-500 hover:shadow-md cursor-pointer border-blue-500'
+                          : 'bg-white hover:border-blue-400 hover:shadow-md cursor-pointer border-gray-200'
+                      }`}
+                      onClick={() => setIncludeRankingsForPDF(!includeRankingsForPDF)}
+                      role="button"
+                      aria-pressed={includeRankingsForPDF}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded p-1">
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h4 className="font-semibold text-gray-900 text-sm">{t('matches.tabRankings')}</h4>
+                        </div>
+                        {includeRankingsForPDF && (
+                          <div className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold">Seçili</div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div
+                      className={`border-2 rounded-lg p-3 transition-all duration-200 ${
+                        includeCompletedForPDF
+                          ? 'bg-white hover:border-blue-500 hover:shadow-md cursor-pointer border-blue-500'
+                          : 'bg-white hover:border-blue-400 hover:shadow-md cursor-pointer border-gray-200'
+                      }`}
+                      onClick={() => setIncludeCompletedForPDF(!includeCompletedForPDF)}
+                      role="button"
+                      aria-pressed={includeCompletedForPDF}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded p-1">
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h4 className="font-semibold text-gray-900 text-sm">{t('matches.tabCompleted')}</h4>
+                        </div>
+                        {includeCompletedForPDF && (
+                          <div className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold">Seçili</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column Selection */}
+                <div className="mb-6 sm:mb-8">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-2">
+                      <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-lg">{t('players.manageColumns') || 'Oyuncu Kolonları'}</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {(() => {
+                      const allColumns = PlayersStorage.getColumns();
+                      return allColumns.map((col) => (
+                        <div
+                          key={col.id}
+                          className={`border-2 rounded-lg p-3 transition-all duration-200 ${
+                            selectedPlayerColumnsForPDF.includes(col.id)
+                              ? 'bg-white hover:border-green-500 hover:shadow-md cursor-pointer border-green-500'
+                              : 'bg-white hover:border-green-400 hover:shadow-md cursor-pointer border-gray-200'
+                          }`}
+                          onClick={() => {
+                            if (selectedPlayerColumnsForPDF.includes(col.id)) {
+                              setSelectedPlayerColumnsForPDF(prev => prev.filter(id => id !== col.id));
+                            } else {
+                              setSelectedPlayerColumnsForPDF(prev => [...prev, col.id]);
+                            }
+                          }}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded p-1.5">
+                                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                              <h4 className="font-semibold text-gray-900 text-sm">
+                                {(() => {
+                                  const isDefaultColumn = defaultColumns.some(dc => dc.id === col.id);
+                                  return isDefaultColumn ? (t(`players.${col.id}`) || col.name) : col.name;
+                                })()}
+                              </h4>
+                            </div>
+                            {selectedPlayerColumnsForPDF.includes(col.id) && (
+                              <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">Seçili</div>
+                            )}
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+
+                {/* Rows per page (Players per page equivalent) */}
+                <div className="mb-6 sm:mb-8">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg p-2">
+                      <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-lg">{t('tournamentCard.playersPerPage')}</h3>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm max-w-xs">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.min')}: 1</span>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.max')}: 40</span>
+                    </div>
+                    <input
+                      type="number"
+                      min={1}
+                      max={40}
+                      value={rowsPerPageForPDF || ''}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '') {
+                          setRowsPerPageForPDF(0);
+                        } else {
+                          const n = parseInt(v);
+                          if (n >= 1 && n <= 40) setRowsPerPageForPDF(n);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const n = parseInt(e.target.value || '0');
+                        if (!n || n < 1) setRowsPerPageForPDF(18);
+                      }}
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-center text-sm font-semibold text-gray-900 outline-none"
+                      placeholder="18"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* PDF Preview Modal for Matches */}
+      {/* PDF Preview Modal for Matches - styled to match Tournaments */}
       {isPDFPreviewModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[9999] overflow-hidden"
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[9999] overflow-hidden"
           onClick={() => {
             setIsPDFPreviewModalOpen(false);
             setPreviewPages([]);
             setCurrentPreviewPage(0);
           }}
         >
-          <div
-            className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-5xl max-h-[95vh] overflow-y-auto mx-2"
+          <div 
+            className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden mx-1 sm:mx-2"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('tournamentCard.pdfPreview')}</h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={async () => {
-                    setIsPDFPreviewModalOpen(false);
-                    if (!activeFixture) return;
-                    try {
-                      setIsExporting(true);
-                      setPdfProgress(0);
-                      await generateFixturePDF(
-                        activeFixture,
-                        includeRankingsForPDF,
-                        includeCompletedForPDF,
-                        rowsPerPageForPDF,
-                        selectedPlayerColumnsForPDF,
-                        (p) => setPdfProgress(p)
-                      );
-                    } catch (e) {
-                    } finally {
-                      if (pdfProgress < 100) setPdfProgress(100);
-                      if (hideProgressTimer.current) window.clearTimeout(hideProgressTimer.current);
-                      hideProgressTimer.current = window.setTimeout(() => {
-                        setIsExporting(false);
-                        setPdfProgress(0);
-                      }, 800);
-                    }
-                  }}
-                  className="px-3 sm:px-4 py-2 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-lg shadow hover:from-red-500 hover:to-red-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
-                >
-                  {t('tournamentCard.downloadPDF')}
-                </button>
-                <button
-                  onClick={() => {
-                    setIsPDFPreviewModalOpen(false);
-                    setIsMatchPDFModalOpen(true);
-                  }}
-                  className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-lg shadow hover:from-blue-500 hover:to-blue-700 transition-all duration-200 text-xs sm:text-sm font-semibold"
-                >
-                  {t('tournamentCard.returnToColumnSelection')}
-                </button>
-                <button
-                  onClick={() => setIsPDFPreviewModalOpen(false)}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 p-8 rounded-xl border-2 border-dashed border-gray-300">
-              {previewPages.length > 1 && (
-                <div className="sticky top-0 z-10 bg-white border-b border-gray-200 py-3 mb-4 rounded-t-lg">
-                  <div className="flex justify-center items-center gap-4">
-                    <button
-                      onClick={() => setCurrentPreviewPage(Math.max(0, currentPreviewPage - 1))}
-                      disabled={currentPreviewPage === 0}
-                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
-                    >
-                      ← {t('tournamentCard.previousPage')}
-                    </button>
-                    <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">
-                      {t('tournamentCard.page')} {currentPreviewPage + 1} / {previewPages.length}
-                    </span>
-                    <button
-                      onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
-                      disabled={currentPreviewPage === previewPages.length - 1}
-                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-xs sm:text-sm"
-                    >
-                      {t('tournamentCard.nextPage')} →
-                    </button>
+            {/* Header - gradient like Tournaments */}
+            <div className="bg-gradient-to-r from-red-600 to-pink-600 px-4 sm:px-8 py-4 sm:py-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <div className="bg-white/20 rounded-lg p-1.5 sm:p-2">
+                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-2xl font-bold text-white">{t('tournamentCard.pdfPreview')}</h2>
+                    <p className="text-red-100 mt-1 text-xs sm:text-sm">PDF önizlemesi</p>
                   </div>
                 </div>
-              )}
-
-              <div className="flex justify-center">
-                <div dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }} />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      setIsPDFPreviewModalOpen(false);
+                      if (!activeFixture) return;
+                      try {
+                        setIsExporting(true);
+                        setPdfProgress(0);
+                        await generateFixturePDF(
+                          activeFixture,
+                          includeRankingsForPDF,
+                          includeCompletedForPDF,
+                          rowsPerPageForPDF,
+                          selectedPlayerColumnsForPDF,
+                          (p) => setPdfProgress(p)
+                        );
+                      } catch (e) {
+                      } finally {
+                        if (pdfProgress < 100) setPdfProgress(100);
+                        if (hideProgressTimer.current) window.clearTimeout(hideProgressTimer.current);
+                        hideProgressTimer.current = window.setTimeout(() => {
+                          setIsExporting(false);
+                          setPdfProgress(0);
+                        }, 800);
+                      }
+                    }}
+                    className="px-3 py-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-200 text-sm font-semibold flex items-center gap-2 text-white"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    {t('tournamentCard.downloadPDF')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsPDFPreviewModalOpen(false);
+                      setIsMatchPDFModalOpen(true);
+                    }}
+                    className="px-3 py-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-200 text-sm font-semibold flex items-center gap-2 text-white"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {t('tournamentCard.returnToColumnSelection')}
+                  </button>
+                  <button
+                    onClick={() => setIsPDFPreviewModalOpen(false)}
+                    className="text-white/90 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Bu, PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki "PDF İndir" butonunu kullanabilirsiniz.
-              </p>
+            {/* Content area */}
+            <div className="h-[calc(85vh-120px)]">
+              <div className="p-3 sm:p-6 overflow-y-auto bg-gray-50 h-full">
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 md:p-8 rounded-2xl border-2 border-dashed border-gray-300">
+                  {previewPages.length > 1 && (
+                    <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border border-gray-200 py-4 sm:py-6 mb-4 sm:mb-6 rounded-2xl shadow-lg">
+                      <div className="grid grid-cols-3 items-center">
+                        <div className="flex justify-start pl-2 sm:pl-4">
+                          <button
+                            onClick={() => setCurrentPreviewPage(Math.max(0, currentPreviewPage - 1))}
+                            disabled={currentPreviewPage === 0}
+                            className="px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-sm flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                            {t('tournamentCard.previousPage')}
+                          </button>
+                        </div>
+                        <div className="flex justify-center">
+                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 sm:px-6 py-2 sm:py-3 rounded-xl border border-blue-200">
+                            <span className="text-sm sm:text-base font-bold text-blue-800">
+                              {t('tournamentCard.page')} {currentPreviewPage + 1} / {previewPages.length}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex justify-end pr-2 sm:pr-4">
+                          <button
+                            onClick={() => setCurrentPreviewPage(Math.min(previewPages.length - 1, currentPreviewPage + 1))}
+                            disabled={currentPreviewPage === previewPages.length - 1}
+                            className="px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-sm flex items-center gap-2"
+                          >
+                            {t('tournamentCard.nextPage')}
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-center">
+                    <div className="pdf-preview-content" dangerouslySetInnerHTML={{ __html: previewPages[currentPreviewPage] }} />
+                  </div>
+                </div>
+
+                <div className="mt-6 sm:mt-8 text-center px-2">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                    <p className="text-sm sm:text-base text-blue-800 leading-relaxed font-medium">
+                      Bu, PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki "PDF İndir" butonunu kullanabilirsiniz.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
