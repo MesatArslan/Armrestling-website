@@ -176,7 +176,7 @@ export const Admin: React.FC = () => {
     {
       key: 'order',
       header: 'Sıra',
-      width: 'w-12',
+      width: 'w-12 sm:w-16',
       align: 'center',
       render: (_, index) => (
         <span className="text-sm font-medium text-gray-900">
@@ -187,14 +187,15 @@ export const Admin: React.FC = () => {
     {
       key: 'user',
       header: 'Kullanıcı',
+      width: 'w-32 sm:w-auto',
       render: (user) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs sm:text-sm font-semibold">
             {(user.username || user.email).charAt(0).toUpperCase()}
           </div>
-          <div>
-            <div className="text-sm font-medium text-gray-900">{user.username || 'İsimsiz'}</div>
-            <div className="text-xs text-gray-500">User</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{user.username || 'İsimsiz'}</div>
+            <div className="text-xs text-gray-500 hidden sm:block">User</div>
           </div>
         </div>
       )
@@ -202,30 +203,34 @@ export const Admin: React.FC = () => {
     {
       key: 'email',
       header: 'Email',
+      width: 'w-24 sm:w-auto',
       render: (user) => (
-        <span className="text-sm text-gray-700">{user.email}</span>
+        <span className="text-xs sm:text-sm text-gray-700 truncate">{user.email}</span>
       )
     },
     {
       key: 'created_at',
       header: 'Oluşturulma',
+      width: 'w-20 sm:w-auto',
       render: (user) => (
-        <span className="text-sm text-gray-600">{new Date(user.created_at).toLocaleDateString('tr-TR')}</span>
+        <span className="text-xs sm:text-sm text-gray-600">{new Date(user.created_at).toLocaleDateString('tr-TR')}</span>
       )
     },
     {
       key: 'actions',
       header: 'İşlemler',
+      width: 'w-24 sm:w-auto',
       render: (user) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={(e) => {
               e.stopPropagation()
               handleEditUserClick(user)
             }}
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mr-3 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 rounded"
           >
-            Düzenle
+            <span className="hidden sm:inline">Düzenle</span>
+            <span className="sm:hidden">D</span>
           </button>
           <button
             onClick={(e) => {
@@ -233,9 +238,10 @@ export const Admin: React.FC = () => {
               handleDeleteUserClick(user)
             }}
             disabled={isSubmitting}
-            className="inline-flex items-center text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center text-red-600 hover:text-red-700 hover:underline text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sil
+            <span className="hidden sm:inline">Sil</span>
+            <span className="sm:hidden">S</span>
           </button>
         </div>
       )

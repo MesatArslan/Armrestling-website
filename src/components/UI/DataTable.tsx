@@ -120,7 +120,7 @@ export function DataTable<T extends { id?: string | number }>({
       )}
       
       {/* Table */}
-      <div className="overflow-x-auto data-table overflow-y-auto border-b border-gray-100" style={{ maxHeight }}>
+      <div className="overflow-x-auto data-table overflow-y-auto border-b border-gray-100 min-h-[calc(100vh-500px)] sm:min-h-[calc(100vh-400px)]" style={{ maxHeight }}>
         <table className="min-w-full divide-y divide-gray-100">
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
