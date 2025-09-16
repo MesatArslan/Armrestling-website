@@ -134,7 +134,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h[85vh] sm:max-h-[85vh] overflow-hidden mx-1 sm:mx-2"
+        className="bg-white rounded-xl shadow-2xl max-w-full sm:max-w-4xl w-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-gradient-to-r from-red-600 to-pink-600 px-4 sm:px-8 py-4 sm:py-6">
@@ -213,7 +213,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
           </div>
         </div>
 
-        <div className="h-[calc(85vh-120px)] sm:h-[calc(85vh-120px)]">
+        <div className="h-[calc(90vh-120px)] sm:h-[calc(85vh-120px)]">
           <div className="p-2 sm:p-6 overflow-y-auto bg-gray-50 h-full overscroll-contain">
             {pages.length > 1 && (
               <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border border-gray-200 py-2 sm:py-4 mb-3 sm:mb-6 rounded-xl sm:rounded-2xl shadow-lg">
