@@ -38,6 +38,19 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Role theme variables (can be used in components via var(--color-...)) */
+[data-role="user"] {
+  --sidebar-bg-from: #111827; /* gray-900 */
+  --sidebar-bg-via: #1e40af;  /* blue-800 */
+  --sidebar-bg-to: #2563eb;   /* blue-600 */
+}
+
+[data-role="admin"] {
+  --sidebar-bg-from: #111827; /* gray-900 */
+  --sidebar-bg-via: #0f766e;  /* teal-700 */
+  --sidebar-bg-to: #0ea5e9;   /* sky-500 */
+}
+
 html, body {
   margin: 0;
   padding: 0;
