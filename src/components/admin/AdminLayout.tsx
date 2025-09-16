@@ -97,10 +97,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
                   </div>
                   <button
                     onClick={toggleSidebar}
-                    className="text-white hover:bg-white/10 p-2 rounded-lg transition-all duration-200"
-                    title="Sidebar'ı Kapat"
+                    className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded-md hover:bg-white/30 transition-all duration-200 text-white transform -translate-y-4"
+                    title="Kapat"
+                    aria-label="Kapat"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
