@@ -174,11 +174,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
         {isSidebarCollapsed && (
           <button
             onClick={toggleSidebar}
-            className="md:hidden fixed top-20 left-4 z-50 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-3 rounded-xl shadow-xl transition-all duration-300 transform hover:scale-105 border border-blue-500/20"
+            className="md:hidden fixed top-20 left-4 z-50 bg-white/90 text-gray-800 px-2.5 py-2 rounded-lg shadow-lg transition-all duration-200 border border-gray-200 hover:shadow-xl hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-300/50"
             title="Sidebar'ı Aç"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
         )}

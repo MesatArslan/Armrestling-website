@@ -87,35 +87,39 @@ export function DataTable<T extends { id?: string | number }>({
       {(showSearch || filters || headerContent) && (
         <div className="px-3 md:px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            {/* Header content and filters on the same row */}
             <div className="flex items-center gap-4 flex-1">
               {headerContent && (
                 <div className="flex items-center gap-4">
                   {headerContent}
                 </div>
               )}
-              {showSearch && (
-                <div className="relative flex-1 max-w-md">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={searchPlaceholder}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white text-gray-900 placeholder-gray-400"
-                  />
-                  <span className="absolute left-3 top-2.5 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l3.817 3.817a1 1 0 01-1.414 1.414l-3.817-3.817A6 6 0 012 8z" clipRule="evenodd" />
-                    </svg>
-                  </span>
+              {filters && (
+                <div className="flex items-center gap-2 ml-auto md:ml-0">
+                  {filters}
                 </div>
               )}
             </div>
-            {filters && (
-              <div className="flex items-center gap-2">
-                {filters}
-              </div>
-            )}
           </div>
+          {/* Search input on its own row below */}
+          {showSearch && (
+            <div className="mt-3">
+              <div className="relative max-w-md">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white text-gray-900 placeholder-gray-400"
+                />
+                <span className="absolute left-3 top-2.5 text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l3.817 3.817a1 1 0 01-1.414 1.414l-3.817-3.817A6 6 0 012 8z" clipRule="evenodd" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       )}
       

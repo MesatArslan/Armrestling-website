@@ -335,7 +335,8 @@ export const Admin: React.FC = () => {
                       onClick={() => setShowCreateUserModal(true)}
                       className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-xs font-medium shadow"
                     >
-                      Yeni Kullanıcı Ekle
+                      <span className="sm:hidden text-lg leading-none">+</span>
+                      <span className="hidden sm:inline">Yeni Kullanıcı Ekle</span>
                     </button>
                   ) : undefined
                 }
