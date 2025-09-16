@@ -440,46 +440,16 @@ export const FileManagement: React.FC = () => {
   }
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 relative">
+    <div className="w-full px-2 sm:px-4 lg:px-8 relative">
 
       {/* Limit Bilgileri */}
       {userLimits && (
         <>
           {/* Mobile: Horizontal scrollable KPI cards */}
-          <div className="mb-6 -mx-4 px-4 sm:hidden">
+          <div className="mb-6 -mx-2 px-2 sm:hidden">
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-4 scroll-smooth pb-2">
-              {/* Tek Dosya Limiti */}
-              <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">Tek Dosya Limiti</h3>
-                    <p className="text-2xl font-bold text-blue-600">{fileManager.formatLimitDisplay(userLimits.singleFileLimit)}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Toplam Limit */}
-              <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">Toplam Limit</h3>
-                    <p className="text-2xl font-bold text-green-600">{fileManager.formatLimitDisplay(userLimits.totalLimit)}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
               {/* Kullanım Durumu */}
-              <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
+              <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-medium text-gray-900">Kullanım Durumu</h3>
@@ -506,41 +476,41 @@ export const FileManagement: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Toplam Limit */}
+              <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">Toplam Limit</h3>
+                    <p className="text-2xl font-bold text-green-600">{fileManager.formatLimitDisplay(userLimits.totalLimit)}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tek Dosya Limiti */}
+              <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">Tek Dosya Limiti</h3>
+                    <p className="text-2xl font-bold text-blue-600">{fileManager.formatLimitDisplay(userLimits.singleFileLimit)}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Tablet/Desktop: Grid KPI cards */}
           <div className="hidden sm:grid mb-6 grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Tek Dosya Limiti */}
-            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Tek Dosya Limiti</h3>
-                  <p className="text-2xl font-bold text-blue-600">{fileManager.formatLimitDisplay(userLimits.singleFileLimit)}</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Toplam Limit */}
-            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Toplam Limit</h3>
-                  <p className="text-2xl font-bold text-green-600">{fileManager.formatLimitDisplay(userLimits.totalLimit)}</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
             {/* Kullanım Durumu */}
             <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
@@ -567,6 +537,36 @@ export const FileManagement: React.FC = () => {
                     }`}
                     style={{ width: `${Math.min(userLimits.percentage, 100)}%` }}
                   ></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Toplam Limit */}
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Toplam Limit</h3>
+                  <p className="text-2xl font-bold text-green-600">{fileManager.formatLimitDisplay(userLimits.totalLimit)}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Tek Dosya Limiti */}
+            <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Tek Dosya Limiti</h3>
+                  <p className="text-2xl font-bold text-blue-600">{fileManager.formatLimitDisplay(userLimits.singleFileLimit)}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
                 </div>
               </div>
             </div>
