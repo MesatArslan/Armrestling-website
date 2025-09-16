@@ -256,7 +256,7 @@ export const Admin: React.FC = () => {
     }
 
     return (
-      <div className="max-w-7xl mx-auto relative">
+      <div className="w-full max-w-7xl mx-auto relative px-2 md:px-0">
         {/* Stats */}
         {stats && (
           <div className="flex md:grid flex-nowrap md:flex-nowrap md:grid-cols-4 gap-6 mb-8 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pb-2">

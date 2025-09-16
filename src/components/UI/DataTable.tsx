@@ -85,7 +85,7 @@ export function DataTable<T extends { id?: string | number }>({
     <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}>
       {/* Header with search and filters */}
       {(showSearch || filters || headerContent) && (
-        <div className="px-6 py-4 border-b border-gray-100">
+        <div className="px-3 md:px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4 flex-1">
               {headerContent && (
@@ -127,7 +127,7 @@ export function DataTable<T extends { id?: string | number }>({
               {columns.map((column, index) => (
                 <th
                   key={column.key}
-                  className={`px-4 py-1 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider ${
+                  className={`px-2 md:px-4 py-1 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider ${
                     column.width || ''
                   } ${
                     index < columns.length - 1 ? 'border-r border-gray-200' : ''
@@ -143,7 +143,7 @@ export function DataTable<T extends { id?: string | number }>({
           <tbody className="bg-white divide-y divide-gray-100">
             {currentData.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="px-6 py-10 text-center text-sm text-gray-500">
+                <td colSpan={columns.length} className="px-3 md:px-6 py-10 text-center text-sm text-gray-500">
                   {filteredData.length === 0 ? noResultsMessage : emptyMessage}
                 </td>
               </tr>
@@ -159,7 +159,7 @@ export function DataTable<T extends { id?: string | number }>({
                 {columns.map((column, colIndex) => (
                   <td
                     key={column.key}
-                    className={`px-4 py-1.5 whitespace-nowrap text-sm ${
+                    className={`px-2 md:px-4 py-1.5 whitespace-nowrap text-sm ${
                       colIndex < columns.length - 1 ? 'border-r border-gray-200' : ''
                     } ${
                       column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
@@ -176,7 +176,7 @@ export function DataTable<T extends { id?: string | number }>({
 
       {/* Pagination */}
       {showPagination && (
-        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50">
+        <div className="px-3 md:px-6 py-3 border-t border-gray-100 bg-gray-50">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-700">

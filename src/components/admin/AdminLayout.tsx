@@ -182,7 +182,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
             </svg>
           </button>
         )}
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           {children}
         </div>
       </div>
