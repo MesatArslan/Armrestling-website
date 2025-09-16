@@ -130,11 +130,11 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[9999] overflow-hidden"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-3 sm:p-4 z-[9999] overflow-hidden"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl max-w-full sm:max-w-4xl w-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden"
+        className="bg-white rounded-xl shadow-2xl max-w-[95%] sm:max-w-4xl w-full max-h-[85vh] sm:max-h-[85vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-gradient-to-r from-red-600 to-pink-600 px-4 sm:px-8 py-4 sm:py-6">
@@ -213,7 +213,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
           </div>
         </div>
 
-        <div className="h-[calc(90vh-120px)] sm:h-[calc(85vh-120px)]">
+        <div className="h-[calc(85vh-120px)] sm:h-[calc(85vh-120px)]">
           <div className="p-2 sm:p-6 overflow-y-auto bg-gray-50 h-full overscroll-contain">
             {pages.length > 1 && (
               <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border border-gray-200 py-2 sm:py-4 mb-3 sm:mb-6 rounded-xl sm:rounded-2xl shadow-lg">
@@ -222,7 +222,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
                     <button
                       onClick={() => onChangePage(Math.max(0, currentPage - 1))}
                       disabled={currentPage === 0}
-                      className="flex px-2 sm:px-6 py-1.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md sm:rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-[11px] sm:text-sm items-center gap-1 sm:gap-2"
+                      className="flex px-1.5 sm:px-6 py-1.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md sm:rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-[10px] sm:text-sm items-center gap-0.5 sm:gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -241,7 +241,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
                     <button
                       onClick={() => onChangePage(Math.min(pages.length - 1, currentPage + 1))}
                       disabled={currentPage === pages.length - 1}
-                      className="flex px-2 sm:px-6 py-1.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md sm:rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-[11px] sm:text-sm items-center gap-1 sm:gap-2"
+                      className="flex px-1.5 sm:px-6 py-1.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md sm:rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold text-[10px] sm:text-sm items-center gap-0.5 sm:gap-2"
                     >
                       {t('tournamentCard.nextPage')}
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

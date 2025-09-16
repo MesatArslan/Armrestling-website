@@ -14,8 +14,8 @@ const PDFSettingsShell: React.FC<PDFSettingsShellProps> = ({ isOpen, titleSuffix
   const { t } = useTranslation();
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-2 sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl max-w-full sm:max-w-4xl w-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-3 sm:p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl max-w-[95%] sm:max-w-4xl w-full max-h-[85vh] sm:max-h-[85vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="bg-gradient-to-r from-red-600 to-pink-600 px-4 sm:px-8 py-4 sm:py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between">
             {/* Mobile: Title and Close button */}
@@ -78,8 +78,8 @@ const PDFSettingsShell: React.FC<PDFSettingsShellProps> = ({ isOpen, titleSuffix
           </div>
         </div>
 
-        <div className="h-[calc(90vh-120px)] sm:h-[calc(85vh-120px)]">
-          <div className="p-2 sm:p-6 overflow-y-auto bg-gray-50 h-full">
+        <div className="h-[calc(85vh-120px)] sm:h-[calc(85vh-120px)]">
+          <div className="px-4 py-4 sm:p-6 overflow-y-auto bg-gray-50 h-full">
             {children}
           </div>
         </div>
