@@ -557,11 +557,15 @@ const mergeFixtureWithDEState = (fixture: any): any => {
 const buildFixtureHeader = (fixture: FixtureLike, pageNum: number, totalPages: number, isForPDF: boolean) => {
   const t = (key: string, options?: any) => String(i18n.t(key, options));
   const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-5px) !important;">${content}</div>` : content);
+  
+  // Combine tournament name and weight range into one line
+  const combinedTitle = `${fixture.tournamentName || ''} - ${fixture.weightRangeName || ''}`;
+  
   return `
     <div style="text-align: center !important; margin-bottom: 10px !important; border-bottom: 1px solid #1e40af !important; padding-bottom: 4px !important;">
       <div style="background: linear-gradient(135deg, #1e40af, #3b82f6) !important; color: white !important; padding: 10px 10px !important; border-radius: 6px !important; margin-bottom: 8px !important;">
-        <h1 style="font-size: 20px !important; font-weight: bold !important; color: #ffffff !important;">${wrap(String(fixture.tournamentName || ''))}</h1>
-        <div style="font-size: 12px !important; font-weight: 500 !important; opacity: 0.9 !important;">${wrap(String(fixture.weightRangeName || ''))}</div>
+        <h1 style="font-size: 20px !important; font-weight: bold !important; color: #ffffff !important;">${wrap(combinedTitle)}</h1>
+        <div style="font-size: 14px !important; font-weight: 600 !important; color: #ffffff !important; margin-top: 4px !important;">${wrap('Fikstür Sonuçları')}</div>
       </div>
       <div style="display:flex !important; justify-content: center !important; gap: 24px !important;">
         <div style="font-size: 10px !important; color: #111827 !important; font-weight: 600 !important;">${wrap(`${t('tournamentCard.page')} ${pageNum + 1}/${totalPages}`)}</div>
@@ -639,7 +643,6 @@ const buildRankingsSection = (fixture: any, isForPDF: boolean, selectedColumns: 
   }).join('');
   return `
     <div style="margin-bottom: 10px !important;">
-      <h3 style="font-size: 14px !important; font-weight: bold !important; color: #111827 !important; margin-bottom: 6px !important;">${wrap('Fikstür Sonuçları')}</h3>
       <table style="width:100% !important; border-collapse: collapse !important;">
         <thead>
           <tr style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;">
