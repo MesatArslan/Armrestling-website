@@ -639,11 +639,11 @@ const buildRankingsSection = (fixture: any, isForPDF: boolean, selectedColumns: 
   }).join('');
   return `
     <div style="margin-bottom: 10px !important;">
-      <h3 style="font-size: 14px !important; font-weight: bold !important; color: #111827 !important; margin-bottom: 6px !important;">${wrap(String(i18n.t('rankings.title')))}</h3>
+      <h3 style="font-size: 14px !important; font-weight: bold !important; color: #111827 !important; margin-bottom: 6px !important;">${wrap('Fikstür Sonuçları')}</h3>
       <table style="width:100% !important; border-collapse: collapse !important;">
         <thead>
           <tr style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;">
-            <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap(String(t('rankings.title')))}</th>
+            <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap('Sıralama')}</th>
             <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap(String(t('players.name')))}</th>
             <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap(String(t('players.basicInfo') || 'Bilgiler'))}</th>
           </tr>
