@@ -171,11 +171,11 @@ const Matches = () => {
     });
   }, [isPDFPreviewModalOpen, currentPreviewPage, previewZoom]);
 
-  // Load player columns for PDF selection
+  // Load player columns for PDF selection (excluding name and surname)
   useEffect(() => {
     try {
       const columns = PlayersStorage.getColumns();
-      const visibleColumns = columns.filter(col => col.visible);
+      const visibleColumns = columns.filter(col => col.visible && col.id !== 'name' && col.id !== 'surname');
       const visibleColumnIds = visibleColumns.map(col => col.id);
       setSelectedPlayerColumnsForPDF(visibleColumnIds);
     } catch { }
@@ -1473,11 +1473,11 @@ const Matches = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2z" />
                 </svg>
               </div>
-              <h3 className="font-bold text-gray-900 text-lg">{t('players.manageColumns') || 'Oyuncu Kolonları'}</h3>
+              <h3 className="font-bold text-gray-900 text-lg">Görünecek Oyuncu Bilgilerini Düzenle</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {(() => {
-                const allColumns = PlayersStorage.getColumns();
+                const allColumns = PlayersStorage.getColumns().filter(col => col.id !== 'name' && col.id !== 'surname');
                 return allColumns.map((col) => (
                   <div
                     key={col.id}

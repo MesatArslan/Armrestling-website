@@ -594,16 +594,10 @@ const buildRankingsSection = (fixture: any, isForPDF: boolean, selectedColumns: 
     const player = fixture.players.find((p: Player) => p.id === playerId);
     const playerName = getPlayerNameFromFixture(fixture, playerId);
     
-    // Build player info based on selected columns
-    const playerInfo = selectedColumns.map(colId => {
+    // Build player info based on selected columns (excluding name and surname)
+    const playerInfo = selectedColumns.filter(colId => colId !== 'name' && colId !== 'surname').map(colId => {
       let value = '';
       switch (colId) {
-        case 'name':
-          value = player?.name || '';
-          break;
-        case 'surname':
-          value = player?.surname || '';
-          break;
         case 'weight':
           value = player?.weight ? `${player.weight} kg` : '';
           break;
@@ -635,9 +629,9 @@ const buildRankingsSection = (fixture: any, isForPDF: boolean, selectedColumns: 
     
     return `
       <tr>
-        <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important;\">${wrap(`${icon} ${label}`)}</td>
-        <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight:600 !important;\">${wrap(playerName || '—')}</td>
-        <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; color:#6b7280 !important;\">${wrap(playerInfo || '—')}</td>
+        <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px 6px 16px !important; font-size: 10px !important; line-height: 1.4 !important;\">${wrap(`${icon} ${label}`)}</td>
+        <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight:600 !important; line-height: 1.4 !important;\">${wrap(playerName || '—')}</td>
+        <td style=\"border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; color:#6b7280 !important; line-height: 1.2 !important;\">${wrap(playerInfo || '—')}</td>
       </tr>
     `;
   }).join('');
@@ -646,9 +640,9 @@ const buildRankingsSection = (fixture: any, isForPDF: boolean, selectedColumns: 
       <table style="width:100% !important; border-collapse: collapse !important;">
         <thead>
           <tr style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;">
-            <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap('Sıralama')}</th>
+            <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important; width: 80px !important;">${wrap('Sıralama')}</th>
             <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap(String(t('players.name')))}</th>
-            <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap(String(t('players.basicInfo') || 'Bilgiler'))}</th>
+            <th style="border:1px solid #e5e7eb !important; padding:6px 8px !important; font-size: 10px !important; font-weight: bold !important;">${wrap('Bilgiler')}</th>
           </tr>
         </thead>
         <tbody>
