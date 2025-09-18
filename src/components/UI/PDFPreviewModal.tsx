@@ -258,10 +258,31 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
                 <div style={{ width: `${previewLeftPad}px`, flex: '0 0 auto' }} />
                 <div
                   className="flex-none"
-                  style={{ transform: `scale(${previewZoom})`, transformOrigin: 'top left', width: 'fit-content', willChange: 'transform' }}
+                  style={{ 
+                    transform: `scale(${previewZoom})`, 
+                    transformOrigin: 'top left', 
+                    width: 'fit-content', 
+                    willChange: 'transform'
+                  } as React.CSSProperties}
                 >
-                  <div className="pdf-preview-content" ref={previewContentRef as any}>
-                    <div style={{ width: '794px', maxWidth: '100%' }} dangerouslySetInnerHTML={{ __html: pages[currentPage] }} />
+                  <div 
+                    className="pdf-preview-content" 
+                    ref={previewContentRef as any}
+                    style={{
+                      backfaceVisibility: 'hidden',
+                      perspective: '1000px',
+                      transform: 'translateZ(0)',
+                      WebkitFontSmoothing: 'antialiased',
+                      MozOsxFontSmoothing: 'grayscale'
+                    } as React.CSSProperties}
+                  >
+                    <div 
+                      style={{ 
+                        width: '794px', 
+                        maxWidth: '100%'
+                      }} 
+                      dangerouslySetInnerHTML={{ __html: pages[currentPage] }} 
+                    />
                   </div>
                 </div>
               </div>

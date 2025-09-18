@@ -213,6 +213,30 @@ button {
 .pdf-preview-content {
   min-width: 210mm;
   max-width: 210mm;
+  /* High quality rendering for zoom */
+  image-rendering: high-quality;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform: translateZ(0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure all elements within PDF preview maintain high quality during zoom */
+.pdf-preview-content *,
+.pdf-preview-content img,
+.pdf-preview-content svg,
+.pdf-preview-content canvas,
+.pdf-preview-content table,
+.pdf-preview-content td,
+.pdf-preview-content th {
+  image-rendering: high-quality !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: crisp-edges !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
 }
 
 @media (max-width: 640px) {
