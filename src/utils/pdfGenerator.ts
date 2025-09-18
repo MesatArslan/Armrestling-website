@@ -779,23 +779,23 @@ export const generateFixturePreviewPages = (
   fixture: FixtureLike,
   includeRankings: boolean,
   includeCompletedMatches: boolean,
-  rowsPerPage: number = 18,
+  _rowsPerPage: number = 18,
   selectedPlayerColumns: string[] = ['name', 'surname', 'weight']
 ) => {
   const fresh = mergeFixtureWithDEState(getFreshFixture(fixture.id) || fixture);
   const completed = includeCompletedMatches ? getCompletedMatchesForFixture(fresh) : [];
   const totalRows = completed.length;
   
-  // Dynamic per-page sizing when showing 8 placements: first page 16, subsequent pages 25
-  // Determine if 8 placements are being shown (based on players count, not only stored rankings)
+  // Dynamic per-page sizing when rankings section is included.
+  // First page rows depend on number of players: 2→22, 3→21, 4→20, 5→19, 6→18, 7→17, 8+→16
   const playersLen = Array.isArray((fresh as any).players) ? (fresh as any).players.length : 0;
-  const hasEightPlacements = includeRankings && playersLen >= 4;
 
   const pages: string[] = [];
 
-  if (hasEightPlacements) {
-    const firstPageRows = 16;
-    const subsequentPageRows = 25;
+  if (includeRankings) {
+    const computedFirstPageRows = Math.max(16, Math.min(22, 24 - (playersLen || 0)));
+    const firstPageRows = computedFirstPageRows;
+    const subsequentPageRows = 27;
     const totalPages = (() => {
       if (totalRows === 0) return 1; // show rankings on first page
       const remainingAfterFirst = Math.max(0, totalRows - firstPageRows);
@@ -826,7 +826,8 @@ export const generateFixturePreviewPages = (
     }
   } else {
     // Default fixed rows per page
-    const effectiveRowsPerPage = Math.max(1, rowsPerPage);
+    // When rankings are NOT selected, always use a stable 27 rows per page
+    const effectiveRowsPerPage = 27;
     const totalPages = Math.max(1, Math.ceil(totalRows / effectiveRowsPerPage) || (includeRankings ? 1 : 0));
     for (let pageNum = 0; pageNum < totalPages; pageNum++) {
       const startIndex = pageNum * effectiveRowsPerPage;
@@ -857,10 +858,9 @@ export const openFixturePreviewModal = (
   fixture: FixtureLike,
   includeRankings: boolean,
   includeCompletedMatches: boolean,
-  rowsPerPage: number = 18,
   selectedPlayerColumns: string[] = ['name', 'surname', 'weight']
 ) => {
-  const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, rowsPerPage, selectedPlayerColumns);
+  const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, 18, selectedPlayerColumns);
   return { pages, currentPage: 0 };
 };
 
@@ -1040,13 +1040,12 @@ export const generateFixturePDF = async (
   fixture: FixtureLike,
   includeRankings: boolean,
   includeCompletedMatches: boolean,
-  rowsPerPage: number = 18,
   selectedPlayerColumns: string[] = ['name', 'surname', 'weight'],
   onProgress?: (percent: number) => void
 ): Promise<{ fileName: string; fileSize: string; totalPages: number }> => {
   try {
     await document.fonts.ready;
-    const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, rowsPerPage, selectedPlayerColumns);
+    const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, 18, selectedPlayerColumns);
     const pdf = new jsPDF('p', 'mm', 'a4');
     if (onProgress) onProgress(0);
     for (let i = 0; i < pages.length; i++) {

@@ -65,7 +65,6 @@ const Matches = () => {
   const [isMatchPDFModalOpen, setIsMatchPDFModalOpen] = useState(false);
   const [includeRankingsForPDF, setIncludeRankingsForPDF] = useState<boolean>(true);
   const [includeCompletedForPDF, setIncludeCompletedForPDF] = useState<boolean>(true);
-  const [rowsPerPageForPDF, setRowsPerPageForPDF] = useState<number>(18);
   const [selectedPlayerColumnsForPDF, setSelectedPlayerColumnsForPDF] = useState<string[]>(['name', 'surname', 'weight']);
   const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
   const [previewPages, setPreviewPages] = useState<string[]>([]);
@@ -1393,7 +1392,6 @@ const Matches = () => {
               activeFixture,
               includeRankingsForPDF,
               includeCompletedForPDF,
-              rowsPerPageForPDF,
               selectedPlayerColumnsForPDF
             );
             setPreviewPages(pages);
@@ -1518,44 +1516,6 @@ const Matches = () => {
             </div>
           </div>
 
-          {/* Rows per page */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg p-2">
-                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-gray-900 text-lg">{t('tournamentCard.playersPerPage')}</h3>
-            </div>
-            <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm max-w-xs">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.min')}: 1</span>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{t('tournamentCard.max')}: 40</span>
-              </div>
-              <input
-                type="number"
-                min={1}
-                max={40}
-                value={rowsPerPageForPDF || ''}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (v === '') {
-                    setRowsPerPageForPDF(0);
-                  } else {
-                    const n = parseInt(v);
-                    if (n >= 1 && n <= 40) setRowsPerPageForPDF(n);
-                  }
-                }}
-                onBlur={(e) => {
-                  const n = parseInt(e.target.value || '0');
-                  if (!n || n < 1) setRowsPerPageForPDF(18);
-                }}
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-center text-sm font-semibold text-gray-900 outline-none"
-                placeholder="18"
-              />
-            </div>
-          </div>
         </PDFSettingsShell>
       )}
 
@@ -1580,7 +1540,6 @@ const Matches = () => {
               activeFixture,
               includeRankingsForPDF,
               includeCompletedForPDF,
-              rowsPerPageForPDF,
               selectedPlayerColumnsForPDF,
               (p) => setPdfProgress(p)
             );
