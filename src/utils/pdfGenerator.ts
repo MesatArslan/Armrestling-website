@@ -556,7 +556,7 @@ const mergeFixtureWithDEState = (fixture: any): any => {
 
 const buildFixtureHeader = (fixture: FixtureLike, pageNum: number, totalPages: number, isForPDF: boolean) => {
   const t = (key: string, options?: any) => String(i18n.t(key, options));
-  const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-5px) !important;">${content}</div>` : content);
+  const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-8px) !important;">${content}</div>` : content);
   
   // Combine tournament name and weight range into one line
   const combinedTitle = `${fixture.tournamentName || ''} - ${fixture.weightRangeName || ''}`;
@@ -576,7 +576,7 @@ const buildFixtureHeader = (fixture: FixtureLike, pageNum: number, totalPages: n
 
 const buildRankingsSection = (fixture: any, isForPDF: boolean, selectedColumns: string[] = ['name', 'surname', 'weight']) => {
   const t = (key: string) => String(i18n.t(key));
-  const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-3px) !important;">${content}</div>` : content);
+  const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-6px) !important;">${content}</div>` : content);
   const entries: Array<{ key: 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'sixth' | 'seventh' | 'eighth'; label: string; icon: string }> = [
     { key: 'first', label: t('rankings.first'), icon: '🥇' },
     { key: 'second', label: t('rankings.second'), icon: '🥈' },
@@ -673,7 +673,7 @@ const getLocalizedBracketLabel = (raw?: string): string => {
 
 const buildCompletedMatchesTable = (fixture: FixtureLike, matches: MatchLike[], startIndex: number, endIndex: number, isForPDF: boolean) => {
   const t = (key: string) => String(i18n.t(key));
-  const wrap = (content: string) => (isForPDF ? `<div style=\"display:inline-block !important; transform: translateY(-3px) !important;\">${content}</div>` : content);
+  const wrap = (content: string) => (isForPDF ? `<div style=\"display:inline-block !important; transform: translateY(-6px) !important;\">${content}</div>` : content);
   const header = `
     <thead>
       <tr style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;">
@@ -780,7 +780,8 @@ export const generateFixturePreviewPages = (
   includeRankings: boolean,
   includeCompletedMatches: boolean,
   _rowsPerPage: number = 18,
-  selectedPlayerColumns: string[] = ['name', 'surname', 'weight']
+  selectedPlayerColumns: string[] = ['name', 'surname', 'weight'],
+  isForPDF: boolean = false
 ) => {
   const fresh = mergeFixtureWithDEState(getFreshFixture(fixture.id) || fixture);
   const completed = includeCompletedMatches ? getCompletedMatchesForFixture(fresh) : [];
@@ -808,17 +809,18 @@ export const generateFixturePreviewPages = (
       const perPage = pageNum === 0 ? firstPageRows : subsequentPageRows;
       const endIndex = Math.min(startIndex + perPage, totalRows);
       let content = '';
-      content += buildFixtureHeader(fresh, pageNum, totalPages, false);
+      content += buildFixtureHeader(fresh, pageNum, totalPages, isForPDF);
       if (pageNum === 0 && includeRankings) {
-        content += buildRankingsSection(fresh, false, selectedPlayerColumns);
+        content += buildRankingsSection(fresh, isForPDF, selectedPlayerColumns);
       }
       if (includeCompletedMatches && totalRows > 0) {
-        content += buildCompletedMatchesTable(fresh, completed as any, startIndex, endIndex, false);
+        content += buildCompletedMatchesTable(fresh, completed as any, startIndex, endIndex, isForPDF);
       }
       if (pageNum === totalPages - 1) {
+        const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-6px) !important;">${content}</div>` : content);
         content += `
           <div style="margin-top: 10px !important; text-align: center !important; padding: 8px !important; background: #f8fafc !important; border-radius: 4px !important; border-top: 2px solid #1e40af !important;">
-            <p style="margin: 0 !important; color: #374151 !important; font-size: 9px !important; font-weight: 500 !important;">${String(i18n.t('pdf.footer'))}</p>
+            <p style="margin: 0 !important; color: #374151 !important; font-size: 9px !important; font-weight: 500 !important;">${wrap(String(i18n.t('pdf.footer')))}</p>
           </div>
         `;
       }
@@ -833,17 +835,18 @@ export const generateFixturePreviewPages = (
       const startIndex = pageNum * effectiveRowsPerPage;
       const endIndex = Math.min(startIndex + effectiveRowsPerPage, totalRows);
       let content = '';
-      content += buildFixtureHeader(fresh, pageNum, totalPages, false);
+      content += buildFixtureHeader(fresh, pageNum, totalPages, isForPDF);
       if (pageNum === 0 && includeRankings) {
-        content += buildRankingsSection(fresh, false, selectedPlayerColumns);
+        content += buildRankingsSection(fresh, isForPDF, selectedPlayerColumns);
       }
       if (includeCompletedMatches) {
-        content += buildCompletedMatchesTable(fresh, completed as any, startIndex, endIndex, false);
+        content += buildCompletedMatchesTable(fresh, completed as any, startIndex, endIndex, isForPDF);
       }
       if (pageNum === totalPages - 1) {
+        const wrap = (content: string) => (isForPDF ? `<div style="display:inline-block !important; transform: translateY(-6px) !important;">${content}</div>` : content);
         content += `
           <div style="margin-top: 10px !important; text-align: center !important; padding: 8px !important; background: #f8fafc !important; border-radius: 4px !important; border-top: 2px solid #1e40af !important;">
-            <p style="margin: 0 !important; color: #374151 !important; font-size: 9px !important; font-weight: 500 !important;">${String(i18n.t('pdf.footer'))}</p>
+            <p style="margin: 0 !important; color: #374151 !important; font-size: 9px !important; font-weight: 500 !important;">${wrap(String(i18n.t('pdf.footer')))}</p>
           </div>
         `;
       }
@@ -860,7 +863,7 @@ export const openFixturePreviewModal = (
   includeCompletedMatches: boolean,
   selectedPlayerColumns: string[] = ['name', 'surname', 'weight']
 ) => {
-  const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, 18, selectedPlayerColumns);
+  const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, 18, selectedPlayerColumns, false);
   return { pages, currentPage: 0 };
 };
 
@@ -1045,7 +1048,7 @@ export const generateFixturePDF = async (
 ): Promise<{ fileName: string; fileSize: string; totalPages: number }> => {
   try {
     await document.fonts.ready;
-    const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, 18, selectedPlayerColumns);
+    const pages = generateFixturePreviewPages(fixture, includeRankings, includeCompletedMatches, 18, selectedPlayerColumns, true);
     const pdf = new jsPDF('p', 'mm', 'a4');
     if (onProgress) onProgress(0);
     for (let i = 0; i < pages.length; i++) {
