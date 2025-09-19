@@ -875,10 +875,22 @@ interface ScoringData {
 }
 
 
+interface ScoringExtraOptions {
+  includeTournamentNames?: boolean;
+  includeSelectedFixtures?: boolean;
+  tournamentNames?: string[];
+  fixtureNames?: string[];
+  tournamentFixtures?: Array<{
+    tournamentName: string;
+    fixtures: string[];
+  }>;
+}
+
 export const generateScoringPreviewContent = (
   aggregatedScores: ScoringData[],
   groupFieldName: string,
-  isForPDF: boolean = false
+  isForPDF: boolean = false,
+  extra?: ScoringExtraOptions
 ): string[] => {
   
   // Helper function to wrap text for PDF (moves text slightly upward)
@@ -898,6 +910,45 @@ export const generateScoringPreviewContent = (
     const endIndex = Math.min(startIndex + scoresPerPage, aggregatedScores.length);
     const pageScores = aggregatedScores.slice(startIndex, endIndex);
     
+    // Optional details section (tournament and fixture names)
+    const detailsSection = (() => {
+      const includeTours = !!extra?.includeTournamentNames && Array.isArray(extra?.tournamentNames) && extra!.tournamentNames!.length > 0;
+      const includeFix = !!extra?.includeSelectedFixtures && Array.isArray(extra?.tournamentFixtures) && extra!.tournamentFixtures!.length > 0;
+      if (!includeTours && !includeFix) return '';
+      
+      let contentHtml = '';
+      
+      if (includeTours && includeFix && extra?.tournamentFixtures) {
+        // Show tournaments with their fixtures grouped
+        contentHtml = extra.tournamentFixtures.map(tf => {
+          const fixturesHtml = tf.fixtures.length > 0 ? `
+            <div style="margin-left: 12px !important; margin-top: 2px !important;">
+              ${tf.fixtures.map(f => `<div style="font-size: 9px !important; color: #6b7280 !important;">• ${wrapForPDF(f)}</div>`).join('')}
+            </div>` : '';
+          return `
+            <div style="margin-bottom: 4px !important;">
+              <div style="font-size: 10px !important; color: #111827 !important; font-weight: 600 !important;">${wrapForPDF(tf.tournamentName)}</div>
+              ${fixturesHtml}
+            </div>`;
+        }).join('');
+      } else if (includeTours) {
+        // Show only tournament names
+        contentHtml = `
+          <div style="font-size: 10px !important; color: #111827 !important;">${wrapForPDF((extra!.tournamentNames || []).join(', '))}</div>`;
+      } else if (includeFix && extra?.fixtureNames) {
+        // Show only fixture names (fallback)
+        contentHtml = `
+          <div style="font-size: 10px !important; color: #111827 !important;">${wrapForPDF((extra!.fixtureNames || []).join(', '))}</div>`;
+      }
+      
+      return `
+        <div style="text-align: left !important; margin: 6px 0 !important; padding: 8px !important; background: #f8fafc !important; border: 1px solid #e5e7eb !important; border-radius: 6px !important;">
+          <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 600 !important; margin-bottom: 4px !important;">${wrapForPDF('Turnuvalar ve Fikstürler')}</div>
+          ${contentHtml}
+        </div>
+      `;
+    })();
+
     const pageContent = `
       <div style="height: 297mm !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important;">
         <div>
@@ -921,6 +972,7 @@ export const generateScoringPreviewContent = (
                 <div style="font-size: 11px !important; color: #111827 !important; font-weight: 600 !important;">${wrapForPDF(`${pageNum + 1}/${totalPages}`)}</div>
               </div>
             </div>
+            ${detailsSection}
           </div>
           
           <div style="background: white !important; border-radius: 6px !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important; overflow: hidden !important; flex: 1 !important;">
@@ -963,20 +1015,22 @@ export const generateScoringPreviewContent = (
 
 export const openScoringPreviewModal = (
   aggregatedScores: ScoringData[],
-  groupFieldName: string
+  groupFieldName: string,
+  extra?: ScoringExtraOptions
 ) => {
-  const pages = generateScoringPreviewContent(aggregatedScores, groupFieldName, false);
+  const pages = generateScoringPreviewContent(aggregatedScores, groupFieldName, false, extra);
   return { pages, currentPage: 0 };
 };
 
 export const generateScoringPDF = async (
   aggregatedScores: ScoringData[],
   groupFieldName: string,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  extra?: ScoringExtraOptions
 ): Promise<{ fileName: string; fileSize: string; totalPages: number }> => {
   try {
     await document.fonts.ready;
-    const pages = generateScoringPreviewContent(aggregatedScores, groupFieldName, true);
+    const pages = generateScoringPreviewContent(aggregatedScores, groupFieldName, true, extra);
     const pdf = new jsPDF('p', 'mm', 'a4');
     
     if (onProgress) onProgress(0);

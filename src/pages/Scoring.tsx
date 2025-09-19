@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TrophyIcon, Cog6ToothIcon, ChartBarIcon, CheckCircleIcon, ClockIcon, StarIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, Cog6ToothIcon, ChartBarIcon, CheckCircleIcon, ClockIcon, StarIcon } from '@heroicons/react/24/outline';
 import type { Player } from '../types';
 import { PlayersStorage, type Column as PlayersColumn } from '../utils/playersStorage';
 import { TournamentsStorage, type Tournament as StoredTournament } from '../utils/tournamentsStorage';
 import { MatchesStorage, type Fixture } from '../utils/matchesStorage';
 import { openScoringPreviewModal, generateScoringPDF } from '../utils/pdfGenerator';
+import PDFSettingsShell from '../components/UI/PDFSettingsShell';
 import PDFPreviewModal from '../components/UI/PDFPreviewModal';
 import { DoubleEliminationRepository } from '../storage/DoubleEliminationRepository';
 
@@ -81,8 +82,10 @@ const Scoring: React.FC = () => {
   const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
   const [previewPages, setPreviewPages] = useState<string[]>([]);
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0);
-  const [isExporting, setIsExporting] = useState(false);
-  const [pdfProgress, setPdfProgress] = useState(0);
+  
+  const [isPDFSettingsOpen, setIsPDFSettingsOpen] = useState(false);
+  const [includeTournamentNames, setIncludeTournamentNames] = useState(true);
+  const [includeSelectedFixtures, setIncludeSelectedFixtures] = useState(true);
 
   // Load initial data
   useEffect(() => {
@@ -236,12 +239,40 @@ const Scoring: React.FC = () => {
   };
 
   // PDF Functions
-  const handleShowPDFPreview = () => {
+  const scoringExtraInfo = useMemo(() => {
+    const selectedIds = new Set(config.selectedTournamentIds);
+    const includedTournaments = tournaments.filter(t => selectedIds.has(t.id));
+    const tournamentNames = includedTournaments.map(t => t.name).filter(Boolean);
+    const includedFixtures = fixtures.filter(f => selectedIds.has(f.tournamentId) && f.status === 'completed');
+    const fixtureNames = includedFixtures.map(f => f.name || `${f.tournamentName || ''} - ${f.weightRangeName || ''}`).filter(Boolean);
+    
+    // Group fixtures by tournament
+    const tournamentFixtures = includedTournaments.map(tournament => {
+      const tournamentFixtures = includedFixtures.filter(f => f.tournamentId === tournament.id);
+      return {
+        tournamentName: tournament.name,
+        fixtures: tournamentFixtures.map(f => f.name || `${f.weightRangeName || ''}`).filter(Boolean)
+      };
+    }).filter(tf => tf.fixtures.length > 0);
+    
+    return { tournamentNames, fixtureNames, tournamentFixtures };
+  }, [tournaments, fixtures, config.selectedTournamentIds]);
+
+  const handleOpenSettings = () => {
     if (aggregatedScores.length === 0) return;
-    
+    setIsPDFSettingsOpen(true);
+  };
+
+  const handleOpenPreviewFromSettings = () => {
     const groupFieldName = availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy;
-    const { pages } = openScoringPreviewModal(aggregatedScores, groupFieldName);
-    
+    const { pages } = openScoringPreviewModal(aggregatedScores, groupFieldName, {
+      includeTournamentNames,
+      includeSelectedFixtures,
+      tournamentNames: scoringExtraInfo.tournamentNames,
+      fixtureNames: scoringExtraInfo.fixtureNames,
+      tournamentFixtures: scoringExtraInfo.tournamentFixtures,
+    });
+    setIsPDFSettingsOpen(false);
     setPreviewPages(pages);
     setCurrentPreviewPage(0);
     setIsPDFPreviewModalOpen(true);
@@ -251,12 +282,16 @@ const Scoring: React.FC = () => {
     if (aggregatedScores.length === 0) return;
     
     try {
-      setIsExporting(true);
-      setPdfProgress(0);
       
       const groupFieldName = availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy;
       
-      await generateScoringPDF(aggregatedScores, groupFieldName, (p) => setPdfProgress(p));
+      await generateScoringPDF(aggregatedScores, groupFieldName, undefined, {
+        includeTournamentNames,
+        includeSelectedFixtures,
+        tournamentNames: scoringExtraInfo.tournamentNames,
+        fixtureNames: scoringExtraInfo.fixtureNames,
+        tournamentFixtures: scoringExtraInfo.tournamentFixtures,
+      });
       
       // Show success message
       alert(t('scoring.pdfSuccessMessage', {
@@ -266,9 +301,6 @@ const Scoring: React.FC = () => {
       
     } catch (error) {
       alert(t('scoring.pdfErrorMessage'));
-    } finally {
-      setIsExporting(false);
-      setPdfProgress(0);
     }
   };
 
@@ -419,7 +451,7 @@ const Scoring: React.FC = () => {
                     {config.groupBy}
                   </span>
                   <button
-                    onClick={handleShowPDFPreview}
+                    onClick={handleOpenSettings}
                     disabled={aggregatedScores.length === 0}
                     className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm flex items-center gap-2"
                   >
@@ -566,7 +598,92 @@ const Scoring: React.FC = () => {
           setCurrentPreviewPage(0);
         }}
         onDownloadClick={handleExportPDF}
+        onBackToSettings={() => {
+          setIsPDFPreviewModalOpen(false);
+          setIsPDFSettingsOpen(true);
+        }}
       />
+
+      <PDFSettingsShell
+        isOpen={isPDFSettingsOpen}
+        onClose={() => setIsPDFSettingsOpen(false)}
+        onOpenPreview={handleOpenPreviewFromSettings}
+        titleSuffix={t('scoring.totalPoints')}
+      >
+        <div className="space-y-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Puanlama PDF Ayarları</h3>
+              <p className="text-sm text-gray-500 mt-1">Önizleme öncesi göstermek istediğiniz bilgileri seçin.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">{aggregatedScores.length} kayıt</span>
+              <span className="text-xs px-2 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-200">{config.groupBy}</span>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeTournamentNames}
+                onChange={(e) => setIncludeTournamentNames(e.target.checked)}
+                className="mt-1 w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded"
+              />
+              <div className="flex-1">
+                 <div className="font-medium text-gray-900 flex items-center gap-2">
+                   Turnuva adlarını göster
+                   <span className="text-[11px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">{scoringExtraInfo.tournamentNames.length}</span>
+                 </div>
+                 <div className="text-sm text-gray-500 mt-1">
+                   PDF başlığının altında listelenir.
+                 </div>
+                {includeTournamentNames && scoringExtraInfo.tournamentNames.length > 0 && (
+                  <div className="mt-2 max-h-20 overflow-y-auto text-sm text-gray-700 bg-gray-50 rounded-lg border border-gray-200 p-2">
+                    {scoringExtraInfo.tournamentNames.slice(0,6).map((n, i) => (
+                      <div key={i} className="truncate">• {n}</div>
+                    ))}
+                    {scoringExtraInfo.tournamentNames.length > 6 && (
+                      <div className="text-xs text-gray-500 mt-1">+{scoringExtraInfo.tournamentNames.length - 6} diğer</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </label>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeSelectedFixtures}
+                onChange={(e) => setIncludeSelectedFixtures(e.target.checked)}
+                className="mt-1 w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded"
+              />
+              <div className="flex-1">
+                 <div className="font-medium text-gray-900 flex items-center gap-2">
+                   Seçilen fikstürleri göster
+                   <span className="text-[11px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">{scoringExtraInfo.fixtureNames.length}</span>
+                 </div>
+                 <div className="text-sm text-gray-500 mt-1">
+                   Sıralama kriterinin altında kısa liste.
+                 </div>
+                {includeSelectedFixtures && scoringExtraInfo.fixtureNames.length > 0 && (
+                  <div className="mt-2 max-h-20 overflow-y-auto text-sm text-gray-700 bg-gray-50 rounded-lg border border-gray-200 p-2">
+                    {scoringExtraInfo.fixtureNames.slice(0,6).map((n, i) => (
+                      <div key={i} className="truncate">• {n}</div>
+                    ))}
+                    {scoringExtraInfo.fixtureNames.length > 6 && (
+                      <div className="text-xs text-gray-500 mt-1">+{scoringExtraInfo.fixtureNames.length - 6} diğer</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </label>
+          </div>
+
+        </div>
+      </PDFSettingsShell>
     </div>
   );
 };
