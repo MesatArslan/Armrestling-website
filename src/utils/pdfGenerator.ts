@@ -919,31 +919,59 @@ export const generateScoringPreviewContent = (
       let contentHtml = '';
       
       if (includeTours && includeFix && extra?.tournamentFixtures) {
-        // Show tournaments with their fixtures grouped
-        contentHtml = extra.tournamentFixtures.map(tf => {
-          const fixturesHtml = tf.fixtures.length > 0 ? `
-            <div style="margin-left: 12px !important; margin-top: 2px !important;">
-              ${tf.fixtures.map(f => `<div style="font-size: 9px !important; color: #6b7280 !important;">• ${wrapForPDF(f)}</div>`).join('')}
-            </div>` : '';
-          return `
-            <div style="margin-bottom: 4px !important;">
-              <div style="font-size: 10px !important; color: #111827 !important; font-weight: 600 !important;">${wrapForPDF(tf.tournamentName)}</div>
-              ${fixturesHtml}
-            </div>`;
-        }).join('');
-      } else if (includeTours) {
-        // Show only tournament names
+        // Show tournaments with their fixtures grouped in beautiful cards
         contentHtml = `
-          <div style="font-size: 10px !important; color: #111827 !important;">${wrapForPDF((extra!.tournamentNames || []).join(', '))}</div>`;
+          <div style="display: grid !important; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; gap: 8px !important; margin-top: 6px !important;">
+            ${extra.tournamentFixtures.map(tf => {
+              const fixturesHtml = tf.fixtures.length > 0 ? `
+                <div style="margin-top: 4px !important;">
+                  ${tf.fixtures.map(f => `
+                    <div style="font-size: 8px !important; color: #6b7280 !important; margin: 2px 0 !important; padding: 2px 6px !important; background: #f1f5f9 !important; border-radius: 4px !important; border-left: 3px solid #3b82f6 !important;">
+                      ${wrapForPDF(f)}
+                    </div>`).join('')}
+                </div>` : '';
+              return `
+                <div style="background: linear-gradient(135deg, #ffffff, #f8fafc) !important; border: 1px solid #e2e8f0 !important; border-radius: 8px !important; padding: 8px !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;">
+                  <div style="display: flex !important; align-items: center !important; margin-bottom: 4px !important;">
+                    <div style="width: 4px !important; height: 16px !important; background: linear-gradient(135deg, #1e40af, #3b82f6) !important; border-radius: 2px !important; margin-right: 6px !important;"></div>
+                    <div style="font-size: 10px !important; color: #111827 !important; font-weight: 700 !important;">${wrapForPDF(tf.tournamentName)}</div>
+                  </div>
+                  ${fixturesHtml}
+                </div>`;
+            }).join('')}
+          </div>`;
+      } else if (includeTours) {
+        // Show only tournament names in a beautiful vertical list
+        contentHtml = `
+          <div style="margin-top: 6px !important;">
+            ${(extra!.tournamentNames || []).map((name, index) => `
+              <div style="display: flex !important; align-items: center !important; margin: 4px 0 !important; padding: 6px 8px !important; background: linear-gradient(135deg, #ffffff, #f8fafc) !important; border: 1px solid #e2e8f0 !important; border-radius: 6px !important; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;">
+                <div style="width: 6px !important; height: 6px !important; background: linear-gradient(135deg, #1e40af, #3b82f6) !important; border-radius: 50% !important; margin-right: 8px !important; flex-shrink: 0 !important;"></div>
+                <div style="font-size: 10px !important; color: #111827 !important; font-weight: 600 !important; flex: 1 !important;">${wrapForPDF(name)}</div>
+                <div style="font-size: 8px !important; color: #6b7280 !important; background: #f1f5f9 !important; padding: 2px 6px !important; border-radius: 4px !important;">${wrapForPDF(String(index + 1))}</div>
+              </div>`).join('')}
+          </div>`;
       } else if (includeFix && extra?.fixtureNames) {
         // Show only fixture names (fallback)
         contentHtml = `
-          <div style="font-size: 10px !important; color: #111827 !important;">${wrapForPDF((extra!.fixtureNames || []).join(', '))}</div>`;
+          <div style="margin-top: 6px !important;">
+            ${(extra!.fixtureNames || []).map((name, index) => `
+              <div style="display: flex !important; align-items: center !important; margin: 3px 0 !important; padding: 4px 6px !important; background: #f8fafc !important; border-left: 3px solid #3b82f6 !important; border-radius: 4px !important;">
+                <div style="font-size: 9px !important; color: #111827 !important; font-weight: 500 !important; flex: 1 !important;">${wrapForPDF(name)}</div>
+                <div style="font-size: 7px !important; color: #6b7280 !important; margin-left: 8px !important;">${wrapForPDF(String(index + 1))}</div>
+              </div>`).join('')}
+          </div>`;
       }
       
+      const sectionTitle = includeTours && includeFix ? 'Turnuvalar ve Fikstürler' : 
+                          includeTours ? 'Seçilen Turnuvalar' : 'Seçilen Fikstürler';
+      
       return `
-        <div style="text-align: left !important; margin: 6px 0 !important; padding: 8px !important; background: #f8fafc !important; border: 1px solid #e5e7eb !important; border-radius: 6px !important;">
-          <div style="font-size: 9px !important; color: #6b7280 !important; font-weight: 600 !important; margin-bottom: 4px !important;">${wrapForPDF('Turnuvalar ve Fikstürler')}</div>
+        <div style="text-align: left !important; margin: 8px 0 !important; padding: 10px !important; background: linear-gradient(135deg, #f8fafc, #ffffff) !important; border: 1px solid #e2e8f0 !important; border-radius: 8px !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;">
+          <div style="display: flex !important; align-items: center !important; margin-bottom: 6px !important;">
+            <div style="width: 3px !important; height: 16px !important; background: linear-gradient(135deg, #1e40af, #3b82f6) !important; border-radius: 2px !important; margin-right: 8px !important;"></div>
+            <div style="font-size: 10px !important; color: #374151 !important; font-weight: 700 !important;">${wrapForPDF(sectionTitle)}</div>
+          </div>
           ${contentHtml}
         </div>
       `;
