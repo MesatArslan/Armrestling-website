@@ -5,12 +5,13 @@ import { useTranslation } from 'react-i18next';
 interface PDFSettingsShellProps {
   isOpen: boolean;
   titleSuffix?: string;
+  customTitle?: string;
   onClose: () => void;
   onOpenPreview: () => void;
   children: React.ReactNode;
 }
 
-const PDFSettingsShell: React.FC<PDFSettingsShellProps> = ({ isOpen, titleSuffix, onClose, onOpenPreview, children }) => {
+const PDFSettingsShell: React.FC<PDFSettingsShellProps> = ({ isOpen, titleSuffix, customTitle, onClose, onOpenPreview, children }) => {
   const { t } = useTranslation();
   if (!isOpen) return null;
   return (
@@ -27,7 +28,7 @@ const PDFSettingsShell: React.FC<PDFSettingsShellProps> = ({ isOpen, titleSuffix
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">{t('tournamentCard.pdfPreview')}</h2>
+                  <h2 className="text-lg font-bold text-white">{customTitle || t('tournamentCard.pdfPreview')}</h2>
                   {titleSuffix && <p className="text-red-100 mt-1 text-xs">{titleSuffix}</p>}
                 </div>
               </div>
@@ -56,7 +57,7 @@ const PDFSettingsShell: React.FC<PDFSettingsShellProps> = ({ isOpen, titleSuffix
                 </svg>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">{t('tournamentCard.pdfPreview')}</h2>
+                <h2 className="text-2xl font-bold text-white">{customTitle || t('tournamentCard.pdfPreview')}</h2>
                 {titleSuffix && <p className="text-red-100 mt-1 text-sm">{titleSuffix}</p>}
               </div>
             </div>
