@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
-import { UserIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { UserIcon, ChevronDownIcon, UserGroupIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 import LanguageSwitcher from './LanguageSwitcher';
 import { AuthModal } from './AuthModal';
 import { useAuth } from '../../contexts/AuthContext';
@@ -114,18 +114,20 @@ const Navbar = () => {
                 
                 {/* Login Dropdown */}
                 {loginDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <button
                       onClick={() => openAuthModal('signup')}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
                     >
-                      Bireysel Giriş
+                      <UserIcon className="w-4 h-4 text-gray-500" />
+                      <span className="font-medium">{t('auth.individualLogin')}</span>
                     </button>
                     <button
                       onClick={() => openAuthModal('login')}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
                     >
-                      Kurum Giriş
+                      <BuildingOfficeIcon className="w-4 h-4 text-gray-500" />
+                      <span className="font-medium">{t('auth.institutionLogin')}</span>
                     </button>
                   </div>
                 )}
@@ -184,7 +186,7 @@ const Navbar = () => {
                   onClick={() => setIsOpen(false)}
                   className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
                 >
-                  Kullanıcı Paneli
+                  {t('auth.userPanel')}
                 </Link>
               )}
             </div>
@@ -194,13 +196,13 @@ const Navbar = () => {
                 onClick={() => openAuthModal('signup')}
                 className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
               >
-                Bireysel Girişi
+                {t('auth.individualLogin')}
               </button>
               <button
                 onClick={() => openAuthModal('login')}
                 className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700"
               >
-                Kurum Girişi
+                {t('auth.institutionLogin')}
               </button>
             </div>
           )}

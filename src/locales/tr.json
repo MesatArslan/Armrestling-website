@@ -99,8 +99,7 @@
       "cloudSync": "Bulut Senkronizasyonu",
       "rights": "Tüm hakları saklıdır.",
       "version": "Sürüm 1.0",
-      "madeWith": "İle yapıldı",
-      "forCommunity": "topluluk için"
+      "madeWith": "Tarafından yapıldı"
     },
     "intro": {
       "title": "Bilek güreşi turnuvaları için hepsi bir arada platform",
@@ -526,6 +525,25 @@
     "login": "Giriş Yap",
     "signup": "Kayıt Ol",
     "logout": "Çıkış Yap",
+    "individualLogin": "Bireysel Giriş",
+    "institutionLogin": "Kurum Giriş",
+    "userPanel": "Kullanıcı Paneli",
+    "individualLoginDesc": "Kişisel hesap erişimi",
+    "institutionLoginDesc": "Kurumsal hesap erişimi",
+    "modalTitle": {
+      "individual": "Bireysel Giriş",
+      "institution": "Kurum Giriş"
+    },
+    "modalButton": {
+      "individual": "Bireysel Giriş",
+      "institution": "Kurum Giriş"
+    },
+    "modalSwitch": {
+      "individualQuestion": "Kurum hesabınız mı var?",
+      "institutionQuestion": "Bireysel hesabınız mı var?",
+      "individualLink": "Bireysel Giriş",
+      "institutionLink": "Kurum Giriş"
+    },
     "email": "E-posta",
     "password": "Şifre",
     "confirmPassword": "Şifreyi Onayla",

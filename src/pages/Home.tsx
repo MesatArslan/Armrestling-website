@@ -13,7 +13,6 @@ import {
   GlobeAltIcon,
   DevicePhoneMobileIcon,
   CloudIcon,
-  HeartIcon,
   FireIcon,
   LightBulbIcon
 } from '@heroicons/react/24/outline';
@@ -441,8 +440,9 @@ const Footer = () => {
                 <span>{t('home.footer.version', { defaultValue: 'Version 1.0' })}</span>
                 <span>•</span>
                 <span>{t('home.footer.madeWith', { defaultValue: 'Made with' })}</span>
-                <HeartIcon className="w-4 h-4 text-red-400" />
-                <span>{t('home.footer.forCommunity', { defaultValue: 'for the community' })}</span>
+                <span className="font-bold bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 bg-clip-text text-transparent animate-pulse">
+                  M.E.A.
+                </span>
               </div>
             </div>
           </div>

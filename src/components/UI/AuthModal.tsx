@@ -152,7 +152,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Modal content */}
         <div className="px-6 py-8">
           <h3 className="text-2xl font-bold text-center text-gray-900 mb-6">
-            {mode === 'login' ? 'Kurum Giriş' : 'Bireysel Giriş'}
+            {mode === 'login' ? t('auth.modalTitle.institution') : t('auth.modalTitle.individual')}
           </h3>
 
           {error && (
@@ -223,19 +223,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     {t('auth.loading')}
                   </>
                 ) : (
-                  mode === 'login' ? 'Kurum Giriş' : 'Bireysel Giriş'
+                  mode === 'login' ? t('auth.modalButton.institution') : t('auth.modalButton.individual')
                 )}
               </button>
 
               <div className="text-center pt-4 border-t border-gray-200">
                 <span className="text-sm text-gray-600">
-                  {mode === 'login' ? 'Bireysel hesabınız mı var?' : 'Kurum hesabınız mı var?'}{' '}
+                  {mode === 'login' ? t('auth.modalSwitch.institutionQuestion') : t('auth.modalSwitch.individualQuestion')}{' '}
                   <button
                     type="button"
                     onClick={() => onModeChange(mode === 'login' ? 'signup' : 'login')}
                     className="font-medium text-indigo-600 hover:text-indigo-500"
                   >
-                    {mode === 'login' ? 'Bireysel Giriş' : 'Kurum Giriş'}
+                    {mode === 'login' ? t('auth.modalSwitch.individualLink') : t('auth.modalSwitch.institutionLink')}
                   </button>
                 </span>
               </div>
