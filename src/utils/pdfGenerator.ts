@@ -910,11 +910,19 @@ export const generateScoringPreviewContent = (
     
     // Calculate height based on tournament names
     if (extra?.includeTournamentNames && extra?.tournamentNames?.length) {
-      detailsHeight += 20; // Base height for tournament section
-      detailsHeight += extra.tournamentNames.length * 8; // Each tournament name adds ~8px
+      if (extra?.includeSelectedFixtures) {
+        // "Turnuvalar ve Fikstürler" seçildiğinde - turnuvalar grid kartlar halinde gösterilir
+        detailsHeight += 20; // Base height for tournament section header
+        detailsHeight += extra.tournamentNames.length * 8; // Each tournament in grid: ~8px
+      } else {
+        // "Sadece Turnuvalar" seçildiğinde - turnuvalar alt alta kartlar halinde gösterilir
+        detailsHeight += 20; // Base height for tournament section header
+        // Each tournament card: margin(4px top + 4px bottom) + padding(6px top + 6px bottom) + content(~12px) = ~32px per tournament
+        detailsHeight += extra.tournamentNames.length * 32;
+      }
     }
     
-    // Calculate height based on tournament fixtures
+    // Calculate height based on tournament fixtures (only if fixtures are included)
     if (extra?.includeSelectedFixtures && extra?.tournamentFixtures?.length) {
       detailsHeight += 20; // Base height for fixtures section
       extra.tournamentFixtures.forEach(tf => {

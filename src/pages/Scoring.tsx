@@ -85,8 +85,7 @@ const Scoring: React.FC = () => {
   
   const [isGroupByDropdownOpen, setIsGroupByDropdownOpen] = useState(false);
   const [isPDFSettingsOpen, setIsPDFSettingsOpen] = useState(false);
-  const [includeTournamentNames, setIncludeTournamentNames] = useState(true);
-  const [includeSelectedFixtures, setIncludeSelectedFixtures] = useState(true);
+  const [pdfContentType, setPdfContentType] = useState<'tournaments' | 'both'>('both');
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -304,8 +303,8 @@ const Scoring: React.FC = () => {
   const handleOpenPreviewFromSettings = () => {
     const groupFieldName = availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy;
     const { pages } = openScoringPreviewModal(aggregatedScores, groupFieldName, {
-      includeTournamentNames,
-      includeSelectedFixtures,
+      includeTournamentNames: pdfContentType === 'tournaments' || pdfContentType === 'both',
+      includeSelectedFixtures: pdfContentType === 'both',
       tournamentNames: scoringExtraInfo.tournamentNames,
       fixtureNames: scoringExtraInfo.fixtureNames,
       tournamentFixtures: scoringExtraInfo.tournamentFixtures,
@@ -324,8 +323,8 @@ const Scoring: React.FC = () => {
       const groupFieldName = availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy;
       
       await generateScoringPDF(aggregatedScores, groupFieldName, undefined, {
-        includeTournamentNames,
-        includeSelectedFixtures,
+        includeTournamentNames: pdfContentType === 'tournaments' || pdfContentType === 'both',
+        includeSelectedFixtures: pdfContentType === 'both',
         tournamentNames: scoringExtraInfo.tournamentNames,
         fixtureNames: scoringExtraInfo.fixtureNames,
         tournamentFixtures: scoringExtraInfo.tournamentFixtures,
@@ -765,58 +764,62 @@ const Scoring: React.FC = () => {
             <h4 className="text-lg font-bold text-gray-900">Gözükecek kısımları seçin</h4>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div
-              className={`border-2 rounded-lg p-3 transition-all duration-200 ${
-                includeTournamentNames
+              className={`border-2 rounded-lg p-4 transition-all duration-200 ${
+                pdfContentType === 'tournaments'
                   ? 'bg-white sm:hover:border-green-500 sm:hover:shadow-md cursor-pointer border-green-500'
                   : 'bg-white sm:hover:border-green-400 sm:hover:shadow-md cursor-pointer border-gray-200'
               }`}
-              onClick={() => setIncludeTournamentNames(!includeTournamentNames)}
+              onClick={() => setPdfContentType('tournaments')}
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-1.5">
-                    <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-2">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <h4 className="font-semibold text-gray-900">Turnuva Adları</h4>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg">Turnuvalar</h4>
+                    <p className="text-sm text-gray-600">Sadece turnuva adları gösterilir</p>
+                  </div>
                 </div>
-                {includeTournamentNames && (
-                  <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">Seçili</div>
+                {pdfContentType === 'tournaments' && (
+                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">Seçili</div>
                 )}
               </div>
-              <p className="text-sm text-gray-600">PDF başlığının altında listelenir.</p>
-              <div className="mt-2 text-xs text-gray-500">
+              <div className="text-xs text-gray-500">
                 {scoringExtraInfo.tournamentNames.length} turnuva
               </div>
             </div>
 
             <div
-              className={`border-2 rounded-lg p-3 transition-all duration-200 ${
-                includeSelectedFixtures
+              className={`border-2 rounded-lg p-4 transition-all duration-200 ${
+                pdfContentType === 'both'
                   ? 'bg-white sm:hover:border-green-500 sm:hover:shadow-md cursor-pointer border-green-500'
                   : 'bg-white sm:hover:border-green-400 sm:hover:shadow-md cursor-pointer border-gray-200'
               }`}
-              onClick={() => setIncludeSelectedFixtures(!includeSelectedFixtures)}
+              onClick={() => setPdfContentType('both')}
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-1.5">
-                    <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-2">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                     </svg>
                   </div>
-                  <h4 className="font-semibold text-gray-900">Fikstürler</h4>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg">Turnuvalar ve Fikstürler</h4>
+                    <p className="text-sm text-gray-600">Hem turnuva adları hem fikstür detayları gösterilir</p>
+                  </div>
                 </div>
-                {includeSelectedFixtures && (
-                  <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">Seçili</div>
+                {pdfContentType === 'both' && (
+                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">Seçili</div>
                 )}
               </div>
-              <p className="text-sm text-gray-600">Sıralama kriterinin altında kısa liste.</p>
-              <div className="mt-2 text-xs text-gray-500">
-                {scoringExtraInfo.fixtureNames.length} fikstür
+              <div className="text-xs text-gray-500">
+                {scoringExtraInfo.tournamentNames.length} turnuva, {scoringExtraInfo.fixtureNames.length} fikstür
               </div>
             </div>
           </div>
