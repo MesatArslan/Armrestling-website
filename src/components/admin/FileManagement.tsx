@@ -18,6 +18,9 @@ export const FileManagement: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [isExporting, setIsExporting] = useState(false)
+  const [pdfProgress, setPdfProgress] = useState(0)
+  const hideProgressTimer = React.useRef<number | null>(null)
   const [userLimits, setUserLimits] = useState<{
     singleFileLimit: number
     totalLimit: number
@@ -112,14 +115,42 @@ export const FileManagement: React.FC = () => {
 
   const handleDownloadFile = async (file: SavedFile) => {
     try {
+      setIsExporting(true)
+      setPdfProgress(0)
+      
+      // Simulate progress for file download
+      const progressInterval = setInterval(() => {
+        setPdfProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return prev
+          }
+          return prev + Math.random() * 15
+        })
+      }, 200)
+
       const result = await fileManager.downloadFile(file.id)
-      if (result.success) {
-        setSuccess('Dosya indirildi!')
-      } else {
+      
+      clearInterval(progressInterval)
+      setPdfProgress(100)
+      
+      if (!result.success) {
         setError(result.error || 'Dosya indirilirken hata oluştu')
       }
     } catch (err) {
       setError('Dosya indirilemedi')
+    } finally {
+      // Hold 100% for a brief moment to give a nice finish
+      if (pdfProgress < 100) {
+        setPdfProgress(100)
+      }
+      if (hideProgressTimer.current) {
+        window.clearTimeout(hideProgressTimer.current)
+      }
+      hideProgressTimer.current = window.setTimeout(() => {
+        setIsExporting(false)
+        setPdfProgress(0)
+      }, 800)
     }
   }
 
@@ -619,6 +650,52 @@ export const FileManagement: React.FC = () => {
           }
         />
       </div>
+
+      {/* PDF Export Progress Indicator */}
+      {isExporting && (
+        <div className="fixed top-6 right-6 z-[10000] transition-all duration-500 ease-out animate-in slide-in-from-top-2 fade-in">
+          <div className="bg-gradient-to-br from-white to-gray-50/95 backdrop-blur-xl border border-gray-200/50 shadow-2xl rounded-xl px-4 py-3 flex items-center gap-3 min-w-[240px] transform hover:scale-105 transition-transform duration-200">
+            {/* Animated download icon */}
+            <div className="relative">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                <svg className="animate-bounce h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              {/* Progress ring */}
+              <div className="absolute -inset-0.5 rounded-lg">
+                <div className="w-9 h-9 border-2 border-blue-200 rounded-lg animate-spin" style={{ animationDuration: '3s' }}>
+                  <div className="w-full h-full border-t-2 border-blue-500 rounded-lg"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="text-xs font-bold text-gray-800">Dosya İndiriliyor</div>
+                <div className="text-xs font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md">{Math.round(pdfProgress)}%</div>
+              </div>
+              
+              {/* Enhanced progress bar */}
+              <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                <div 
+                  className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full transition-all duration-300 ease-out shadow-lg" 
+                  style={{ width: `${pdfProgress}%` }}
+                >
+                  <div className="h-full bg-gradient-to-r from-white/20 to-transparent rounded-full"></div>
+                </div>
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+              </div>
+              
+              {/* Status text */}
+              <div className="mt-1.5 text-xs text-gray-500 font-medium">
+                {pdfProgress < 100 ? 'Dosya hazırlanıyor...' : 'İndiriliyor...'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toasts */}
       <div className="pointer-events-none fixed top-4 right-4 z-[60] space-y-3">
