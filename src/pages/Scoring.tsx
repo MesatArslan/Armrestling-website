@@ -558,6 +558,7 @@ const Scoring: React.FC = () => {
                 <div className="ml-auto flex items-center gap-3">
                   <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-100 to-purple-100 px-4 py-2 rounded-xl border border-indigo-200">
                     <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
+                    <span className="text-sm font-semibold text-indigo-700">
                       Sıralama: {availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy}
                   </span>
                   </div>
