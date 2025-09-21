@@ -9,13 +9,25 @@
   "home": {
     "title": "Arm Wrestling Tournament Manager",
     "description": "Manage your arm wrestling tournaments, players, and matches with ease",
+    "badge": "Professional Tournament Management",
+    "trust": {
+      "secure": "Secure & Reliable",
+      "multilingual": "Multilingual Support",
+      "responsive": "Mobile Optimized"
+    },
     "quickActions": "Quick Actions",
+    "quickActionsDetails": {
+      "tournamentDesc": "Set up your tournament with custom weight ranges and filters",
+      "playerDesc": "Add and manage players with detailed profiles",
+      "matchDesc": "Run live matches and track tournament progress"
+    },
     "createTournament": "Create Tournament",
     "addPlayer": "Add Player",
     "viewMatches": "View Matches",
     "featuresTitle": "Why Choose Our Platform?",
     "featuresSubtitle": "The ultimate platform for arm wrestling enthusiasts",
     "features": {
+      "badge": "Platform Features",
       "tournamentManagement": {
         "title": "Tournament Management",
         "description": "Organize professional armwrestling tournaments with custom weight classes and filters."
@@ -31,9 +43,65 @@
       "statsAnalytics": {
         "title": "Statistics & Analytics",
         "description": "View results and rankings; export players and generate PDFs."
+      },
+      "pdfExport": {
+        "title": "PDF Export & Reports",
+        "description": "Generate professional PDFs with localized content and custom layouts."
+      },
+      "cloudSync": {
+        "title": "Cloud Synchronization",
+        "description": "Access your tournaments from anywhere with real-time cloud synchronization."
+      },
+      "mobileApp": {
+        "title": "Mobile Optimized",
+        "description": "Fully responsive design that works perfectly on all devices - phones, tablets, and desktops."
       }
     },
-    "clickToProceed": "Click to proceed",
+    "stats": {
+      "title": "Trusted by Arm Wrestling Community",
+      "subtitle": "Join thousands of organizers and athletes who trust our platform for their tournaments",
+      "players": "Active Players",
+      "tournaments": "Tournaments Hosted",
+      "matches": "Matches Played",
+      "countries": "Countries"
+    },
+    "testimonials": {
+      "badge": "Success Stories",
+      "title": "What Our Users Say",
+      "subtitle": "Hear from tournament organizers and athletes who have transformed their events with our platform",
+      "t1": {
+        "name": "Ahmet Yılmaz",
+        "role": "Tournament Director",
+        "content": "This platform revolutionized how we organize tournaments. The bracket system is flawless and the PDF export feature saves us hours of work."
+      },
+      "t2": {
+        "name": "Maria Santos",
+        "role": "Athletics Coordinator",
+        "content": "The multilingual support and mobile optimization make it perfect for international tournaments. Our athletes love the real-time updates."
+      },
+      "t3": {
+        "name": "John Smith",
+        "role": "Club Manager",
+        "content": "From player registration to final results, everything is streamlined. The cloud sync feature means we can manage tournaments from anywhere."
+      }
+    },
+    "clickToProceed": "Get Started",
+    "footer": {
+      "description": "Professional arm wrestling tournament management platform. Organize tournaments, manage players, and track matches with ease.",
+      "secure": "Secure Platform",
+      "multilingual": "Multilingual",
+      "quickLinks": "Quick Links",
+      "features": "Features",
+      "tournamentManagement": "Tournament Management",
+      "playerProfiles": "Player Profiles",
+      "matchTracking": "Match Tracking",
+      "pdfExport": "PDF Export",
+      "cloudSync": "Cloud Sync",
+      "rights": "All rights reserved.",
+      "version": "Version 1.0",
+      "madeWith": "Made with",
+      "forCommunity": "for the community"
+    },
     "intro": {
       "title": "All-in-one platform for armwrestling tournaments",
       "description": "Create tournaments with custom weight ranges, manage players with flexible filters, run live matches, and export localized PDFs with one click.",

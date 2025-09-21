@@ -9,13 +9,25 @@
   "home": {
     "title": "Bilek Güreşi Turnuva Yöneticisi",
     "description": "Bilek güreşi turnuvalarınızı, oyuncularınızı ve maçlarınızı kolayca yönetin",
+    "badge": "Profesyonel Turnuva Yönetimi",
+    "trust": {
+      "secure": "Güvenli ve Güvenilir",
+      "multilingual": "Çok Dilli Destek",
+      "responsive": "Mobil Optimize"
+    },
     "quickActions": "Hızlı İşlemler",
+    "quickActionsDetails": {
+      "tournamentDesc": "Özel sıklet aralıkları ve filtrelerle turnuvanızı kurun",
+      "playerDesc": "Detaylı profillerle oyuncu ekleyin ve yönetin",
+      "matchDesc": "Canlı maçları yürütün ve turnuva ilerlemesini takip edin"
+    },
     "createTournament": "Turnuva Oluştur",
     "addPlayer": "Oyuncu Ekle",
     "viewMatches": "Maçları Görüntüle",
     "featuresTitle": "Neden Bu Platform?",
     "featuresSubtitle": "Bilek güreşi tutkunları için eksiksiz bir platform",
     "features": {
+      "badge": "Platform Özellikleri",
       "tournamentManagement": {
         "title": "Turnuva Yönetimi",
         "description": "Özel sıklet aralıkları ve filtrelerle profesyonel turnuvalar düzenleyin."
@@ -31,9 +43,65 @@
       "statsAnalytics": {
         "title": "İstatistik ve Analiz",
         "description": "Sonuçlar ve sıralamaları görüntüleyin; oyuncuları dışa aktarın ve PDF oluşturun."
+      },
+      "pdfExport": {
+        "title": "PDF Dışa Aktarma ve Raporlar",
+        "description": "Yerelleştirilmiş içerik ve özel düzenlerle profesyonel PDF'ler oluşturun."
+      },
+      "cloudSync": {
+        "title": "Bulut Senkronizasyonu",
+        "description": "Gerçek zamanlı bulut senkronizasyonu ile turnuvalarınıza her yerden erişin."
+      },
+      "mobileApp": {
+        "title": "Mobil Optimize",
+        "description": "Telefon, tablet ve masaüstü dahil tüm cihazlarda mükemmel çalışan tamamen duyarlı tasarım."
       }
     },
-    "clickToProceed": "Devam etmek için tıklayın",
+    "stats": {
+      "title": "Bilek Güreşi Topluluğu Tarafından Güvenilen",
+      "subtitle": "Turnuvaları için platformumuza güvenen binlerce organizatör ve sporcuya katılın",
+      "players": "Aktif Oyuncular",
+      "tournaments": "Düzenlenen Turnuvalar",
+      "matches": "Oynanan Maçlar",
+      "countries": "Ülke"
+    },
+    "testimonials": {
+      "badge": "Başarı Hikayeleri",
+      "title": "Kullanıcılarımız Ne Diyor",
+      "subtitle": "Etkinliklerini platformumuzla dönüştüren turnuva organizatörleri ve sporculardan dinleyin",
+      "t1": {
+        "name": "Ahmet Yılmaz",
+        "role": "Turnuva Direktörü",
+        "content": "Bu platform turnuva organizasyonumuzu devrim niteliğinde değiştirdi. Braket sistemi kusursuz ve PDF dışa aktarma özelliği saatlerce çalışmamızı kurtarıyor."
+      },
+      "t2": {
+        "name": "Maria Santos",
+        "role": "Atletizm Koordinatörü",
+        "content": "Çok dilli destek ve mobil optimizasyon, uluslararası turnuvalar için mükemmel. Sporcularımız gerçek zamanlı güncellemeleri seviyor."
+      },
+      "t3": {
+        "name": "John Smith",
+        "role": "Kulüp Müdürü",
+        "content": "Oyuncu kaydından final sonuçlarına kadar her şey akıcı. Bulut senkronizasyon özelliği sayesinde turnuvaları her yerden yönetebiliyoruz."
+      }
+    },
+    "clickToProceed": "Başlayın",
+    "footer": {
+      "description": "Profesyonel bilek güreşi turnuva yönetim platformu. Turnuvaları organize edin, oyuncuları yönetin ve maçları kolayca takip edin.",
+      "secure": "Güvenli Platform",
+      "multilingual": "Çok Dilli",
+      "quickLinks": "Hızlı Bağlantılar",
+      "features": "Özellikler",
+      "tournamentManagement": "Turnuva Yönetimi",
+      "playerProfiles": "Oyuncu Profilleri",
+      "matchTracking": "Maç Takibi",
+      "pdfExport": "PDF Dışa Aktarma",
+      "cloudSync": "Bulut Senkronizasyonu",
+      "rights": "Tüm hakları saklıdır.",
+      "version": "Sürüm 1.0",
+      "madeWith": "İle yapıldı",
+      "forCommunity": "topluluk için"
+    },
     "intro": {
       "title": "Bilek güreşi turnuvaları için hepsi bir arada platform",
       "description": "Özel sıklet aralıklarıyla turnuvalar oluşturun, esnek filtrelerle oyuncuları yönetin, canlı maçları yürütün ve tek tıkla yerelleştirilmiş PDF’ler oluşturun.",
@@ -44,11 +112,31 @@
       }
     },
     "steps": {
+      "badge": "Basit Süreç",
       "title": "Nasıl çalışır",
-      "s1": { "title": "Turnuva oluşturun", "desc": "Sıklet ve isteğe bağlı filtreleri belirleyin." },
-      "s2": { "title": "Oyuncu ekleyin", "desc": "İçe aktarın veya hızlı ekleyin, klasmanlara göre yönetin." },
-      "s3": { "title": "Maçları yürütün", "desc": "Fikstürü başlatın, kazananları onaylayın, sıralamayı görün." },
-      "s4": { "title": "Sonuçları dışa aktarın", "desc": "Yerelleştirilmiş PDF’ler oluşturun ve paylaşın." }
+      "subtitle": "Platformumuzla sadece 4 basit adımda başlayın. Turnuva oluşturmaktan final sonuçlarına kadar her şey başarınız için optimize edilmiştir.",
+      "s1": { 
+        "title": "Turnuva Oluştur", 
+        "desc": "Turnuva yapınızı kurun",
+        "details": "Özel sıklet aralıkları, yaş grupları ve cinsiyet filtreleriyle turnuvalar oluşturun. Farklı kategoriler için birden fazla klasman kurun."
+      },
+      "s2": { 
+        "title": "Oyuncu Ekle", 
+        "desc": "Katılımcıları kaydedin",
+        "details": "Oyuncuları manuel olarak ekleyin veya Excel'den içe aktarın. Kilo, yaş, kol tercihi ve iletişim bilgileri dahil detaylı bilgilerle oyuncu profillerini yönetin."
+      },
+      "s3": { 
+        "title": "Maçları Yürüt", 
+        "desc": "Turnuvayı gerçekleştirin",
+        "details": "Turnuvaları başlatın ve maçları yürütün. Kazananları onaylayın, braketlerde ilerlemeyi takip edin ve gerçek zamanlı sıralamalar ve istatistikleri görüntüleyin."
+      },
+      "s4": { 
+        "title": "Sonuçları Dışa Aktar", 
+        "desc": "Turnuva sonuçlarını paylaşın",
+        "details": "Turnuva sonuçları, oyuncu sıralamaları ve maç geçmişiyle profesyonel PDF raporları oluşturun. Kolay paylaşım için verileri birden fazla formatta dışa aktarın."
+      },
+      "cta": "İlk Turnuvanızı Başlatın",
+      "ctaSubtitle": "Platformumuza güvenen binlerce organizatöre katılın"
     },
     "bottomCta": {
       "title": "Bir sonraki Bilek Güreşi etkinliğinize hazır mısınız?",
