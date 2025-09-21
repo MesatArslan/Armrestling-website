@@ -22,7 +22,7 @@ const Hero = () => {
   const { t } = useTranslation();
   
   return (
-    <div className="relative isolate overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 w-screen flex items-center" style={{ height: 'calc(100vh - 64px)' }}>
+    <div className="relative isolate overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 w-screen flex items-center" style={{ height: 'calc(100vh - 64px)' }}>
       {/* Animated background elements */}
       <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-gradient-to-tr from-blue-400 via-indigo-400 to-purple-500 opacity-20 blur-3xl animate-pulse" />
       <div className="pointer-events-none absolute -bottom-16 -right-24 h-96 w-96 rounded-full bg-gradient-to-tr from-fuchsia-400 via-pink-400 to-rose-500 opacity-20 blur-3xl animate-pulse delay-1000" />
@@ -45,18 +45,18 @@ const Hero = () => {
       <div className="w-full px-4 sm:px-6 lg:px-8 py-20 relative z-10">
         <div className="text-center max-w-6xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-200 mb-8 animate-fade-in">
-            <FireIcon className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-semibold text-blue-700">{t('home.badge', { defaultValue: 'Professional Tournament Management' })}</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/30 mb-8 animate-fade-in">
+            <FireIcon className="w-4 h-4 text-blue-300" />
+            <span className="text-sm font-semibold text-blue-200">{t('home.badge', { defaultValue: 'Professional Tournament Management' })}</span>
           </div>
           
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 animate-fade-in-up">
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">
+            <span className="bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent drop-shadow-sm">
               {t('home.title')}
             </span>
           </h1>
           
-          <p className="text-xl sm:text-2xl text-gray-700 max-w-4xl mx-auto mb-12 leading-relaxed animate-fade-in-up delay-200">
+          <p className="text-xl sm:text-2xl text-gray-200 max-w-4xl mx-auto mb-12 leading-relaxed animate-fade-in-up delay-200">
             {t('home.description')}
           </p>
           
@@ -89,17 +89,17 @@ const Hero = () => {
           </div>
           
           {/* Trust indicators */}
-          <div className="flex flex-wrap justify-center items-center gap-8 text-gray-600 animate-fade-in-up delay-500">
+          <div className="flex flex-wrap justify-center items-center gap-8 text-gray-300 animate-fade-in-up delay-500">
             <div className="flex items-center gap-2">
-              <ShieldCheckIcon className="w-5 h-5 text-green-500" />
+              <ShieldCheckIcon className="w-5 h-5 text-green-400" />
               <span className="text-sm font-medium">{t('home.trust.secure', { defaultValue: 'Secure & Reliable' })}</span>
             </div>
             <div className="flex items-center gap-2">
-              <GlobeAltIcon className="w-5 h-5 text-blue-500" />
+              <GlobeAltIcon className="w-5 h-5 text-blue-400" />
               <span className="text-sm font-medium">{t('home.trust.multilingual', { defaultValue: 'Multilingual Support' })}</span>
             </div>
             <div className="flex items-center gap-2">
-              <DevicePhoneMobileIcon className="w-5 h-5 text-purple-500" />
+              <DevicePhoneMobileIcon className="w-5 h-5 text-purple-400" />
               <span className="text-sm font-medium">{t('home.trust.responsive', { defaultValue: 'Mobile Optimized' })}</span>
             </div>
           </div>
@@ -118,67 +118,67 @@ const Features = () => {
       title: t('home.features.tournamentManagement.title'),
       description: t('home.features.tournamentManagement.description'),
       color: 'from-blue-500 to-indigo-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200'
+      bgColor: 'bg-gray-800/50',
+      borderColor: 'border-blue-500/30'
     },
     {
       icon: UserIcon,
       title: t('home.features.playerProfiles.title'),
       description: t('home.features.playerProfiles.description'),
       color: 'from-emerald-500 to-green-600',
-      bgColor: 'bg-emerald-50',
-      borderColor: 'border-emerald-200'
+      bgColor: 'bg-gray-800/50',
+      borderColor: 'border-emerald-500/30'
     },
     {
       icon: ChartBarIcon,
       title: t('home.features.statsAnalytics.title'),
       description: t('home.features.statsAnalytics.description'),
       color: 'from-orange-500 to-red-600',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200'
+      bgColor: 'bg-gray-800/50',
+      borderColor: 'border-orange-500/30'
     },
     {
       icon: DocumentTextIcon,
       title: t('home.features.pdfExport.title', { defaultValue: 'PDF Export & Reports' }),
       description: t('home.features.pdfExport.description', { defaultValue: 'Generate professional PDFs with localized content and custom layouts.' }),
       color: 'from-cyan-500 to-blue-600',
-      bgColor: 'bg-cyan-50',
-      borderColor: 'border-cyan-200'
+      bgColor: 'bg-gray-800/50',
+      borderColor: 'border-cyan-500/30'
     },
     {
       icon: CloudIcon,
       title: t('home.features.cloudSync.title', { defaultValue: 'Cloud Synchronization' }),
       description: t('home.features.cloudSync.description', { defaultValue: 'Access your tournaments from anywhere with real-time cloud synchronization.' }),
       color: 'from-indigo-500 to-purple-600',
-      bgColor: 'bg-indigo-50',
-      borderColor: 'border-indigo-200'
+      bgColor: 'bg-gray-800/50',
+      borderColor: 'border-indigo-500/30'
     },
     {
       icon: DevicePhoneMobileIcon,
       title: t('home.features.mobileApp.title', { defaultValue: 'Mobile Optimized' }),
       description: t('home.features.mobileApp.description', { defaultValue: 'Fully responsive design that works perfectly on all devices - phones, tablets, and desktops.' }),
       color: 'from-pink-500 to-rose-600',
-      bgColor: 'bg-pink-50',
-      borderColor: 'border-pink-200'
+      bgColor: 'bg-gray-800/50',
+      borderColor: 'border-pink-500/30'
     }
   ];
 
   return (
-    <section className="w-screen py-20 bg-gradient-to-br from-white via-gray-50 to-blue-50">
+    <section className="w-screen py-20 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-200 mb-6">
-              <LightBulbIcon className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-semibold text-blue-700">{t('home.features.badge', { defaultValue: 'Platform Features' })}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/30 mb-6">
+              <LightBulbIcon className="w-4 h-4 text-blue-300" />
+              <span className="text-sm font-semibold text-blue-200">{t('home.features.badge', { defaultValue: 'Platform Features' })}</span>
             </div>
             <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-6">
-              <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                 {t('home.featuresTitle')}
               </span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               {t('home.featuresSubtitle')}
             </p>
           </div>
@@ -195,10 +195,10 @@ const Features = () => {
                     <feature.icon className="w-7 h-7 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-gray-950 transition-colors">
+                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-gray-100 transition-colors">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 leading-relaxed">
+                    <p className="text-gray-300 leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
@@ -227,8 +227,8 @@ const Steps = () => {
       desc: t('home.steps.s1.desc'),
       details: t('home.steps.s1.details', { defaultValue: 'Create tournaments with custom weight ranges, age groups, and gender filters. Set up multiple divisions for different categories.' }),
       color: 'from-blue-500 to-indigo-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200'
+      bgColor: 'bg-gray-700/50',
+      borderColor: 'border-blue-500/30'
     },
     { 
       Icon: UserIcon, 
@@ -236,8 +236,8 @@ const Steps = () => {
       desc: t('home.steps.s2.desc'),
       details: t('home.steps.s2.details', { defaultValue: 'Add players manually or import from Excel. Manage player profiles with detailed information including weight, age, hand preference, and contact details.' }),
       color: 'from-emerald-500 to-green-600',
-      bgColor: 'bg-emerald-50',
-      borderColor: 'border-emerald-200'
+      bgColor: 'bg-gray-700/50',
+      borderColor: 'border-emerald-500/30'
     },
     { 
       Icon: PlayCircleIcon, 
@@ -245,8 +245,8 @@ const Steps = () => {
       desc: t('home.steps.s3.desc'),
       details: t('home.steps.s3.details', { defaultValue: 'Start tournaments and run matches. Confirm winners, track progress through brackets, and view real-time rankings and statistics.' }),
       color: 'from-purple-500 to-fuchsia-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-200'
+      bgColor: 'bg-gray-700/50',
+      borderColor: 'border-purple-500/30'
     },
     { 
       Icon: CheckBadgeIcon, 
@@ -254,27 +254,27 @@ const Steps = () => {
       desc: t('home.steps.s4.desc'),
       details: t('home.steps.s4.details', { defaultValue: 'Generate professional PDF reports with tournament results, player rankings, and match history. Export data in multiple formats for easy sharing.' }),
       color: 'from-orange-500 to-red-600',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200'
+      bgColor: 'bg-gray-700/50',
+      borderColor: 'border-orange-500/30'
     },
   ];
   
   return (
-    <section className="w-screen py-20 bg-gradient-to-br from-gray-50 via-white to-blue-50">
+    <section className="w-screen py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 mb-6">
-              <CheckBadgeIcon className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-semibold text-green-700">{t('home.steps.badge', { defaultValue: 'Simple Process' })}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30 mb-6">
+              <CheckBadgeIcon className="w-4 h-4 text-green-300" />
+              <span className="text-sm font-semibold text-green-200">{t('home.steps.badge', { defaultValue: 'Simple Process' })}</span>
             </div>
             <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-6">
-              <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                 {t('home.steps.title')}
               </span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               {t('home.steps.subtitle', { defaultValue: 'Get started with our platform in just 4 simple steps. From tournament creation to final results, everything is streamlined for your success.' })}
             </p>
           </div>
@@ -297,13 +297,13 @@ const Steps = () => {
                   </div>
                   
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-gray-950 transition-colors">
+                    <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-gray-100 transition-colors">
                       {title}
                     </h3>
-                    <p className="text-lg text-gray-700 mb-4 font-medium">
+                    <p className="text-lg text-gray-200 mb-4 font-medium">
                       {desc}
                     </p>
-                    <p className="text-gray-600 leading-relaxed">
+                    <p className="text-gray-300 leading-relaxed">
                       {details}
                     </p>
                   </div>
@@ -311,7 +311,7 @@ const Steps = () => {
                 
                 {/* Connection Line */}
                 {idx < steps.length - 1 && (
-                  <div className="hidden lg:block absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0.5 h-8 bg-gradient-to-b from-gray-300 to-transparent"></div>
+                  <div className="hidden lg:block absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-0.5 h-8 bg-gradient-to-b from-gray-500 to-transparent"></div>
                 )}
               </div>
             ))}
@@ -324,7 +324,7 @@ const Steps = () => {
               <span>{t('home.steps.cta', { defaultValue: 'Start Your First Tournament' })}</span>
               <ArrowRightIcon className="w-5 h-5" />
             </div>
-            <p className="mt-4 text-gray-600">
+            <p className="mt-4 text-gray-300">
               {t('home.steps.ctaSubtitle', { defaultValue: 'Join thousands of organizers who trust our platform' })}
             </p>
           </div>
@@ -337,13 +337,13 @@ const Steps = () => {
 const BottomCTA = () => {
   const { t } = useTranslation();
   return (
-    <section className="w-screen py-16 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+    <section className="w-screen py-16 bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center text-white">
           <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight">{t('home.bottomCta.title')}</h3>
           <p className="mt-3 text-lg text-white/90">{t('home.bottomCta.description')}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link to="/tournaments" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-blue-700 font-semibold shadow hover:shadow-lg transition">
+            <Link to="/tournaments" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow hover:shadow-lg hover:bg-blue-700 transition">
               <TrophyIcon className="w-5 h-5" />
               <span>{t('home.bottomCta.primary')}</span>
             </Link>
