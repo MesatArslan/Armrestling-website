@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import type { Profile, Institution } from '../../types/auth'
 import { DashboardLayout } from '../UI/DashboardLayout'
+import { useTranslation } from 'react-i18next'
 
 interface UserLayoutProps {
   user: (Profile & { institution?: Institution }) | null
@@ -11,12 +12,13 @@ interface UserLayoutProps {
 }
 
 export const UserLayout: React.FC<UserLayoutProps> = ({ user, onSignOut, children, activeSection, onSectionChange }) => {
+  const { t } = useTranslation()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed)
   const sidebarHeader = (
     <div className="mb-8">
-      <h2 className="text-xl font-bold text-white mb-1">Kullanıcı Panel</h2>
-      <p className="text-blue-100 text-sm truncate">{user?.institution?.name || 'Kurum'}</p>
+      <h2 className="text-xl font-bold text-white mb-1">{t('sidebar.user.title')}</h2>
+      <p className="text-blue-100 text-sm truncate">{user?.institution?.name || t('sidebar.user.institution')}</p>
       <p className="text-blue-200 text-xs truncate">{user?.email}</p>
     </div>
   )
@@ -36,7 +38,7 @@ export const UserLayout: React.FC<UserLayoutProps> = ({ user, onSignOut, childre
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
-            Dosya Yönetimi
+            {t('sidebar.user.fileManagement')}
           </button>
         </li>
       </ul>
@@ -51,7 +53,7 @@ export const UserLayout: React.FC<UserLayoutProps> = ({ user, onSignOut, childre
       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
       </svg>
-      Çıkış Yap
+      {t('sidebar.user.signOut')}
     </button>
   )
 
@@ -84,8 +86,8 @@ export const UserLayout: React.FC<UserLayoutProps> = ({ user, onSignOut, childre
               <div className="mb-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-white mb-1">Kullanıcı Panel</h2>
-                    <p className="text-blue-100 text-sm truncate">{user?.institution?.name || 'Kurum'}</p>
+                    <h2 className="text-xl font-bold text-white mb-1">{t('sidebar.user.title')}</h2>
+                    <p className="text-blue-100 text-sm truncate">{user?.institution?.name || t('sidebar.user.institution')}</p>
                     <p className="text-blue-200 text-xs truncate">{user?.email}</p>
                   </div>
                   <button
@@ -118,7 +120,7 @@ export const UserLayout: React.FC<UserLayoutProps> = ({ user, onSignOut, childre
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                       </svg>
-                      Dosya Yönetimi
+                      {t('sidebar.user.fileManagement')}
                     </button>
                   </li>
                 </ul>
@@ -137,7 +139,7 @@ export const UserLayout: React.FC<UserLayoutProps> = ({ user, onSignOut, childre
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                Çıkış Yap
+                {t('sidebar.user.signOut')}
               </button>
             </div>
           </aside>

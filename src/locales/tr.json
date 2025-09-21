@@ -926,6 +926,12 @@
       "userManagement": "Kullanıcı Yönetimi",
       "storageManagement": "Storage Yönetimi",
       "signOut": "Çıkış Yap"
+    },
+    "user": {
+      "title": "Kullanıcı Panel",
+      "institution": "Kurum",
+      "fileManagement": "Dosya Yönetimi",
+      "signOut": "Çıkış Yap"
     }
   },
     "notifications": {

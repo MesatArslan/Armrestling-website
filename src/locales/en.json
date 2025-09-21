@@ -887,6 +887,12 @@
       "userManagement": "User Management",
       "storageManagement": "Storage Management",
       "signOut": "Sign Out"
+    },
+    "user": {
+      "title": "User Panel",
+      "institution": "Institution",
+      "fileManagement": "File Management",
+      "signOut": "Sign Out"
     }
   },
     "notifications": {
