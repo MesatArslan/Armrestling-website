@@ -10,6 +10,7 @@ import { CreateUserModal } from '../components/admin/CreateUserModal'
 import { FileManagement } from '../components/admin/FileManagement'
 import Toast from '../components/UI/Toast'
 import { DataTable, type Column } from '../components/UI/DataTable'
+import { TrashIcon } from '@heroicons/react/24/outline'
 
 export const Admin: React.FC = () => {
   const { user, signOut } = useAuth()
@@ -221,16 +222,18 @@ export const Admin: React.FC = () => {
       header: 'İşlemler',
       width: 'w-24 sm:w-auto',
       render: (user) => (
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={(e) => {
               e.stopPropagation()
               handleEditUserClick(user)
             }}
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 rounded"
+            className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            title="Düzenle"
           >
-            <span className="hidden sm:inline">Düzenle</span>
-            <span className="sm:hidden">D</span>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
           </button>
           <button
             onClick={(e) => {
@@ -238,10 +241,10 @@ export const Admin: React.FC = () => {
               handleDeleteUserClick(user)
             }}
             disabled={isSubmitting}
-            className="inline-flex items-center text-red-600 hover:text-red-700 hover:underline text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Sil"
           >
-            <span className="hidden sm:inline">Sil</span>
-            <span className="sm:hidden">S</span>
+            <TrashIcon className="h-4 w-4" />
           </button>
         </div>
       )

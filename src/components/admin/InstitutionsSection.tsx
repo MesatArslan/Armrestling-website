@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import type { Institution, Profile } from '../../types/auth'
 import { DataTable, type Column } from '../UI/DataTable'
 import { AuthService } from '../../services/authService'
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 interface InstitutionsSectionProps {
   institutions: Institution[]
@@ -302,26 +303,28 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
       key: 'actions',
       header: 'İşlemler',
       render: (user) => (
-        <>
+        <div className="flex items-center gap-2">
           <button
             onClick={(e) => {
               e.stopPropagation()
               onEditUser(user)
             }}
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mr-3 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded"
+            className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            title="Düzenle"
           >
-            Düzenle
+            <PencilIcon className="h-4 w-4" />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation()
               onDeleteUser(user)
             }}
-            className="inline-flex items-center text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-300 rounded"
+            className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300"
+            title="Sil"
           >
-            Sil
+            <TrashIcon className="h-4 w-4" />
           </button>
-        </>
+        </div>
       )
     }
   ]
