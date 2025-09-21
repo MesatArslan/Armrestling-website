@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import type { Profile, Institution } from '../../types/auth'
 import { DashboardLayout } from '../UI/DashboardLayout'
+import { useTranslation } from 'react-i18next'
 
 interface AdminLayoutProps {
   user: (Profile & { institution?: Institution }) | null
@@ -11,6 +12,7 @@ interface AdminLayoutProps {
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, children, activeSection, onSectionChange }) => {
+  const { t } = useTranslation()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   const toggleSidebar = () => {
@@ -18,8 +20,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
   }
   const sidebarHeader = (
     <div className="mb-8">
-      <h2 className="text-xl font-bold text-white mb-1">Kurum Admin</h2>
-      <p className="text-blue-100 text-sm truncate">{user?.institution?.name || 'Kurum'}</p>
+      <h2 className="text-xl font-bold text-white mb-1">{t('sidebar.admin.title')}</h2>
+      <p className="text-blue-100 text-sm truncate">{user?.institution?.name || t('sidebar.admin.institution')}</p>
       <p className="text-blue-200 text-xs truncate">{user?.email}</p>
     </div>
   )
@@ -39,7 +41,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            <span>Kullanıcı Yönetimi</span>
+            <span>{t('sidebar.admin.userManagement')}</span>
           </button>
         </li>
         <li>
@@ -54,7 +56,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
-            <span>Dosya Yönetimi</span>
+            <span>{t('sidebar.admin.fileManagement')}</span>
           </button>
         </li>
       </ul>
@@ -69,7 +71,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
       </svg>
-      <span className="ml-2">Çıkış Yap</span>
+      <span className="ml-2">{t('sidebar.admin.signOut')}</span>
     </button>
   )
 
@@ -102,8 +104,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
               <div className="mb-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-white mb-1">Kurum Admin</h2>
-                    <p className="text-blue-100 text-sm truncate">{user?.institution?.name || 'Kurum'}</p>
+                    <h2 className="text-xl font-bold text-white mb-1">{t('sidebar.admin.title')}</h2>
+                    <p className="text-blue-100 text-sm truncate">{user?.institution?.name || t('sidebar.admin.institution')}</p>
                     <p className="text-blue-200 text-xs truncate">{user?.email}</p>
                   </div>
                   <button
@@ -136,7 +138,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
-                      <span>Kullanıcı Yönetimi</span>
+                      <span>{t('sidebar.admin.userManagement')}</span>
                     </button>
                   </li>
                   <li>
@@ -154,7 +156,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                       </svg>
-                      <span>Dosya Yönetimi</span>
+                      <span>{t('sidebar.admin.fileManagement')}</span>
                     </button>
                   </li>
                 </ul>
@@ -173,7 +175,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onSignOut, child
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                <span className="ml-2">Çıkış Yap</span>
+                <span className="ml-2">{t('sidebar.admin.signOut')}</span>
               </button>
             </div>
           </aside>

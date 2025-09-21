@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import type { CreateInstitutionForm } from '../../types/auth'
 import LoadingSpinner from '../UI/LoadingSpinner'
+import { useTranslation } from 'react-i18next'
 
 interface CreateInstitutionModalProps {
   isOpen: boolean
@@ -15,6 +16,7 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
   onSubmit,
   isSubmitting
 }) => {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState<CreateInstitutionForm>({
     email: '',
     password: '',
@@ -33,11 +35,11 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
     if (/[0-9]/.test(pwd)) score++
     if (/[^A-Za-z0-9]/.test(pwd)) score++
     const percent = Math.min(100, Math.round((score / 4) * 100))
-    let label = 'Zayıf'
-    if (percent >= 75) label = 'Güçlü'
-    else if (percent >= 50) label = 'Orta'
+    let label = t('admin.modals.createInstitution.weak')
+    if (percent >= 75) label = t('admin.modals.createInstitution.strong')
+    else if (percent >= 50) label = t('admin.modals.createInstitution.medium')
     return { percent, label }
-  }, [formData.password])
+  }, [formData.password, t])
 
   // Modal her açıldığında formu sıfırla ve varsayılan tarihleri ayarla
   useEffect(() => {
@@ -114,7 +116,7 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
     <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
       <div className="relative top-10 mx-auto p-6 border border-gray-100 w-11/12 max-w-3xl shadow-2xl rounded-xl bg-white">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Yeni Kurum Ekle</h3>
+          <h3 className="text-lg font-medium text-gray-900">{t('admin.modals.createInstitution.title')}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -124,12 +126,12 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="rounded-lg bg-gray-50 border border-gray-100 p-4">
-            <h4 className="text-sm font-medium text-gray-900">Yeni Kurum Bilgileri</h4>
-            <p className="text-xs text-gray-500 mt-1">Yönetici email ve şifre ile kurum hesabı oluşturulur. Üyelik tarihlerini hızlı seçimlerle belirleyebilirsiniz.</p>
+            <h4 className="text-sm font-medium text-gray-900">{t('admin.modals.createInstitution.title')}</h4>
+            <p className="text-xs text-gray-500 mt-1">{t('admin.modals.createInstitution.description')}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Kurum Adı</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.createInstitution.institutionName')}</label>
               <div className="mt-1 relative">
                 <span className="absolute left-3 top-2.5 text-gray-400">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M10 3a7 7 0 00-4.95 11.95l-1.768 1.768a1 1 0 101.414 1.414l1.768-1.768A7 7 0 1010 3z"/></svg>
@@ -138,17 +140,17 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
                   type="text"
                   name="name"
                   required
-                  placeholder="Örn: İstanbul Kulübü"
+                  placeholder={t('admin.modals.createInstitution.institutionNamePlaceholder')}
                   value={formData.name}
                   onChange={handleInputChange}
                   className="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white text-gray-900 placeholder-gray-400"
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">Kurumun görünen adı</p>
+              <p className="mt-1 text-xs text-gray-500">{t('admin.modals.createInstitution.institutionNameHelp')}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.createInstitution.email')}</label>
               <div className="mt-1 relative">
                 <span className="absolute left-3 top-2.5 text-gray-400">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2.94 6.94A2 2 0 014.343 6h11.314a2 2 0 011.404.94L10 11 2.94 6.94z"/><path d="M18 8.118l-8 4.8-8-4.8V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
@@ -157,17 +159,17 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
                   type="email"
                   name="email"
                   required
-                  placeholder="kurum@ornek.com"
+                  placeholder={t('admin.modals.createInstitution.emailPlaceholder')}
                   value={formData.email}
                   onChange={handleInputChange}
                   className="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white text-gray-900 placeholder-gray-400"
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">Yönetici hesabı için giriş emaili</p>
+              <p className="mt-1 text-xs text-gray-500">{t('admin.modals.createInstitution.emailHelp')}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Şifre</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.createInstitution.password')}</label>
               <div className="mt-1 relative">
                 <span className="absolute left-3 top-2.5 text-gray-400">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M5 8a5 5 0 1110 0v1h1a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1v-7a1 1 0 011-1h1V8zm2 0V7a3 3 0 116 0v1H7z" clipRule="evenodd"/></svg>
@@ -177,7 +179,7 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
                   name="password"
                   required
                   minLength={6}
-                  placeholder="Güçlü bir şifre girin"
+                  placeholder={t('admin.modals.createInstitution.passwordPlaceholder')}
                   value={formData.password}
                   onChange={handleInputChange}
                   className="block w-full pl-9 pr-10 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white text-gray-900 placeholder-gray-400"
@@ -202,29 +204,29 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
                     style={{ width: `${passwordStrength.percent}%` }}
                   />
                 </div>
-                <div className="mt-1 text-xs text-gray-500">Şifre gücü: {passwordStrength.label}</div>
+                <div className="mt-1 text-xs text-gray-500">{t('admin.modals.createInstitution.passwordStrength', { strength: passwordStrength.label })}</div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Kullanıcı Kotası</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.createInstitution.userQuota')}</label>
               <div className="mt-1 relative">
                 <input
                   type="number"
                   name="user_quota"
                   required
                   min={1}
-                  placeholder="Örn: 100"
+                  placeholder={t('admin.modals.createInstitution.userQuotaPlaceholder')}
                   value={formData.user_quota}
                   onChange={handleInputChange}
                   className="block w-full pr-12 pl-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white text-gray-900 placeholder-gray-400"
                 />
-                <span className="absolute right-3 top-2 text-xs text-gray-500">kullanıcı</span>
+                <span className="absolute right-3 top-2 text-xs text-gray-500">{t('admin.modals.createInstitution.users')}</span>
               </div>
             </div>
 
             <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-gray-700">Üyelik Başlangıç Tarihi</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.createInstitution.subscriptionStartDate')}</label>
               <input
                 type="datetime-local"
                 name="subscription_start_date"
@@ -236,16 +238,16 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
             </div>
 
             <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-gray-700">Üyelik Bitiş Tarihi</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.createInstitution.subscriptionEndDate')}</label>
               <div className="mt-1">
                                     <div className="flex flex-wrap gap-2">
-                      <button type="button" onClick={() => setCreateInstitutionEndInMonths(1)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">+1 ay</button>
-                      <button type="button" onClick={() => setCreateInstitutionEndInMonths(3)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">+3 ay</button>
-                      <button type="button" onClick={() => setCreateInstitutionEndInMonths(6)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">+6 ay</button>
-                      <button type="button" onClick={() => setCreateInstitutionEndInMonths(12)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">+12 ay</button>
+                      <button type="button" onClick={() => setCreateInstitutionEndInMonths(1)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">{t('admin.modals.createInstitution.quickAddMonths', { months: 1 })}</button>
+                      <button type="button" onClick={() => setCreateInstitutionEndInMonths(3)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">{t('admin.modals.createInstitution.quickAddMonths', { months: 3 })}</button>
+                      <button type="button" onClick={() => setCreateInstitutionEndInMonths(6)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">{t('admin.modals.createInstitution.quickAddMonths', { months: 6 })}</button>
+                      <button type="button" onClick={() => setCreateInstitutionEndInMonths(12)} className="px-3 py-1.5 text-xs rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-medium">{t('admin.modals.createInstitution.quickAddMonths', { months: 12 })}</button>
                     </div>
                 <div className="mt-3 text-sm">
-                  <div className="text-gray-500">Seçilen bitiş tarihi</div>
+                  <div className="text-gray-500">{t('admin.modals.createInstitution.selectedEndDate')}</div>
                   <div className="mt-0.5 font-medium text-gray-900">
                     {formData.subscription_end_date ? formatDate(formData.subscription_end_date) : '-'}
                   </div>
@@ -260,14 +262,14 @@ export const CreateInstitutionModal: React.FC<CreateInstitutionModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
             >
-              İptal
+              {t('admin.modals.createInstitution.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? <LoadingSpinner /> : 'Kurum Oluştur'}
+              {isSubmitting ? <LoadingSpinner /> : t('admin.modals.createInstitution.createInstitution')}
             </button>
           </div>
         </form>

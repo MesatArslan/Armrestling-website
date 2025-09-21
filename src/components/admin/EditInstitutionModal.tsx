@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import type { Institution } from '../../types/auth'
 import LoadingSpinner from '../UI/LoadingSpinner'
+import { useTranslation } from 'react-i18next'
 
 interface EditInstitutionModalProps {
   isOpen: boolean
@@ -17,6 +18,7 @@ export const EditInstitutionModal: React.FC<EditInstitutionModalProps> = ({
   isSubmitting,
   institution
 }) => {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -85,12 +87,12 @@ export const EditInstitutionModal: React.FC<EditInstitutionModalProps> = ({
       <div className="relative top-20 mx-auto p-6 border border-gray-100 w-96 shadow-2xl rounded-xl bg-white">
         <div className="mt-3">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Kurum Düzenle: {institution.name}
+            {t('admin.modals.editInstitution.title', { name: institution.name })}
           </h3>
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Kurum Adı</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.editInstitution.institutionName')}</label>
                                 <input
                     type="text"
                     name="name"
@@ -102,7 +104,7 @@ export const EditInstitutionModal: React.FC<EditInstitutionModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.editInstitution.email')}</label>
                                 <input
                     type="email"
                     name="email"
@@ -114,7 +116,7 @@ export const EditInstitutionModal: React.FC<EditInstitutionModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Kullanıcı Kotası</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.editInstitution.userQuota')}</label>
                                 <input
                     type="number"
                     name="user_quota"
@@ -127,7 +129,7 @@ export const EditInstitutionModal: React.FC<EditInstitutionModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Üyelik Başlangıç Tarihi</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.editInstitution.subscriptionStartDate')}</label>
                                 <input
                     type="date"
                     name="subscription_start_date"
@@ -139,7 +141,7 @@ export const EditInstitutionModal: React.FC<EditInstitutionModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Üyelik Bitiş Tarihi</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.modals.editInstitution.subscriptionEndDate')}</label>
                                 <input
                     type="date"
                     name="subscription_end_date"
@@ -149,10 +151,10 @@ export const EditInstitutionModal: React.FC<EditInstitutionModalProps> = ({
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                   />
                                 <div className="mt-2 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => setEditInstitutionEndInMonths(1)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">1 ay</button>
-                    <button type="button" onClick={() => setEditInstitutionEndInMonths(3)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">3 ay</button>
-                    <button type="button" onClick={() => setEditInstitutionEndInMonths(6)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">6 ay</button>
-                    <button type="button" onClick={() => setEditInstitutionEndInMonths(12)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">12 ay</button>
+                    <button type="button" onClick={() => setEditInstitutionEndInMonths(1)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">{t('admin.modals.editInstitution.quickAddMonths', { months: 1 })}</button>
+                    <button type="button" onClick={() => setEditInstitutionEndInMonths(3)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">{t('admin.modals.editInstitution.quickAddMonths', { months: 3 })}</button>
+                    <button type="button" onClick={() => setEditInstitutionEndInMonths(6)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">{t('admin.modals.editInstitution.quickAddMonths', { months: 6 })}</button>
+                    <button type="button" onClick={() => setEditInstitutionEndInMonths(12)} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-medium">{t('admin.modals.editInstitution.quickAddMonths', { months: 12 })}</button>
                   </div>
             </div>
 
@@ -162,14 +164,14 @@ export const EditInstitutionModal: React.FC<EditInstitutionModalProps> = ({
                 onClick={onClose}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-300"
               >
-                İptal
+                {t('admin.modals.editInstitution.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? <LoadingSpinner /> : 'Güncelle'}
+                {isSubmitting ? <LoadingSpinner /> : t('admin.modals.editInstitution.update')}
               </button>
             </div>
           </form>

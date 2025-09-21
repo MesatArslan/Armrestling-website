@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import type { Profile } from '../../types/auth'
 import { DashboardLayout } from '../UI/DashboardLayout'
+import { useTranslation } from 'react-i18next'
 
 interface SuperAdminLayoutProps {
   user: Profile | null
@@ -18,13 +19,14 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
   onSignOut,
   children
 }) => {
+  const { t } = useTranslation()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed)
 
   const sidebarHeader = (
     <div className="mb-8">
-      <h2 className="text-xl font-bold text-white mb-2">Super Admin</h2>
-      <p className="text-blue-100 text-sm">Hoş geldiniz, {user?.email}</p>
+      <h2 className="text-xl font-bold text-white mb-2">{t('sidebar.superAdmin.title')}</h2>
+      <p className="text-blue-100 text-sm">{t('sidebar.superAdmin.welcome', { email: user?.email })}</p>
     </div>
   )
 
@@ -40,7 +42,7 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
-            Kurum Yönetimi
+            {t('sidebar.superAdmin.institutionManagement')}
           </button>
         </li>
         <li>
@@ -52,7 +54,7 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
             </svg>
-            Kullanıcı Yönetimi
+            {t('sidebar.superAdmin.userManagement')}
           </button>
         </li>
         <li>
@@ -64,7 +66,7 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
             </svg>
-            Storage Yönetimi
+            {t('sidebar.superAdmin.storageManagement')}
           </button>
         </li>
       </ul>
@@ -79,7 +81,7 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
       </svg>
-      Çıkış Yap
+      {t('sidebar.superAdmin.signOut')}
     </button>
   )
 
@@ -112,8 +114,8 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
               <div className="mb-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-white mb-2">Super Admin</h2>
-                    <p className="text-blue-100 text-sm">Hoş geldiniz, {user?.email}</p>
+                    <h2 className="text-xl font-bold text-white mb-2">{t('sidebar.superAdmin.title')}</h2>
+                    <p className="text-blue-100 text-sm">{t('sidebar.superAdmin.welcome', { email: user?.email })}</p>
                   </div>
                   <button
                     onClick={toggleSidebar}
@@ -139,7 +141,7 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
-                      Kurum Yönetimi
+                      {t('sidebar.superAdmin.institutionManagement')}
                     </button>
                   </li>
                   <li>
@@ -151,7 +153,7 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                       </svg>
-                      Kullanıcı Yönetimi
+                      {t('sidebar.superAdmin.userManagement')}
                     </button>
                   </li>
                   <li>
@@ -163,7 +165,7 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                       </svg>
-                      Storage Yönetimi
+                      {t('sidebar.superAdmin.storageManagement')}
                     </button>
                   </li>
                 </ul>
@@ -179,7 +181,7 @@ export const SuperAdminLayout: React.FC<SuperAdminLayoutProps> = ({
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                Çıkış Yap
+                {t('sidebar.superAdmin.signOut')}
               </button>
             </div>
           </aside>

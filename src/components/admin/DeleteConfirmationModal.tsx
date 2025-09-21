@@ -1,6 +1,7 @@
 import React from 'react'
 import type { Institution, Profile } from '../../types/auth'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { useTranslation } from 'react-i18next'
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean
@@ -19,6 +20,8 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
   item,
   itemType
 }) => {
+  const { t } = useTranslation()
+  
   if (!isOpen || !item) return null
 
   const getItemName = () => {
@@ -30,38 +33,22 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
   }
 
   const getItemTypeText = () => {
-    return itemType === 'institution' ? 'Kurum' : 'Kullanıcı'
+    return itemType === 'institution' ? t('admin.institutions.institution') : t('admin.users.user')
   }
 
   const getWarningText = () => {
     if (itemType === 'institution') {
-      return (
-        <>
-          <strong>{getItemName()}</strong> kurumunu silmek istediğinizden emin misiniz?
-          <br />
-          <span className="text-red-600 font-medium">
-            Bu işlem geri alınamaz!
-          </span>
-          <br />
-          <span className="text-orange-600 font-medium">
-            Kuruma ait tüm kullanıcılar ve dosyalar da silinecektir!
-          </span>
-        </>
-      )
+      return t('deleteConfirmation.institutionMessage', { name: getItemName() })
     } else {
-      return (
-        <>
-          <strong>{getItemName()}</strong> kullanıcısını silmek istediğinizden emin misiniz?
-          <br />
-          <span className="text-red-600 font-medium">
-            Bu işlem geri alınamaz!
-          </span>
-          <br />
-          <span className="text-orange-600 font-medium">
-            Kullanıcıya ait tüm dosyalar da silinecektir!
-          </span>
-        </>
-      )
+      return t('deleteConfirmation.userMessage', { name: getItemName() })
+    }
+  }
+
+  const getTitle = () => {
+    if (itemType === 'institution') {
+      return t('deleteConfirmation.institutionTitle')
+    } else {
+      return t('deleteConfirmation.userTitle')
     }
   }
 
@@ -104,7 +91,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
                   onClick={onClose}
                   className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 font-medium"
                 >
-                  İptal
+                  {t('deleteConfirmation.cancel')}
                 </button>
                 <button
                   onClick={onConfirm}
@@ -117,10 +104,10 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Siliniyor...
+                      {t('deleteConfirmation.deleting')}
                     </>
                   ) : (
-                    'Sil'
+                    t('deleteConfirmation.delete')
                   )}
                 </button>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import type { Profile } from '../../types/auth'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { useTranslation } from 'react-i18next'
 
 interface EditUserModalProps {
   isOpen: boolean
@@ -23,6 +24,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
   user,
   showExpiration = true
 }) => {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -98,7 +100,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">Kullanıcı Düzenle</h2>
+                  <h2 className="text-lg font-bold text-white">{t('admin.modals.editUser.title')}</h2>
                   <p className="text-blue-100 mt-1 text-xs">{user.username || user.email}</p>
                 </div>
               </div>
@@ -115,7 +117,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                 </svg>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">Kullanıcı Düzenle</h2>
+                <h2 className="text-2xl font-bold text-white">{t('admin.modals.editUser.title')}</h2>
                 <p className="text-blue-100 mt-1 text-sm">{user.username || user.email}</p>
               </div>
             </div>
@@ -133,7 +135,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Kullanıcı Adı</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.modals.editUser.username')}</label>
                   <input
                     type="text"
                     name="username"
@@ -141,12 +143,12 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                     value={formData.username}
                     onChange={handleInputChange}
                     className="block w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-400 shadow-sm"
-                    placeholder="Kullanıcı adını girin"
+                    placeholder={t('admin.modals.editUser.usernamePlaceholder')}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.modals.editUser.email')}</label>
                   <input
                     type="email"
                     name="email"
@@ -154,13 +156,13 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                     value={formData.email}
                     onChange={handleInputChange}
                     className="block w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-400 shadow-sm"
-                    placeholder="Email adresini girin"
+                    placeholder={t('admin.modals.editUser.emailPlaceholder')}
                   />
                 </div>
 
                 {showExpiration && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Son Kullanma Tarihi</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.modals.editUser.expirationDate')}</label>
                   <input
                     type="datetime-local"
                     name="expiration_date"
@@ -169,10 +171,10 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                     className="block w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 shadow-sm"
                   />
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => setEditUserExpirationInMonths(1)} className="px-3 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-700 font-medium transition-colors">1 ay</button>
-                    <button type="button" onClick={() => setEditUserExpirationInMonths(3)} className="px-3 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-700 font-medium transition-colors">3 ay</button>
-                    <button type="button" onClick={() => setEditUserExpirationInMonths(6)} className="px-3 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-700 font-medium transition-colors">6 ay</button>
-                    <button type="button" onClick={() => setEditUserExpirationInMonths(12)} className="px-3 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-700 font-medium transition-colors">12 ay</button>
+                    <button type="button" onClick={() => setEditUserExpirationInMonths(1)} className="px-3 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-700 font-medium transition-colors">{t('admin.modals.editUser.quickAddMonths', { months: 1 })}</button>
+                    <button type="button" onClick={() => setEditUserExpirationInMonths(3)} className="px-3 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-700 font-medium transition-colors">{t('admin.modals.editUser.quickAddMonths', { months: 3 })}</button>
+                    <button type="button" onClick={() => setEditUserExpirationInMonths(6)} className="px-3 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-700 font-medium transition-colors">{t('admin.modals.editUser.quickAddMonths', { months: 6 })}</button>
+                    <button type="button" onClick={() => setEditUserExpirationInMonths(12)} className="px-3 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-700 font-medium transition-colors">{t('admin.modals.editUser.quickAddMonths', { months: 12 })}</button>
                   </div>
                 </div>
                 )}
@@ -184,7 +186,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                   onClick={onClose}
                   className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 font-medium"
                 >
-                  İptal
+                  {t('admin.modals.editUser.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -197,10 +199,10 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Güncelleniyor...
+                      {t('admin.modals.editUser.updating')}
                     </>
                   ) : (
-                    'Güncelle'
+                    t('admin.modals.editUser.update')
                   )}
                 </button>
               </div>

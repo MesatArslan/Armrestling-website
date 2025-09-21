@@ -3,6 +3,7 @@ import type { Institution, Profile } from '../../types/auth'
 import { DataTable, type Column } from '../UI/DataTable'
 import { AuthService } from '../../services/authService'
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { useTranslation } from 'react-i18next'
 
 interface InstitutionsSectionProps {
   institutions: Institution[]
@@ -28,6 +29,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
   onDetailViewChange,
   initialSelectedInstitution
 }) => {
+  const { t } = useTranslation()
   const [institutionStatusFilter, setInstitutionStatusFilter] = useState<'all' | 'active' | 'expired'>('all')
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(initialSelectedInstitution || null)
   const [activeTab, setActiveTab] = useState<'users' | 'payment' | 'info'>('users')
@@ -111,7 +113,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
   const columns: Column<Institution>[] = [
     {
       key: 'order',
-      header: 'Sıra',
+      header: t('admin.institutions.order'),
       width: 'w-12',
       align: 'center',
       render: (_, index) => (
@@ -122,7 +124,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
     },
     {
       key: 'name',
-      header: 'Kurum',
+      header: t('admin.institutions.institution'),
       render: (institution) => (
         <div 
           className="flex items-center cursor-pointer hover:text-blue-600"
@@ -143,7 +145,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
     },
     {
       key: 'email',
-      header: 'Email',
+      header: t('admin.institutions.email'),
       render: (institution) => (
         <span className="text-sm text-gray-600">
           {institution.email}
@@ -152,7 +154,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
     },
     {
       key: 'quota',
-      header: 'Kota',
+      header: t('admin.institutions.quota'),
       render: (institution) => {
         const quotaTotal = Math.max(1, institution.user_quota || 1)
         const quotaUsed = Math.max(0, institution.users_created || 0)
@@ -170,7 +172,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
     },
     {
       key: 'created_at',
-      header: 'Başlangıç Tarihi',
+      header: t('admin.institutions.startDate'),
       render: (institution) => (
         <span className="text-sm text-gray-600">
           {formatDate(institution.created_at)}
@@ -179,21 +181,21 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
     },
     {
       key: 'subscription_end_date',
-      header: 'Bitiş Tarihi',
+      header: t('admin.institutions.endDate'),
       render: (institution) => (
         <>
           <div className="text-sm font-medium text-gray-900">
             {formatDate(institution.subscription_end_date)}
           </div>
           <div className="text-xs text-gray-500">
-            {calculateRemainingDays(institution.subscription_end_date)} gün kaldı
+            {calculateRemainingDays(institution.subscription_end_date)} {t('admin.institutions.daysLeft')}
           </div>
         </>
       )
     },
     {
       key: 'status',
-      header: 'Durum',
+      header: t('admin.institutions.status'),
       render: (institution) => {
         const isExpired = new Date(institution.subscription_end_date) < new Date()
         return (
@@ -202,14 +204,14 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
               ? 'bg-red-100 text-red-800' 
               : 'bg-green-100 text-green-800'
           }`}>
-            {isExpired ? 'Süresi Dolmuş' : 'Aktif'}
+            {isExpired ? t('admin.institutions.expired') : t('admin.institutions.active')}
           </span>
         )
       }
     },
     {
       key: 'actions',
-      header: 'İşlemler',
+      header: t('admin.institutions.actions'),
       render: (institution) => (
         <>
           <button
@@ -219,7 +221,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
             }}
             className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mr-3 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded"
           >
-            Düzenle
+            {t('admin.institutions.edit')}
           </button>
           <button
             onClick={(e) => {
@@ -228,7 +230,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
             }}
             className="inline-flex items-center text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-300 rounded"
           >
-            Sil
+            {t('admin.institutions.delete')}
           </button>
         </>
       )
@@ -239,7 +241,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
   const userColumns: Column<Profile>[] = [
     {
       key: 'order',
-      header: 'Sıra',
+      header: t('admin.institutions.order'),
       width: 'w-12',
       align: 'center',
       render: (_, index) => (
@@ -250,7 +252,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
     },
     {
       key: 'user',
-      header: 'Kullanıcı',
+      header: t('admin.institutions.user'),
       render: (user) => (
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
@@ -262,7 +264,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
           </div>
           <div className="ml-3">
             <div className="text-sm font-medium text-gray-900">
-              {user.username || 'İsimsiz'}
+              {user.username || t('admin.institutions.noName')}
             </div>
           </div>
         </div>
@@ -270,7 +272,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
     },
     {
       key: 'email',
-      header: 'Email',
+      header: t('admin.institutions.email'),
       render: (user) => (
         <span className="text-sm text-gray-600">
           {user.email}
@@ -279,20 +281,20 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
     },
     {
       key: 'role',
-      header: 'Rol',
+      header: t('admin.institutions.role'),
       render: (user) => (
         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
           user.role === 'admin' 
             ? 'bg-blue-100 text-blue-800' 
             : 'bg-green-100 text-green-800'
         }`}>
-          {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
+          {user.role === 'admin' ? t('admin.institutions.admin') : t('admin.institutions.userRole')}
         </span>
       )
     },
     {
       key: 'created_at',
-      header: 'Oluşturulma Tarihi',
+      header: t('admin.institutions.createdAt'),
       render: (user) => (
         <span className="text-sm text-gray-600">
           {new Date(user.created_at).toLocaleDateString('tr-TR')}
@@ -301,7 +303,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
     },
     {
       key: 'actions',
-      header: 'İşlemler',
+      header: t('admin.institutions.actions'),
       render: (user) => (
         <div className="flex items-center gap-2">
           <button
@@ -310,7 +312,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
               onEditUser(user)
             }}
             className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
-            title="Düzenle"
+            title={t('admin.institutions.edit')}
           >
             <PencilIcon className="h-4 w-4" />
           </button>
@@ -320,7 +322,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
               onDeleteUser(user)
             }}
             className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300"
-            title="Sil"
+            title={t('admin.institutions.delete')}
           >
             <TrashIcon className="h-4 w-4" />
           </button>
@@ -336,22 +338,22 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
         type="button"
         onClick={() => setInstitutionStatusFilter('all')}
         className={`px-3 py-1.5 text-xs rounded-md ${institutionStatusFilter === 'all' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-      >Tümü</button>
+      >{t('admin.institutions.all')}</button>
       <button
         type="button"
         onClick={() => setInstitutionStatusFilter('active')}
         className={`px-3 py-1.5 text-xs rounded-md ${institutionStatusFilter === 'active' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-      >Aktif</button>
+      >{t('admin.institutions.active')}</button>
       <button
         type="button"
         onClick={() => setInstitutionStatusFilter('expired')}
         className={`px-3 py-1.5 text-xs rounded-md ${institutionStatusFilter === 'expired' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-      >Süresi Dolmuş</button>
+      >{t('admin.institutions.expired')}</button>
       <button
         type="button"
         onClick={onCreateInstitution}
         className="ml-2 inline-flex items-center px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700"
-      >Yeni Kurum Ekle</button>
+      >{t('admin.institutions.addNewInstitution')}</button>
     </div>
   )
 
@@ -390,7 +392,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Kullanıcılar
+              {t('admin.institutions.users')}
             </button>
             <button
               onClick={() => setActiveTab('payment')}
@@ -400,7 +402,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Ödeme Planı
+              {t('admin.institutions.paymentPlan')}
             </button>
             <button
               onClick={() => setActiveTab('info')}
@@ -410,7 +412,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Kurum Bilgisi
+              {t('admin.institutions.institutionInfo')}
             </button>
           </nav>
         </div>
@@ -422,7 +424,7 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Kullanıcılar yükleniyor...</p>
+                  <p className="mt-4 text-gray-600">{t('admin.institutions.loadingUsers')}</p>
                 </div>
               </div>
             ) : (
@@ -434,21 +436,21 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
                 showSearch={true}
                 showPagination={true}
                 maxHeight="calc(100vh - 400px)"
-                emptyMessage="Bu kurumun henüz kullanıcısı yok"
-                noResultsMessage="Aramanıza uygun kullanıcı bulunamadı"
+                emptyMessage={t('admin.institutions.noUsersInInstitution')}
+                noResultsMessage={t('admin.institutions.noUsersFound')}
                 filters={
                   <button
                     onClick={onCreateUser}
                     className="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow focus:outline-none focus:ring-2 focus:ring-green-300"
                   >
-                    Yeni Kullanıcı Ekle
+                    {t('admin.institutions.addNewUser')}
                   </button>
                 }
                 headerContent={
                   <div className="flex items-center gap-4">
-                    <h4 className="text-lg font-medium text-gray-900">Kullanıcılar</h4>
+                    <h4 className="text-lg font-medium text-gray-900">{t('admin.institutions.users')}</h4>
                     <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                      {institutionUsers.length} kullanıcı
+                      {t('admin.institutions.usersCount', { count: institutionUsers.length })}
                     </span>
                   </div>
                 }
@@ -459,28 +461,28 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
           {activeTab === 'payment' && (
             <div className="space-y-6">
               <div className="bg-gray-50 rounded-lg p-6">
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Ödeme Planı</h4>
+                <h4 className="text-lg font-medium text-gray-900 mb-4">{t('admin.institutions.paymentPlan')}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <p className="text-sm text-gray-600">Başlangıç Tarihi</p>
+                    <p className="text-sm text-gray-600">{t('admin.institutions.startDate')}</p>
                     <p className="text-lg font-medium text-gray-900">{formatDate(selectedInstitution.created_at)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Bitiş Tarihi</p>
+                    <p className="text-sm text-gray-600">{t('admin.institutions.endDate')}</p>
                     <p className="text-lg font-medium text-gray-900">{formatDate(selectedInstitution.subscription_end_date)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Kalan Gün</p>
-                    <p className="text-lg font-medium text-gray-900">{calculateRemainingDays(selectedInstitution.subscription_end_date)} gün</p>
+                    <p className="text-sm text-gray-600">{t('admin.institutions.remainingDays')}</p>
+                    <p className="text-lg font-medium text-gray-900">{calculateRemainingDays(selectedInstitution.subscription_end_date)} {t('admin.institutions.daysLeft')}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Durum</p>
+                    <p className="text-sm text-gray-600">{t('admin.institutions.status')}</p>
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       new Date(selectedInstitution.subscription_end_date) < new Date()
                         ? 'bg-red-100 text-red-800' 
                         : 'bg-green-100 text-green-800'
                     }`}>
-                      {new Date(selectedInstitution.subscription_end_date) < new Date() ? 'Süresi Dolmuş' : 'Aktif'}
+                      {new Date(selectedInstitution.subscription_end_date) < new Date() ? t('admin.institutions.expired') : t('admin.institutions.active')}
                     </span>
                   </div>
                 </div>
@@ -491,22 +493,22 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
           {activeTab === 'info' && (
             <div className="space-y-6">
               <div className="bg-gray-50 rounded-lg p-6">
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Kurum Bilgileri</h4>
+                <h4 className="text-lg font-medium text-gray-900 mb-4">{t('admin.institutions.institutionInfo')}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <p className="text-sm text-gray-600">Kurum Adı</p>
+                    <p className="text-sm text-gray-600">{t('admin.institutions.institutionName')}</p>
                     <p className="text-lg font-medium text-gray-900">{selectedInstitution.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="text-sm text-gray-600">{t('admin.institutions.email')}</p>
                     <p className="text-lg font-medium text-gray-900">{selectedInstitution.email}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Kullanıcı Kotası</p>
+                    <p className="text-sm text-gray-600">{t('admin.institutions.userQuota')}</p>
                     <p className="text-lg font-medium text-gray-900">{selectedInstitution.user_quota || 0}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Oluşturulan Kullanıcı</p>
+                    <p className="text-sm text-gray-600">{t('admin.institutions.createdUsers')}</p>
                     <p className="text-lg font-medium text-gray-900">{selectedInstitution.users_created || 0}</p>
                   </div>
                 </div>
@@ -529,14 +531,14 @@ export const InstitutionsSection: React.FC<InstitutionsSectionProps> = ({
         showSearch={true}
         showPagination={true}
         maxHeight="calc(100vh - 350px)"
-        emptyMessage="Bu sayfada kurum bulunamadı"
-        noResultsMessage="Aramanıza uygun kurum bulunamadı"
+        emptyMessage={t('admin.institutions.noInstitutionsFound')}
+        noResultsMessage={t('admin.institutions.noInstitutionsMatch')}
         filters={statusFilters}
         headerContent={
           <div className="flex items-center gap-4">
-            <h3 className="text-lg font-medium text-gray-900">Kurumlar</h3>
+            <h3 className="text-lg font-medium text-gray-900">{t('admin.institutions.title')}</h3>
             <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-              {filteredInstitutions.length} kurum
+              {t('admin.institutions.institutionsCount', { count: filteredInstitutions.length })}
             </span>
           </div>
         }

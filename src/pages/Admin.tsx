@@ -11,8 +11,10 @@ import { FileManagement } from '../components/admin/FileManagement'
 import Toast from '../components/UI/Toast'
 import { DataTable, type Column } from '../components/UI/DataTable'
 import { TrashIcon } from '@heroicons/react/24/outline'
+import { useTranslation } from 'react-i18next'
 
 export const Admin: React.FC = () => {
+  const { t } = useTranslation()
   const { user, signOut } = useAuth()
   const [users, setUsers] = useState<Profile[]>([])
   const [stats, setStats] = useState<AdminStats | null>(null)
@@ -89,14 +91,14 @@ export const Admin: React.FC = () => {
       }, user.institution_id)
       
       if (result.success) {
-        setSuccess('Kullanıcı başarıyla oluşturuldu!')
+        setSuccess(t('adminPage.messages.userCreatedSuccess'))
         setShowCreateUserModal(false)
         await loadData()
       } else {
-        setError(result.error || 'Kullanıcı oluşturulurken hata oluştu')
+        setError(result.error || t('adminPage.messages.userCreateError'))
       }
     } catch (error) {
-      setError('Beklenmeyen bir hata oluştu')
+      setError(t('adminPage.messages.unexpectedError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -125,15 +127,15 @@ export const Admin: React.FC = () => {
       const payload = { username: formData.username, email: formData.email }
       const result = await AuthService.updateUser(userId, payload)
       if (result.success) {
-        setSuccess('Kullanıcı başarıyla güncellendi!')
+        setSuccess(t('adminPage.messages.userUpdatedSuccess'))
         setShowEditUserModal(false)
         setEditingUser(null)
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...formData, role: 'user' } : u))
       } else {
-        setError(result.error || 'Kullanıcı güncellenirken hata oluştu')
+        setError(result.error || t('adminPage.messages.userUpdateError'))
       }
     } catch (error) {
-      setError('Beklenmeyen bir hata oluştu')
+      setError(t('adminPage.messages.unexpectedError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -153,30 +155,30 @@ export const Admin: React.FC = () => {
     try {
       const result = await AuthService.deleteUser(deletingUser.id)
       if (result.success) {
-        setSuccess('Kullanıcı başarıyla silindi!')
+        setSuccess(t('adminPage.messages.userDeletedSuccess'))
         setUsers(prev => prev.filter(u => u.id !== deletingUser.id))
         setShowDeleteUserModal(false)
         setDeletingUser(null)
         await loadData()
       } else {
-        setError(result.error || 'Kullanıcı silinirken hata oluştu')
+        setError(result.error || t('adminPage.messages.userDeleteError'))
       }
     } catch (error) {
-      setError('Beklenmeyen bir hata oluştu')
+      setError(t('adminPage.messages.unexpectedError'))
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const canCreateUser = stats ? stats.remainingQuota > 0 : false
-  const subscriptionStatus = stats ? (stats.subscriptionDaysLeft > 0 ? 'Aktif' : 'Süresi Dolmuş') : 'Bilinmiyor'
+  const subscriptionStatus = stats ? (stats.subscriptionDaysLeft > 0 ? t('admin.institutions.active') : t('admin.institutions.expired')) : t('admin.institutions.noName')
   const subscriptionColor = stats ? (stats.subscriptionDaysLeft > 7 ? 'text-green-600' : stats.subscriptionDaysLeft > 0 ? 'text-yellow-600' : 'text-red-600') : 'text-gray-600'
 
   // Table columns definition for users
   const userColumns: Column<Profile>[] = [
     {
       key: 'order',
-      header: 'Sıra',
+      header: t('admin.users.order'),
       width: 'w-12 sm:w-16',
       align: 'center',
       render: (_, index) => (
@@ -187,7 +189,7 @@ export const Admin: React.FC = () => {
     },
     {
       key: 'user',
-      header: 'Kullanıcı',
+      header: t('admin.users.user'),
       width: 'w-32 sm:w-auto',
       render: (user) => (
         <div className="flex items-center gap-2 sm:gap-3">
@@ -195,15 +197,15 @@ export const Admin: React.FC = () => {
             {(user.username || user.email).charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{user.username || 'İsimsiz'}</div>
-            <div className="text-xs text-gray-500 hidden sm:block">User</div>
+            <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{user.username || t('admin.users.noName')}</div>
+            <div className="text-xs text-gray-500 hidden sm:block">{t('admin.users.userRole')}</div>
           </div>
         </div>
       )
     },
     {
       key: 'email',
-      header: 'Email',
+      header: t('admin.users.email'),
       width: 'w-24 sm:w-auto',
       render: (user) => (
         <span className="text-xs sm:text-sm text-gray-700 truncate">{user.email}</span>
@@ -211,15 +213,15 @@ export const Admin: React.FC = () => {
     },
     {
       key: 'created_at',
-      header: 'Oluşturulma',
+      header: t('admin.users.createdAt'),
       width: 'w-20 sm:w-auto',
       render: (user) => (
-        <span className="text-xs sm:text-sm text-gray-600">{new Date(user.created_at).toLocaleDateString('tr-TR')}</span>
+        <span className="text-xs sm:text-sm text-gray-600">{new Date(user.created_at).toLocaleDateString()}</span>
       )
     },
     {
       key: 'actions',
-      header: 'İşlemler',
+      header: t('admin.users.actions'),
       width: 'w-24 sm:w-auto',
       render: (user) => (
         <div className="flex items-center gap-2">
@@ -229,7 +231,7 @@ export const Admin: React.FC = () => {
               handleEditUserClick(user)
             }}
             className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
-            title="Düzenle"
+            title={t('admin.users.edit')}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -242,7 +244,7 @@ export const Admin: React.FC = () => {
             }}
             disabled={isSubmitting}
             className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Sil"
+            title={t('admin.users.delete')}
           >
             <TrashIcon className="h-4 w-4" />
           </button>
@@ -273,7 +275,7 @@ export const Admin: React.FC = () => {
               <div className="p-5 flex items-center gap-4">
                 <div className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold">T</div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-gray-500">Toplam Kullanıcı</div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500">{t('adminPage.stats.totalUsers')}</div>
                   <div className="text-2xl font-semibold text-gray-900">{stats.totalUsers}</div>
                 </div>
               </div>
@@ -283,7 +285,7 @@ export const Admin: React.FC = () => {
               <div className="p-5 flex items-center gap-4">
                 <div className="w-10 h-10 bg-green-600 text-white rounded-lg flex items-center justify-center font-bold">K</div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-gray-500">Kalan Kota</div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500">{t('adminPage.stats.institutionUsers')}</div>
                   <div className="text-2xl font-semibold text-gray-900">{stats.remainingQuota}</div>
                 </div>
               </div>
@@ -293,7 +295,7 @@ export const Admin: React.FC = () => {
               <div className="p-5 flex items-center gap-4">
                 <div className="w-10 h-10 bg-yellow-500 text-white rounded-lg flex items-center justify-center font-bold">U</div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-gray-500">Kullanılan Kota</div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500">{t('adminPage.stats.individualUsers')}</div>
                   <div className="text-2xl font-semibold text-gray-900">{stats.usedQuota}</div>
                 </div>
               </div>
@@ -305,9 +307,9 @@ export const Admin: React.FC = () => {
                   stats.subscriptionDaysLeft > 7 ? 'bg-green-600' : stats.subscriptionDaysLeft > 0 ? 'bg-yellow-500' : 'bg-red-600'
                 }`}>A</div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-gray-500">Abonelik</div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500">{t('adminPage.stats.totalInstitutions')}</div>
                   <div className={`text-2xl font-semibold ${subscriptionColor}`}>
-                    {stats.subscriptionDaysLeft > 0 ? `${stats.subscriptionDaysLeft} gün` : subscriptionStatus}
+                    {stats.subscriptionDaysLeft > 0 ? `${stats.subscriptionDaysLeft} ${t('admin.institutions.daysLeft')}` : subscriptionStatus}
                   </div>
                 </div>
               </div>
@@ -325,13 +327,13 @@ export const Admin: React.FC = () => {
               <DataTable
                 data={users}
                 columns={userColumns}
-                searchPlaceholder="Kullanıcı adı veya email ara..."
+                searchPlaceholder={t('admin.users.searchPlaceholder')}
                 searchKeys={['username', 'email']}
                 showSearch={true}
                 showPagination={true}
                 maxHeight="calc(100vh - 400px)"
-                emptyMessage="Henüz kullanıcı oluşturmadınız"
-                noResultsMessage="Aramanıza uygun kullanıcı bulunamadı"
+                emptyMessage={t('admin.users.noUsersFound')}
+                noResultsMessage={t('admin.users.noUsersMatch')}
                 filters={
                   canCreateUser && stats && stats.subscriptionDaysLeft > 0 ? (
                     <button
@@ -339,14 +341,14 @@ export const Admin: React.FC = () => {
                       className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-xs font-medium shadow"
                     >
                       <span className="sm:hidden text-lg leading-none">+</span>
-                      <span className="hidden sm:inline">Yeni Kullanıcı Ekle</span>
+                      <span className="hidden sm:inline">{t('admin.users.addNewUser')}</span>
                     </button>
                   ) : undefined
                 }
                 headerContent={
                   <div className="flex items-center gap-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Oluşturulan Kullanıcılar</h3>
-                    <span className="text-xs text-gray-500">Toplam: {users.length}</span>
+                    <h3 className="text-lg font-semibold text-gray-900">{t('adminPage.stats.institutionUsers')}</h3>
+                    <span className="text-xs text-gray-500">{t('adminPage.stats.totalUsers')}: {users.length}</span>
                   </div>
                 }
               />

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react'
 import type { Profile } from '../../types/auth'
 import { DataTable, type Column } from '../UI/DataTable'
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { useTranslation } from 'react-i18next'
 
 interface NonInstitutionUsersSectionProps {
   users: Profile[]
@@ -16,6 +17,7 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
   onDeleteUser,
   onCreateUser
 }) => {
+  const { t } = useTranslation()
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expired'>('all')
 
   // Kullanıcıları duruma göre filtrele
@@ -55,7 +57,7 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
   const columns: Column<Profile>[] = [
     {
       key: 'order',
-      header: 'Sıra',
+      header: t('admin.users.order'),
       width: 'w-12',
       align: 'center',
       render: (_, index) => (
@@ -66,7 +68,7 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
     },
     {
       key: 'user',
-      header: 'Kullanıcı',
+      header: t('admin.users.user'),
       render: (user) => (
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
@@ -78,7 +80,7 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
           </div>
           <div className="ml-3">
             <div className="text-sm font-medium text-gray-900">
-              {user.username || 'İsimsiz'}
+              {user.username || t('admin.users.noName')}
             </div>
           </div>
         </div>
@@ -86,7 +88,7 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
     },
     {
       key: 'email',
-      header: 'Email',
+      header: t('admin.users.email'),
       render: (user) => (
         <span className="text-sm text-gray-600">
           {user.email}
@@ -95,20 +97,20 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
     },
     {
       key: 'role',
-      header: 'Rol',
+      header: t('admin.users.role'),
       render: (user) => (
         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
           user.role === 'admin' 
             ? 'bg-blue-100 text-blue-800' 
             : 'bg-green-100 text-green-800'
         }`}>
-          {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
+          {user.role === 'admin' ? t('admin.users.admin') : t('admin.users.userRole')}
         </span>
       )
     },
     {
       key: 'expiration_date',
-      header: 'Son Kullanma Tarihi',
+      header: t('admin.users.expirationDate'),
       render: (user) => (
         user.expiration_date ? (
           <>
@@ -116,7 +118,7 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
               {formatDate(user.expiration_date)}
             </div>
             <div className="text-xs text-gray-500">
-              {calculateRemainingDays(user.expiration_date)} gün kaldı
+              {calculateRemainingDays(user.expiration_date)} {t('admin.users.daysLeft')}
             </div>
           </>
         ) : (
@@ -126,7 +128,7 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
     },
     {
       key: 'status',
-      header: 'Durum',
+      header: t('admin.users.status'),
       render: (user) => {
         const isExpired = user.expiration_date ? new Date(user.expiration_date) < new Date() : false
         return (
@@ -135,14 +137,14 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
               ? 'bg-red-100 text-red-800' 
               : 'bg-green-100 text-green-800'
           }`}>
-            {isExpired ? 'Süresi Dolmuş' : 'Aktif'}
+            {isExpired ? t('admin.users.expired') : t('admin.users.active')}
           </span>
         )
       }
     },
     {
       key: 'created_at',
-      header: 'Oluşturulma Tarihi',
+      header: t('admin.users.createdAt'),
       render: (user) => (
         <span className="text-sm text-gray-600">
           {new Date(user.created_at).toLocaleDateString('tr-TR')}
@@ -151,7 +153,7 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
     },
     {
       key: 'actions',
-      header: 'İşlemler',
+      header: t('admin.users.actions'),
       render: (user) => (
         <div className="flex items-center gap-2">
           <button
@@ -160,7 +162,7 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
               onEditUser(user)
             }}
             className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
-            title="Düzenle"
+            title={t('admin.users.edit')}
           >
             <PencilIcon className="h-4 w-4" />
           </button>
@@ -170,7 +172,7 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
               onDeleteUser(user)
             }}
             className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300"
-            title="Sil"
+            title={t('admin.users.delete')}
           >
             <TrashIcon className="h-4 w-4" />
           </button>
@@ -186,22 +188,22 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
         type="button"
         onClick={() => setStatusFilter('all')}
         className={`px-3 py-1.5 text-xs rounded-md ${statusFilter === 'all' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-      >Tümü</button>
+      >{t('admin.users.all')}</button>
       <button
         type="button"
         onClick={() => setStatusFilter('active')}
         className={`px-3 py-1.5 text-xs rounded-md ${statusFilter === 'active' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-      >Aktif</button>
+      >{t('admin.users.active')}</button>
       <button
         type="button"
         onClick={() => setStatusFilter('expired')}
         className={`px-3 py-1.5 text-xs rounded-md ${statusFilter === 'expired' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-      >Süresi Dolmuş</button>
+      >{t('admin.users.expired')}</button>
       <button
         type="button"
         onClick={onCreateUser}
         className="ml-2 inline-flex items-center px-3 py-1.5 text-xs rounded-md bg-green-600 text-white hover:bg-green-700"
-      >Yeni Kullanıcı Ekle</button>
+      >{t('admin.users.addNewUser')}</button>
     </div>
   )
 
@@ -215,14 +217,14 @@ export const NonInstitutionUsersSection: React.FC<NonInstitutionUsersSectionProp
         showSearch={true}
         showPagination={true}
         maxHeight="calc(100vh - 350px)"
-        emptyMessage="Bu sayfada kullanıcı bulunamadı"
-        noResultsMessage="Aramanıza uygun kullanıcı bulunamadı"
+        emptyMessage={t('admin.users.noUsersFound')}
+        noResultsMessage={t('admin.users.noUsersMatch')}
         filters={statusFilters}
         headerContent={
           <div className="flex items-center gap-4">
-            <h3 className="text-lg font-medium text-gray-900">Bireysel Kullanıcılar</h3>
+            <h3 className="text-lg font-medium text-gray-900">{t('admin.users.title')}</h3>
             <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-              {filteredUsers.length} kullanıcı
+              {t('admin.users.usersCount', { count: filteredUsers.length })}
             </span>
           </div>
         }

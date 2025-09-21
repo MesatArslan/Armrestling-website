@@ -1,6 +1,7 @@
 import React from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import type { SavedFile } from '../../services/supabaseFileManagerService'
+import { useTranslation } from 'react-i18next'
 
 interface FileDeleteConfirmationModalProps {
   isOpen: boolean
@@ -17,13 +18,15 @@ export const FileDeleteConfirmationModal: React.FC<FileDeleteConfirmationModalPr
   isSubmitting,
   file
 }) => {
+  const { t } = useTranslation()
+  
   if (!isOpen || !file) return null
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case 'players': return 'Oyuncular'
-      case 'tournaments': return 'Turnuvalar'
-      case 'fixtures': return 'Fixtürler'
+      case 'players': return t('players.title')
+      case 'tournaments': return t('tournaments.title')
+      case 'fixtures': return t('matches.title')
       default: return type
     }
   }
@@ -50,7 +53,7 @@ export const FileDeleteConfirmationModal: React.FC<FileDeleteConfirmationModalPr
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Dosya Silme Onayı</h2>
+                <h2 className="text-lg font-bold text-white">{t('deleteConfirmation.fileTitle')}</h2>
                 <p className="text-red-100 text-xs">{file.name}</p>
               </div>
             </div>
@@ -66,7 +69,7 @@ export const FileDeleteConfirmationModal: React.FC<FileDeleteConfirmationModalPr
             {/* File Info */}
             <div className="bg-white rounded-lg p-4 border border-gray-200">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-gray-900">Dosya Bilgileri</h3>
+                <h3 className="text-sm font-semibold text-gray-900">{t('adminPage.stats.totalFiles')}</h3>
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTypeColor(file.type)}`}>
                   {getTypeLabel(file.type)}
                 </span>
@@ -82,15 +85,7 @@ export const FileDeleteConfirmationModal: React.FC<FileDeleteConfirmationModalPr
             {/* Warning Text */}
             <div className="text-center">
               <div className="text-sm text-gray-700 leading-relaxed">
-                <strong>{file.name}</strong> dosyasını silmek istediğinizden emin misiniz?
-                <br />
-                <span className="text-red-600 font-medium">
-                  Bu işlem geri alınamaz!
-                </span>
-                <br />
-                <span className="text-orange-600 font-medium">
-                  Dosya kalıcı olarak silinecektir!
-                </span>
+                {t('deleteConfirmation.fileMessage', { name: file.name })}
               </div>
             </div>
             
@@ -100,7 +95,7 @@ export const FileDeleteConfirmationModal: React.FC<FileDeleteConfirmationModalPr
                 onClick={onClose}
                 className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 font-medium"
               >
-                İptal
+                {t('deleteConfirmation.cancel')}
               </button>
               <button
                 onClick={onConfirm}
@@ -113,10 +108,10 @@ export const FileDeleteConfirmationModal: React.FC<FileDeleteConfirmationModalPr
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Siliniyor...
+                    {t('deleteConfirmation.deleting')}
                   </>
                 ) : (
-                  'Sil'
+                  t('deleteConfirmation.delete')
                 )}
               </button>
             </div>
