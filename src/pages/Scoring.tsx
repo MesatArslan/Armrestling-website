@@ -428,7 +428,7 @@ const Scoring: React.FC = () => {
                     <svg className="w-4 h-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Puanlar bu kritere göre gruplandırılacak
+                    Puanlar bu kritere göre verilecektir.
                   </p>
                 </div>
               </div>
@@ -456,7 +456,7 @@ const Scoring: React.FC = () => {
               
               <div className="flex items-center justify-between mb-6">
                 <div className="text-sm text-gray-600">
-                  <span className="font-semibold text-blue-600">{config.selectedTournamentIds.length}</span> {t('scoring.tournamentsSelected', { count: config.selectedTournamentIds.length })}
+                  <span className="font-semibold text-blue-600">{config.selectedTournamentIds.length}</span> turnuva seçildi
                 </div>
                 <div className="flex gap-3">
                   <button
@@ -556,9 +556,11 @@ const Scoring: React.FC = () => {
                 </div>
                 <h2 className="text-xl font-bold text-gray-900">{t('scoring.totalPoints')}</h2>
                 <div className="ml-auto flex items-center gap-3">
-                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                    {config.groupBy}
+                  <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-100 to-purple-100 px-4 py-2 rounded-xl border border-indigo-200">
+                    <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
+                      Sıralama: {availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy}
                   </span>
+                  </div>
                   <button
                     onClick={handleOpenSettings}
                     disabled={aggregatedScores.length === 0}
@@ -647,7 +649,7 @@ const Scoring: React.FC = () => {
                               }`}>
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="font-medium text-gray-900 truncate flex-1" title={f.name}>
-                                    {f.name}
+                                    {f.name?.includes(' - ') ? f.name.split(' - ').slice(1).join(' - ') : f.name}
                                   </div>
                                   <span className={`ml-2 text-xs px-3 py-1.5 rounded-full font-medium ${
                                     completed 
