@@ -152,7 +152,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Modal content */}
         <div className="px-6 py-8">
           <h3 className="text-2xl font-bold text-center text-gray-900 mb-6">
-            {mode === 'login' ? 'Kurum Girişi' : 'Bireysel Girişi'}
+            {mode === 'login' ? 'Kurum Giriş' : 'Bireysel Giriş'}
           </h3>
 
           {error && (
@@ -223,7 +223,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     {t('auth.loading')}
                   </>
                 ) : (
-                  mode === 'login' ? 'Kurum Girişi' : 'Bireysel Girişi'
+                  mode === 'login' ? 'Kurum Giriş' : 'Bireysel Giriş'
                 )}
               </button>
 
@@ -235,7 +235,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     onClick={() => onModeChange(mode === 'login' ? 'signup' : 'login')}
                     className="font-medium text-indigo-600 hover:text-indigo-500"
                   >
-                    {mode === 'login' ? 'Bireysel Girişi' : 'Kurum Girişi'}
+                    {mode === 'login' ? 'Bireysel Giriş' : 'Kurum Giriş'}
                   </button>
                 </span>
               </div>

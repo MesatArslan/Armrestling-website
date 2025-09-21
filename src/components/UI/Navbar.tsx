@@ -119,13 +119,13 @@ const Navbar = () => {
                       onClick={() => openAuthModal('signup')}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                     >
-                      Bireysel Girişi
+                      Bireysel Giriş
                     </button>
                     <button
                       onClick={() => openAuthModal('login')}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                     >
-                      Kurum Girişi
+                      Kurum Giriş
                     </button>
                   </div>
                 )}
