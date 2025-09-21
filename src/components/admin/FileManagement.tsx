@@ -97,7 +97,7 @@ export const FileManagement: React.FC = () => {
         const message = successCount > 1 ? `${successCount} dosya başarıyla kaydedildi!` : 'Dosya başarıyla kaydedildi!'
         setSuccessMessage(message)
         setShowSuccessModal(true)
-        setShowUploadModal(false)
+        // Modal açık kalsın - setShowUploadModal(false) kaldırıldı
         loadUserLimits()
       }
       if (payloads.length > successCount) {
