@@ -899,15 +899,61 @@ export const generateScoringPreviewContent = (
     return `<div style="display: inline-block !important; transform: translateY(-5px) !important;">${content}</div>`;
   };
   
-  // Calculate how many scores fit per page (approximately 15-20 per page)
-  const scoresPerPage = 18;
-  const totalPages = Math.ceil(aggregatedScores.length / scoresPerPage);
+  // Calculate how many scores fit per page
+  // First page has less space due to details section, subsequent pages have more space
+  const subsequentPageScores = 40; // More space on subsequent pages
+  
+  // Calculate first page rows based on tournament/fixture details height
+  const calculateFirstPageRows = () => {
+    const baseRows = 40; // Maximum rows that fit on a page
+    let detailsHeight = 0;
+    
+    // Calculate height based on tournament names
+    if (extra?.includeTournamentNames && extra?.tournamentNames?.length) {
+      detailsHeight += 20; // Base height for tournament section
+      detailsHeight += extra.tournamentNames.length * 8; // Each tournament name adds ~8px
+    }
+    
+    // Calculate height based on tournament fixtures
+    if (extra?.includeSelectedFixtures && extra?.tournamentFixtures?.length) {
+      detailsHeight += 20; // Base height for fixtures section
+      extra.tournamentFixtures.forEach(tf => {
+        detailsHeight += 15; // Tournament header
+        detailsHeight += tf.fixtures.length * 8; // Each fixture adds ~8px (balanced reduction)
+      });
+    }
+    
+    // Convert height to approximate rows (each row is ~12px)
+    const heightInRows = Math.ceil(detailsHeight / 12);
+    const availableRows = baseRows - heightInRows; // No minimum limit
+    
+    return Math.max(0, Math.min(availableRows, 35)); // Minimum 0 rows, maximum 35 rows on first page
+  };
+  
+  const firstPageScores = calculateFirstPageRows();
+  
+  // Calculate total pages
+  let totalPages = 1;
+  if (aggregatedScores.length > firstPageScores) {
+    const remainingScores = aggregatedScores.length - firstPageScores;
+    totalPages += Math.ceil(remainingScores / subsequentPageScores);
+  }
   
   const pages: string[] = [];
   
   for (let pageNum = 0; pageNum < totalPages; pageNum++) {
-    const startIndex = pageNum * scoresPerPage;
-    const endIndex = Math.min(startIndex + scoresPerPage, aggregatedScores.length);
+    let startIndex, endIndex;
+    
+    if (pageNum === 0) {
+      // First page
+      startIndex = 0;
+      endIndex = Math.min(firstPageScores, aggregatedScores.length);
+    } else {
+      // Subsequent pages
+      const previousPageEnd = firstPageScores + (pageNum - 1) * subsequentPageScores;
+      startIndex = previousPageEnd;
+      endIndex = Math.min(startIndex + subsequentPageScores, aggregatedScores.length);
+    }
     const pageScores = aggregatedScores.slice(startIndex, endIndex);
     
     // Optional details section (tournament and fixture names) - only show on first page
