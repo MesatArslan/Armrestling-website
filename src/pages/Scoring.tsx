@@ -259,14 +259,37 @@ const Scoring: React.FC = () => {
     const includedTournaments = tournaments.filter(t => selectedIds.has(t.id));
     const tournamentNames = includedTournaments.map(t => t.name).filter(Boolean);
     const includedFixtures = fixtures.filter(f => selectedIds.has(f.tournamentId) && f.status === 'completed');
-    const fixtureNames = includedFixtures.map(f => f.name || `${f.tournamentName || ''} - ${f.weightRangeName || ''}`).filter(Boolean);
+    
+    // Clean fixture names for PDF - remove tournament name and hand preference
+    const cleanFixtureName = (name: string) => {
+      let cleanName = name;
+      // Remove tournament name if present
+      if (cleanName?.includes(' - ')) {
+        cleanName = cleanName.split(' - ').slice(1).join(' - ');
+      }
+      // Remove hand preference
+      if (cleanName?.includes('Sağ Kol -')) {
+        cleanName = cleanName.replace('Sağ Kol -', '').trim();
+      } else if (cleanName?.includes('Sol Kol -')) {
+        cleanName = cleanName.replace('Sol Kol -', '').trim();
+      }
+      return cleanName;
+    };
+    
+    const fixtureNames = includedFixtures.map(f => {
+      const rawName = f.name || `${f.tournamentName || ''} - ${f.weightRangeName || ''}`;
+      return cleanFixtureName(rawName);
+    }).filter(Boolean);
     
     // Group fixtures by tournament
     const tournamentFixtures = includedTournaments.map(tournament => {
       const tournamentFixtures = includedFixtures.filter(f => f.tournamentId === tournament.id);
       return {
         tournamentName: tournament.name,
-        fixtures: tournamentFixtures.map(f => f.name || `${f.weightRangeName || ''}`).filter(Boolean)
+        fixtures: tournamentFixtures.map(f => {
+          const rawName = f.name || `${f.weightRangeName || ''}`;
+          return cleanFixtureName(rawName);
+        }).filter(Boolean)
       };
     }).filter(tf => tf.fixtures.length > 0);
     
