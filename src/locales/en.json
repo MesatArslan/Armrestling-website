@@ -442,7 +442,18 @@
     "undoLastMatch": "Previous Match",
     "tournamentCompleted": "Fixture Completed!",
     "viewResultsMessage": "Click the button below to view results and rankings.",
-    "goToRankings": "Go to Rankings Tab"
+    "goToRankings": "Go to Rankings Tab",
+    "import": "Import",
+    "export": "Export",
+    "importFixture": "Import Fixture",
+    "importing": "Importing...",
+    "importFixtureTitle": "Import Fixture",
+    "importFixtureToImport": "Fixture to Import:",
+    "pdfSettings": {
+      "includedSections": "Included Sections",
+      "editPlayerInfo": "Edit Player Information to Display",
+      "selected": "Selected"
+    }
   },
   "matchCounter": {
     "title": "Match Count",
@@ -667,7 +678,20 @@
     "selectAtLeastOneTournament": "Please select at least one tournament.",
     "noFixturesForTournament": "No fixtures found for this tournament.",
     "resultsNotReady": "Results are not available yet",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "sortingCriteria": "Sorting Criteria",
+    "selectSortingCriteria": "Select Sorting Criteria",
+    "pointsWillBeAwardedByThisCriteria": "Points will be awarded based on this criteria.",
+    "tournamentsSelectedCount": "{{count}} tournaments selected",
+    "selectContentToShow": "Select content to show",
+    "tournamentsOnly": "Tournaments Only",
+    "tournamentsOnlyDesc": "Only tournament names will be shown",
+    "tournamentsAndFixtures": "Tournaments and Fixtures",
+    "tournamentsAndFixturesDesc": "Both tournament names and fixture names will be shown",
+    "tournamentsCount": "{{count}} tournaments",
+    "pdfCreating": "Creating PDF...",
+    "downloading": "Downloading...",
+    "sortingBy": "Sorting by: {{criteria}}"
   }
 }
 

@@ -518,7 +518,18 @@
     "undoLastMatch": "Bir Önceki Maç",
     "tournamentCompleted": "Fikstür Tamamlandı!",
     "viewResultsMessage": "Sonuçları ve sıralamaları görmek için aşağıdan sıralama sekmesine gidin.",
-    "goToRankings": "Sıralama Sekmesine Git"
+    "goToRankings": "Sıralama Sekmesine Git",
+    "import": "İçe Aktar",
+    "export": "Dışa Aktar",
+    "importFixture": "Fixtür İçe Aktar",
+    "importing": "İçe Aktarılıyor...",
+    "importFixtureTitle": "Fixtür İçe Aktar",
+    "importFixtureToImport": "İçe Aktarılacak Fixtür:",
+    "pdfSettings": {
+      "includedSections": "Dahil Edilecek Bölümler",
+      "editPlayerInfo": "Görünecek Oyuncu Bilgilerini Düzenle",
+      "selected": "Seçili"
+    }
   },
   "matchCounter": {
     "title": "Maç Sayısı",
@@ -687,7 +698,22 @@
     "selectAtLeastOneTournament": "Lütfen en az bir turnuva seçin.",
     "noFixturesForTournament": "Bu turnuvaya ait fikstür bulunamadı.",
     "resultsNotReady": "Sonuçlar henüz oluşmadı",
-    "unknown": "Bilinmiyor"
+    "unknown": "Bilinmiyor",
+    "sortingCriteria": "Sıralama Kriteri",
+    "selectSortingCriteria": "Sıralama Kriteri Seçin",
+    "pointsWillBeAwardedByThisCriteria": "Puanlar bu kritere göre verilecektir.",
+    "tournamentsSelectedCount": "{{count}} turnuva seçildi",
+    "selectContentToShow": "Gözükecek kısımları seçin",
+    "tournamentsOnly": "Turnuvalar",
+    "tournamentsOnlyDesc": "Sadece turnuva adları gösterilir",
+    "tournamentsAndFixtures": "Turnuvalar ve Fikstürler",
+    "tournamentsAndFixturesDesc": "Hem turnuva adları hem fikstür adları gösterilir",
+    "selected": "Seçili",
+    "tournamentsCount": "{{count}} turnuva",
+    "fixturesCount": "{{count}} fikstür",
+    "pdfCreating": "PDF oluşturuluyor...",
+    "downloading": "İndiriliyor...",
+    "sortingBy": "Sıralama: {{criteria}}"
   }
   ,
   "opponentsModal": {

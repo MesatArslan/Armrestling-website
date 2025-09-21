@@ -1316,7 +1316,7 @@ const Matches = () => {
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                   </svg>
-                  İçe Aktar
+                  {t('matches.import')}
                 </button>
                 
                 {/* Dışa Aktar ve PDF butonları sadece aktif fixtür varken görünür */}
@@ -1329,7 +1329,7 @@ const Matches = () => {
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
-                      Dışa Aktar
+                      {t('matches.export')}
                     </button>
                     <button
                       onClick={() => setIsMatchPDFModalOpen(true)}
@@ -1367,7 +1367,7 @@ const Matches = () => {
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                   </svg>
-                  Fixtür İçe Aktar
+                  {t('matches.importFixture')}
                 </button>
                 <button
                   onClick={() => navigate('/tournaments')}
@@ -1408,7 +1408,7 @@ const Matches = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="font-bold text-gray-900 text-lg">Dahil Edilecek Bölümler</h3>
+              <h3 className="font-bold text-gray-900 text-lg">{t('matches.pdfSettings.includedSections')}</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div
@@ -1431,7 +1431,7 @@ const Matches = () => {
                     <h4 className="font-semibold text-gray-900 text-sm">{t('matches.tabRankings')}</h4>
                   </div>
                   {includeRankingsForPDF && (
-                    <div className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold">Seçili</div>
+                    <div className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold">{t('matches.pdfSettings.selected')}</div>
                   )}
                 </div>
               </div>
@@ -1456,7 +1456,7 @@ const Matches = () => {
                     <h4 className="font-semibold text-gray-900 text-sm">{t('matches.tabCompleted')}</h4>
                   </div>
                   {includeCompletedForPDF && (
-                    <div className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold">Seçili</div>
+                    <div className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold">{t('matches.pdfSettings.selected')}</div>
                   )}
                 </div>
               </div>
@@ -1471,7 +1471,7 @@ const Matches = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2z" />
                 </svg>
               </div>
-              <h3 className="font-bold text-gray-900 text-lg">Görünecek Oyuncu Bilgilerini Düzenle</h3>
+              <h3 className="font-bold text-gray-900 text-lg">{t('matches.pdfSettings.editPlayerInfo')}</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {(() => {
@@ -1507,7 +1507,7 @@ const Matches = () => {
                         </h4>
                       </div>
                       {selectedPlayerColumnsForPDF.includes(col.id) && (
-                        <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">Seçili</div>
+                        <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">{t('matches.pdfSettings.selected')}</div>
                       )}
                     </div>
                   </div>
@@ -1627,7 +1627,7 @@ const Matches = () => {
           >
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Fixtür İçe Aktar</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('matches.importFixtureTitle')}</h3>
                 <p className="text-sm text-gray-600">Daha önce dışa aktardığınız bir fixtür dosyasını seçin</p>
               </div>
               <button
@@ -1700,7 +1700,7 @@ const Matches = () => {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                   </svg>
                 )}
-                {isImporting ? 'İçe Aktarılıyor...' : 'İçe Aktar'}
+                {isImporting ? t('matches.importing') : t('matches.import')}
               </button>
             </div>
           </div>
@@ -1749,7 +1749,7 @@ const Matches = () => {
               </div>
 
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-2">İçe Aktarılacak Fixtür:</h4>
+                <h4 className="font-semibold text-blue-800 mb-2">{t('matches.importFixtureToImport')}</h4>
                 <p className="text-sm text-blue-700">
                   <span className="font-medium">Ad:</span> {duplicateFixtureModal.importData?.fixture?.name}
                 </p>

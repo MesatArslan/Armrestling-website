@@ -400,7 +400,7 @@ const Scoring: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900">Sıralama Kriteri</h3>
+                  <h3 className="text-lg font-bold text-gray-900">{t('scoring.sortingCriteria')}</h3>
                 </div>
                 
                 <div className="relative group-by-dropdown">
@@ -422,7 +422,7 @@ const Scoring: React.FC = () => {
                   {isGroupByDropdownOpen && (
                     <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl z-[9999] max-h-48 overflow-y-auto">
                       <div className="p-2">
-                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">Sıralama Kriteri Seçin</div>
+                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">{t('scoring.selectSortingCriteria')}</div>
                         {availableGroupFields.map((field) => (
                           <button
                             key={field.id}
@@ -455,7 +455,7 @@ const Scoring: React.FC = () => {
                     <svg className="w-4 h-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Puanlar bu kritere göre verilecektir.
+                    {t('scoring.pointsWillBeAwardedByThisCriteria')}
                   </p>
                 </div>
               </div>
@@ -483,7 +483,7 @@ const Scoring: React.FC = () => {
               
               <div className="flex items-center justify-between mb-6">
                 <div className="text-sm text-gray-600">
-                  <span className="font-semibold text-blue-600">{config.selectedTournamentIds.length}</span> turnuva seçildi
+                  <span className="font-semibold text-blue-600">{config.selectedTournamentIds.length}</span> {t('scoring.tournamentsSelectedCount', { count: config.selectedTournamentIds.length })}
                 </div>
                 <div className="flex gap-3">
                   <button
@@ -548,7 +548,7 @@ const Scoring: React.FC = () => {
                               ? 'bg-blue-100 text-blue-700' 
                               : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'
                           }`}>
-                            {tour.weightRanges?.length ?? 0} fikstür
+                            {t('scoring.fixturesCount', { count: tour.weightRanges?.length ?? 0 })}
                           </div>
                         </div>
                         
@@ -586,7 +586,7 @@ const Scoring: React.FC = () => {
                   <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-100 to-purple-100 px-4 py-2 rounded-xl border border-indigo-200">
                     <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
                     <span className="text-sm font-semibold text-indigo-700">
-                      Sıralama: {availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy}
+                      {t('scoring.sortingBy', { criteria: availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy })}
                   </span>
                   </div>
                   <button
@@ -766,7 +766,7 @@ const Scoring: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2z" />
               </svg>
             </div>
-            <h4 className="text-lg font-bold text-gray-900">Gözükecek kısımları seçin</h4>
+            <h4 className="text-lg font-bold text-gray-900">{t('scoring.selectContentToShow')}</h4>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
@@ -786,16 +786,16 @@ const Scoring: React.FC = () => {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 text-lg">Turnuvalar</h4>
-                    <p className="text-sm text-gray-600">Sadece turnuva adları gösterilir</p>
+                    <h4 className="font-bold text-gray-900 text-lg">{t('scoring.tournamentsOnly')}</h4>
+                    <p className="text-sm text-gray-600">{t('scoring.tournamentsOnlyDesc')}</p>
                   </div>
                 </div>
                 {pdfContentType === 'tournaments' && (
-                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">Seçili</div>
+                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">{t('scoring.selected')}</div>
                 )}
               </div>
               <div className="text-xs text-gray-500">
-                {scoringExtraInfo.tournamentNames.length} turnuva
+                {t('scoring.tournamentsCount', { count: scoringExtraInfo.tournamentNames.length })}
               </div>
             </div>
 
@@ -815,16 +815,16 @@ const Scoring: React.FC = () => {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 text-lg">Turnuvalar ve Fikstürler</h4>
-                    <p className="text-sm text-gray-600">Hem turnuva adları hem fikstür adları gösterilir</p>
+                    <h4 className="font-bold text-gray-900 text-lg">{t('scoring.tournamentsAndFixtures')}</h4>
+                    <p className="text-sm text-gray-600">{t('scoring.tournamentsAndFixturesDesc')}</p>
                   </div>
                 </div>
                 {pdfContentType === 'both' && (
-                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">Seçili</div>
+                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">{t('scoring.selected')}</div>
                 )}
               </div>
               <div className="text-xs text-gray-500">
-                {scoringExtraInfo.tournamentNames.length} turnuva, {scoringExtraInfo.fixtureNames.length} fikstür
+                {t('scoring.tournamentsCount', { count: scoringExtraInfo.tournamentNames.length })}, {t('scoring.fixturesCount', { count: scoringExtraInfo.fixtureNames.length })}
               </div>
             </div>
           </div>
@@ -871,7 +871,7 @@ const Scoring: React.FC = () => {
               
               {/* Status text */}
               <div className="mt-1.5 text-xs text-gray-500 font-medium">
-                {pdfProgress < 100 ? 'PDF oluşturuluyor...' : 'İndiriliyor...'}
+                {pdfProgress < 100 ? t('scoring.pdfCreating') : t('scoring.downloading')}
               </div>
             </div>
           </div>
