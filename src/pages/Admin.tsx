@@ -307,7 +307,7 @@ export const Admin: React.FC = () => {
                   stats.subscriptionDaysLeft > 7 ? 'bg-green-600' : stats.subscriptionDaysLeft > 0 ? 'bg-yellow-500' : 'bg-red-600'
                 }`}>A</div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-gray-500">{t('adminPage.stats.totalInstitutions')}</div>
+                  <div className="text-xs uppercase tracking-wide text-gray-500">{t('admin.institutions.remainingDays')}</div>
                   <div className={`text-2xl font-semibold ${subscriptionColor}`}>
                     {stats.subscriptionDaysLeft > 0 ? `${stats.subscriptionDaysLeft} ${t('admin.institutions.daysLeft')}` : subscriptionStatus}
                   </div>

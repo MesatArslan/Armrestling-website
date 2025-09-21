@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { TrashIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useTranslation } from 'react-i18next'
 
 interface FileDeleteSuccessNotificationProps {
   isOpen: boolean
@@ -14,6 +15,8 @@ const FileDeleteSuccessNotification: React.FC<FileDeleteSuccessNotificationProps
   message,
   duration = 4000
 }) => {
+  const { t } = useTranslation()
+  
   useEffect(() => {
     if (!isOpen || !duration) return
     const timer = setTimeout(() => {
@@ -44,7 +47,7 @@ const FileDeleteSuccessNotification: React.FC<FileDeleteSuccessNotificationProps
           {/* Message Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-gray-900">Silindi!</h4>
+              <h4 className="text-sm font-semibold text-gray-900">{t('notifications.deleted')}</h4>
               <button
                 onClick={onClose}
                 className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-all duration-200"

@@ -729,7 +729,6 @@
       "institutionName": "Institution Name",
       "userQuota": "User Quota",
       "createdUsers": "Created Users",
-      "remainingDays": "Remaining Days",
       "noInstitutionsFound": "No institutions found on this page",
       "noInstitutionsMatch": "No institutions found matching your search",
       "institutionsCount": "{{count}} institutions"
@@ -890,7 +889,15 @@
       "signOut": "Sign Out"
     }
   },
-  "fileManagement": {
+    "notifications": {
+      "success": "Success!",
+      "deleted": "Deleted!"
+    },
+    "pagination": {
+      "records": "records",
+      "itemsPerPage": "Items per page:"
+    },
+    "fileManagement": {
     "title": "File Management",
     "subtitle": "Manage your saved files and data",
     "addNewFile": "Add New File",

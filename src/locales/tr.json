@@ -751,7 +751,6 @@
       "institutionName": "Kurum Adı",
       "userQuota": "Kullanıcı Kotası",
       "createdUsers": "Oluşturulan Kullanıcı",
-      "remainingDays": "Kalan Gün",
       "noInstitutionsFound": "Bu sayfada kurum bulunamadı",
       "noInstitutionsMatch": "Aramanıza uygun kurum bulunamadı",
       "institutionsCount": "{{count}} kurum"
@@ -929,7 +928,15 @@
       "signOut": "Çıkış Yap"
     }
   },
-  "fileManagement": {
+    "notifications": {
+      "success": "Başarılı!",
+      "deleted": "Silindi!"
+    },
+    "pagination": {
+      "records": "kayıt",
+      "itemsPerPage": "Sayfa başına:"
+    },
+    "fileManagement": {
     "title": "Dosya Yönetimi",
     "subtitle": "Kaydedilen dosyalarınızı ve verilerinizi yönetin",
     "addNewFile": "Yeni Dosya Ekle",

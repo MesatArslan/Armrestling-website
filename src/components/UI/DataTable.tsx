@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface Column<T> {
   key: string
@@ -44,6 +45,7 @@ export function DataTable<T extends { id?: string | number }>({
   headerContent,
   className = ""
 }: DataTableProps<T>) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(defaultItemsPerPage)
@@ -189,12 +191,12 @@ export function DataTable<T extends { id?: string | number }>({
                 <span className="font-medium">{Math.min(endIndex, filteredData.length)}</span>
                 {' / '}
                 <span className="font-medium">{filteredData.length}</span>
-                {' kayıt'}
+                {' ' + t('pagination.records')}
               </div>
               
               {/* Items per page selector */}
               <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-600">Sayfa başına:</label>
+                <label className="text-sm text-gray-600">{t('pagination.itemsPerPage')}</label>
                 <select
                   value={itemsPerPage}
                   onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
