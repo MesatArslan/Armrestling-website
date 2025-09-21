@@ -127,8 +127,8 @@ const Players = () => {
     }
     setConfirmationModal({
       isOpen: true,
-      title: 'Sütunu Sil',
-      message: t('players.confirmDeleteColumn') || 'Sütunu silmek istediğinize emin misiniz?',
+      title: t('players.deleteColumn'),
+      message: t('players.deleteColumnConfirm'),
       onConfirm: () => {
         const updatedColumns = normalizeColumns(PlayersStorage.deleteColumn(columnsState, columnId));
         setColumnsState(updatedColumns);
@@ -167,7 +167,7 @@ const Players = () => {
   const handleClearAllData = () => {
     setConfirmationModal({
       isOpen: true,
-      title: 'Tüm Verileri Temizle',
+      title: t('players.clearAllDataTitle'),
       message: t('players.clearAllDataConfirm'),
       onConfirm: () => {
         try { clearPlayers(); } catch {}
@@ -198,14 +198,14 @@ const Players = () => {
         setImportModal({
           isOpen: true,
           type: 'success',
-          title: 'Başarılı!',
+          title: t('players.successTitle'),
           message: t('players.importSuccess')
         });
       } catch (err: any) {
         setImportModal({
           isOpen: true,
           type: 'error',
-          title: 'Hata!',
+          title: t('players.errorTitle'),
           message: t('players.importError', { error: err.message })
         });
       }
@@ -435,14 +435,14 @@ const Players = () => {
         setImportModal({
           isOpen: true,
           type: 'success',
-          title: 'Başarılı!',
+          title: t('players.successTitle'),
           message: t('players.importSuccess')
         });
       } catch (err: any) {
         setImportModal({
           isOpen: true,
           type: 'error',
-          title: 'Hata!',
+          title: t('players.errorTitle'),
           message: t('players.importError', { error: err.message || String(err) })
         });
       } finally {
@@ -676,29 +676,26 @@ const Players = () => {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="backdrop-blur-md bg-white/90 p-6 rounded-2xl w-full max-w-lg mx-4 shadow-2xl border border-gray-200">
             <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">{t('players.importExcel')}</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{t('players.excelImport.title')}</h2>
               <div className="mt-3 text-sm text-gray-700 space-y-3">
-                <p className="text-gray-600">Excel dosyanızdaki başlıkları şu alanlarla eşleştiriyoruz:</p>
+                <p className="text-gray-600">{t('players.excelImport.description')}</p>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>Ad → <span className="font-semibold">Ad</span></li>
-                  <li>Soyad → <span className="font-semibold">Soyad</span></li>
-                  <li>Kilo → <span className="font-semibold">Kilo</span> (ondalık kabul edilir: 70,5 gibi)</li>
-                  <li>Kol Tercihi → <span className="font-semibold">Kol Tercihi</span> (sağ / sol / sağ,sol → Sağ,Sol)</li>
-                  <li>Cinsiyet → <span className="font-semibold">Cinsiyet</span> (Erkek/Kadın)</li>
-                  <li>Doğum Tarihi → <span className="font-semibold">Doğum Tarihi</span> (yyyy-aa-gg, gg.aa.yyyy veya Excel tarih)</li>
-                  <li>Adı ve Soyadı → <span className="font-semibold">Ad</span> ve <span className="font-semibold">Soyad</span> olarak otomatik ayrılır.</li>
+                  <li>{t('players.excelImport.mapping.name')}</li>
+                  <li>{t('players.excelImport.mapping.surname')}</li>
+                  <li>{t('players.excelImport.mapping.weight')}</li>
+                  <li>{t('players.excelImport.mapping.handPreference')}</li>
+                  <li>{t('players.excelImport.mapping.gender')}</li>
+                  <li>{t('players.excelImport.mapping.birthday')}</li>
+                  <li>{t('players.excelImport.mapping.fullName')}</li>
                 </ul>
-                <p className="text-gray-600">Tanımadığımız başlıklar otomatik olarak yeni bir sütun olarak eklenir. Boş satırlar atlanır.</p>
+                <p className="text-gray-600">{t('players.excelImport.note')}</p>
                 <div className="rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-600">
-                  <div className="font-semibold text-gray-800 mb-1">Örnek başlık satırı</div>
+                  <div className="font-semibold text-gray-800 mb-1">{t('players.excelImport.exampleTitle')}</div>
                   <div className="overflow-x-auto">
                     <div className="inline-grid grid-cols-6 gap-2">
-                      <span className="px-2 py-1 bg-gray-50 rounded">Ad</span>
-                      <span className="px-2 py-1 bg-gray-50 rounded">Soyad</span>
-                      <span className="px-2 py-1 bg-gray-50 rounded">Kilo</span>
-                      <span className="px-2 py-1 bg-gray-50 rounded">Kol Tercihi</span>
-                      <span className="px-2 py-1 bg-gray-50 rounded">Cinsiyet</span>
-                      <span className="px-2 py-1 bg-gray-50 rounded">Doğum Tarihi</span>
+                      {t('players.excelImport.exampleHeaders', { returnObjects: true }).map((header: string, index: number) => (
+                        <span key={index} className="px-2 py-1 bg-gray-50 rounded">{header}</span>
+                      ))}
                     </div>
                   </div>
                 </div>

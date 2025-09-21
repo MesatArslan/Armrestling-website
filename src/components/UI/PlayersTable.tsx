@@ -689,9 +689,9 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
           onKeyDown={handleNewPlayerKeyDown}
           className="w-full px-2 py-1 bg-transparent border-0 text-sm text-gray-700 focus:outline-none focus:ring-0"
         >
-          <option value="">Select gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
+          <option value="">{t('players.selectGender')}</option>
+          <option value="male">{t('players.male')}</option>
+          <option value="female">{t('players.female')}</option>
         </select>
       );
     } else if (column.id === 'handPreference') {
@@ -751,7 +751,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
           value={newPlayer[column.id] || ''}
           onChange={(e) => handleNewPlayerChange(column.id, e.target.value)}
           onKeyDown={handleNewPlayerKeyDown}
-          placeholder={column.id === 'birthday' ? '' : `Enter ${column.name.toLowerCase()}`}
+          placeholder={column.id === 'birthday' ? '' : t('players.filters.enterField', { field: column.name.toLowerCase() })}
           className="w-full px-2 py-1 bg-transparent border-0 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0"
           autoFocus={column.id === 'name' && Object.keys(newPlayer).length === 0}
         />
@@ -915,7 +915,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                                 onKeyDown={(e) => {
                                                   if (e.key === 'Escape') setOpenFilter(null);
                                                 }}
-                                                placeholder="Search options..."
+                                                placeholder={t('players.filters.searchPlaceholder')}
                                                 className="w-full px-3 py-2 text-sm text-gray-800 placeholder-gray-500 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                               />
                                             </div>
@@ -977,7 +977,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                                 }}
                                                 className="px-3 py-1.5 text-xs rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
                                               >
-                                                Clear
+                                                {t('players.filters.clear')}
                                               </button>
                                               <button
                                                 onClick={(e) => {
@@ -986,7 +986,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                                 }}
                                                 className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700"
                                               >
-                                                Done
+                                                {t('players.filters.done')}
                                               </button>
                                             </div>
                                           </div>
@@ -1002,7 +1002,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                     >
                                       <div className="p-3">
                                         <div className="flex items-center justify-between mb-2">
-                                          <div className="text-sm font-semibold text-gray-800">Weight range</div>
+                                          <div className="text-sm font-semibold text-gray-800">{t('players.filters.weightRange')}</div>
                                           <div className="text-xs text-gray-600">
                                             {currentWeightMatches} oyuncu
                                           </div>
@@ -1017,7 +1017,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                           value={weightFilter.min || ''}
                                           onChange={(e) => handleWeightFilterChange('min', e.target.value)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter') setIsWeightFilterOpen(false); }}
-                                                placeholder="e.g. 70"
+                                                placeholder={t('players.filters.weightExample')}
                                                 className="w-full pl-3 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                               />
                                               <span className="absolute inset-y-0 right-2 flex items-center text-xs text-gray-400">kg</span>
@@ -1032,7 +1032,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                           value={weightFilter.max || ''}
                                           onChange={(e) => handleWeightFilterChange('max', e.target.value)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter') setIsWeightFilterOpen(false); }}
-                                                placeholder="e.g. 90"
+                                                placeholder={t('players.filters.weightExampleMax')}
                                                 className="w-full pl-3 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                               />
                                               <span className="absolute inset-y-0 right-2 flex items-center text-xs text-gray-400">kg</span>
@@ -1041,7 +1041,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                         </div>
                                         <div className="mt-3">
                                           <div className="flex items-center justify-between mb-2">
-                                            <div className="text-xs text-gray-500">Quick ranges</div>
+                                            <div className="text-xs text-gray-500">{t('players.filters.quickRanges')}</div>
                                             <div className="flex items-center gap-2">
                                               <button
                                                 onClick={() => {
@@ -1061,9 +1061,9 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                                   setNewWeightRange({ min: '', max: '' });
                                                 }}
                                                 className={`px-2 py-1 text-[11px] rounded-md border ${isEditRangesMode ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
-                                                title="Edit ranges"
+                                                title={t('players.filters.editRanges')}
                                               >
-                                                Edit
+                                                {t('players.filters.edit')}
                                               </button>
                                             </div>
                                           </div>
@@ -1085,7 +1085,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                                     }
                                                   }}
                                                   className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full border ${isSelected ? 'border-red-300 bg-red-50 text-red-700' : 'border-amber-300 bg-amber-50 text-amber-800'} ${isEditRangesMode ? 'cursor-pointer' : ''}`}
-                                                  title={isEditRangesMode ? 'Select to delete' : 'Apply'}
+                                                  title={isEditRangesMode ? t('players.filters.selectToDelete') : t('players.filters.apply')}
                                                 >
                                                   {formatRangeLabel(r.min, r.max)}
                                                 </button>
@@ -1111,21 +1111,21 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                           {showAddRangeForm && (
                                             <div className="mt-3 grid grid-cols-5 items-end gap-2">
                                               <div className="col-span-2">
-                                                <label className="block text-xs text-gray-500 mb-1">Min</label>
+                                                <label className="block text-xs text-gray-500 mb-1">{t('players.filters.minLabel')}</label>
                                                 <input
                                                   value={newWeightRange.min}
                                                   onChange={(e) => setNewWeightRange(s => ({ ...s, min: e.target.value }))}
-                                                  placeholder="min"
+                                                  placeholder={t('players.filters.min')}
                                                   className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                                 />
                                               </div>
                                               <div className="text-center pb-2">–</div>
                                               <div className="col-span-2">
-                                                <label className="block text-xs text-gray-500 mb-1">Max</label>
+                                                <label className="block text-xs text-gray-500 mb-1">{t('players.filters.maxLabel')}</label>
                                                 <input
                                                   value={newWeightRange.max}
                                                   onChange={(e) => setNewWeightRange(s => ({ ...s, max: e.target.value }))}
-                                                  placeholder="max"
+                                                  placeholder={t('players.filters.max')}
                                                   className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                                 />
                                               </div>
@@ -1155,7 +1155,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                           }}
                                           className="px-3 py-1.5 text-xs rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
                                         >
-                                          Clear
+                                          {t('players.filters.clear')}
                                         </button>
                                         <button
                                           onClick={(e) => {
@@ -1164,7 +1164,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
                                           }}
                                           className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700"
                                         >
-                                          Done
+                                          {t('players.filters.done')}
                                         </button>
                                       </div>
                                     </div>
