@@ -74,7 +74,7 @@ const Scoring: React.FC = () => {
 
   const [config, setConfig] = useState<ScoringConfig>({
     points: defaultPoints,
-    groupBy: 'city',
+    groupBy: 'gender',
     selectedTournamentIds: [],
   });
 
@@ -83,9 +83,25 @@ const Scoring: React.FC = () => {
   const [previewPages, setPreviewPages] = useState<string[]>([]);
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0);
   
+  const [isGroupByDropdownOpen, setIsGroupByDropdownOpen] = useState(false);
   const [isPDFSettingsOpen, setIsPDFSettingsOpen] = useState(false);
   const [includeTournamentNames, setIncludeTournamentNames] = useState(true);
   const [includeSelectedFixtures, setIncludeSelectedFixtures] = useState(true);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isGroupByDropdownOpen) {
+        const target = event.target as Element;
+        if (!target.closest('.group-by-dropdown')) {
+          setIsGroupByDropdownOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isGroupByDropdownOpen]);
 
   // Load initial data
   useEffect(() => {
@@ -171,25 +187,24 @@ const Scoring: React.FC = () => {
   }, [fixtures, config.points, config.groupBy, config.selectedTournamentIds, players]);
 
   const availableGroupFields = useMemo(() => {
-    // Allow grouping by any visible player column plus fallback known fields if hidden
+    // Allow grouping by any visible player column, but exclude fields not available in scoring
     const fromColumns = playersColumns.map(c => ({ id: c.id, name: c.name }));
-    const ensureField = (id: string, name: string) => {
-      if (!fromColumns.some(c => c.id === id)) {
-        fromColumns.push({ id, name });
-      }
-    };
-    ensureField('city', 'City');
+    
+    // Filter out fields that are not available as columns in scoring page
+    const excludedFields = ['name', 'city', 'fullName', 'surname', 'weight', 'handPreference', 'birthday'];
+    const filteredColumns = fromColumns.filter(col => !excludedFields.includes(col.id));
+    
     // Include any custom fields present on players but not in columns, up to a small limit
     const extraIds = new Set<string>();
     for (const p of players) {
       Object.keys(p).forEach(k => {
-        if (['id', 'name', 'surname', 'weight', 'gender', 'handPreference', 'birthday', 'city'].includes(k)) return;
-        if (!fromColumns.some(c => c.id === k)) extraIds.add(k);
+        if (['id', 'name', 'surname', 'weight', 'gender', 'handPreference', 'birthday', 'city', 'fullName'].includes(k)) return;
+        if (!filteredColumns.some(c => c.id === k)) extraIds.add(k);
       });
       if (extraIds.size > 8) break;
     }
-    extraIds.forEach(id => fromColumns.push({ id, name: id }));
-    return fromColumns;
+    extraIds.forEach(id => filteredColumns.push({ id, name: id }));
+    return filteredColumns;
   }, [playersColumns, players]);
 
   const getPlayerName = (id?: string) => {
@@ -262,7 +277,7 @@ const Scoring: React.FC = () => {
     if (aggregatedScores.length === 0) return;
     setIsPDFSettingsOpen(true);
   };
-
+    
   const handleOpenPreviewFromSettings = () => {
     const groupFieldName = availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy;
     const { pages } = openScoringPreviewModal(aggregatedScores, groupFieldName, {
@@ -352,17 +367,70 @@ const Scoring: React.FC = () => {
 
               {/* Grouping Configuration */}
               <div className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">{t('scoring.groupBy')}</h3>
-                <select
-                  value={config.groupBy}
-                  onChange={(e) => setConfig(prev => ({ ...prev, groupBy: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 font-medium"
-                >
-                  {availableGroupFields.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-2">{t('scoring.groupByHelp')}</p>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg p-2">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">Sıralama Kriteri</h3>
+                </div>
+                
+                <div className="relative group-by-dropdown">
+                  <button
+                    onClick={() => setIsGroupByDropdownOpen(!isGroupByDropdownOpen)}
+                    className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-800 font-medium cursor-pointer hover:border-indigo-300 transition-all duration-200 flex items-center justify-between"
+                  >
+                    <span>{availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy}</span>
+                    <svg 
+                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isGroupByDropdownOpen ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {isGroupByDropdownOpen && (
+                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl z-[9999] max-h-48 overflow-y-auto">
+                      <div className="p-2">
+                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">Sıralama Kriteri Seçin</div>
+                        {availableGroupFields.map((field) => (
+                          <button
+                            key={field.id}
+                            onClick={() => {
+                              setConfig(prev => ({ ...prev, groupBy: field.id }));
+                              setIsGroupByDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2.5 text-left hover:bg-indigo-50 transition-colors duration-200 flex items-center gap-3 rounded-md ${
+                              config.groupBy === field.id 
+                                ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+                                : 'text-gray-700'
+                            }`}
+                          >
+                            <div className={`w-2 h-2 rounded-full ${config.groupBy === field.id ? 'bg-indigo-500' : 'bg-gray-300'}`}></div>
+                            <span className="flex-1 text-sm">{field.name}</span>
+                            {config.groupBy === field.id && (
+                              <svg className="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border border-indigo-200">
+                  <p className="text-sm text-indigo-700 font-medium">
+                    <svg className="w-4 h-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Puanlar bu kritere göre gruplandırılacak
+                  </p>
+                </div>
               </div>
 
               {/* Reset Button */}
@@ -390,19 +458,25 @@ const Scoring: React.FC = () => {
                 <div className="text-sm text-gray-600">
                   <span className="font-semibold text-blue-600">{config.selectedTournamentIds.length}</span> {t('scoring.tournamentsSelected', { count: config.selectedTournamentIds.length })}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <button
                     onClick={() => setConfig(prev => ({ ...prev, selectedTournamentIds: tournaments.map(t => t.id) }))}
-                    className="px-4 py-2 text-sm rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-60 transition-all duration-200 font-medium"
+                    className="px-5 py-2.5 text-sm rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center gap-2"
                     disabled={allSelected}
                   >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
                     {t('scoring.selectAll')}
                   </button>
                   <button
                     onClick={() => setConfig(prev => ({ ...prev, selectedTournamentIds: [] }))}
-                    className="px-4 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition-all duration-200 font-medium"
+                    className="px-5 py-2.5 text-sm rounded-xl border-2 border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center gap-2"
                     disabled={!anySelected}
                   >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                     {t('scoring.clear')}
                   </button>
                 </div>
@@ -416,25 +490,60 @@ const Scoring: React.FC = () => {
                   <p className="text-sm">{t('scoring.noTournaments')}</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {tournaments.map(tour => (
-                    <label key={tour.id} className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={config.selectedTournamentIds.includes(tour.id)}
-                        onChange={() => handleToggleTournament(tour.id)}
-                        className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 truncate group-hover:text-blue-700 transition-colors">
-                          {tour.name}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {tournaments.map(tour => {
+                    const isSelected = config.selectedTournamentIds.includes(tour.id);
+                    return (
+                      <label 
+                        key={tour.id} 
+                        className={`relative flex flex-col p-3 rounded-xl border-2 transition-all duration-300 cursor-pointer group ${
+                          isSelected 
+                            ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg shadow-blue-100/50' 
+                            : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/30 hover:shadow-md'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-200 ${
+                            isSelected 
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-gray-100 text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-500'
+                          }`}>
+                            {isSelected ? (
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
+                            )}
+                          </div>
+                          <div className={`px-2 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
+                            isSelected 
+                              ? 'bg-blue-100 text-blue-700' 
+                              : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'
+                          }`}>
+                            {tour.weightRanges?.length ?? 0} fikstür
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {t('scoring.fixturesCount', { count: (tour.weightRanges?.length ?? 0) })}
+                        
+                        <div className="flex-1">
+                          <h3 className={`font-semibold text-base transition-colors duration-200 ${
+                            isSelected 
+                              ? 'text-blue-900' 
+                              : 'text-gray-900 group-hover:text-blue-800'
+                          }`}>
+                            {tour.name}
+                          </h3>
                         </div>
-                      </div>
+                        
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleTournament(tour.id)}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
                     </label>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

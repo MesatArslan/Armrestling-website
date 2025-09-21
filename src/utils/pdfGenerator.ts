@@ -910,8 +910,10 @@ export const generateScoringPreviewContent = (
     const endIndex = Math.min(startIndex + scoresPerPage, aggregatedScores.length);
     const pageScores = aggregatedScores.slice(startIndex, endIndex);
     
-    // Optional details section (tournament and fixture names)
+    // Optional details section (tournament and fixture names) - only show on first page
     const detailsSection = (() => {
+      if (pageNum > 0) return ''; // Only show on first page
+      
       const includeTours = !!extra?.includeTournamentNames && Array.isArray(extra?.tournamentNames) && extra!.tournamentNames!.length > 0;
       const includeFix = !!extra?.includeSelectedFixtures && Array.isArray(extra?.tournamentFixtures) && extra!.tournamentFixtures!.length > 0;
       if (!includeTours && !includeFix) return '';
