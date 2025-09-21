@@ -3,6 +3,8 @@ import { DataTable, type Column } from '../UI/DataTable'
 import LoadingSpinner from '../UI/LoadingSpinner'
 import Toast from '../UI/Toast'
 import FileUploadSuccessNotification from '../UI/FileUploadSuccessModal'
+import FileDeleteSuccessNotification from '../UI/FileDeleteSuccessNotification'
+import { FileDeleteConfirmationModal } from '../UI/FileDeleteConfirmationModal'
 import { FileUploadModal } from './FileUploadModal'
 import { SupabaseFileManagerService, type SavedFile } from '../../services/supabaseFileManagerService'
 import { PlayersStorage } from '../../utils/playersStorage'
@@ -21,6 +23,11 @@ export const FileManagement: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false)
   const [pdfProgress, setPdfProgress] = useState(0)
   const hideProgressTimer = React.useRef<number | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [fileToDelete, setFileToDelete] = useState<SavedFile | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false)
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState('')
   const [userLimits, setUserLimits] = useState<{
     singleFileLimit: number
     totalLimit: number
@@ -154,19 +161,31 @@ export const FileManagement: React.FC = () => {
     }
   }
 
-  const handleDeleteFile = async (fileId: string) => {
-    if (!confirm('Bu dosyayı silmek istediğinizden emin misiniz?')) return
+  const handleDeleteFile = async (file: SavedFile) => {
+    setFileToDelete(file)
+    setShowDeleteModal(true)
+  }
 
+  const confirmDeleteFile = async () => {
+    if (!fileToDelete) return
+
+    setIsDeleting(true)
     try {
-      const result = await fileManager.deleteFile(fileId)
+      const result = await fileManager.deleteFile(fileToDelete.id)
       if (result.success) {
-        setSuccess('Dosya başarıyla silindi!')
+        const message = 'Dosya başarıyla silindi!'
+        setDeleteSuccessMessage(message)
+        setShowDeleteSuccessModal(true)
         loadUserLimits() // Limit bilgilerini ve dosya listesini yenile
+        setShowDeleteModal(false)
+        setFileToDelete(null)
       } else {
         setError(result.error || 'Dosya silinirken hata oluştu')
       }
     } catch (err) {
       setError('Dosya silinemedi')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -461,7 +480,7 @@ export const FileManagement: React.FC = () => {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              handleDeleteFile(file.id)
+              handleDeleteFile(file)
             }}
             className="inline-flex items-center text-red-600 hover:text-red-700 hover:underline text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-300 rounded"
             title="Sil"
@@ -721,6 +740,26 @@ export const FileManagement: React.FC = () => {
         onClose={() => setShowSuccessModal(false)}
         message={successMessage}
         duration={4000}
+      />
+
+      {/* Delete Success Notification */}
+      <FileDeleteSuccessNotification
+        isOpen={showDeleteSuccessModal}
+        onClose={() => setShowDeleteSuccessModal(false)}
+        message={deleteSuccessMessage}
+        duration={4000}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <FileDeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setFileToDelete(null)
+        }}
+        onConfirm={confirmDeleteFile}
+        isSubmitting={isDeleting}
+        file={fileToDelete}
       />
     </div>
   )
