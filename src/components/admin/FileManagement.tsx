@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { DataTable, type Column } from '../UI/DataTable'
 import LoadingSpinner from '../UI/LoadingSpinner'
 import Toast from '../UI/Toast'
+import FileUploadSuccessNotification from '../UI/FileUploadSuccessModal'
 import { FileUploadModal } from './FileUploadModal'
 import { SupabaseFileManagerService, type SavedFile } from '../../services/supabaseFileManagerService'
 import { PlayersStorage } from '../../utils/playersStorage'
@@ -15,6 +16,8 @@ export const FileManagement: React.FC = () => {
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
   const [userLimits, setUserLimits] = useState<{
     singleFileLimit: number
     totalLimit: number
@@ -91,7 +94,9 @@ export const FileManagement: React.FC = () => {
         }
       }
       if (successCount > 0) {
-        setSuccess(successCount > 1 ? `${successCount} dosya başarıyla kaydedildi!` : 'Dosya başarıyla kaydedildi!')
+        const message = successCount > 1 ? `${successCount} dosya başarıyla kaydedildi!` : 'Dosya başarıyla kaydedildi!'
+        setSuccessMessage(message)
+        setShowSuccessModal(true)
         setShowUploadModal(false)
         loadUserLimits()
       }
@@ -631,6 +636,14 @@ export const FileManagement: React.FC = () => {
         onClose={() => setShowUploadModal(false)}
         onSubmit={handleUploadFile}
         isSubmitting={isSubmitting}
+      />
+
+      {/* Success Notification */}
+      <FileUploadSuccessNotification
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        message={successMessage}
+        duration={4000}
       />
     </div>
   )
