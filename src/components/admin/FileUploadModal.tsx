@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { PlayersRepository } from '../../storage/PlayersRepository'
 import { TournamentsRepository } from '../../storage/TournamentsRepository'
 import { MatchesRepository } from '../../storage/MatchesRepository'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 
 interface FileUploadModalProps {
   isOpen: boolean
@@ -129,7 +130,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               const now = new Date().toISOString()
               
               // Sadece görünür sütunları al
-              const visibleColumns = playersRepo.getColumns().filter(col => col.visible)
+              const visibleColumns = playersRepo.getColumns()?.filter(col => col.visible) || []
               const visibleColumnIds = visibleColumns.map(col => col.id)
               
               const pendingFixture = {
@@ -305,8 +306,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const getTypeLabel = (type: string) => {
     switch (type) {
       case 'players': return 'Oyuncular'
-      case 'tournaments': return 'Turnuvalar'
-      case 'fixtures': return 'Fixtürler'
+      case 'tournaments': return 'Turnuva'
+      case 'fixtures': return 'Fikstür'
       default: return type
     }
   }
@@ -427,7 +428,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         const tournamentFixtures = allFixtures.filter(f => f.tournamentId === selectedData.id)
 
         // Oyuncuları topla (görünür kolonlarla)
-        const visibleColumns = playersRepo.getColumns().filter((col: any) => col.visible)
+        const visibleColumns = playersRepo.getColumns()?.filter((col: any) => col.visible) || []
         const visibleColumnIds = visibleColumns.map((col: any) => col.id)
         const playerMap = new Map<string, any>()
         // 1) Aktif fixtürlerdeki oyuncular
@@ -504,7 +505,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     }
 
     // Fikstürler için özel data hazırlama
-    if (selectedType === 'fixtures') {
+    if (selectedType === ('fixtures' as 'players' | 'tournaments' | 'fixtures')) {
       if (selectedData.isPending) {
         // Başlamayı bekleyen fikstür için özel format
         dataToSave = {
@@ -542,27 +543,59 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Yeni Dosya Ekle</h2>
-            <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-3 sm:p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl max-w-[95%] sm:max-w-2xl w-full max-h-[85vh] sm:max-h-[85vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        {/* Header with gradient background */}
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 sm:px-8 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between">
+            {/* Mobile: Title and Close button */}
+            <div className="flex sm:hidden items-center justify-between w-full mb-2">
+              <div className="flex items-center space-x-2">
+                <div className="bg-white/20 rounded-lg p-1.5">
+                  <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Yeni Dosya Ekle</h2>
+                  <p className="text-purple-100 mt-1 text-xs">Dosya yönetimi için yeni dosya ekleyin</p>
+                </div>
+              </div>
+              <button onClick={handleClose} className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded-md hover:bg-white/30 transition-all duration-200 text-[11px] font-semibold flex items-center justify-center text-white mt-1">
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            </div>
+            
+            {/* Desktop: Original layout */}
+            <div className="hidden sm:flex items-center space-x-3">
+              <div className="bg-white/20 rounded-lg p-2">
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Yeni Dosya Ekle</h2>
+                <p className="text-purple-100 mt-1 text-sm">Dosya yönetimi için yeni dosya ekleyin</p>
+              </div>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <button onClick={handleClose} className="text-white/90 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg">
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Dosya Türü Seçimi */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Dosya Türü
-              </label>
+        {/* Content area */}
+        <div className="h-[calc(70vh-120px)] sm:h-[calc(70vh-120px)] flex flex-col bg-gray-50">
+          {/* Scrollable form content */}
+          <div className="flex-1 px-4 py-4 sm:p-6 overflow-y-auto custom-scrollbar">
+            <form id="file-upload-form" onSubmit={handleSubmit} className="space-y-6">
+              {/* Dosya Türü Seçimi */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Dosya Türü
+                </label>
               <div className="grid grid-cols-3 gap-3">
                 {(['players', 'tournaments', 'fixtures'] as const).map((type) => (
                   <button
@@ -742,18 +775,23 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               </div>
             )}
 
-            {/* Butonlar */}
-            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+            </form>
+          </div>
+          
+          {/* Fixed Action Buttons */}
+          <div className="flex-shrink-0 px-4 py-4 sm:p-6 border-t border-gray-200 bg-white">
+            <div className="flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 font-medium"
                 disabled={isSubmitting}
               >
                 İptal
               </button>
               <button
                 type="submit"
+                form="file-upload-form"
                 disabled={
                   isSubmitting || (
                     selectedType !== 'fixtures'
@@ -761,12 +799,22 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                       : (selectedFixtures.length === 0)
                   )
                 }
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center order-1 sm:order-2"
+                className="inline-flex items-center bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
-                {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Kaydediliyor...
+                  </>
+                ) : (
+                  'Kaydet'
+                )}
               </button>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
