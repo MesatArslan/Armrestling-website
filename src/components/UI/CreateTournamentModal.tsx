@@ -272,7 +272,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                           <button
                             onClick={() => handleRemoveWeightRange(range.id)}
                             className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-2 transition-colors touch-manipulation"
-                            title="Remove this range"
+                            title={t('tournaments.removeRange')}
                           >
                             <span className="text-lg">×</span>
                           </button>

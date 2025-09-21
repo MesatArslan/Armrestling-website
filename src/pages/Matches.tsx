@@ -1385,7 +1385,7 @@ const Matches = () => {
       {isMatchPDFModalOpen && activeFixture && (
         <PDFSettingsShell
           isOpen={isMatchPDFModalOpen}
-          titleSuffix={`${activeFixture.name} - PDF Ayarları`}
+          titleSuffix={`${activeFixture.name} - ${t('tournaments.pdfSettings')}`}
           onClose={() => setIsMatchPDFModalOpen(false)}
           onOpenPreview={() => {
             const { pages, currentPage } = openFixturePreviewModal(

@@ -377,7 +377,7 @@ const Tournaments = () => {
     try {
       const text = await importFile.text();
       const pkg = JSON.parse(text);
-      if (!pkg || !pkg.tournament) throw new Error('Geçersiz turnuva paketi');
+      if (!pkg || !pkg.tournament) throw new Error(t('tournaments.invalidPackage'));
 
       // Merge players
       try {
@@ -441,9 +441,9 @@ const Tournaments = () => {
         }
       } catch {}
 
-      setImportMessage({ type: 'success', text: 'Turnuva paketi içe aktarıldı' });
+      setImportMessage({ type: 'success', text: t('tournaments.importSuccess') });
     } catch (e: any) {
-      setImportMessage({ type: 'error', text: e?.message || 'Turnuva paketi içe aktarılamadı' });
+      setImportMessage({ type: 'error', text: e?.message || t('tournaments.importError') });
     } finally {
       setIsImporting(false);
     }
@@ -499,7 +499,7 @@ const Tournaments = () => {
     
     setConfirmationModal({
       isOpen: true,
-      title: 'Turnuvayı Sil',
+      title: t('tournaments.deleteTournament'),
       message: t('tournamentCard.confirmDeleteTournament', { name: tournament.name }),
       onConfirm: () => {
         const updatedTournaments = tournaments.filter(t => t.id !== tournamentId);
@@ -517,8 +517,8 @@ const Tournaments = () => {
     
     setConfirmationModal({
       isOpen: true,
-      title: 'Turnuva Oluştur',
-      message: `"${tournamentName}" turnuvasını oluşturmak istiyor musunuz?`,
+      title: t('tournaments.createTournamentFromTemplate'),
+      message: t('tournaments.createFromTemplateConfirm', { name: tournamentName }),
       onConfirm: () => {
         const newTournament = createTournamentFromTemplate(template, tournamentName);
         // Apply hand preference filter to the tournament
@@ -633,8 +633,8 @@ const Tournaments = () => {
   const handleClearAllTournamentData = () => {
     setConfirmationModal({
       isOpen: true,
-      title: 'Tüm Turnuva Verilerini Temizle',
-      message: 'Tüm turnuva verilerini temizlemek istediğinizden emin misiniz? Bu işlem tüm turnuvaları, seçimleri ve filtreleri kaldıracaktır.',
+      title: t('tournaments.clearAllTournamentData'),
+      message: t('tournaments.clearAllTournamentDataConfirm'),
       onConfirm: () => {
         clearAllTournamentData();
         setTournaments([]);
@@ -776,7 +776,7 @@ const Tournaments = () => {
               <div className="flex-shrink-0">
                 <ActionsMenu
                   items={[
-                    { id: 'import', label: 'Turnuva İçe Aktar', onClick: () => setIsImportModalOpen(true) },
+                    { id: 'import', label: t('tournaments.importTournament'), onClick: () => setIsImportModalOpen(true) },
                     { id: 'use-template', label: t('tournaments.useTemplate'), onClick: handleOpenTemplateModal },
                     { id: 'create', label: t('tournaments.createTournament'), onClick: () => {
                       setIsEditMode(false);
@@ -801,7 +801,7 @@ const Tournaments = () => {
               <div className="flex flex-wrap gap-2 sm:gap-3">
                 <ActionsMenu
                   items={[
-                    { id: 'import', label: 'Turnuva İçe Aktar', onClick: () => setIsImportModalOpen(true) },
+                    { id: 'import', label: t('tournaments.importTournament'), onClick: () => setIsImportModalOpen(true) },
                     { id: 'use-template', label: t('tournaments.useTemplate'), onClick: handleOpenTemplateModal },
                     { id: 'create', label: t('tournaments.createTournament'), onClick: () => {
                       setIsEditMode(false);
@@ -901,8 +901,8 @@ const Tournaments = () => {
         <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg max-h-[85vh] overflow-y-auto mx-2" onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Turnuva İçe Aktar</h3>
-              <p className="text-sm text-gray-600">Turnuva paketi JSON dosyasını seçin</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('tournaments.importTournamentPackage')}</h3>
+              <p className="text-sm text-gray-600">{t('tournaments.selectPackageFile')}</p>
             </div>
             <button onClick={() => setIsImportModalOpen(false)} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200">
               <XMarkIcon className="w-6 h-6" />
@@ -910,13 +910,13 @@ const Tournaments = () => {
           </div>
           <div className="space-y-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Turnuva Paketi (.json)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('tournaments.importTournamentPackage')} (.json)</label>
               <input type="file" accept=".json" onChange={(e) => setImportFile(e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer border border-gray-300 rounded-lg" />
             </div>
             {importFile && (
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm text-blue-800"><span className="font-semibold">Seçilen dosya:</span> {importFile.name}</p>
-                <p className="text-xs text-blue-600 mt-1">Boyut: {(importFile.size / 1024).toFixed(2)} KB</p>
+                <p className="text-sm text-blue-800"><span className="font-semibold">{t('tournaments.selectedFile')}:</span> {importFile.name}</p>
+                <p className="text-xs text-blue-600 mt-1">{t('tournaments.fileSize')}: {(importFile.size / 1024).toFixed(2)} KB</p>
               </div>
             )}
             {importMessage && (
@@ -926,8 +926,8 @@ const Tournaments = () => {
             )}
           </div>
           <div className="flex justify-end gap-3">
-            <button onClick={resetImportState} className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm font-semibold rounded-lg" disabled={isImporting}>İptal</button>
-            <button onClick={handleImportTournamentPackage} disabled={!importFile || isImporting} className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2">{isImporting ? 'İçe Aktarılıyor...' : 'İçe Aktar'}</button>
+            <button onClick={resetImportState} className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm font-semibold rounded-lg" disabled={isImporting}>{t('common.cancel')}</button>
+            <button onClick={handleImportTournamentPackage} disabled={!importFile || isImporting} className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2">{isImporting ? t('tournaments.importing') : t('tournaments.importTournament')}</button>
           </div>
         </div>
       </div>
@@ -982,7 +982,7 @@ const Tournaments = () => {
     {/* Template-Style PDF Download Form Modal (shared shell) */}
     <PDFSettingsShell
       isOpen={isBulkPDFModalOpen && Boolean(currentTournamentForPDF)}
-      titleSuffix={currentTournamentForPDF ? `${currentTournamentForPDF.name} - PDF Ayarları` : ''}
+      titleSuffix={currentTournamentForPDF ? `${currentTournamentForPDF.name} - ${t('tournaments.pdfSettings')}` : ''}
       onClose={() => setIsBulkPDFModalOpen(false)}
       onOpenPreview={() => {
         if (!currentTournamentForPDF) return;
@@ -1026,7 +1026,7 @@ const Tournaments = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <h3 className="font-bold text-gray-900 text-lg">Gösterilecek Fikstürler</h3>
+                  <h3 className="font-bold text-gray-900 text-lg">{t('tournaments.weightRangesToShow')}</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {(currentTournamentForPDF?.weightRanges || []).map(wr => (
@@ -1050,7 +1050,7 @@ const Tournaments = () => {
                         </div>
                         {selectedBulkRanges[wr.id] && (
                           <div className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-xs font-semibold">
-                            Seçili
+                            {t('tournaments.selected')}
                           </div>
                         )}
                       </div>
@@ -1073,7 +1073,7 @@ const Tournaments = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z" />
                     </svg>
                   </div>
-                  <h3 className="font-bold text-gray-900 text-lg">Gösterilecek PDF Kolonları</h3>
+                  <h3 className="font-bold text-gray-900 text-lg">{t('tournaments.columnsToShow')}</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {availablePDFColumns.map((column) => (
@@ -1108,7 +1108,7 @@ const Tournaments = () => {
                         </div>
                         {selectedPDFColumns.includes(column.id) && (
                           <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">
-                            Seçili
+                            {t('tournaments.selected')}
                           </div>
                         )}
                       </div>
@@ -1252,11 +1252,11 @@ const Tournaments = () => {
               </div>
               <h4 className="text-lg font-bold text-gray-900">{t('tournamentCard.playersPerPage')}</h4>
             </div>
-            <p className="text-sm text-gray-600 mb-4">Sayfa başına gösterilecek oyuncu sayısını belirleyin</p>
+            <p className="text-sm text-gray-600 mb-4">{t('tournaments.selectColumnsForPDFDesc')}</p>
             <div className="flex items-center gap-4 mb-4">
               <span className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-lg font-medium">{t('tournamentCard.min')}: 1</span>
               <span className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-lg font-medium">{t('tournamentCard.max')}: 40</span>
-              <span className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-lg font-medium">Önerilen: 33</span>
+              <span className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-lg font-medium">{t('tournaments.recommended')}: 33</span>
             </div>
             <div className="relative">
               <input
@@ -1284,7 +1284,7 @@ const Tournaments = () => {
                 placeholder="33"
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                <span className="text-sm text-gray-400 font-medium">oyuncu</span>
+                <span className="text-sm text-gray-400 font-medium">{t('tournaments.player')}</span>
               </div>
             </div>
           </div>

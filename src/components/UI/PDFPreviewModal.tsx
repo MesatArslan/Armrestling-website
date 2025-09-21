@@ -149,7 +149,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
               </div>
               <div>
                 <h2 className="text-lg sm:text-2xl font-bold text-white">{t('tournamentCard.pdfPreview')}</h2>
-                <p className="text-red-100 mt-1 text-xs sm:text-sm">PDF önizlemesi</p>
+                <p className="text-red-100 mt-1 text-xs sm:text-sm">{t('tournamentCard.pdfPreview')}</p>
               </div>
             </div>
             <div className="hidden sm:flex items-center gap-2">
@@ -293,7 +293,7 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
             <div className="mt-6 sm:mt-8 text-center px-2">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
                 <p className="text-sm sm:text-base text-blue-800 leading-relaxed font-medium">
-                  Bu, PDF'inizin nasıl görüneceğinin önizlemesidir. PDF'i indirmek için üstteki "PDF İndir" butonunu kullanabilirsiniz.
+                  {t('tournaments.previewDescription')}
                 </p>
               </div>
             </div>

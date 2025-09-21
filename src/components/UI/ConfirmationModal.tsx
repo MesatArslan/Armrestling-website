@@ -1,5 +1,6 @@
 import React from 'react';
 import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -19,11 +20,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   title,
   message,
   confirmText,
-  cancelText = 'İptal',
+  cancelText,
   type = 'danger'
 }) => {
+  const { t } = useTranslation();
   // Set default confirm text based on type
-  const defaultConfirmText = type === 'danger' ? 'Onayla' : 'Evet';
+  const defaultConfirmText = type === 'danger' ? t('tournaments.confirm') : t('tournaments.yes');
+  const defaultCancelText = cancelText || t('tournaments.cancel');
   const finalConfirmText = confirmText || defaultConfirmText;
   if (!isOpen) return null;
 
@@ -72,7 +75,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             <div>
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h3>
               <p className="text-sm text-gray-600 mt-1">
-                {type === 'danger' ? 'Bu işlem geri alınamaz' : 'Devam etmek istediğinizden emin misiniz?'}
+                {type === 'danger' ? t('tournaments.cannotBeUndone') : t('tournaments.areYouSureContinue')}
               </p>
             </div>
           </div>
@@ -93,7 +96,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             onClick={onClose}
             className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200 font-semibold"
           >
-            {cancelText}
+            {defaultCancelText}
           </button>
           <button
             onClick={() => {

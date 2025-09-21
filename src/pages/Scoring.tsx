@@ -750,14 +750,14 @@ const Scoring: React.FC = () => {
           setIsPDFPreviewModalOpen(false);
           setIsPDFSettingsOpen(true);
         }}
-        backToSettingsText="PDF Ayarları"
+        backToSettingsText={t('tournaments.pdfSettings')}
       />
 
       <PDFSettingsShell
         isOpen={isPDFSettingsOpen}
         onClose={() => setIsPDFSettingsOpen(false)}
         onOpenPreview={handleOpenPreviewFromSettings}
-        customTitle="PDF Ayarları"
+        customTitle={t('tournaments.pdfSettings')}
       >
         <div className="space-y-5">
           <div className="flex items-center gap-3 mb-4">

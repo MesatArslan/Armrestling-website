@@ -258,10 +258,10 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
                     <InformationCircleIcon className="h-8 w-8 text-blue-500" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                    Kol Tercihi Seçin
+                    {t('tournaments.selectHandPreference')}
                   </h3>
                   <p className="text-gray-500">
-                    Şablon seçmek için önce sağ kol veya sol kol tercihi yapın.
+                    {t('tournaments.selectHandPreferenceDesc')}
                   </p>
                 </div>
               )}
@@ -275,7 +275,7 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
                     {t('tournaments.noTemplates')}
                   </h3>
                   <p className="text-gray-500">
-                    Seçilen kriterlere uygun şablon bulunamadı.
+                    {t('tournaments.noTemplatesForCriteria')}
                   </p>
                 </div>
               )}
