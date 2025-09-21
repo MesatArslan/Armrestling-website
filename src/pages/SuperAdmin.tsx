@@ -16,6 +16,9 @@ import {
   InstitutionUsersModal,
   StorageManagement
 } from '../components/admin'
+import UserCreationSuccessNotification from '../components/UI/UserCreationSuccessNotification'
+import UserEditSuccessNotification from '../components/UI/UserEditSuccessNotification'
+import UserDeleteSuccessNotification from '../components/UI/UserDeleteSuccessNotification'
 
 export const SuperAdmin: React.FC = () => {
   const { user, signOut } = useAuth()
@@ -55,6 +58,12 @@ export const SuperAdmin: React.FC = () => {
   const [deletingUser, setDeletingUser] = useState<Profile | null>(null)
   const [showCreateUserModal, setShowCreateUserModal] = useState(false)
   const [showInstitutionUsersModal, setShowInstitutionUsersModal] = useState(false)
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [showEditSuccessNotification, setShowEditSuccessNotification] = useState(false)
+  const [editSuccessMessage, setEditSuccessMessage] = useState('')
+  const [showDeleteSuccessNotification, setShowDeleteSuccessNotification] = useState(false)
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState('')
 
   // Active section
   const [activeSection, setActiveSection] = useState<'institutions' | 'nonInstitutionUsers' | 'storageManagement'>('institutions')
@@ -356,7 +365,8 @@ export const SuperAdmin: React.FC = () => {
       })
       
       if (result.success) {
-        setSuccess('Kullanıcı başarıyla oluşturuldu!')
+        setSuccessMessage('Kullanıcı başarıyla oluşturuldu!')
+        setShowSuccessNotification(true)
         setShowCreateUserModal(false)
         
         // Yeni kullanıcıyı listeye ekle
@@ -401,7 +411,8 @@ export const SuperAdmin: React.FC = () => {
       const result = await AuthService.updateUser(userId, updateData)
       
       if (result.success) {
-        setSuccess('Kullanıcı başarıyla güncellendi!')
+        setEditSuccessMessage('Kullanıcı başarıyla güncellendi!')
+        setShowEditSuccessNotification(true)
         setShowEditUserModal(false)
         setEditingUser(null)
         
@@ -431,13 +442,14 @@ export const SuperAdmin: React.FC = () => {
       const result = await AuthService.deleteUser(deletingUser.id)
       
       if (result.success) {
-        setSuccess('Kullanıcı başarıyla silindi!')
+        setDeleteSuccessMessage('Kullanıcı başarıyla silindi!')
+        setShowDeleteSuccessNotification(true)
         setShowDeleteUserModal(false)
         setDeletingUser(null)
         
         // Sadece ilgili kullanıcıyı listeden kaldır
         setNonInstitutionUsers(prev => prev.filter(user => user.id !== deletingUser.id))
-          
+        
         // Stats'i de güncelle
         if (stats) {
           setStats(prev => prev ? {
@@ -667,6 +679,30 @@ export const SuperAdmin: React.FC = () => {
         institution={selectedInstitution}
         users={institutionUsers}
         loading={institutionUsersLoading}
+      />
+
+      {/* User Creation Success Notification */}
+      <UserCreationSuccessNotification
+        isOpen={showSuccessNotification}
+        onClose={() => setShowSuccessNotification(false)}
+        message={successMessage}
+        duration={4000}
+      />
+
+      {/* User Edit Success Notification */}
+      <UserEditSuccessNotification
+        isOpen={showEditSuccessNotification}
+        onClose={() => setShowEditSuccessNotification(false)}
+        message={editSuccessMessage}
+        duration={4000}
+      />
+
+      {/* User Delete Success Notification */}
+      <UserDeleteSuccessNotification
+        isOpen={showDeleteSuccessNotification}
+        onClose={() => setShowDeleteSuccessNotification(false)}
+        message={deleteSuccessMessage}
+        duration={4000}
       />
     </SuperAdminLayout>
   )

@@ -5,6 +5,19 @@
   text-align: center;
 }
 
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-progress {
+  animation: progress linear forwards;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

@@ -9,6 +9,9 @@ import { AdminLayout } from '../components/admin/AdminLayout'
 import { CreateUserModal } from '../components/admin/CreateUserModal'
 import { FileManagement } from '../components/admin/FileManagement'
 import Toast from '../components/UI/Toast'
+import UserCreationSuccessNotification from '../components/UI/UserCreationSuccessNotification'
+import UserEditSuccessNotification from '../components/UI/UserEditSuccessNotification'
+import UserDeleteSuccessNotification from '../components/UI/UserDeleteSuccessNotification'
 import { DataTable, type Column } from '../components/UI/DataTable'
 import { TrashIcon } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
@@ -29,6 +32,12 @@ export const Admin: React.FC = () => {
   const [showDeleteUserModal, setShowDeleteUserModal] = useState(false)
   const [deletingUser, setDeletingUser] = useState<Profile | null>(null)
   const [showCreateUserModal, setShowCreateUserModal] = useState(false)
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [showEditSuccessNotification, setShowEditSuccessNotification] = useState(false)
+  const [editSuccessMessage, setEditSuccessMessage] = useState('')
+  const [showDeleteSuccessNotification, setShowDeleteSuccessNotification] = useState(false)
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState('')
 
   // Auto-dismiss messages (align with SuperAdmin UX)
   useEffect(() => {
@@ -91,7 +100,8 @@ export const Admin: React.FC = () => {
       }, user.institution_id)
       
       if (result.success) {
-        setSuccess(t('adminPage.messages.userCreatedSuccess'))
+        setSuccessMessage(t('adminPage.messages.userCreatedSuccess'))
+        setShowSuccessNotification(true)
         setShowCreateUserModal(false)
         await loadData()
       } else {
@@ -127,7 +137,8 @@ export const Admin: React.FC = () => {
       const payload = { username: formData.username, email: formData.email }
       const result = await AuthService.updateUser(userId, payload)
       if (result.success) {
-        setSuccess(t('adminPage.messages.userUpdatedSuccess'))
+        setEditSuccessMessage(t('adminPage.messages.userUpdatedSuccess'))
+        setShowEditSuccessNotification(true)
         setShowEditUserModal(false)
         setEditingUser(null)
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...formData, role: 'user' } : u))
@@ -155,7 +166,8 @@ export const Admin: React.FC = () => {
     try {
       const result = await AuthService.deleteUser(deletingUser.id)
       if (result.success) {
-        setSuccess(t('adminPage.messages.userDeletedSuccess'))
+        setDeleteSuccessMessage(t('adminPage.messages.userDeletedSuccess'))
+        setShowDeleteSuccessNotification(true)
         setUsers(prev => prev.filter(u => u.id !== deletingUser.id))
         setShowDeleteUserModal(false)
         setDeletingUser(null)
@@ -404,6 +416,30 @@ export const Admin: React.FC = () => {
         onClose={() => setShowCreateUserModal(false)}
         onSubmit={handleCreateUser}
         isSubmitting={isSubmitting}
+      />
+
+      {/* User Creation Success Notification */}
+      <UserCreationSuccessNotification
+        isOpen={showSuccessNotification}
+        onClose={() => setShowSuccessNotification(false)}
+        message={successMessage}
+        duration={4000}
+      />
+
+      {/* User Edit Success Notification */}
+      <UserEditSuccessNotification
+        isOpen={showEditSuccessNotification}
+        onClose={() => setShowEditSuccessNotification(false)}
+        message={editSuccessMessage}
+        duration={4000}
+      />
+
+      {/* User Delete Success Notification */}
+      <UserDeleteSuccessNotification
+        isOpen={showDeleteSuccessNotification}
+        onClose={() => setShowDeleteSuccessNotification(false)}
+        message={deleteSuccessMessage}
+        duration={4000}
       />
     </AdminLayout>
   )
