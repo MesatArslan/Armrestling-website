@@ -86,6 +86,8 @@ const Scoring: React.FC = () => {
   const [isGroupByDropdownOpen, setIsGroupByDropdownOpen] = useState(false);
   const [isPDFSettingsOpen, setIsPDFSettingsOpen] = useState(false);
   const [pdfContentType, setPdfContentType] = useState<'tournaments' | 'both'>('both');
+  const [isExporting, setIsExporting] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -319,10 +321,14 @@ const Scoring: React.FC = () => {
     if (aggregatedScores.length === 0) return;
     
     try {
+      setIsExporting(true);
+      setPdfProgress(0);
       
       const groupFieldName = availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy;
       
-      await generateScoringPDF(aggregatedScores, groupFieldName, undefined, {
+      await generateScoringPDF(aggregatedScores, groupFieldName, (progress) => {
+        setPdfProgress(progress);
+      }, {
         includeTournamentNames: pdfContentType === 'tournaments' || pdfContentType === 'both',
         includeSelectedFixtures: pdfContentType === 'both',
         tournamentNames: scoringExtraInfo.tournamentNames,
@@ -330,14 +336,13 @@ const Scoring: React.FC = () => {
         tournamentFixtures: scoringExtraInfo.tournamentFixtures,
       });
       
-      // Show success message
-      alert(t('scoring.pdfSuccessMessage', {
-        fileSize: 'PDF',
-        totalPages: Math.ceil(aggregatedScores.length / 18)
-      }));
+      // Keep popup visible for a moment after completion
+      setTimeout(() => {
+        setIsExporting(false);
+      }, 1500);
       
     } catch (error) {
-      alert(t('scoring.pdfErrorMessage'));
+      setIsExporting(false);
     }
   };
 
@@ -811,7 +816,7 @@ const Scoring: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 text-lg">Turnuvalar ve Fikstürler</h4>
-                    <p className="text-sm text-gray-600">Hem turnuva adları hem fikstür detayları gösterilir</p>
+                    <p className="text-sm text-gray-600">Hem turnuva adları hem fikstür adları gösterilir</p>
                   </div>
                 </div>
                 {pdfContentType === 'both' && (
@@ -826,6 +831,52 @@ const Scoring: React.FC = () => {
 
         </div>
       </PDFSettingsShell>
+
+      {/* PDF Download Progress Popup */}
+      {isExporting && (
+        <div className="fixed top-6 right-6 z-[10000] transition-all duration-500 ease-out animate-in slide-in-from-top-2 fade-in">
+          <div className="bg-gradient-to-br from-white to-gray-50/95 backdrop-blur-xl border border-gray-200/50 shadow-2xl rounded-xl px-4 py-3 flex items-center gap-3 min-w-[240px] transform hover:scale-105 transition-transform duration-200">
+            {/* Animated download icon */}
+            <div className="relative">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                <svg className="animate-bounce h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              {/* Progress ring */}
+              <div className="absolute -inset-0.5 rounded-lg">
+                <div className="w-9 h-9 border-2 border-blue-200 rounded-lg animate-spin" style={{ animationDuration: '3s' }}>
+                  <div className="w-full h-full border-t-2 border-blue-500 rounded-lg"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="text-xs font-bold text-gray-800">{t('tournamentCard.downloadPDF')}</div>
+                <div className="text-xs font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md">{pdfProgress}%</div>
+              </div>
+              
+              {/* Enhanced progress bar */}
+              <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                <div 
+                  className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full transition-all duration-300 ease-out shadow-lg" 
+                  style={{ width: `${pdfProgress}%` }}
+                >
+                  <div className="h-full bg-gradient-to-r from-white/20 to-transparent rounded-full"></div>
+                </div>
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+              </div>
+              
+              {/* Status text */}
+              <div className="mt-1.5 text-xs text-gray-500 font-medium">
+                {pdfProgress < 100 ? 'PDF oluşturuluyor...' : 'İndiriliyor...'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
