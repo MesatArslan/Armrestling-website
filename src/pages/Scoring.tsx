@@ -650,7 +650,16 @@ const Scoring: React.FC = () => {
                               }`}>
                                 <div className="flex items-center justify-between mb-3">
                                   <div className="font-medium text-gray-900 truncate flex-1" title={f.name}>
-                                    {f.name?.includes(' - ') ? f.name.split(' - ').slice(1).join(' - ') : f.name}
+                                    {(() => {
+                                      let displayName = f.name?.includes(' - ') ? f.name.split(' - ').slice(1).join(' - ') : f.name;
+                                      // Remove hand preference (Sağ Kol, Sol Kol) from the name
+                                      if (displayName?.includes('Sağ Kol -')) {
+                                        displayName = displayName.replace('Sağ Kol -', '').trim();
+                                      } else if (displayName?.includes('Sol Kol -')) {
+                                        displayName = displayName.replace('Sol Kol -', '').trim();
+                                      }
+                                      return displayName;
+                                    })()}
                                   </div>
                                   <span className={`ml-2 text-xs px-3 py-1.5 rounded-full font-medium ${
                                     completed 
