@@ -596,7 +596,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Dosya Türü
                 </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-2">
                 {(['players', 'tournaments', 'fixtures'] as const).map((type) => (
                   <button
                     key={type}
@@ -607,15 +607,15 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                       setFileName('') // Tür değiştirildiğinde dosya adını da temizle
                       setSelectedFixtures([])
                     }}
-                    className={`p-4 rounded-lg border-2 transition-all ${
+                    className={`p-2 rounded-lg border-2 transition-all min-h-[60px] flex flex-col justify-center ${
                       selectedType === type
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
                         : 'border-gray-200 hover:border-gray-300 text-gray-600'
                     }`}
                   >
                     <div className="text-center">
-                      <div className="text-lg font-medium">{getTypeLabel(type)}</div>
-                      <div className="text-xs mt-1">
+                      <div className="text-xs font-medium leading-tight">{getTypeLabel(type)}</div>
+                      <div className="text-[10px] mt-1 leading-tight text-gray-500">
                         {type === 'players' && `${dataCounts.players} oyuncu`}
                         {type === 'tournaments' && `${dataCounts.tournaments} turnuva`}
                         {type === 'fixtures' && `${dataCounts.fixtures} fixtür`}
