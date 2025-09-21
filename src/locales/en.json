@@ -708,6 +708,7 @@
       "expired": "Expired",
       "edit": "Edit",
       "delete": "Delete",
+      "remainingDays": "Remaining Days",
       "daysLeft": "days left",
       "user": "User",
       "role": "Role",
@@ -887,6 +888,79 @@
       "userManagement": "User Management",
       "storageManagement": "Storage Management",
       "signOut": "Sign Out"
+    }
+  },
+  "fileManagement": {
+    "title": "File Management",
+    "subtitle": "Manage your saved files and data",
+    "addNewFile": "Add New File",
+    "savedFiles": "Saved Files",
+    "totalFiles": "Total: {{count}}",
+    "noFiles": "No saved files yet",
+    "noFilesFound": "No files found matching your search",
+    "searchPlaceholder": "Search file name...",
+    "columns": {
+      "order": "Order",
+      "fileName": "File Name",
+      "type": "Type",
+      "size": "Size",
+      "createdAt": "Created",
+      "actions": "Actions",
+      "description": "Description"
+    },
+    "types": {
+      "players": "Players",
+      "tournaments": "Tournaments",
+      "fixtures": "Fixtures"
+    },
+    "actions": {
+      "import": "Import",
+      "download": "Download",
+      "delete": "Delete"
+    },
+    "limits": {
+      "usageStatus": "Usage Status",
+      "totalLimit": "Total Limit",
+      "singleFileLimit": "Single File Limit"
+    },
+    "upload": {
+      "title": "Add New File",
+      "subtitle": "Add new file for file management",
+      "fileType": "File Type",
+      "selectData": "Select {{type}}",
+      "fileName": "File Name (required)",
+      "fileNamePlaceholder": "e.g., Championship Tournament Players",
+      "dataPreview": "Selected Data Preview",
+      "noDataAvailable": "No {{type}} data available yet. Create {{type}} in the application first.",
+      "noPlayersData": "No selectable player data",
+      "noTournamentsData": "No selectable tournaments",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "counts": {
+        "players": "{{count}} players",
+        "tournaments": "{{count}} tournaments",
+        "fixtures": "{{count}} fixtures"
+      }
+    },
+    "messages": {
+      "fileSavedSuccess": "File saved successfully!",
+      "filesSavedSuccess": "{{count}} files saved successfully!",
+      "fileDeletedSuccess": "File deleted successfully!",
+      "fileDownloadError": "Error downloading file",
+      "fileDeleteError": "Error deleting file",
+      "fileSaveError": "Error saving file",
+      "importSuccess": "Data imported successfully",
+      "importError": "Import failed",
+      "unknownFileType": "Unknown file type",
+      "emptyFileData": "File data is empty",
+      "loadingError": "Error loading files",
+      "unknown": "Unknown"
+    },
+    "progress": {
+      "downloading": "Downloading File",
+      "preparing": "Preparing file...",
+      "downloadingStatus": "Downloading..."
     }
   }
 }

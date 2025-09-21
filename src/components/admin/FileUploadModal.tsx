@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { PlayersRepository } from '../../storage/PlayersRepository'
 import { TournamentsRepository } from '../../storage/TournamentsRepository'
 import { MatchesRepository } from '../../storage/MatchesRepository'
@@ -31,6 +32,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   onSubmit,
   isSubmitting
 }) => {
+  const { t } = useTranslation()
   const [selectedType, setSelectedType] = useState<'players' | 'tournaments' | 'fixtures'>('players')
   const [fileName, setFileName] = useState('')
   const [description, setDescription] = useState('')
@@ -305,21 +307,21 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case 'players': return 'Oyuncular'
-      case 'tournaments': return 'Turnuva'
-      case 'fixtures': return 'Fikstür'
+      case 'players': return t('fileManagement.types.players')
+      case 'tournaments': return t('fileManagement.types.tournaments')
+      case 'fixtures': return t('fileManagement.types.fixtures')
       default: return type
     }
   }
 
   const getDataPreview = (data: any) => {
-    if (!data) return 'Veri seçilmedi'
+    if (!data) return t('fileManagement.upload.noDataAvailable', { type: getTypeLabel(selectedType).toLowerCase() })
     
     switch (selectedType) {
       case 'players':
         // Oyuncular için özel preview
         if (data.id === 'all_players') {
-          return `Tüm Oyuncular - ${data.count} oyuncu`
+          return t('fileManagement.upload.counts.players', { count: data.count })
         }
         return `${data.name || data.firstName + ' ' + data.lastName || 'İsimsiz Oyuncu'} - ${data.weight || 'Bilinmeyen'}kg`
       case 'tournaments':
@@ -557,8 +559,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">Yeni Dosya Ekle</h2>
-                  <p className="text-purple-100 mt-1 text-xs">Dosya yönetimi için yeni dosya ekleyin</p>
+                  <h2 className="text-lg font-bold text-white">{t('fileManagement.upload.title')}</h2>
+                  <p className="text-purple-100 mt-1 text-xs">{t('fileManagement.upload.subtitle')}</p>
                 </div>
               </div>
               <button onClick={handleClose} className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded-md hover:bg-white/30 transition-all duration-200 text-[11px] font-semibold flex items-center justify-center text-white mt-1">
@@ -574,8 +576,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 </svg>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">Yeni Dosya Ekle</h2>
-                <p className="text-purple-100 mt-1 text-sm">Dosya yönetimi için yeni dosya ekleyin</p>
+                <h2 className="text-2xl font-bold text-white">{t('fileManagement.upload.title')}</h2>
+                <p className="text-purple-100 mt-1 text-sm">{t('fileManagement.upload.subtitle')}</p>
               </div>
             </div>
             <div className="hidden sm:flex items-center gap-2">
@@ -594,7 +596,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               {/* Dosya Türü Seçimi */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dosya Türü
+                  {t('fileManagement.upload.fileType')}
                 </label>
               <div className="grid grid-cols-3 gap-2">
                 {(['players', 'tournaments', 'fixtures'] as const).map((type) => (
@@ -616,9 +618,9 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                     <div className="text-center">
                       <div className="text-xs font-medium leading-tight">{getTypeLabel(type)}</div>
                       <div className="text-[10px] mt-1 leading-tight text-gray-500">
-                        {type === 'players' && `${dataCounts.players} oyuncu`}
-                        {type === 'tournaments' && `${dataCounts.tournaments} turnuva`}
-                        {type === 'fixtures' && `${dataCounts.fixtures} fixtür`}
+                        {type === 'players' && t('fileManagement.upload.counts.players', { count: dataCounts.players })}
+                        {type === 'tournaments' && t('fileManagement.upload.counts.tournaments', { count: dataCounts.tournaments })}
+                        {type === 'fixtures' && t('fileManagement.upload.counts.fixtures', { count: dataCounts.fixtures })}
                       </div>
                     </div>
                   </button>
@@ -630,7 +632,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             {availableData.length > 0 ? (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {getTypeLabel(selectedType)} Seç
+                  {t('fileManagement.upload.selectData', { type: getTypeLabel(selectedType) })}
                 </label>
                 {selectedType === 'fixtures' ? (
                   <div className="space-y-2 max-h-64 overflow-auto border border-gray-200 rounded-md p-2">
@@ -664,7 +666,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                     {selectedType === 'players' ? (
                       <div className="space-y-2 max-h-64 overflow-auto border border-gray-200 rounded-md p-2">
                         {availableData.length === 0 ? (
-                          <div className="text-sm text-gray-500">Seçilebilir oyuncu verisi yok</div>
+                          <div className="text-sm text-gray-500">{t('fileManagement.upload.noPlayersData')}</div>
                         ) : (
                           availableData.map((item, index) => {
                             const checked = Boolean(selectedData && (selectedData.id === item.id))
@@ -695,7 +697,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                       // tournaments - single select (radio) but visually similar to fixtures list
                       <div className="space-y-2 max-h-64 overflow-auto border border-gray-200 rounded-md p-2">
                         {availableData.length === 0 ? (
-                          <div className="text-sm text-gray-500">Seçilebilir turnuva yok</div>
+                          <div className="text-sm text-gray-500">{t('fileManagement.upload.noTournamentsData')}</div>
                         ) : (
                           availableData.map((item, index) => {
                             const checked = Boolean(selectedData && selectedData.id === item.id)
@@ -728,7 +730,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   <span className="text-sm text-yellow-800">
-                    Bu türde henüz veri bulunmuyor. Önce uygulamada {getTypeLabel(selectedType).toLowerCase()} oluşturun.
+                    {t('fileManagement.upload.noDataAvailable', { type: getTypeLabel(selectedType).toLowerCase() })}
                   </span>
                 </div>
               </div>
@@ -737,7 +739,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             {/* Dosya Adı */}
             <div>
               <label htmlFor="fileName" className="block text-sm font-medium text-gray-700 mb-2">
-                Dosya Adı (zorunlu)
+                {t('fileManagement.upload.fileName')}
               </label>
               <input
                 type="text"
@@ -745,7 +747,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 value={fileName}
                 onChange={(e) => setFileName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
-                placeholder="Örn: Şampiyonluk Turnuvası Oyuncuları"
+                placeholder={t('fileManagement.upload.fileNamePlaceholder')}
                 required={selectedType !== 'fixtures'}
               />
             </div>
@@ -756,7 +758,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             {selectedType === 'fixtures' && selectedData && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Seçilen Veri Önizlemesi
+                  {t('fileManagement.upload.dataPreview')}
                 </label>
                 <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
                   <div className="text-sm text-gray-600">
@@ -787,7 +789,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 font-medium"
                 disabled={isSubmitting}
               >
-                İptal
+                {t('fileManagement.upload.cancel')}
               </button>
               <button
                 type="submit"
@@ -807,10 +809,10 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Kaydediliyor...
+                    {t('fileManagement.upload.saving')}
                   </>
                 ) : (
-                  'Kaydet'
+                  t('fileManagement.upload.save')
                 )}
               </button>
             </div>

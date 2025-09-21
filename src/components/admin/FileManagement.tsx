@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { DataTable, type Column } from '../UI/DataTable'
 import LoadingSpinner from '../UI/LoadingSpinner'
 import Toast from '../UI/Toast'
@@ -12,6 +13,7 @@ import { TournamentsStorage } from '../../utils/tournamentsStorage'
 import { MatchesStorage } from '../../utils/matchesStorage'
 
 export const FileManagement: React.FC = () => {
+  const { t } = useTranslation()
   const [files, setFiles] = useState<SavedFile[]>([])
   const [loading, setLoading] = useState(true)
   const [showUploadModal, setShowUploadModal] = useState(false)
@@ -66,11 +68,11 @@ export const FileManagement: React.FC = () => {
         setFiles(result.data.files) // Dosya listesini de set et
       } else {
         console.error('FileManagement: Limit yüklenemedi:', result.error)
-        setError('Dosyalar yüklenirken hata oluştu')
+        setError(t('fileManagement.messages.loadingError'))
       }
     } catch (err) {
       console.error('Limit bilgileri yüklenirken hata:', err)
-      setError('Dosyalar yüklenirken hata oluştu')
+      setError(t('fileManagement.messages.loadingError'))
     } finally {
       setLoading(false)
     }
@@ -100,21 +102,21 @@ export const FileManagement: React.FC = () => {
         if (result.success) {
           successCount++
         } else {
-          lastError = result.error || 'Dosya kaydedilirken hata oluştu'
+          lastError = result.error || t('fileManagement.messages.fileSaveError')
         }
       }
       if (successCount > 0) {
-        const message = successCount > 1 ? `${successCount} dosya başarıyla kaydedildi!` : 'Dosya başarıyla kaydedildi!'
+        const message = successCount > 1 ? t('fileManagement.messages.filesSavedSuccess', { count: successCount }) : t('fileManagement.messages.fileSavedSuccess')
         setSuccessMessage(message)
         setShowSuccessModal(true)
         // Modal açık kalsın - setShowUploadModal(false) kaldırıldı
         loadUserLimits()
       }
       if (payloads.length > successCount) {
-        setError(lastError || 'Bazı dosyalar kaydedilemedi')
+        setError(lastError || t('fileManagement.messages.fileSaveError'))
       }
     } catch (err) {
-      setError('Beklenmeyen bir hata oluştu')
+      setError(t('fileManagement.messages.fileSaveError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -142,10 +144,10 @@ export const FileManagement: React.FC = () => {
       setPdfProgress(100)
       
       if (!result.success) {
-        setError(result.error || 'Dosya indirilirken hata oluştu')
+        setError(result.error || t('fileManagement.messages.fileDownloadError'))
       }
     } catch (err) {
-      setError('Dosya indirilemedi')
+      setError(t('fileManagement.messages.fileDownloadError'))
     } finally {
       // Hold 100% for a brief moment to give a nice finish
       if (pdfProgress < 100) {
@@ -173,17 +175,17 @@ export const FileManagement: React.FC = () => {
     try {
       const result = await fileManager.deleteFile(fileToDelete.id)
       if (result.success) {
-        const message = 'Dosya başarıyla silindi!'
+        const message = t('fileManagement.messages.fileDeletedSuccess')
         setDeleteSuccessMessage(message)
         setShowDeleteSuccessModal(true)
         loadUserLimits() // Limit bilgilerini ve dosya listesini yenile
         setShowDeleteModal(false)
         setFileToDelete(null)
       } else {
-        setError(result.error || 'Dosya silinirken hata oluştu')
+        setError(result.error || t('fileManagement.messages.fileDeleteError'))
       }
     } catch (err) {
-      setError('Dosya silinemedi')
+      setError(t('fileManagement.messages.fileDeleteError'))
     } finally {
       setIsDeleting(false)
     }
@@ -207,7 +209,7 @@ export const FileManagement: React.FC = () => {
       // Some records may wrap payload under `data`
       let data: any = raw && raw.data != null ? raw.data : raw
       if (data == null) {
-        setError('Dosya verisi boş')
+        setError(t('fileManagement.messages.emptyFileData'))
         return
       }
 
@@ -275,7 +277,7 @@ export const FileManagement: React.FC = () => {
       if (file.type === 'players') {
         // data is an array of players
         addMissingPlayers(Array.isArray(data) ? data : [])
-        setSuccess('Oyuncular içe aktarıldı')
+        setSuccess(t('fileManagement.messages.importSuccess'))
         return
       }
 
@@ -318,7 +320,7 @@ export const FileManagement: React.FC = () => {
             }
           }
         }
-        setSuccess('Turnuva paketi içe aktarıldı')
+        setSuccess(t('fileManagement.messages.importSuccess'))
         return
       }
 
@@ -356,21 +358,21 @@ export const FileManagement: React.FC = () => {
             }
           }
         }
-        setSuccess('Fixtür(ler) içe aktarıldı')
+        setSuccess(t('fileManagement.messages.importSuccess'))
         return
       }
 
-      setError('Bilinmeyen dosya türü')
+      setError(t('fileManagement.messages.unknownFileType'))
     } catch (e: any) {
-      setError(e?.message || 'İçe aktarma başarısız')
+      setError(e?.message || t('fileManagement.messages.importError'))
     }
   }
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case 'players': return 'Oyuncular'
-      case 'tournaments': return 'Turnuvalar'
-      case 'fixtures': return 'Fixtürler'
+      case 'players': return t('fileManagement.types.players')
+      case 'tournaments': return t('fileManagement.types.tournaments')
+      case 'fixtures': return t('fileManagement.types.fixtures')
       default: return type
     }
   }
@@ -388,7 +390,7 @@ export const FileManagement: React.FC = () => {
   const fileColumns: Column<SavedFile>[] = [
     {
       key: 'order',
-      header: 'Sıra',
+      header: t('fileManagement.columns.order'),
       width: 'w-12 sm:w-16',
       align: 'center',
       render: (_, index) => (
@@ -399,7 +401,7 @@ export const FileManagement: React.FC = () => {
     },
     {
       key: 'name',
-      header: 'Dosya Adı',
+      header: t('fileManagement.columns.fileName'),
       width: 'w-32 sm:w-auto',
       render: (file) => (
         <div className="min-w-0">
@@ -412,7 +414,7 @@ export const FileManagement: React.FC = () => {
     },
     {
       key: 'type',
-      header: 'Tür',
+      header: t('fileManagement.columns.type'),
       width: 'w-20 sm:w-auto',
       render: (file) => (
         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTypeColor(file.type)}`}>
@@ -423,7 +425,7 @@ export const FileManagement: React.FC = () => {
     },
     {
       key: 'size',
-      header: 'Boyut',
+      header: t('fileManagement.columns.size'),
       width: 'w-16 sm:w-auto',
       render: (file) => (
         <span className="text-xs sm:text-sm text-gray-600">{fileManager.formatFileSizeDisplay(file.file_size)}</span>
@@ -431,7 +433,7 @@ export const FileManagement: React.FC = () => {
     },
     {
       key: 'createdAt',
-      header: 'Oluşturulma',
+      header: t('fileManagement.columns.createdAt'),
       width: 'w-20 sm:w-auto',
       render: (file) => (
         <span className="text-xs sm:text-sm text-gray-600">
@@ -447,7 +449,7 @@ export const FileManagement: React.FC = () => {
     },
     {
       key: 'actions',
-      header: 'İşlemler',
+      header: t('fileManagement.columns.actions'),
       width: 'w-20 sm:w-auto',
       render: (file) => (
         <div className="flex items-center gap-2 sm:gap-3">
@@ -457,12 +459,12 @@ export const FileManagement: React.FC = () => {
               handleImportFile(file)
             }}
             className="inline-flex items-center text-green-600 hover:text-green-700 hover:underline text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-300 rounded"
-            title="İçe Aktar"
+            title={t('fileManagement.actions.import')}
           >
             <svg className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
             </svg>
-            <span className="hidden sm:inline">İçe Aktar</span>
+            <span className="hidden sm:inline">{t('fileManagement.actions.import')}</span>
           </button>
           <button
             onClick={(e) => {
@@ -470,12 +472,12 @@ export const FileManagement: React.FC = () => {
               handleDownloadFile(file)
             }}
             className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 rounded"
-            title="İndir"
+            title={t('fileManagement.actions.download')}
           >
             <svg className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span className="hidden sm:inline">İndir</span>
+            <span className="hidden sm:inline">{t('fileManagement.actions.download')}</span>
           </button>
           <button
             onClick={(e) => {
@@ -483,12 +485,12 @@ export const FileManagement: React.FC = () => {
               handleDeleteFile(file)
             }}
             className="inline-flex items-center text-red-600 hover:text-red-700 hover:underline text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-300 rounded"
-            title="Sil"
+            title={t('fileManagement.actions.delete')}
           >
             <svg className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            <span className="hidden sm:inline">Sil</span>
+            <span className="hidden sm:inline">{t('fileManagement.actions.delete')}</span>
           </button>
         </div>
       )
@@ -516,7 +518,7 @@ export const FileManagement: React.FC = () => {
               <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Kullanım Durumu</h3>
+                    <h3 className="text-sm font-medium text-gray-900">{t('fileManagement.limits.usageStatus')}</h3>
                     <p className="text-2xl font-bold text-purple-600">{userLimits.percentage}%</p>
                     <p className="text-xs text-gray-500">
                       {fileManager.formatLimitDisplay(userLimits.usedSpace)} / {fileManager.formatLimitDisplay(userLimits.totalLimit)}
@@ -545,7 +547,7 @@ export const FileManagement: React.FC = () => {
               <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Toplam Limit</h3>
+                    <h3 className="text-sm font-medium text-gray-900">{t('fileManagement.limits.totalLimit')}</h3>
                     <p className="text-2xl font-bold text-green-600">{fileManager.formatLimitDisplay(userLimits.totalLimit)}</p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -560,7 +562,7 @@ export const FileManagement: React.FC = () => {
               <div className="min-w-[85%] snap-start bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Tek Dosya Limiti</h3>
+                    <h3 className="text-sm font-medium text-gray-900">{t('fileManagement.limits.singleFileLimit')}</h3>
                     <p className="text-2xl font-bold text-blue-600">{fileManager.formatLimitDisplay(userLimits.singleFileLimit)}</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -579,7 +581,7 @@ export const FileManagement: React.FC = () => {
             <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Kullanım Durumu</h3>
+                  <h3 className="text-sm font-medium text-gray-900">{t('fileManagement.limits.usageStatus')}</h3>
                   <p className="text-2xl font-bold text-purple-600">{userLimits.percentage}%</p>
                   <p className="text-xs text-gray-500">
                     {fileManager.formatLimitDisplay(userLimits.usedSpace)} / {fileManager.formatLimitDisplay(userLimits.totalLimit)}
@@ -609,7 +611,7 @@ export const FileManagement: React.FC = () => {
             <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Toplam Limit</h3>
+                  <h3 className="text-sm font-medium text-gray-900">{t('fileManagement.limits.totalLimit')}</h3>
                   <p className="text-2xl font-bold text-green-600">{fileManager.formatLimitDisplay(userLimits.totalLimit)}</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -624,7 +626,7 @@ export const FileManagement: React.FC = () => {
             <div className="bg-white/80 backdrop-blur rounded-xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Tek Dosya Limiti</h3>
+                  <h3 className="text-sm font-medium text-gray-900">{t('fileManagement.limits.singleFileLimit')}</h3>
                   <p className="text-2xl font-bold text-blue-600">{fileManager.formatLimitDisplay(userLimits.singleFileLimit)}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -642,13 +644,13 @@ export const FileManagement: React.FC = () => {
         <DataTable
           data={files}
           columns={fileColumns}
-          searchPlaceholder="Dosya adı ara..."
+          searchPlaceholder={t('fileManagement.searchPlaceholder')}
           searchKeys={['name', 'description']}
           showSearch={true}
           showPagination={true}
           maxHeight="calc(100vh - 400px)"
-          emptyMessage="Henüz kaydedilmiş dosya bulunmuyor"
-          noResultsMessage="Aramanıza uygun dosya bulunamadı"
+          emptyMessage={t('fileManagement.noFiles')}
+          noResultsMessage={t('fileManagement.noFilesFound')}
           filters={
             <button
               onClick={() => setShowUploadModal(true)}
@@ -658,13 +660,13 @@ export const FileManagement: React.FC = () => {
               <svg className="hidden sm:inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              <span className="hidden sm:inline">Yeni Dosya Ekle</span>
+              <span className="hidden sm:inline">{t('fileManagement.addNewFile')}</span>
             </button>
           }
           headerContent={
             <div className="flex items-center gap-4">
-              <h3 className="text-lg font-semibold text-gray-900">Kaydedilen Dosyalar</h3>
-              <span className="text-xs text-gray-500">Toplam: {files.length}</span>
+              <h3 className="text-lg font-semibold text-gray-900">{t('fileManagement.savedFiles')}</h3>
+              <span className="text-xs text-gray-500">{t('fileManagement.totalFiles', { count: files.length })}</span>
             </div>
           }
         />
@@ -691,7 +693,7 @@ export const FileManagement: React.FC = () => {
             
             <div className="flex-1">
               <div className="flex items-center justify-between mb-1.5">
-                <div className="text-xs font-bold text-gray-800">Dosya İndiriliyor</div>
+                <div className="text-xs font-bold text-gray-800">{t('fileManagement.progress.downloading')}</div>
                 <div className="text-xs font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md">{Math.round(pdfProgress)}%</div>
               </div>
               
@@ -709,7 +711,7 @@ export const FileManagement: React.FC = () => {
               
               {/* Status text */}
               <div className="mt-1.5 text-xs text-gray-500 font-medium">
-                {pdfProgress < 100 ? 'Dosya hazırlanıyor...' : 'İndiriliyor...'}
+                {pdfProgress < 100 ? t('fileManagement.progress.preparing') : t('fileManagement.progress.downloadingStatus')}
               </div>
             </div>
           </div>

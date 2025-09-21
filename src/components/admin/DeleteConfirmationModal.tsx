@@ -44,13 +44,6 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
     }
   }
 
-  const getTitle = () => {
-    if (itemType === 'institution') {
-      return t('deleteConfirmation.institutionTitle')
-    } else {
-      return t('deleteConfirmation.userTitle')
-    }
-  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-3 sm:p-4" onClick={onClose}>

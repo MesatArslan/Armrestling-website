@@ -730,6 +730,7 @@
       "expired": "Süresi Dolmuş",
       "edit": "Düzenle",
       "delete": "Sil",
+      "remainingDays": "Kalan Gün",
       "daysLeft": "gün kaldı",
       "user": "Kullanıcı",
       "role": "Rol",
@@ -926,6 +927,79 @@
       "userManagement": "Kullanıcı Yönetimi",
       "storageManagement": "Storage Yönetimi",
       "signOut": "Çıkış Yap"
+    }
+  },
+  "fileManagement": {
+    "title": "Dosya Yönetimi",
+    "subtitle": "Kaydedilen dosyalarınızı ve verilerinizi yönetin",
+    "addNewFile": "Yeni Dosya Ekle",
+    "savedFiles": "Kaydedilen Dosyalar",
+    "totalFiles": "Toplam: {{count}}",
+    "noFiles": "Henüz kaydedilmiş dosya bulunmuyor",
+    "noFilesFound": "Aramanıza uygun dosya bulunamadı",
+    "searchPlaceholder": "Dosya adı ara...",
+    "columns": {
+      "order": "Sıra",
+      "fileName": "Dosya Adı",
+      "type": "Tür",
+      "size": "Boyut",
+      "createdAt": "Oluşturulma",
+      "actions": "İşlemler",
+      "description": "Açıklama"
+    },
+    "types": {
+      "players": "Oyuncular",
+      "tournaments": "Turnuvalar",
+      "fixtures": "Fikstürler"
+    },
+    "actions": {
+      "import": "İçe Aktar",
+      "download": "İndir",
+      "delete": "Sil"
+    },
+    "limits": {
+      "usageStatus": "Kullanım Durumu",
+      "totalLimit": "Toplam Limit",
+      "singleFileLimit": "Tek Dosya Limiti"
+    },
+    "upload": {
+      "title": "Yeni Dosya Ekle",
+      "subtitle": "Dosya yönetimi için yeni dosya ekleyin",
+      "fileType": "Dosya Türü",
+      "selectData": "{{type}} Seç",
+      "fileName": "Dosya Adı (zorunlu)",
+      "fileNamePlaceholder": "örn. Şampiyonluk Turnuvası Oyuncuları",
+      "dataPreview": "Seçilen Veri Önizlemesi",
+      "noDataAvailable": "Bu türde henüz veri bulunmuyor. Önce uygulamada {{type}} oluşturun.",
+      "noPlayersData": "Seçilebilir oyuncu verisi yok",
+      "noTournamentsData": "Seçilebilir turnuva yok",
+      "cancel": "İptal",
+      "save": "Kaydet",
+      "saving": "Kaydediliyor...",
+      "counts": {
+        "players": "{{count}} oyuncu",
+        "tournaments": "{{count}} turnuva",
+        "fixtures": "{{count}} fikstür"
+      }
+    },
+    "messages": {
+      "fileSavedSuccess": "Dosya başarıyla kaydedildi!",
+      "filesSavedSuccess": "{{count}} dosya başarıyla kaydedildi!",
+      "fileDeletedSuccess": "Dosya başarıyla silindi!",
+      "fileDownloadError": "Dosya indirilirken hata oluştu",
+      "fileDeleteError": "Dosya silinirken hata oluştu",
+      "fileSaveError": "Dosya kaydedilirken hata oluştu",
+      "importSuccess": "Veriler başarıyla içe aktarıldı",
+      "importError": "İçe aktarma başarısız",
+      "unknownFileType": "Bilinmeyen dosya türü",
+      "emptyFileData": "Dosya verisi boş",
+      "loadingError": "Dosyalar yüklenirken hata oluştu",
+      "unknown": "Bilinmiyor"
+    },
+    "progress": {
+      "downloading": "Dosya İndiriliyor",
+      "preparing": "Dosya hazırlanıyor...",
+      "downloadingStatus": "İndiriliyor..."
     }
   }
 }

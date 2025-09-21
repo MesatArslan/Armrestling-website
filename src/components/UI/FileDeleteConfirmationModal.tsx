@@ -75,10 +75,10 @@ export const FileDeleteConfirmationModal: React.FC<FileDeleteConfirmationModalPr
                 </span>
               </div>
               <div className="space-y-1 text-sm text-gray-600">
-                <div><strong>Dosya Adı:</strong> {file.name}</div>
-                {file.description && <div><strong>Açıklama:</strong> {file.description}</div>}
-                <div><strong>Boyut:</strong> {file.file_size ? `${(file.file_size / 1024).toFixed(1)} KB` : 'Bilinmiyor'}</div>
-                <div><strong>Oluşturulma:</strong> {new Date(file.created_at).toLocaleDateString('tr-TR')}</div>
+                <div><strong>{t('fileManagement.columns.fileName')}:</strong> {file.name}</div>
+                {file.description && <div><strong>{t('fileManagement.columns.description')}:</strong> {file.description}</div>}
+                <div><strong>{t('fileManagement.columns.size')}:</strong> {file.file_size ? `${(file.file_size / 1024).toFixed(1)} KB` : t('fileManagement.messages.unknown')}</div>
+                <div><strong>{t('fileManagement.columns.createdAt')}:</strong> {new Date(file.created_at).toLocaleDateString('tr-TR')}</div>
               </div>
             </div>
 
