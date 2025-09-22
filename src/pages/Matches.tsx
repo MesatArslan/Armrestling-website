@@ -408,8 +408,16 @@ const Matches = () => {
 
       const dataStr = JSON.stringify(exportData, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-      
-      const exportFileDefaultName = `fixture_${fixture.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`;
+
+      // Use fixture name as filename (consistent with File Management), sanitize unsafe characters
+      const safeName = (fixture.name || 'fixture')
+        .toString()
+        .trim()
+        .replace(/[\/:*?"<>|]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .slice(0, 120)
+        .trim();
+      const exportFileDefaultName = `${safeName || 'fixture'}.json`;
       
       const linkElement = document.createElement('a');
       linkElement.setAttribute('href', dataUri);
