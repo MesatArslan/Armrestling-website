@@ -10,6 +10,7 @@ import ActionsMenu from '../components/UI/ActionsMenu';
 import ImportNotificationModal from '../components/UI/ImportNotificationModal';
 import ConfirmationModal from '../components/UI/ConfirmationModal';
 import { PlayersStorage, type Column, type ExtendedPlayer, defaultColumns } from '../utils/playersStorage';
+import { PlayersRepository } from '../storage/PlayersRepository';
 import { usePlayers } from '../hooks/usePlayers';
 import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.js`;
@@ -181,7 +182,10 @@ const Players = () => {
 
   // JSON Export
   const handleExportJSON = () => {
-    PlayersStorage.exportPlayersToJSON(playersState);
+    // Export exactly what File Management saves for type 'players': repository snapshot
+    const repo = new PlayersRepository();
+    const latest = repo.getAll();
+    PlayersStorage.exportPlayersToJSON(latest as unknown as ExtendedPlayer[]);
   };
 
   // JSON Import
@@ -192,7 +196,38 @@ const Players = () => {
     reader.onload = (ev) => {
       try {
         const jsonData = ev.target?.result as string;
-        const mergedPlayers = PlayersStorage.importPlayersFromJSON(jsonData, playersState);
+        // Prefer a tolerant import that matches File Management exports
+        let parsed: any = JSON.parse(jsonData);
+        if (parsed && typeof parsed === 'object' && parsed.data) {
+          parsed = parsed.data;
+        }
+        if (!Array.isArray(parsed)) {
+          throw new Error('Geçersiz JSON formatı. Lütfen oyuncu listesini içeren bir dosya seçiniz.');
+        }
+        const normalized: ExtendedPlayer[] = parsed.map((raw: any) => {
+          const base: any = typeof raw === 'object' && raw !== null ? raw : {};
+          const norm: any = {
+            id: base.id || uuidv4(),
+            name: base.name ?? '',
+            surname: base.surname ?? '',
+            weight: parseWeight(base.weight) ?? 0,
+            gender: parseGender(base.gender) ?? 'male',
+            handPreference: parseHandPreference(base.handPreference) ?? 'right',
+            birthday: base.birthday ? (parseBirthday(base.birthday) ?? '') : '',
+            city: base.city ?? ''
+          };
+          // Preserve additional fields
+          Object.keys(base).forEach((k) => {
+            if (!(k in norm)) {
+              norm[k] = base[k];
+            }
+          });
+          return norm as ExtendedPlayer;
+        });
+        // Merge by id with existing players
+        const map = new Map<string, ExtendedPlayer>(playersState.map(p => [p.id, p]));
+        normalized.forEach(p => { map.set(p.id, { ...map.get(p.id), ...p } as ExtendedPlayer); });
+        const mergedPlayers = Array.from(map.values());
         setPlayersState(mergedPlayers);
         savePlayers(mergedPlayers as unknown as Player[]);
         setImportModal({
@@ -202,6 +237,19 @@ const Players = () => {
           message: t('players.importSuccess')
         });
       } catch (err: any) {
+        // Fallback to strict importer if tolerant path failed for unexpected reason
+        try {
+          const mergedPlayers = PlayersStorage.importPlayersFromJSON(String(ev.target?.result || ''), playersState);
+          setPlayersState(mergedPlayers);
+          savePlayers(mergedPlayers as unknown as Player[]);
+          setImportModal({
+            isOpen: true,
+            type: 'success',
+            title: t('players.successTitle'),
+            message: t('players.importSuccess')
+          });
+          return;
+        } catch {}
         setImportModal({
           isOpen: true,
           type: 'error',
