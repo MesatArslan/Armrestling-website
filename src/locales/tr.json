@@ -274,6 +274,8 @@
     "fileSize": "Boyut",
     "importing": "İçe Aktarılıyor...",
     "importSuccess": "Turnuva paketi başarıyla içe aktarıldı",
+    "importAdded": "Turnuva eklendi",
+    "importUpdated": "Turnuva güncellendi",
     "importError": "Turnuva paketi içe aktarılamadı",
     "invalidPackage": "Geçersiz turnuva paketi",
     "selectHandPreference": "Kol Tercihi Seçin",

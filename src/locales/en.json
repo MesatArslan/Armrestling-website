@@ -246,6 +246,8 @@
     "fileSize": "Size",
     "importing": "Importing...",
     "importSuccess": "Tournament package imported successfully",
+    "importAdded": "Tournament added",
+    "importUpdated": "Tournament updated",
     "importError": "Tournament package could not be imported",
     "invalidPackage": "Invalid tournament package",
     "selectHandPreference": "Select hand preference",

@@ -398,6 +398,7 @@ const Tournaments = () => {
       // Merge tournament
       const baseTournaments = (repoTournaments as StorageTournament[]) as any[];
       const exists = baseTournaments.find(t => t.id === pkg.tournament.id);
+      let wasNew = false;
       let merged: any[];
       if (!exists) {
         const tNew = {
@@ -413,6 +414,7 @@ const Tournaments = () => {
           isExpanded: false,
         };
         merged = [...baseTournaments, tNew];
+        wasNew = true;
       } else {
         exists.genderFilter = pkg.tournament.genderFilter ?? exists.genderFilter ?? null;
         exists.handPreferenceFilter = pkg.tournament.handPreferenceFilter ?? exists.handPreferenceFilter ?? null;
@@ -424,7 +426,14 @@ const Tournaments = () => {
         }
         merged = baseTournaments.map(t => t.id === exists.id ? exists : t);
       }
+      // Persist and immediately reflect in UI without requiring a page reload
       saveTournaments(merged as any);
+      try {
+        const uiMerged = (merged as any[]).map((t) => ({ ...t, isExpanded: Boolean((t as any).isExpanded) }));
+        setTournaments(uiMerged);
+      } catch {
+        setTournaments(merged as any);
+      }
 
       // Import fixtures (pending: kept as pending; active: add to Matches)
       try {
@@ -441,7 +450,11 @@ const Tournaments = () => {
         }
       } catch {}
 
-      setImportMessage({ type: 'success', text: t('tournaments.importSuccess') });
+      // Show contextual success message
+      const successText = wasNew
+        ? (t('tournaments.importAdded') || 'Turnuva eklendi')
+        : (t('tournaments.importUpdated') || 'Turnuva güncellendi');
+      setImportMessage({ type: 'success', text: successText });
     } catch (e: any) {
       setImportMessage({ type: 'error', text: e?.message || t('tournaments.importError') });
     } finally {
