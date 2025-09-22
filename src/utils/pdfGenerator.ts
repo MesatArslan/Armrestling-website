@@ -884,6 +884,10 @@ interface ScoringExtraOptions {
     tournamentName: string;
     fixtures: string[];
   }>;
+  // If provided, force number of rows on the first page
+  firstPageRows?: number;
+  // Optional custom header title for scoring PDF
+  headerTitle?: string;
 }
 
 export const generateScoringPreviewContent = (
@@ -900,11 +904,16 @@ export const generateScoringPreviewContent = (
   };
   
   // Calculate how many scores fit per page
-  // First page has less space due to details section, subsequent pages have more space
+  // First page can be user-controlled; otherwise we auto-calculate based on details height
   const subsequentPageScores = 40; // More space on subsequent pages
   
   // Calculate first page rows based on tournament/fixture details height
   const calculateFirstPageRows = () => {
+    // User override takes precedence
+    if (typeof extra?.firstPageRows === 'number' && Number.isFinite(extra.firstPageRows)) {
+      // Clamp to a safe range
+      return Math.max(0, Math.min(Math.floor(extra.firstPageRows), 40));
+    }
     const baseRows = 40; // Maximum rows that fit on a page
     let detailsHeight = 0;
     
@@ -1038,8 +1047,8 @@ export const generateScoringPreviewContent = (
         <div>
           <div style="text-align: center !important; margin-bottom: 10px !important; border-bottom: 1px solid #1e40af !important; padding-bottom: 4px !important;">
             <div style="background: linear-gradient(135deg, #1e40af, #3b82f6) !important; color: white !important; padding: 10px 10px !important; border-radius: 6px !important; margin-bottom: 8px !important;">
-              <h1 style="font-size: 20px !important; font-weight: bold !important; color: #ffffff !important;">${wrapForPDF('Puanlama Sistemi')}</h1>
-              <h2 style="font-size: 14px !important; margin-top: 4px !important; font-weight: 600 !important; color: #ffffff !important;">${wrapForPDF('Toplam Puanlar')}</h2>
+              <h1 style="font-size: 20px !important; font-weight: bold !important; color: #ffffff !important;">${wrapForPDF(String(extra?.headerTitle || String(i18n.t('scoring.pdfHeaderTitle'))))}</h1>
+              <h2 style="font-size: 14px !important; margin-top: 4px !important; font-weight: 600 !important; color: #ffffff !important;">${wrapForPDF(String(i18n.t('scoring.pdfHeaderSubtitle')))}</h2>
             </div>
             
             <div style="display: flex !important; justify-content: space-between !important; margin: 6px 0 !important; padding: 4px 0 !important; border-top: 1px solid #e5e7eb !important; border-bottom: 1px solid #e5e7eb !important;">

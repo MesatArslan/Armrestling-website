@@ -713,7 +713,14 @@
     "fixturesCount": "{{count}} fikstür",
     "pdfCreating": "PDF oluşturuluyor...",
     "downloading": "İndiriliyor...",
-    "sortingBy": "Sıralama: {{criteria}}"
+    "sortingBy": "Sıralama: {{criteria}}",
+    "firstPageRows": "İlk sayfa satır sayısı",
+    "firstPageRowsDesc": "İlk sayfada gösterilecek satır sayısını belirleyin",
+    "pdfHeaderTitle": "Puanlama Özeti",
+    "pdfHeaderSubtitle": "Genel Puan Tablosu",
+    "pdfNamingSection": "PDF İsimlendirme ve Düzen",
+    "customHeaderTitle": "PDF Başlığı",
+    "customHeaderTitleDesc": "Kapakta görünecek başlığı yazın"
   },
   "admin": {
     "institutions": {

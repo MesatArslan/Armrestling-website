@@ -691,7 +691,14 @@
     "tournamentsCount": "{{count}} tournaments",
     "pdfCreating": "Creating PDF...",
     "downloading": "Downloading...",
-    "sortingBy": "Sorting by: {{criteria}}"
+    "sortingBy": "Sorting by: {{criteria}}",
+    "firstPageRows": "First page rows",
+    "firstPageRowsDesc": "Set how many rows to show on the first page",
+    "pdfHeaderTitle": "Scoring Summary",
+    "pdfHeaderSubtitle": "Overall Points Table",
+    "pdfNamingSection": "PDF Naming & Layout",
+    "customHeaderTitle": "PDF Title",
+    "customHeaderTitleDesc": "Enter the title to appear on the cover"
   },
   "admin": {
     "institutions": {

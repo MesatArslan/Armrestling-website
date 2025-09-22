@@ -88,6 +88,10 @@ const Scoring: React.FC = () => {
   const [pdfContentType, setPdfContentType] = useState<'tournaments' | 'both'>('both');
   const [isExporting, setIsExporting] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
+  // Kullanıcının ilk sayfadaki satır sayısını belirlemesi için
+  const [scoringFirstPageRows, setScoringFirstPageRows] = useState<number | ''>('');
+  // Puanlama PDF başlık özelleştirme
+  const [scoringHeaderTitle, setScoringHeaderTitle] = useState<string>('');
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -310,6 +314,10 @@ const Scoring: React.FC = () => {
       tournamentNames: scoringExtraInfo.tournamentNames,
       fixtureNames: scoringExtraInfo.fixtureNames,
       tournamentFixtures: scoringExtraInfo.tournamentFixtures,
+      firstPageRows: typeof scoringFirstPageRows === 'number' && Number.isFinite(scoringFirstPageRows)
+        ? Math.max(0, Math.min(40, Math.floor(scoringFirstPageRows)))
+        : undefined,
+      headerTitle: scoringHeaderTitle && scoringHeaderTitle.trim().length > 0 ? scoringHeaderTitle.trim() : undefined,
     });
     setIsPDFSettingsOpen(false);
     setPreviewPages(pages);
@@ -334,6 +342,10 @@ const Scoring: React.FC = () => {
         tournamentNames: scoringExtraInfo.tournamentNames,
         fixtureNames: scoringExtraInfo.fixtureNames,
         tournamentFixtures: scoringExtraInfo.tournamentFixtures,
+        firstPageRows: typeof scoringFirstPageRows === 'number' && Number.isFinite(scoringFirstPageRows)
+          ? Math.max(0, Math.min(40, Math.floor(scoringFirstPageRows)))
+          : undefined,
+        headerTitle: scoringHeaderTitle && scoringHeaderTitle.trim().length > 0 ? scoringHeaderTitle.trim() : undefined,
       });
       
       // Keep popup visible for a moment after completion
@@ -826,6 +838,60 @@ const Scoring: React.FC = () => {
               <div className="text-xs text-gray-500">
                 {t('scoring.tournamentsCount', { count: scoringExtraInfo.tournamentNames.length })}, {t('scoring.fixturesCount', { count: scoringExtraInfo.fixtureNames.length })}
               </div>
+            </div>
+          </div>
+
+          {/* Naming & layout section */}
+          <div className="border-2 rounded-lg p-4 bg-white">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"></div>
+              <div className="text-sm font-bold text-gray-900">{t('scoring.pdfNamingSection')}</div>
+            </div>
+
+            {/* Custom header title setting */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">{t('scoring.customHeaderTitle')}</div>
+                  <div className="text-xs text-gray-500">{t('scoring.customHeaderTitleDesc')}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  value={scoringHeaderTitle}
+                  onChange={(e) => setScoringHeaderTitle(e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                  placeholder={t('scoring.pdfHeaderTitle') as string}
+                />
+              </div>
+            </div>
+
+            {/* First page rows setting */}
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <div className="text-sm font-semibold text-gray-900">{t('scoring.firstPageRows')}</div>
+                <div className="text-xs text-gray-500">{t('scoring.firstPageRowsDesc')}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min={0}
+                max={40}
+                value={scoringFirstPageRows === '' ? '' : scoringFirstPageRows}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '') { setScoringFirstPageRows(''); return; }
+                  const num = parseInt(v, 10);
+                  if (Number.isFinite(num)) {
+                    setScoringFirstPageRows(Math.max(0, Math.min(40, num)));
+                  }
+                }}
+                className="w-28 px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center font-semibold bg-white text-gray-900"
+                placeholder="Oto"
+              />
+              <span className="text-xs text-gray-500">0-40</span>
             </div>
           </div>
 
