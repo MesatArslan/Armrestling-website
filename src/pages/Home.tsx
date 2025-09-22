@@ -1,5 +1,6 @@
 
 import { useTranslation } from 'react-i18next';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   TrophyIcon, 
@@ -19,38 +20,150 @@ import {
 
 const Hero = () => {
   const { t } = useTranslation();
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const starsRef = useRef<Array<{ x: number; y: number; size: number; speed: number }>>([]);
+  const shootersRef = useRef<Array<{ x: number; y: number; vx: number; vy: number; life: number }>>([]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const parent = canvas.parentElement as HTMLElement | null;
+    if (!parent) return;
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const { width, height } = parent.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(width * dpr));
+      canvas.height = Math.max(1, Math.floor(height * dpr));
+      canvas.style.width = `${Math.floor(width)}px`;
+      canvas.style.height = `${Math.floor(height)}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Recreate stars based on size
+      const density = 0.08; // stars per px^2 (scaled down)
+      const count = Math.min(600, Math.max(120, Math.floor(width * height * density * 0.001)));
+      const stars: Array<{ x: number; y: number; size: number; speed: number }> = [];
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: Math.random() * 1.2 + 0.3,
+          speed: Math.random() * 0.3 + 0.05,
+        });
+      }
+      starsRef.current = stars;
+    };
+
+    resize();
+    let last = performance.now();
+
+    const step = (now: number) => {
+      const dt = Math.min(50, now - last);
+      last = now;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+
+      // clear
+      ctx.clearRect(0, 0, width, height);
+
+      // twinkling background slight vignette
+      const grd = ctx.createRadialGradient(width / 2, height / 2, Math.min(width, height) * 0.1, width / 2, height / 2, Math.max(width, height));
+      grd.addColorStop(0, 'rgba(255,255,255,0.02)');
+      grd.addColorStop(1, 'rgba(0,0,0,0.25)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, width, height);
+
+      // stars
+      ctx.fillStyle = '#ffffff';
+      for (const star of starsRef.current) {
+        star.x -= star.speed * (dt * 0.06); // slow parallax drift to the left
+        if (star.x < -2) star.x = width + Math.random() * 4;
+
+        const twinkle = 0.6 + Math.sin((now * 0.002) + star.y) * 0.2;
+        ctx.globalAlpha = twinkle;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // spawn shooting stars
+      if (Math.random() < 0.01 && shootersRef.current.length < 3) {
+        const startY = Math.random() * height * 0.6;
+        const speed = Math.random() * 4 + 6; // px per frame at ~60fps
+        const angle = (-Math.PI / 4) + (Math.random() * Math.PI * 0.08); // roughly top-right to bottom-left
+        shootersRef.current.push({
+          x: width + 50,
+          y: startY,
+          vx: -Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed * 0.3,
+          life: 800 + Math.random() * 600,
+        });
+      }
+
+      // draw shooting stars
+      for (let i = shootersRef.current.length - 1; i >= 0; i--) {
+        const s = shootersRef.current[i];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.life -= dt;
+
+        // trail
+        const trailLength = 80;
+        const grad = ctx.createLinearGradient(s.x, s.y, s.x - s.vx * 6, s.y - s.vy * 6);
+        grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(s.x - s.vx * (trailLength * 0.02), s.y - s.vy * (trailLength * 0.02));
+        ctx.stroke();
+
+        // head
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (s.life <= 0 || s.x < -100 || s.y > height + 100) {
+          shootersRef.current.splice(i, 1);
+        }
+      }
+
+      rafRef.current = requestAnimationFrame(step);
+    };
+
+    const onResize = () => resize();
+    window.addEventListener('resize', onResize);
+    rafRef.current = requestAnimationFrame(step);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
   
   return (
-    <div className="relative isolate overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 w-screen flex items-center" style={{ height: 'calc(100vh - 64px)' }}>
-      {/* Animated background elements */}
-      <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-gradient-to-tr from-blue-400 via-indigo-400 to-purple-500 opacity-20 blur-3xl animate-pulse" />
-      <div className="pointer-events-none absolute -bottom-16 -right-24 h-96 w-96 rounded-full bg-gradient-to-tr from-fuchsia-400 via-pink-400 to-rose-500 opacity-20 blur-3xl animate-pulse delay-1000" />
-      <div className="pointer-events-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500 opacity-10 blur-2xl animate-pulse delay-500" />
-      
-      {/* Floating icons */}
-      <div className="pointer-events-none absolute top-20 left-10 animate-bounce delay-300">
-        <TrophyIcon className="w-8 h-8 text-blue-400 opacity-60" />
-      </div>
-      <div className="pointer-events-none absolute top-32 right-20 animate-bounce delay-700">
-        <UserIcon className="w-8 h-8 text-purple-400 opacity-60" />
-      </div>
-      <div className="pointer-events-none absolute bottom-40 left-20 animate-bounce delay-1000">
-        <PlayCircleIcon className="w-8 h-8 text-emerald-400 opacity-60" />
-      </div>
-      <div className="pointer-events-none absolute bottom-20 right-10 animate-bounce delay-500">
-        <ChartBarIcon className="w-8 h-8 text-pink-400 opacity-60" />
-      </div>
+    <div className="relative isolate overflow-hidden bg-gray-900 w-screen flex items-center" style={{ height: 'calc(100vh - 64px)' }}>
+
+      {/* Starfield Canvas */}
+      <canvas ref={canvasRef} className="absolute inset-0 opacity-80 pointer-events-none" />
 
       <div className="w-full px-4 sm:px-6 lg:px-8 py-20 relative z-10">
         <div className="text-center max-w-6xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/30 mb-8 animate-fade-in">
-            <FireIcon className="w-4 h-4 text-blue-300" />
-            <span className="text-sm font-semibold text-blue-200">{t('home.badge', { defaultValue: 'Professional Tournament Management' })}</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8">
+            <FireIcon className="w-4 h-4 text-gray-300" />
+            <span className="text-sm font-semibold text-gray-200">{t('home.badge', { defaultValue: 'Professional Tournament Management' })}</span>
           </div>
           
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 animate-fade-in-up">
-            <span className="bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent drop-shadow-sm">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8">
+            <span className="text-white drop-shadow-sm">
               {t('home.title')}
             </span>
           </h1>
@@ -59,46 +172,46 @@ const Hero = () => {
             {t('home.description')}
           </p>
           
-          {/* Enhanced CTA buttons */}
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-16 animate-fade-in-up delay-300">
+          {/* CTA buttons */}
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-16">
             <Link 
               to="/tournaments" 
-              className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg shadow-2xl hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300"
+              className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-indigo-600 text-white font-bold text-lg shadow-lg hover:bg-indigo-500 transition-colors"
             >
               <TrophyIcon className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
               <span>{t('home.createTournament')}</span>
-              <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+              <ArrowRightIcon className="w-5 h-5" />
             </Link>
             
             <Link 
               to="/players" 
-              className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-white text-blue-700 font-bold text-lg border-2 border-blue-200 shadow-xl hover:shadow-blue-500/25 hover:scale-105 hover:bg-blue-50 transition-all duration-300"
+              className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-white font-bold text-lg ring-1 ring-white/20 hover:bg-white/10 transition-colors"
             >
-              <UserIcon className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
+              <UserIcon className="w-6 h-6" />
               <span>{t('home.addPlayer')}</span>
             </Link>
             
             <Link 
               to="/matches" 
-              className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-white text-purple-700 font-bold text-lg border-2 border-purple-200 shadow-xl hover:shadow-purple-500/25 hover:scale-105 hover:bg-purple-50 transition-all duration-300"
+              className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-white font-bold text-lg ring-1 ring-white/20 hover:bg-white/10 transition-colors"
             >
-              <PlayCircleIcon className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
+              <PlayCircleIcon className="w-6 h-6" />
               <span>{t('home.viewMatches')}</span>
             </Link>
           </div>
           
           {/* Trust indicators */}
-          <div className="flex flex-wrap justify-center items-center gap-8 text-gray-300 animate-fade-in-up delay-500">
+          <div className="flex flex-wrap justify-center items-center gap-8 text-gray-300">
             <div className="flex items-center gap-2">
-              <ShieldCheckIcon className="w-5 h-5 text-green-400" />
+              <ShieldCheckIcon className="w-5 h-5 text-gray-400" />
               <span className="text-sm font-medium">{t('home.trust.secure', { defaultValue: 'Secure & Reliable' })}</span>
             </div>
             <div className="flex items-center gap-2">
-              <GlobeAltIcon className="w-5 h-5 text-blue-400" />
+              <GlobeAltIcon className="w-5 h-5 text-gray-400" />
               <span className="text-sm font-medium">{t('home.trust.multilingual', { defaultValue: 'Multilingual Support' })}</span>
             </div>
             <div className="flex items-center gap-2">
-              <DevicePhoneMobileIcon className="w-5 h-5 text-purple-400" />
+              <DevicePhoneMobileIcon className="w-5 h-5 text-gray-400" />
               <span className="text-sm font-medium">{t('home.trust.responsive', { defaultValue: 'Mobile Optimized' })}</span>
             </div>
           </div>
