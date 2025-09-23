@@ -348,9 +348,9 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
       if (fixturesToSave.length > 1) {
         // Save as single bundle file automatically
-        const normalized = fixturesToSave.map((fixture: any) => {
+        const normalized = await Promise.all(fixturesToSave.map(async (fixture: any) => {
           const tournamentMeta = getTournamentMeta(fixture.tournamentId, fixture.tournamentName)
-          const base = {
+          const base: any = {
             fixture,
             tournament: tournamentMeta,
             weightRange: fixture.weightRangeId ? {
@@ -363,8 +363,31 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           if (fixture.isPending) {
             return { ...base, isPending: true, readyToStart: true }
           }
+          // Attach double-elimination state if available
+          try {
+            const deKeys = Object.keys(localStorage).filter(key => key.includes(`double-elimination-fixture-${fixture.id}`))
+            let doubleEliminationData: any = null
+            if (deKeys.length > 0) {
+              doubleEliminationData = {}
+              deKeys.forEach(key => {
+                ;(doubleEliminationData as any)[key] = JSON.parse(localStorage.getItem(key) || '{}')
+              })
+            }
+            try {
+              const { DoubleEliminationRepository } = await import('../../storage/DoubleEliminationRepository')
+              const deRepo = new DoubleEliminationRepository()
+              const repoData = deRepo.getState(fixture.id)
+              if (repoData) {
+                if (!doubleEliminationData) doubleEliminationData = {}
+                ;(doubleEliminationData as any).repositoryData = repoData
+              }
+            } catch {}
+            if (doubleEliminationData) {
+              base.doubleEliminationData = doubleEliminationData
+            }
+          } catch {}
           return base
-        })
+        }))
 
         const payload = {
           name: (fileName.trim() || `Fixtür Paketi (${fixturesToSave.length})`),
@@ -396,6 +419,27 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             } : undefined
           }
         } else {
+          // Attach double-elimination state for single fixture export
+          let doubleEliminationData: any = null
+          try {
+            const deKeys = Object.keys(localStorage).filter(key => key.includes(`double-elimination-fixture-${fixture.id}`))
+            if (deKeys.length > 0) {
+              doubleEliminationData = {}
+              deKeys.forEach(key => {
+                ;(doubleEliminationData as any)[key] = JSON.parse(localStorage.getItem(key) || '{}')
+              })
+            }
+            try {
+              const { DoubleEliminationRepository } = await import('../../storage/DoubleEliminationRepository')
+              const deRepo = new DoubleEliminationRepository()
+              const repoData = deRepo.getState(fixture.id)
+              if (repoData) {
+                if (!doubleEliminationData) doubleEliminationData = {}
+                ;(doubleEliminationData as any).repositoryData = repoData
+              }
+            } catch {}
+          } catch {}
+
           dataToSave = {
             fixture,
             tournament: tournamentMeta,
@@ -404,7 +448,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               name: fixture.weightRangeName || '',
               min: fixture.weightRange?.min,
               max: fixture.weightRange?.max
-            } : undefined
+            } : undefined,
+            ...(doubleEliminationData ? { doubleEliminationData } : {})
           }
         }
 

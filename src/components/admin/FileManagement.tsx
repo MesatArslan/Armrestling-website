@@ -328,7 +328,7 @@ export const FileManagement: React.FC = () => {
                 })
                 if (deData.repositoryData) {
                   try {
-                    const { DoubleEliminationRepository } = await import('../../utils/../storage/DoubleEliminationRepository')
+                    const { DoubleEliminationRepository } = await import('../../storage/DoubleEliminationRepository')
                     const deRepo = new DoubleEliminationRepository()
                     deRepo.saveState(fx.id, deData.repositoryData)
                   } catch {}
@@ -373,6 +373,24 @@ export const FileManagement: React.FC = () => {
             if (!MatchesStorage.getFixtureById(fx.id)) {
               MatchesStorage.addFixture({ ...fx } as any)
             }
+            // Restore double-elimination state if present on entry
+            try {
+              if (entry.doubleEliminationData) {
+                const deData = entry.doubleEliminationData
+                Object.keys(deData).forEach((key: string) => {
+                  if (key !== 'repositoryData') {
+                    localStorage.setItem(key, JSON.stringify(deData[key]))
+                  }
+                })
+                if (deData.repositoryData) {
+                  try {
+                    const { DoubleEliminationRepository } = await import('../../storage/DoubleEliminationRepository')
+                    const deRepo = new DoubleEliminationRepository()
+                    deRepo.saveState(fx.id, deData.repositoryData)
+                  } catch {}
+                }
+              }
+            } catch {}
           }
         }
         setSuccess(t('fileManagement.messages.importSuccess'))
