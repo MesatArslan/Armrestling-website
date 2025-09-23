@@ -78,12 +78,11 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   // Tüm fikstürleri yükle (hem başlamış hem de başlamayı bekleyen)
   const loadAllFixtures = async () => {
     try {
-      // Başlamış fikstürleri al
+      // Maçlar sayfasında bulunan tüm fixtürleri al (durumdan bağımsız)
       const fixtureIds = matchesRepo.getIndex()
       const activeFixtures = fixtureIds
         .map(id => matchesRepo.getFixture(id))
         .filter(Boolean)
-        .filter((f: any) => f && (f.status === 'active' || f.status === 'paused' || !f.status))
       // Aktif/pasif anahtar seti (turnuva + kategori)
       const activeKeys = new Set(
         activeFixtures.map((f: any) => `${f.tournamentId}:${f.weightRangeId}`)
@@ -327,7 +326,13 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       case 'tournaments':
         return `${data.name || 'İsimsiz Turnuva'} - ${data.weightRanges?.length || 0} kategori`
       case 'fixtures':
-        const statusText = data.isPending ? ' (Başlamayı Bekliyor)' : ' (Aktif)'
+        const statusText = data.isPending
+          ? ' (Başlamayı Bekliyor)'
+          : data.status === 'completed'
+            ? ' (Tamamlandı)'
+            : data.status === 'paused'
+              ? ' (Duraklatıldı)'
+              : ' (Aktif)'
         return `${data.name || 'İsimsiz Fixtür'} - ${data.playerCount || 0} oyuncu${statusText}`
       default:
         return JSON.stringify(data).substring(0, 100) + '...'
