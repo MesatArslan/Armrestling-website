@@ -52,6 +52,25 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
     initialData?.birthYearMax || null
   );
 
+  // Styled dropdown states (match Scoring sorting criteria UI)
+  const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
+  const [isHandDropdownOpen, setIsHandDropdownOpen] = useState(false);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (isGenderDropdownOpen && !target.closest('.gender-dropdown')) {
+        setIsGenderDropdownOpen(false);
+      }
+      if (isHandDropdownOpen && !target.closest('.hand-dropdown')) {
+        setIsHandDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isGenderDropdownOpen, isHandDropdownOpen]);
+
   // Update form state when initialData changes (for edit mode)
   useEffect(() => {
     if (isEditMode && initialData) {
@@ -185,28 +204,106 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                       {t('tournaments.genderRestriction')}
                     </label>
-                    <select
-                      value={genderFilter ?? 'male'}
-                      onChange={(e) => setGenderFilter(e.target.value as 'male' | 'female' | null || null)}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 text-sm"
-                    >
-                      <option value="male">{t('players.maleOnly')}</option>
-                      <option value="female">{t('players.femaleOnly')}</option>
-                    </select>
+                    <div className="relative gender-dropdown">
+                      <button
+                        type="button"
+                        onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
+                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-800 font-medium cursor-pointer hover:border-indigo-300 transition-all duration-200 flex items-center justify-between text-sm"
+                      >
+                        <span>{genderFilter === 'female' ? t('players.femaleOnly') : t('players.maleOnly')}</span>
+                        <svg 
+                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} 
+                          fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {isGenderDropdownOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl z-[1000] max-h-48 overflow-y-auto">
+                          <div className="p-2">
+                            {(['male','female'] as Array<'male'|'female'>).map((val) => (
+                              <button
+                                key={val}
+                                onClick={() => {
+                                  setGenderFilter(val);
+                                  setIsGenderDropdownOpen(false);
+                                }}
+                                className={`w-full px-3 py-2 text-left hover:bg-indigo-50 transition-colors duration-200 flex items-center gap-3 rounded-md ${
+                                  genderFilter === val ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-gray-700'
+                                }`}
+                              >
+                                <div className={`w-2 h-2 rounded-full ${genderFilter === val ? 'bg-indigo-500' : 'bg-gray-300'}`}></div>
+                                <span className="flex-1 text-sm">{val === 'male' ? t('players.maleOnly') : t('players.femaleOnly')}</span>
+                                {genderFilter === val && (
+                                  <svg className="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                       {t('tournaments.handPreference')}
                     </label>
-                    <select
-                      value={handPreferenceFilter || ''}
-                      onChange={(e) => setHandPreferenceFilter(e.target.value as 'left' | 'right' | null || null)}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800 text-sm"
-                    >
-                      <option value="">{t('tournaments.allHandPreferences')}</option>
-                      <option value="left">{t('players.leftHandOnly')}</option>
-                      <option value="right">{t('players.rightHandOnly')}</option>
-                    </select>
+                    <div className="relative hand-dropdown">
+                      <button
+                        type="button"
+                        onClick={() => setIsHandDropdownOpen(!isHandDropdownOpen)}
+                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-800 font-medium cursor-pointer hover:border-indigo-300 transition-all duration-200 flex items-center justify-between text-sm"
+                      >
+                        <span>
+                          {handPreferenceFilter === 'left'
+                            ? t('players.leftHandOnly')
+                            : handPreferenceFilter === 'right'
+                            ? t('players.rightHandOnly')
+                            : t('tournaments.allHandPreferences')}
+                        </span>
+                        <svg 
+                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isHandDropdownOpen ? 'rotate-180' : ''}`} 
+                          fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {isHandDropdownOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl z-[1000] max-h-48 overflow-y-auto">
+                          <div className="p-2">
+                            {([
+                              { id: '', label: t('tournaments.allHandPreferences') },
+                              { id: 'left', label: t('players.leftHandOnly') },
+                              { id: 'right', label: t('players.rightHandOnly') },
+                            ] as Array<{ id: '' | 'left' | 'right'; label: string }>).map((opt) => {
+                              const isSelected = (handPreferenceFilter || '') === opt.id;
+                              return (
+                                <button
+                                  key={opt.id || 'all'}
+                                  onClick={() => {
+                                    setHandPreferenceFilter(opt.id === '' ? null : (opt.id as 'left' | 'right'));
+                                    setIsHandDropdownOpen(false);
+                                  }}
+                                  className={`w-full px-3 py-2 text-left hover:bg-indigo-50 transition-colors duration-200 flex items-center gap-3 rounded-md ${
+                                    isSelected ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-gray-700'
+                                  }`}
+                                >
+                                  <div className={`w-2 h-2 rounded-full ${isSelected ? 'bg-indigo-500' : 'bg-gray-300'}`}></div>
+                                  <span className="flex-1 text-sm">{opt.label}</span>
+                                  {isSelected && (
+                                    <svg className="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
