@@ -435,18 +435,32 @@ const Tournaments = () => {
         setTournaments(merged as any);
       }
 
-      // Import fixtures (pending: kept as pending; active: add to Matches)
+      // Import fixtures: add all (active/paused/completed) and restore double-elimination state
       try {
         const list = Array.isArray(pkg.fixtures) ? pkg.fixtures : [];
         for (const fx of list) {
-          // Normalize to entry format used by Matches importer
-          // If active, add to Matches; if not, leave for Tournaments
-          if (fx.status === 'active' || fx.status === 'paused') {
-            const existing = MatchesStorage.getFixtureById(fx.id);
-            if (!existing) {
-              MatchesStorage.addFixture({ ...fx } as any);
-            }
+          const existing = MatchesStorage.getFixtureById(fx.id);
+          if (!existing) {
+            MatchesStorage.addFixture({ ...fx } as any);
           }
+          // Restore double-elimination state if present
+          try {
+            const deData = (fx as any).doubleEliminationData;
+            if (deData) {
+              Object.keys(deData).forEach((key) => {
+                if (key !== 'repositoryData') {
+                  localStorage.setItem(key, JSON.stringify(deData[key]));
+                }
+              });
+              if (deData.repositoryData) {
+                try {
+                  const { DoubleEliminationRepository } = await import('../storage/DoubleEliminationRepository');
+                  const deRepo = new DoubleEliminationRepository();
+                  deRepo.saveState(fx.id, deData.repositoryData);
+                } catch {}
+              }
+            }
+          } catch {}
         }
       } catch {}
 
