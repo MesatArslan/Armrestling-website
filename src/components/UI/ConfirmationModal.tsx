@@ -34,27 +34,31 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     switch (type) {
       case 'danger':
         return {
-          iconBg: 'bg-red-100 text-red-600',
-          buttonBg: 'bg-red-600 hover:bg-red-700',
-          icon: <ExclamationTriangleIcon className="w-8 h-8" />
+          headerGradient: 'bg-gradient-to-r from-red-600 to-pink-600',
+          confirmGradient: 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 focus:ring-red-300',
+          iconBg: 'bg-white/20',
+          iconColor: 'text-white'
         };
       case 'warning':
         return {
-          iconBg: 'bg-yellow-100 text-yellow-600',
-          buttonBg: 'bg-yellow-600 hover:bg-yellow-700',
-          icon: <ExclamationTriangleIcon className="w-8 h-8" />
+          headerGradient: 'bg-gradient-to-r from-amber-500 to-yellow-600',
+          confirmGradient: 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 focus:ring-amber-300',
+          iconBg: 'bg-white/20',
+          iconColor: 'text-white'
         };
       case 'info':
         return {
-          iconBg: 'bg-blue-100 text-blue-600',
-          buttonBg: 'bg-blue-600 hover:bg-blue-700',
-          icon: <ExclamationTriangleIcon className="w-8 h-8" />
+          headerGradient: 'bg-gradient-to-r from-blue-600 to-indigo-600',
+          confirmGradient: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:ring-blue-300',
+          iconBg: 'bg-white/20',
+          iconColor: 'text-white'
         };
       default:
         return {
-          iconBg: 'bg-red-100 text-red-600',
-          buttonBg: 'bg-red-600 hover:bg-red-700',
-          icon: <ExclamationTriangleIcon className="w-8 h-8" />
+          headerGradient: 'bg-gradient-to-r from-red-600 to-pink-600',
+          confirmGradient: 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 focus:ring-red-300',
+          iconBg: 'bg-white/20',
+          iconColor: 'text-white'
         };
     }
   };
@@ -62,39 +66,42 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   const styles = getTypeStyles();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] overflow-hidden">
-      <div 
-        className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md mx-2 transform transition-all duration-300 ease-out"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${styles.iconBg}`}>
-              {styles.icon}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-3 sm:p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl max-w-[95%] sm:max-w-md w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className={`${styles.headerGradient} px-4 py-4`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`${styles.iconBg} rounded-lg p-2`}>
+                <ExclamationTriangleIcon className={`h-5 w-5 ${styles.iconColor}`} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white">{title}</h2>
+                <p className="text-white/80 text-xs">
+                  {type === 'danger' ? t('tournaments.cannotBeUndone') : t('tournaments.areYouSureContinue')}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                {type === 'danger' ? t('tournaments.cannotBeUndone') : t('tournaments.areYouSureContinue')}
-              </p>
+            <button onClick={onClose} className="text-white/90 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg">
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="px-4 py-4 bg-gray-50">
+          <div className="space-y-4">
+            <div className="text-sm text-gray-700 leading-relaxed">
+              {message}
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-200"
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
         </div>
 
-        <div className="mb-6">
-          <p className="text-gray-700 leading-relaxed">{message}</p>
-        </div>
-
-        <div className="flex gap-3 justify-end">
+        {/* Actions */}
+        <div className="px-4 py-4 border-t border-gray-200 bg-white flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200 font-semibold"
+            className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 font-medium"
           >
             {defaultCancelText}
           </button>
@@ -103,7 +110,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               onConfirm();
               onClose();
             }}
-            className={`px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl ${styles.buttonBg}`}
+            className={`inline-flex items-center ${styles.confirmGradient} text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200`}
           >
             {finalConfirmText}
           </button>
