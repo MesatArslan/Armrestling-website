@@ -9,6 +9,7 @@ import PlayersTable from '../components/UI/PlayersTable';
 import ActionsMenu from '../components/UI/ActionsMenu';
 import ImportNotificationModal from '../components/UI/ImportNotificationModal';
 import ConfirmationModal from '../components/UI/ConfirmationModal';
+import ManageColumnsModal from '../components/UI/ManageColumnsModal';
 import { PlayersStorage, type Column, type ExtendedPlayer, defaultColumns } from '../utils/playersStorage';
 import { PlayersRepository } from '../storage/PlayersRepository';
 import { usePlayers } from '../hooks/usePlayers';
@@ -635,88 +636,17 @@ const Players = () => {
       </div>
 
       {/* Manage Columns Modal */}
-      {isManageColumnsOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="backdrop-blur-md bg-white/90 p-6 rounded-2xl w-full max-w-lg mx-4 shadow-2xl border border-gray-200">
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">{t('players.manageColumns')}</h2>
-              <p className="mt-1 text-sm text-gray-500">{t('players.manageColumnsDescription')}</p>
-            </div>
-            <div className="mb-4 flex gap-2 items-center">
-              <input
-                type="text"
-                value={newColumnName}
-                onChange={(e) => setNewColumnName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleAddColumn(); }}
-                placeholder={t('players.columnName')}
-                className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm text-gray-700 placeholder-gray-400 transition-all duration-200"
-              />
-              <button
-                onClick={handleAddColumn}
-                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold"
-              >
-                {t('players.addNewColumn')}
-              </button>
-            </div>
-            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-              {columns
-                .filter((col) => !defaultColumns.some((d) => d.id === col.id))
-                .map((col) => (
-                  <div
-                    key={col.id}
-                    onClick={() => handleToggleColumnVisibility(col.id)}
-                    className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
-                      col.visible
-                        ? 'border-blue-200 bg-blue-50/60 hover:bg-blue-100'
-                        : 'border-gray-200 bg-white hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="font-medium text-gray-900 truncate">{col.name}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <label
-                        className="inline-flex items-center cursor-pointer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={col.visible}
-                          onChange={() => handleToggleColumnVisibility(col.id)}
-                          className="sr-only"
-                        />
-                        <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${col.visible ? 'bg-blue-600' : 'bg-gray-300'}`}>
-                          <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition ${col.visible ? 'translate-x-5' : 'translate-x-1'}`} />
-                        </div>
-                      </label>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteColumn(col.id);
-                        }}
-                        className="text-red-600 hover:text-red-700 px-2 py-1 text-sm"
-                        title={t('players.delete')}
-                      >
-                        {t('players.delete')}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              {columns.filter((col) => !defaultColumns.some((d) => d.id === col.id)).length === 0 && (
-                <div className="text-sm text-gray-500 p-2">{t('players.noCustomColumns') || 'Özel sütun yok.'}</div>
-              )}
-            </div>
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                onClick={() => setIsManageColumnsOpen(false)}
-                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-base font-semibold rounded-lg"
-              >
-                {t('common.close')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ManageColumnsModal
+        isOpen={isManageColumnsOpen}
+        onClose={() => setIsManageColumnsOpen(false)}
+        columns={columns}
+        defaultColumns={defaultColumns}
+        newColumnName={newColumnName}
+        onChangeNewColumnName={setNewColumnName}
+        onAddColumn={handleAddColumn}
+        onToggleColumnVisibility={handleToggleColumnVisibility}
+        onDeleteColumn={handleDeleteColumn}
+      />
 
       {/* Import Excel Modal */}
       {isExcelImportOpen && (
@@ -740,9 +670,10 @@ const Players = () => {
                   <div className="font-semibold text-gray-800 mb-1">{t('players.excelImport.exampleTitle')}</div>
                   <div className="overflow-x-auto">
                     <div className="inline-grid grid-cols-6 gap-2">
-                      {t('players.excelImport.exampleHeaders', { returnObjects: true }).map((header: string, index: number) => (
-                        <span key={index} className="px-2 py-1 bg-gray-50 rounded">{header}</span>
-                      ))}
+                      {Array.isArray(t('players.excelImport.exampleHeaders', { returnObjects: true })) &&
+                        (t('players.excelImport.exampleHeaders', { returnObjects: true }) as unknown as string[]).map((header: string, index: number) => (
+                          <span key={index} className="px-2 py-1 bg-gray-50 rounded">{header}</span>
+                        ))}
                     </div>
                   </div>
                 </div>
