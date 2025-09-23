@@ -291,16 +291,28 @@ export const FileManagement: React.FC = () => {
         } catch {}
       }
 
-      const ensureColumnsForPlayers = (players: any[]) => {
+      const ensureColumnsForPlayers = (players: any[], options?: { allowedColumnIds?: Set<string> }) => {
         try {
           if (!Array.isArray(players) || players.length === 0) return
           const existingColumns = PlayersStorage.getColumns()
           const existingIds = new Set(existingColumns.map((c: any) => c.id))
           const skip = new Set(['id', 'opponents', 'fullName', 'fullname'])
           const toAdd: any[] = []
+          // Precompute which keys actually have at least one non-empty value
+          const keyHasNonEmpty: Record<string, boolean> = {}
+          players.forEach((p: any) => {
+            Object.keys(p).forEach((k) => {
+              if (skip.has(k)) return
+              const v = p[k]
+              if (v !== undefined && v !== null && String(v).trim() !== '') keyHasNonEmpty[k] = true
+            })
+          })
           players.forEach((p: any) => {
             Object.keys(p).forEach((key) => {
               if (skip.has(key)) return
+              // Only add a column if it's explicitly allowed by incoming columns OR has at least one non-empty value
+              const allowed = options?.allowedColumnIds ? options.allowedColumnIds.has(key) : true
+              if (!allowed && !keyHasNonEmpty[key]) return
               if (!existingIds.has(key)) {
                 existingIds.add(key)
                 toAdd.push({ id: key, name: key, visible: true })
@@ -344,7 +356,10 @@ export const FileManagement: React.FC = () => {
           } catch {}
         }
         if (Array.isArray(data.players)) {
-          ensureColumnsForPlayers(data.players)
+          const allowedSet = Array.isArray(data.columns)
+            ? new Set((data.columns as any[]).map((c: any) => c?.id).filter((x: any) => typeof x === 'string'))
+            : undefined
+          ensureColumnsForPlayers(data.players, { allowedColumnIds: allowedSet })
           addOrMergePlayers(data.players)
         }
         if (data.tournament) {
@@ -424,6 +439,7 @@ export const FileManagement: React.FC = () => {
         // Add or merge players from fixtures (use full provided fields)
         try {
           // If bundle entries have columns, merge them first to preserve names
+          const unionAllowed = new Set<string>()
           for (const e of entries) {
             if (Array.isArray(e.columns)) {
               try {
@@ -433,6 +449,7 @@ export const FileManagement: React.FC = () => {
                 ;(e.columns as any[])
                   .filter((c: any) => c && typeof c.id === 'string' && c.id.toLowerCase() !== 'fullname')
                   .forEach((c: any) => {
+                  unionAllowed.add(c.id)
                   if (!map.has(c.id)) { map.set(c.id, { id: c.id, name: c.name || c.id, visible: !!c.visible }); changed = true }
                   else {
                     const cur = map.get(c.id)!
@@ -448,7 +465,7 @@ export const FileManagement: React.FC = () => {
           }
           const allPlayers: any[] = []
           for (const e of entries) { (e.fixture?.players || []).forEach((p: any) => allPlayers.push(p)) }
-          ensureColumnsForPlayers(allPlayers)
+          ensureColumnsForPlayers(allPlayers, { allowedColumnIds: unionAllowed.size > 0 ? unionAllowed : undefined })
           addOrMergePlayers(allPlayers)
         } catch {}
 
