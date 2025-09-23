@@ -470,7 +470,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
           weight: newPlayer.weight,
           gender: newPlayer.gender,
           handPreference: newPlayer.handPreference,
-          city: newPlayer.city || ''
+          birthday: newPlayer.birthday || ''
         };
         onPlayersChange([...players, player]);
         setNewPlayer({});
@@ -681,6 +681,10 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
   };
 
   const renderNewPlayerInput = (column: Column) => {
+    // Do not show local input for city when adding a new player
+    if (column.id === 'city') {
+      return null;
+    }
     if (column.id === 'gender') {
       return (
         <select

@@ -619,7 +619,6 @@ const Players = () => {
                 gender: 'male',
                 handPreference: 'right',
                 birthday: '',
-                city: '',
               };
               const next = [...playersState, newPlayer];
               setPlayersState(next);

@@ -346,10 +346,37 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       const fixturesToSave = selectedFixtures.length > 0 ? selectedFixtures : (selectedData ? [selectedData] : [])
       if (fixturesToSave.length === 0) return
 
+      // Helper: enrich fixture players with full player fields from Players storage
+      const allPlayers = (() => {
+        try { return playersRepo.getAll() as any[] } catch { return [] as any[] }
+      })()
+      const playerById = new Map<string, any>(allPlayers.map(p => [p.id, p]))
+      const enrichFixturePlayers = (fixture: any) => {
+        try {
+          const nextPlayers = (fixture.players || []).map((p: any) => {
+            const full = playerById.get(p.id)
+            if (!full) return p
+            const merged: any = { id: p.id }
+            // Copy ALL fields from full player
+            Object.keys(full).forEach((k) => { merged[k] = full[k] })
+            // Preserve opponents if present in fixture
+            if (p.opponents) merged.opponents = p.opponents
+            return merged
+          })
+          return { ...fixture, players: nextPlayers }
+        } catch { return fixture }
+      }
+
       if (fixturesToSave.length > 1) {
         // Save as single bundle file automatically
-        const normalized = await Promise.all(fixturesToSave.map(async (fixture: any) => {
+        const normalized = await Promise.all(fixturesToSave.map(async (rawFixture: any) => {
+          const fixture = enrichFixturePlayers(rawFixture)
           const tournamentMeta = getTournamentMeta(fixture.tournamentId, fixture.tournamentName)
+          let playerColumns: any[] = []
+          try {
+            const cols = playersRepo.getColumns()
+            if (Array.isArray(cols)) playerColumns = cols
+          } catch {}
           const base: any = {
             fixture,
             tournament: tournamentMeta,
@@ -358,7 +385,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               name: fixture.weightRangeName || '',
               min: fixture.weightRange?.min,
               max: fixture.weightRange?.max
-            } : undefined
+            } : undefined,
+            columns: playerColumns,
           }
           if (fixture.isPending) {
             return { ...base, isPending: true, readyToStart: true }
@@ -402,7 +430,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         return
       } else {
         // Single fixture save
-        const fixture = fixturesToSave[0]
+        const fixture = enrichFixturePlayers(fixturesToSave[0])
         const tournamentMeta = getTournamentMeta(fixture.tournamentId, fixture.tournamentName)
         let dataToSave: any
         if (fixture.isPending) {
@@ -421,6 +449,11 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         } else {
           // Attach double-elimination state for single fixture export
           let doubleEliminationData: any = null
+          let playerColumns: any[] = []
+          try {
+            const cols = playersRepo.getColumns()
+            if (Array.isArray(cols)) playerColumns = cols
+          } catch {}
           try {
             const deKeys = Object.keys(localStorage).filter(key => key.includes(`double-elimination-fixture-${fixture.id}`))
             if (deKeys.length > 0) {
@@ -449,6 +482,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               min: fixture.weightRange?.min,
               max: fixture.weightRange?.max
             } : undefined,
+            columns: playerColumns,
             ...(doubleEliminationData ? { doubleEliminationData } : {})
           }
         }
@@ -479,17 +513,15 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         const allFixtures = allFixtureIds.map(id => matchesRepo.getFixture(id)).filter(Boolean) as any[]
         const tournamentFixtures = allFixtures.filter(f => f.tournamentId === selectedData.id)
 
-        // Oyuncuları topla (görünür kolonlarla)
-        const visibleColumns = playersRepo.getColumns()?.filter((col: any) => col.visible) || []
-        const visibleColumnIds = visibleColumns.map((col: any) => col.id)
+        // Oyuncuları topla (TÜM kolonlarla - görünür/gizli ayrımı yapmadan)
         const playerMap = new Map<string, any>()
         // 1) Aktif fixtürlerdeki oyuncular
         tournamentFixtures.forEach(fx => {
           (fx.players || []).forEach((p: any) => {
             if (!playerMap.has(p.id)) {
               const newPlayer: any = { id: p.id }
-              visibleColumnIds.forEach((columnId: string) => {
-                if (p.hasOwnProperty(columnId)) newPlayer[columnId] = p[columnId]
+              Object.keys(p).forEach((key) => {
+                if (key !== 'opponents') newPlayer[key] = p[key]
               })
               playerMap.set(p.id, newPlayer)
             }
@@ -521,9 +553,11 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             })
             eligible.forEach((p: any) => {
               if (!playerMap.has(p.id)) {
-                const np: any = { id: p.id }
-                visibleColumnIds.forEach((cid: string) => { if (p.hasOwnProperty(cid)) np[cid] = p[cid] })
-                playerMap.set(p.id, np)
+                const newPlayer: any = { id: p.id }
+                Object.keys(p).forEach((key) => {
+                  newPlayer[key] = p[key]
+                })
+                playerMap.set(p.id, newPlayer)
               }
             })
           }
@@ -571,13 +605,21 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           }
         }))
 
+        // Include player columns (with names and visibility)
+        let playerColumns: any[] = []
+        try {
+          const cols = playersRepo.getColumns()
+          if (Array.isArray(cols)) playerColumns = cols
+        } catch {}
+
         dataToSave = {
-          version: '1.0.0',
-          exportDate: new Date().toISOString(),
-          tournament: selectedData,
-          players: Array.from(playerMap.values()),
+            version: '1.0.0',
+            exportDate: new Date().toISOString(),
+            tournament: selectedData,
+            players: Array.from(playerMap.values()), // full player records including birthday and custom columns
           fixtures: fixturesWithState,
-        }
+          columns: playerColumns,
+          }
       } catch (e) {
         // Fallback: sadece turnuvayı kaydet
         dataToSave = selectedData

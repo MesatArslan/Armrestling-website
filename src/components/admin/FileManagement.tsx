@@ -255,35 +255,98 @@ export const FileManagement: React.FC = () => {
         } catch {}
       }
 
-      const addMissingPlayers = (players: any[]) => {
+      const addOrMergePlayers = (players: any[]) => {
         try {
           const existing = PlayersStorage.getPlayers()
           const existingIds = new Set(existing.map((p: any) => p.id))
-          const cols = PlayersStorage.getColumns().filter((c: any) => c.visible).map((c: any) => c.id)
           const toAdd: any[] = []
+          let changedExisting = false
           for (const p of players || []) {
             if (!existingIds.has(p.id)) {
               const np: any = { id: p.id }
-              cols.forEach((cid: string) => { if (p.hasOwnProperty(cid)) np[cid] = p[cid] })
+              // Save ALL provided fields for players (not just visible columns)
+              Object.keys(p).forEach((key) => {
+                np[key] = p[key]
+              })
               toAdd.push(np)
+            } else {
+              // Merge new fields into existing player (custom columns and birthday)
+              const idx = existing.findIndex((x: any) => x.id === p.id)
+              if (idx !== -1) {
+                const merged = { ...existing[idx] }
+                Object.keys(p).forEach((key) => {
+                  if (key === 'id') return
+                  if (p[key] !== undefined && p[key] !== null && merged[key] !== p[key]) {
+                    merged[key] = p[key]
+                  }
+                })
+                existing[idx] = merged
+                changedExisting = true
+              }
             }
           }
-          if (toAdd.length > 0) {
+          if (toAdd.length > 0 || changedExisting) {
             PlayersStorage.savePlayers([...existing, ...toAdd])
+          }
+        } catch {}
+      }
+
+      const ensureColumnsForPlayers = (players: any[]) => {
+        try {
+          if (!Array.isArray(players) || players.length === 0) return
+          const existingColumns = PlayersStorage.getColumns()
+          const existingIds = new Set(existingColumns.map((c: any) => c.id))
+          const skip = new Set(['id', 'opponents', 'fullName', 'fullname'])
+          const toAdd: any[] = []
+          players.forEach((p: any) => {
+            Object.keys(p).forEach((key) => {
+              if (skip.has(key)) return
+              if (!existingIds.has(key)) {
+                existingIds.add(key)
+                toAdd.push({ id: key, name: key, visible: true })
+              }
+            })
+          })
+          if (toAdd.length > 0) {
+            PlayersStorage.saveColumns([...existingColumns, ...toAdd])
           }
         } catch {}
       }
 
       if (file.type === 'players') {
         // data is an array of players
-        addMissingPlayers(Array.isArray(data) ? data : [])
+        addOrMergePlayers(Array.isArray(data) ? data : [])
         setSuccess(t('fileManagement.messages.importSuccess'))
         return
       }
 
       if (file.type === 'tournaments') {
         // Expect tournament package: { tournament, players, fixtures }
-        if (Array.isArray(data.players)) addMissingPlayers(data.players)
+        // Restore/merge columns (names and visibility) first if provided
+        if (Array.isArray(data.columns)) {
+          try {
+            const existing = PlayersStorage.getColumns()
+            const map = new Map(existing.map((c: any) => [c.id, c]))
+            let changed = false
+            ;(data.columns as any[])
+              .filter((c: any) => c && typeof c.id === 'string' && c.id.toLowerCase() !== 'fullname')
+              .forEach((c: any) => {
+              if (!map.has(c.id)) { map.set(c.id, { id: c.id, name: c.name || c.id, visible: !!c.visible }); changed = true }
+              else {
+                const cur = map.get(c.id)!
+                const next = { ...cur }
+                if (c.name && cur.name !== c.name) { next.name = c.name; changed = true }
+                if (typeof c.visible === 'boolean' && cur.visible !== c.visible) { next.visible = c.visible; changed = true }
+                if (changed) map.set(c.id, next)
+              }
+            })
+            if (changed) PlayersStorage.saveColumns(Array.from(map.values()) as any)
+          } catch {}
+        }
+        if (Array.isArray(data.players)) {
+          ensureColumnsForPlayers(data.players)
+          addOrMergePlayers(data.players)
+        }
         if (data.tournament) {
           const tournaments = TournamentsStorage.getTournaments()
           const exists = tournaments.find((t: any) => t.id === data.tournament.id)
@@ -358,11 +421,35 @@ export const FileManagement: React.FC = () => {
           entries.push(data)
         }
 
-        // Add missing players from fixtures
+        // Add or merge players from fixtures (use full provided fields)
         try {
+          // If bundle entries have columns, merge them first to preserve names
+          for (const e of entries) {
+            if (Array.isArray(e.columns)) {
+              try {
+                const existing = PlayersStorage.getColumns()
+                const map = new Map(existing.map((c: any) => [c.id, c]))
+                let changed = false
+                ;(e.columns as any[])
+                  .filter((c: any) => c && typeof c.id === 'string' && c.id.toLowerCase() !== 'fullname')
+                  .forEach((c: any) => {
+                  if (!map.has(c.id)) { map.set(c.id, { id: c.id, name: c.name || c.id, visible: !!c.visible }); changed = true }
+                  else {
+                    const cur = map.get(c.id)!
+                    const next = { ...cur }
+                    if (c.name && cur.name !== c.name) { next.name = c.name; changed = true }
+                    if (typeof c.visible === 'boolean' && cur.visible !== c.visible) { next.visible = c.visible; changed = true }
+                    if (changed) map.set(c.id, next)
+                  }
+                })
+                if (changed) PlayersStorage.saveColumns(Array.from(map.values()) as any)
+              } catch {}
+            }
+          }
           const allPlayers: any[] = []
           for (const e of entries) { (e.fixture?.players || []).forEach((p: any) => allPlayers.push(p)) }
-          addMissingPlayers(allPlayers)
+          ensureColumnsForPlayers(allPlayers)
+          addOrMergePlayers(allPlayers)
         } catch {}
 
         for (const entry of entries) {
