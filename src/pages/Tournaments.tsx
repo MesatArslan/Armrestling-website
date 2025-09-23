@@ -515,6 +515,9 @@ const Tournaments = () => {
       title: t('tournaments.deleteTournament'),
       message: t('tournamentCard.confirmDeleteTournament', { name: tournament.name }),
       onConfirm: () => {
+        // Tournament'a ait tüm fixtures'ları sil
+        MatchesStorage.deleteTournamentFixtures(tournamentId);
+        
         const updatedTournaments = tournaments.filter(t => t.id !== tournamentId);
         setTournaments(updatedTournaments);
         saveTournaments(updatedTournaments as any);

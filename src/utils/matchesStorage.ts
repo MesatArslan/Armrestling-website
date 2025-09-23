@@ -344,6 +344,22 @@ export const MatchesStorage = {
       tournamentComplete: false,
       activeTab: 'active'
     };
+  },
+
+  // Tournament'a ait tüm fixtures'ları sil
+  deleteTournamentFixtures: (tournamentId: string) => {
+    const data = MatchesStorage.getMatchesData();
+    const fixturesToDelete = data.fixtures.filter(f => f.tournamentId === tournamentId);
+    
+    // Her fixture için deleteFixture fonksiyonunu çağır
+    fixturesToDelete.forEach(fixture => {
+      MatchesStorage.deleteFixture(fixture.id);
+    });
+    
+    // Eğer aktif fixture silinmişse, aktif fixture'ı temizle
+    if (data.activeFixtureId && fixturesToDelete.some(f => f.id === data.activeFixtureId)) {
+      MatchesStorage.setActiveFixture(null);
+    }
   }
   ,
   // --- Per-match play status persistence ---
