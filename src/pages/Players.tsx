@@ -10,6 +10,7 @@ import ActionsMenu from '../components/UI/ActionsMenu';
 import ImportNotificationModal from '../components/UI/ImportNotificationModal';
 import ConfirmationModal from '../components/UI/ConfirmationModal';
 import ManageColumnsModal from '../components/UI/ManageColumnsModal';
+import ExcelImportModal from '../components/UI/ExcelImportModal';
 import { PlayersStorage, type Column, type ExtendedPlayer, defaultColumns } from '../utils/playersStorage';
 import { PlayersRepository } from '../storage/PlayersRepository';
 import { usePlayers } from '../hooks/usePlayers';
@@ -648,57 +649,14 @@ const Players = () => {
         onDeleteColumn={handleDeleteColumn}
       />
 
-      {/* Import Excel Modal */}
-      {isExcelImportOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="backdrop-blur-md bg-white/90 p-6 rounded-2xl w-full max-w-lg mx-4 shadow-2xl border border-gray-200">
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">{t('players.excelImport.title')}</h2>
-              <div className="mt-3 text-sm text-gray-700 space-y-3">
-                <p className="text-gray-600">{t('players.excelImport.description')}</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>{t('players.excelImport.mapping.name')}</li>
-                  <li>{t('players.excelImport.mapping.surname')}</li>
-                  <li>{t('players.excelImport.mapping.weight')}</li>
-                  <li>{t('players.excelImport.mapping.handPreference')}</li>
-                  <li>{t('players.excelImport.mapping.gender')}</li>
-                  <li>{t('players.excelImport.mapping.birthday')}</li>
-                  <li>{t('players.excelImport.mapping.fullName')}</li>
-                </ul>
-                <p className="text-gray-600">{t('players.excelImport.note')}</p>
-                <div className="rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-600">
-                  <div className="font-semibold text-gray-800 mb-1">{t('players.excelImport.exampleTitle')}</div>
-                  <div className="overflow-x-auto">
-                    <div className="inline-grid grid-cols-6 gap-2">
-                      {Array.isArray(t('players.excelImport.exampleHeaders', { returnObjects: true })) &&
-                        (t('players.excelImport.exampleHeaders', { returnObjects: true }) as unknown as string[]).map((header: string, index: number) => (
-                          <span key={index} className="px-2 py-1 bg-gray-50 rounded">{header}</span>
-                        ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                onClick={() => setIsExcelImportOpen(false)}
-                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-base font-semibold rounded-lg"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => {
-                  setIsExcelImportOpen(false);
-                  excelInputRef.current?.click();
-                }}
-                className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg shadow hover:from-teal-600 hover:to-teal-700 transition-all duration-200 text-base font-semibold"
-              >
-                {t('players.importExcel')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ExcelImportModal
+        isOpen={isExcelImportOpen}
+        onClose={() => setIsExcelImportOpen(false)}
+        onImport={() => {
+          setIsExcelImportOpen(false);
+          excelInputRef.current?.click();
+        }}
+      />
 
       {/* Import Notification Modal */}
       <ImportNotificationModal
