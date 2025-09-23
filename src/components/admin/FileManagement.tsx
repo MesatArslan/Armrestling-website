@@ -314,10 +314,27 @@ export const FileManagement: React.FC = () => {
           for (const fx of data.fixtures) {
             const entry = { fixture: fx, tournament: data.tournament, weightRange: { id: fx.weightRangeId, name: fx.weightRangeName, min: fx.weightRange?.min, max: fx.weightRange?.max } }
             ensureTournament(entry)
-            if (fx.status === 'active' || fx.status === 'paused') {
-              const existing = MatchesStorage.getFixtureById(fx.id)
-              if (!existing) MatchesStorage.addFixture({ ...fx } as any)
-            }
+            // Add all fixtures (active, paused, completed) into Matches storage if not exist
+            const existing = MatchesStorage.getFixtureById(fx.id)
+            if (!existing) MatchesStorage.addFixture({ ...fx } as any)
+            // Restore double-elimination state if provided
+            try {
+              if ((fx as any).doubleEliminationData) {
+                const deData = (fx as any).doubleEliminationData
+                Object.keys(deData).forEach((key) => {
+                  if (key !== 'repositoryData') {
+                    localStorage.setItem(key, JSON.stringify(deData[key]))
+                  }
+                })
+                if (deData.repositoryData) {
+                  try {
+                    const { DoubleEliminationRepository } = await import('../../utils/../storage/DoubleEliminationRepository')
+                    const deRepo = new DoubleEliminationRepository()
+                    deRepo.saveState(fx.id, deData.repositoryData)
+                  } catch {}
+                }
+              }
+            } catch {}
           }
         }
         setSuccess(t('fileManagement.messages.importSuccess'))

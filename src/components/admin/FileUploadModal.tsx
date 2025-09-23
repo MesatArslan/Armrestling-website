@@ -334,7 +334,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedType === 'fixtures') {
       // Multiple fixture support (auto-behavior)
@@ -479,12 +479,31 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           }
         } catch {}
 
-        dataToSave = {
-          version: '1.0.0',
-          exportDate: new Date().toISOString(),
-          tournament: selectedData,
-          players: Array.from(playerMap.values()),
-          fixtures: tournamentFixtures.map(fx => ({
+        // Her fixtür için double-elimination durumunu da ekle
+        const fixturesWithState = await Promise.all(tournamentFixtures.map(async (fx) => {
+          let doubleEliminationData: any = null
+          try {
+            // localStorage anahtarları
+            const deKeys = Object.keys(localStorage).filter(key => key.includes(`double-elimination-fixture-${fx.id}`))
+            if (deKeys.length > 0) {
+              doubleEliminationData = {} as any
+              deKeys.forEach(key => {
+                (doubleEliminationData as any)[key] = JSON.parse(localStorage.getItem(key) || '{}')
+              })
+            }
+            // Repository verisi
+            try {
+              const { DoubleEliminationRepository } = await import('../../storage/DoubleEliminationRepository')
+              const deRepo = new DoubleEliminationRepository()
+              const repoData = deRepo.getState(fx.id)
+              if (repoData) {
+                if (!doubleEliminationData) doubleEliminationData = {} as any
+                ;(doubleEliminationData as any).repositoryData = repoData
+              }
+            } catch {}
+          } catch {}
+
+          return {
             id: fx.id,
             name: fx.name,
             tournamentId: fx.tournamentId,
@@ -498,7 +517,16 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             createdAt: fx.createdAt,
             lastUpdated: fx.lastUpdated,
             activeTab: fx.activeTab,
-          }))
+            doubleEliminationData,
+          }
+        }))
+
+        dataToSave = {
+          version: '1.0.0',
+          exportDate: new Date().toISOString(),
+          tournament: selectedData,
+          players: Array.from(playerMap.values()),
+          fixtures: fixturesWithState,
         }
       } catch (e) {
         // Fallback: sadece turnuvayı kaydet
