@@ -46,7 +46,7 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-2 sm:p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden">
+      <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[85vh] overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 sm:px-8 py-4 sm:py-6">
           <div className="flex items-center justify-between">
@@ -76,7 +76,7 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row h-[calc(95vh-120px)]">
+        <div className="flex flex-col lg:flex-row h-[calc(85vh-120px)]">
           {/* Sidebar - Categories */}
           <div className="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-4 sm:p-6 overflow-y-auto max-h-80 lg:max-h-none">
             <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg flex items-center">
