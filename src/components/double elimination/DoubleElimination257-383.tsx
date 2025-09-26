@@ -34,7 +34,7 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
   );
   const [selectedWinner, setSelectedWinner] = useState<{ [key: string]: string | null }>({});
   const [completedOrder, setCompletedOrder] = useState<string[]>([]);
-  const [autoSelecting, setAutoSelecting] = useState<boolean>(false);
+  const [, setAutoSelecting] = useState<boolean>(false);
   const autoSelectingRef = useRef<boolean>(false);
   const intervalRef = useRef<number | null>(null);
   const matchesRef = useRef<Match[]>(matches);
@@ -300,33 +300,6 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
     autoRoundKeyRef.current = null;
   };
 
-  const startAutoSelecting = () => {
-    if (autoSelectingRef.current) return;
-    autoSelectingRef.current = true;
-    setAutoSelecting(true);
-    autoRoundKeyRef.current = currentRoundKeyRef.current;
-    intervalRef.current = window.setInterval(() => {
-      if (!autoSelectingRef.current) return;
-      if (tournamentCompleteRef.current) {
-        stopAutoSelecting();
-        return;
-      }
-      const lockedKey = autoRoundKeyRef.current || currentRoundKeyRef.current;
-      const currentMatches = matchesRef.current;
-      const activeLocked = currentMatches.filter(m => getMatchRoundKey(m) === lockedKey);
-      const pendingLocked = activeLocked.filter(m => !m.isBye && !m.winnerId);
-      if (pendingLocked.length > 0) {
-        const nextMatch = [...pendingLocked].sort((a, b) => (a.round - b.round) || (a.matchNumber - b.matchNumber))[0];
-        const winnerId = Math.random() < 0.5 ? nextMatch.player1Id : nextMatch.player2Id;
-        if (winnerId) handleMatchResult(nextMatch.id, winnerId);
-        return;
-      }
-      if (currentRoundKeyRef.current !== lockedKey) {
-        autoRoundKeyRef.current = currentRoundKeyRef.current;
-        return;
-      }
-    }, 600);
-  };
 
   // Cleanup interval on unmount
   React.useEffect(() => () => { stopAutoSelecting(); }, []);
@@ -1226,20 +1199,6 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
   // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   // Complete one match automatically
-  const completeOneMatch = () => {
-    if (tournamentCompleteRef.current) return;
-    
-    const currentMatches = matchesRef.current;
-    const activeMatches = currentMatches.filter(m => getMatchRoundKey(m) === currentRoundKeyRef.current);
-    const pendingMatches = activeMatches.filter(m => !m.isBye && !m.winnerId);
-    
-    if (pendingMatches.length > 0) {
-      // Pick deterministically: by round then matchNumber
-      const nextMatch = [...pendingMatches].sort((a, b) => (a.round - b.round) || (a.matchNumber - b.matchNumber))[0];
-      const winnerId = Math.random() < 0.5 ? nextMatch.player1Id : nextMatch.player2Id;
-      if (winnerId) handleMatchResult(nextMatch.id, winnerId);
-    }
-  };
   
   return (
     <div className="px-3 sm:px-6 py-6 bg-gray-50 min-h-screen">
@@ -1268,20 +1227,7 @@ const DoubleElimination257_383: React.FC<DoubleElimination257_383Props> = ({ pla
               <div className="max-w-4xl mx-auto">
                 {/* Aktif Tur bilgisi kaldırıldı */}
               </div>
-      {/* Complete One Match Button */}
-      {activeTab === 'active' && !firstSecondDetermined && (
-        <div className="flex justify-center mb-4">
-          <button
-            onClick={completeOneMatch}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow transition-all duration-200 text-sm font-semibold"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Bir Maçı Tamamla
-          </button>
-        </div>
-      )}
+      {/* Complete One Match Button removed */}
       {activeTab === 'active' && (
         <>
           {firstSecondDetermined ? (

@@ -194,20 +194,6 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
   // Rankings are already saved in double elimination storage, no need to duplicate in main fixture
 
   // Complete one match automatically
-  const completeOneMatch = () => {
-    if (tournamentCompleteRef.current) return;
-    
-    const currentMatches = matchesRef.current;
-    const activeMatches = currentMatches.filter(m => getMatchRoundKey(m) === currentRoundKeyRef.current);
-    const pendingMatches = activeMatches.filter(m => !m.isBye && !m.winnerId);
-    
-    if (pendingMatches.length > 0) {
-      // Pick deterministically: by round then matchNumber
-      const nextMatch = [...pendingMatches].sort((a, b) => (a.round - b.round) || (a.matchNumber - b.matchNumber))[0];
-      const winnerId = Math.random() < 0.5 ? nextMatch.player1Id : nextMatch.player2Id;
-      if (winnerId) handleMatchResult(nextMatch.id, winnerId);
-    }
-  };
 
   const isRoundComplete = (roundKey: RoundKey, matchList: Match[]) => {
     const roundMatches = matchList.filter(m => getMatchRoundKey(m) === roundKey);
@@ -1144,18 +1130,7 @@ const DoubleElimination129_191: React.FC<DoubleElimination129_191Props> = ({ pla
             </button>
           )}
           
-          {/* Complete One Match Button */}
-          {!tournamentComplete && (
-            <button
-              onClick={completeOneMatch}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg shadow transition-all duration-200 text-sm font-semibold"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Bir Maçı Tamamla
-            </button>
-          )}
+          {/* Complete One Match Button removed */}
         </div>
       )}
       {activeTab === 'active' && (

@@ -1203,30 +1203,7 @@ const DoubleElimination33_47: React.FC<DoubleElimination33_47Props> = ({ players
             />
           ) : (
             <>
-              {/* Otomatik Kazananları Seç Butonu */}
-              {(() => {
-                const roundMatches = activeRoundMatches.filter(m => !m.isBye && !m.winnerId);
-                return roundMatches.length > 0;
-              })() && (
-                <div className="flex justify-center mb-4">
-                  <button
-                    onClick={() => {
-                      const roundMatches = activeRoundMatches.filter(m => !m.isBye && !m.winnerId);
-                      roundMatches.forEach(match => {
-                        // Her maç için rastgele bir kazanan seç
-                        const winnerId = Math.random() < 0.5 ? match.player1Id : match.player2Id;
-                        handleMatchResult(match.id, winnerId);
-                      });
-                    }}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Bu Turun Kazananlarını Otomatik Seç
-                  </button>
-                </div>
-              )}
+              {/* Otomatik Kazananları Seç Butonu kaldırıldı */}
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 max-w-7xl w-full mx-auto">
                 {activeRoundMatches.filter(m => !m.isBye && !m.winnerId).map(renderMatch)}

@@ -1099,23 +1099,7 @@ const DoubleElimination96_128: React.FC<DoubleElimination96_128Props> = ({ playe
             </button>
           )}
           
-          {/* Auto-select Winners Button */}
-          {!tournamentComplete && activeRoundMatches.filter(m => !m.isBye && !m.winnerId).length > 0 && (
-            <button
-              onClick={() => {
-                activeRoundMatches.filter(m => !m.isBye && !m.winnerId).forEach(match => {
-                  const winnerId = Math.random() < 0.5 ? match.player1Id : match.player2Id;
-                  handleMatchResult(match.id, winnerId);
-                });
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Bu Turun Kazananlarını Otomatik Seç
-            </button>
-          )}
+          {/* Auto-select Winners Button removed as requested */}
         </div>
       )}
       {activeTab === 'active' && (
