@@ -650,6 +650,15 @@
     "eighth": "8th Place"
   },
   "scoring": {
+    "tabs": {
+      "selections": "Selections",
+      "summary": "Summary",
+      "details": "Details"
+    },
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "leftSide": "Left",
+    "rightSide": "Right",
     "createPDF": "Create PDF",
     "pdfPreview": "Scoring PDF Preview",
     "downloadPDF": "Download PDF",

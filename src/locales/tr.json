@@ -670,6 +670,15 @@
     "eighth": "8. Sıra"
   },
   "scoring": {
+    "tabs": {
+      "selections": "Puan Seçimi",
+      "summary": "Özet",
+      "details": "Detaylar"
+    },
+    "showMore": "Daha fazla göster",
+    "showLess": "Daha az göster",
+    "leftSide": "Sol Kısım",
+    "rightSide": "Sağ Kısım",
     "createPDF": "PDF Oluştur",
     "pdfPreview": "Puanlama PDF Önizleme",
     "downloadPDF": "PDF İndir",

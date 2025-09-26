@@ -78,6 +78,11 @@ const Scoring: React.FC = () => {
     selectedTournamentIds: [],
   });
 
+  // Mobile tabs and UI helpers
+  const [activeTab, setActiveTab] = useState<'selections' | 'summary' | 'details'>('selections');
+  const [showAllSummary, setShowAllSummary] = useState(false);
+  const [openTournamentIds, setOpenTournamentIds] = useState<Record<string, boolean>>({});
+
   // PDF Preview Modal States
   const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
   const [previewPages, setPreviewPages] = useState<string[]>([]);
@@ -362,10 +367,33 @@ const Scoring: React.FC = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
 
+        {/* Mobile Tab Navigation (Selections / Summary / Details) */}
+        <div className="xl:hidden mb-4 border-b border-gray-200 bg-white rounded-lg overflow-hidden">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('selections')}
+              className={`${activeTab === 'selections' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'} flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
+            >
+              {t('scoring.tabs.selections')}
+            </button>
+            <button
+              onClick={() => setActiveTab('summary')}
+              className={`${activeTab === 'summary' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'} flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
+            >
+              {t('scoring.tabs.summary')}
+            </button>
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`${activeTab === 'details' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'} flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
+            >
+              {t('scoring.tabs.details')}
+            </button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Settings Panel */}
-          <div className="xl:col-span-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
+          <div className={`xl:col-span-1 max-h-[calc(100vh-4rem)] overflow-y-auto ${activeTab !== 'selections' ? 'hidden xl:block' : ''}`}>
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6 sticky top-24">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
@@ -483,7 +511,7 @@ const Scoring: React.FC = () => {
           </div>
 
           {/* Main Content */}
-          <div className="xl:col-span-2 max-h-[calc(100vh-4rem)] overflow-y-auto space-y-6">
+          <div className={`xl:col-span-2 max-h-[calc(100vh-4rem)] overflow-y-auto space-y-6 ${activeTab === 'selections' ? 'hidden xl:block' : ''}`}>
             {/* Tournament Selection */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6">
               <div className="flex items-center gap-3 mb-6">
@@ -495,25 +523,25 @@ const Scoring: React.FC = () => {
               
               <div className="flex items-center justify-between mb-6">
                 <div className="text-sm text-gray-600">
-                  <span className="font-semibold text-blue-600">{config.selectedTournamentIds.length}</span> {t('scoring.tournamentsSelectedCount', { count: config.selectedTournamentIds.length })}
+                  {t('scoring.tournamentsSelectedCount', { count: config.selectedTournamentIds.length })}
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <button
                     onClick={() => setConfig(prev => ({ ...prev, selectedTournamentIds: tournaments.map(t => t.id) }))}
-                    className="px-5 py-2.5 text-sm rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center gap-2"
+                    className="px-3 py-2 text-xs sm:px-5 sm:py-2.5 sm:text-sm rounded-lg sm:rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center gap-2"
                     disabled={allSelected}
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     {t('scoring.selectAll')}
                   </button>
                   <button
                     onClick={() => setConfig(prev => ({ ...prev, selectedTournamentIds: [] }))}
-                    className="px-5 py-2.5 text-sm rounded-xl border-2 border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center gap-2"
+                    className="px-3 py-2 text-xs sm:px-5 sm:py-2.5 sm:text-sm rounded-lg sm:rounded-xl border-2 border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center gap-2"
                     disabled={!anySelected}
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     {t('scoring.clear')}
@@ -587,27 +615,30 @@ const Scoring: React.FC = () => {
               )}
             </div>
 
-            {/* Aggregated Scores */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-                  <ChartBarIcon className="w-5 h-5 text-white" />
+            {/* Aggregated Scores (Summary Tab) */}
+            <div className={`bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-4 sm:p-6 ${activeTab !== 'summary' ? 'hidden xl:block' : ''}`}>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3 mb-4 sm:mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <ChartBarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">{t('scoring.totalPoints')}</h2>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">{t('scoring.totalPoints')}</h2>
-                <div className="ml-auto flex items-center gap-3">
-                  <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-100 to-purple-100 px-4 py-2 rounded-xl border border-indigo-200">
-                    <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
-                    <span className="text-sm font-semibold text-indigo-700">
+                <div className="sm:ml-auto flex flex-wrap items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-100 to-purple-100 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-indigo-200 min-w-0">
+                    <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex-shrink-0"></div>
+                    <span className="text-xs sm:text-sm font-semibold text-indigo-700 truncate">
                       {t('scoring.sortingBy', { criteria: availableGroupFields.find(f => f.id === config.groupBy)?.name || config.groupBy })}
-                  </span>
+                    </span>
                   </div>
                   <button
                     onClick={handleOpenSettings}
                     disabled={aggregatedScores.length === 0}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm flex items-center gap-2"
+                    className="px-3 py-2 text-xs sm:px-4 sm:py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold flex items-center gap-2"
                   >
                     <ChartBarIcon className="w-4 h-4" />
-                    {t('scoring.createPDF')}
+                    <span className="hidden sm:inline">{t('scoring.createPDF')}</span>
+                    <span className="sm:hidden">{t('tournamentCard.downloadPDF')}</span>
                   </button>
                 </div>
               </div>
@@ -622,7 +653,7 @@ const Scoring: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {aggregatedScores.map((row, index) => (
+                  {(showAllSummary ? aggregatedScores : aggregatedScores.slice(0, 10)).map((row, index) => (
                     <div key={row.group} className="flex items-center gap-4 p-4 rounded-xl border border-gray-200/50 hover:border-blue-300 hover:bg-blue-50/30 transition-all duration-200">
                       <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${getPlacementColor(index)} flex items-center justify-center text-white text-sm font-bold`}>
                         {index + 1}
@@ -636,12 +667,22 @@ const Scoring: React.FC = () => {
                       </div>
                     </div>
                   ))}
+                  {aggregatedScores.length > 10 && (
+                    <div className="text-center pt-2">
+                      <button
+                        onClick={() => setShowAllSummary(!showAllSummary)}
+                        className="px-4 py-2 text-sm font-semibold border-2 border-blue-200 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        {showAllSummary ? t('scoring.showLess') : t('scoring.showMore')}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Per-tournament/fixture details */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6">
+            {/* Per-tournament/fixture details (Details Tab) */}
+            <div className={`bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6 ${activeTab !== 'details' ? 'hidden xl:block' : ''}`}>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                   <StarIcon className="w-5 h-5 text-white" />
@@ -668,15 +709,25 @@ const Scoring: React.FC = () => {
                         </div>
                       );
                     }
+                    const isOpen = openTournamentIds[tour.id] ?? false;
                     return (
-                      <div key={tour.id} className="border border-gray-200/50 rounded-xl p-6 bg-gradient-to-br from-gray-50/50 to-white/50">
-                        <div className="font-semibold text-gray-900 text-lg mb-4 flex items-center gap-2">
+                      <div key={tour.id} className="border border-gray-200/50 rounded-xl bg-gradient-to-br from-gray-50/50 to-white/50">
+                        <button
+                          className="w-full flex items-center justify-between px-6 py-4"
+                          onClick={() => setOpenTournamentIds(prev => ({ ...prev, [tour.id]: !isOpen }))}
+                        >
+                          <div className="font-semibold text-gray-900 text-lg flex items-center gap-2">
                           <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                             <TrophyIcon className="w-3 h-3 text-white" />
                           </div>
                           {tour.name}
-                        </div>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          </div>
+                          <svg className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {isOpen && (
+                          <div className="px-6 pb-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
                           {fs.map(f => {
                             // Merge fixture with double elimination state to get rankings
                             const mergedFixture = mergeFixtureWithDEState(f);
@@ -736,7 +787,8 @@ const Scoring: React.FC = () => {
                               </div>
                             );
                           })}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
