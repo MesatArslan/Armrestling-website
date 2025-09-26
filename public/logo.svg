@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-label="Arabic letter Alif (ا) minimal">
+  <!-- Transparent background; only the Alif stroke is drawn -->
+  <g fill="none" stroke="#10b981" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Alif main stroke: slightly calligraphic curve -->
+    <path d="M136 28
+             C132 60,126 96,124 128
+             C122 164,126 196,132 228" stroke-width="22"/>
+    <!-- Subtle base flourish along the baseline -->
+    <path d="M104 228
+             C118 232,146 232,160 228" stroke-width="8"/>
+  </g>
+</svg>
+
