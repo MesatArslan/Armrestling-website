@@ -8,9 +8,10 @@ interface ActiveFixturesNavProps {
   onFixtureClose: (fixtureId: string, fixtureName: string) => void;
   activeFixtureId?: string | null;
   onReorder?: (nextIds: string[]) => void;
+  selectedTournamentId?: string | null;
 }
 
-const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtureSelect, onFixtureClose, activeFixtureId, onReorder }) => {
+const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtureSelect, onFixtureClose, activeFixtureId, onReorder, selectedTournamentId }) => {
   const { t } = useTranslation();
   const activeFixtureRef = useRef<HTMLDivElement | null>(null);
   const [orderIds, setOrderIds] = useState<string[]>([]);
@@ -149,7 +150,7 @@ const ActiveFixturesNav: React.FC<ActiveFixturesNavProps> = ({ fixtures, onFixtu
                     <div className="flex items-start justify-between gap-3 mb-4">
                       <div className="min-w-0 flex-1">
                         <h3 className="font-bold text-gray-900 text-base leading-tight group-hover:text-blue-700 transition-colors duration-200 line-clamp-2">
-                          {fixture.name}
+                          {selectedTournamentId ? (fixture.weightRangeName || fixture.name) : fixture.name}
                         </h3>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

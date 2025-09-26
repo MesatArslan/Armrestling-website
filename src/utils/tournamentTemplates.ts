@@ -262,6 +262,8 @@ export const createTournamentFromTemplate = (template: TournamentTemplate, custo
     name: customName || template.nameKey, // nameKey kullanıyoruz
     weightRanges: template.weightRanges.map(range => ({
       ...range,
+      // İsimlerdeki 'kg' ifadesini standart olarak 'KG' yap
+      name: typeof range.name === 'string' ? range.name.replace(/kg\b/gi, 'KG') : range.name,
       id: uuidv4(), // Her turnuva için yeni ID'ler
       excludedPlayerIds: [],
     })),

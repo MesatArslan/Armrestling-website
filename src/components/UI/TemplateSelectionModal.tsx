@@ -241,14 +241,17 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
                       {t('tournaments.weightCategories')}:
                     </h4>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2">
-                      {template.weightRanges.map((range) => (
-                        <span
-                          key={range.id}
-                          className="inline-block bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 text-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium border border-blue-200"
-                        >
-                          {range.name}
-                        </span>
-                      ))}
+                      {template.weightRanges.map((range) => {
+                        const displayName = typeof range.name === 'string' ? range.name.replace(/kg\b/gi, 'KG') : range.name;
+                        return (
+                          <span
+                            key={range.id}
+                            className="inline-block bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 text-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium border border-blue-200"
+                          >
+                            {displayName}
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
 

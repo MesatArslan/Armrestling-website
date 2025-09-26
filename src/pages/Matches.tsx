@@ -1383,6 +1383,7 @@ const Matches = () => {
                 onFixtureClose={handleFixtureClose}
                 activeFixtureId={activeFixture?.id}
                 onReorder={(ids) => reorderFixtures(ids)}
+                selectedTournamentId={selectedTournamentIdForMatches}
               />
               <div className="mt-4 flex justify-end gap-3">
                 {/* İçe Aktar butonu her zaman görünür */}
