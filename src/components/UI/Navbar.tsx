@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
-import { UserIcon, ChevronDownIcon, UserGroupIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { UserIcon, ChevronDownIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 import LanguageSwitcher from './LanguageSwitcher';
 import { AuthModal } from './AuthModal';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,6 +12,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [loginHint, setLoginHint] = useState<{ visible: boolean; text: string }>(() => ({ visible: false, text: '' }));
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -50,6 +51,18 @@ const Navbar = () => {
     setLoginDropdownOpen(false);
   };
 
+  const requireAuth = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault();
+      setLoginHint({ visible: true, text: 'Lütfen giriş yapınız' });
+      // auto hide
+      window.setTimeout(() => setLoginHint({ visible: false, text: '' }), 1800);
+      openAuthModal('login');
+      return true;
+    }
+    return false;
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-[60] bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 shadow-sm border-b border-gray-100">
       <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -62,16 +75,16 @@ const Navbar = () => {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/players" className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
+            <Link to="/players" onClick={(e) => requireAuth(e)} className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
               {t('navigation.players')}
             </Link>
-            <Link to="/tournaments" className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
+            <Link to="/tournaments" onClick={(e) => requireAuth(e)} className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
               {t('navigation.tournaments')}
             </Link>
-            <Link to="/matches" className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
+            <Link to="/matches" onClick={(e) => requireAuth(e)} className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
               {t('navigation.matches')}
             </Link>
-            <Link to="/scoring" className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
+            <Link to="/scoring" onClick={(e) => requireAuth(e)} className="text-gray-600 hover:text-blue-600 transition-colors duration-200">
               {t('navigation.scoring')}
             </Link>
             <LanguageSwitcher />
@@ -155,16 +168,16 @@ const Navbar = () => {
       {/* Mobile/Tablet menu */}
       <div ref={mobileMenuRef} className={`${isOpen ? 'opacity-100 max-h-[70vh]' : 'opacity-0 max-h-0 pointer-events-none'} md:hidden transition-all duration-300 overflow-hidden absolute left-0 right-0 top-16 z-[70] bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-100 shadow-lg`}> 
         <div className="px-4 py-3 space-y-2 max-h-[70vh] overflow-auto">
-          <Link to="/players" onClick={() => setIsOpen(false)} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+          <Link to="/players" onClick={(e) => { if (requireAuth(e)) return; setIsOpen(false); }} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
             {t('navigation.players')}
           </Link>
-          <Link to="/tournaments" onClick={() => setIsOpen(false)} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+          <Link to="/tournaments" onClick={(e) => { if (requireAuth(e)) return; setIsOpen(false); }} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
             {t('navigation.tournaments')}
           </Link>
-          <Link to="/matches" onClick={() => setIsOpen(false)} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+          <Link to="/matches" onClick={(e) => { if (requireAuth(e)) return; setIsOpen(false); }} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
             {t('navigation.matches')}
           </Link>
-          <Link to="/scoring" onClick={() => setIsOpen(false)} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+          <Link to="/scoring" onClick={(e) => { if (requireAuth(e)) return; setIsOpen(false); }} className="block w-full text-center px-3 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700">
             {t('navigation.scoring')}
           </Link>
           
@@ -220,6 +233,15 @@ const Navbar = () => {
         mode={authMode}
         onModeChange={setAuthMode}
       />
+
+      {/* Login hint toast */}
+      {loginHint.visible && (
+        <div className="fixed top-20 right-6 z-[70]">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg shadow">
+            {loginHint.text}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

@@ -547,7 +547,7 @@ const Footer = () => {
           <div className="border-t border-gray-700 mt-12 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-gray-400 text-sm">
-                © 2024 ArmWrestle Pro. {t('home.footer.rights', { defaultValue: 'All rights reserved.' })}
+                © ArmWrestle Pro. {t('home.footer.rights', { defaultValue: 'All rights reserved.' })}
               </div>
               <div className="flex items-center gap-6 text-sm text-gray-400">
                 <span>{t('home.footer.version', { defaultValue: 'Version 1.0' })}</span>
