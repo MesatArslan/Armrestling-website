@@ -51,6 +51,9 @@ const Matches = () => {
   const fixtures: Fixture[] = fixtureIds.map(id => fixturesMap[id]).filter(Boolean) as Fixture[];
   const activeFixture: Fixture | null = activeFixtureId ? (fixturesMap[activeFixtureId] as Fixture) : null;
   const [desiredTab, setDesiredTab] = useState<'active' | 'completed' | 'rankings' | null>(null);
+  // Matches page tournament filter state (derived from active fixtures)
+  const [selectedTournamentIdForMatches, setSelectedTournamentIdForMatches] = useState<string | null>(null);
+  const tournamentScrollRef = useRef<HTMLDivElement | null>(null);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     fixtureId: string | null;
@@ -196,6 +199,18 @@ const Matches = () => {
     // Clear URL parameters via router to prevent re-processing
     navigate({ pathname: location.pathname }, { replace: true });
   }, [isLoading, fixtures.length, location.search]);
+
+  // Ensure an active fixture exists when tournament filter changes
+  useEffect(() => {
+    if (isLoading) return;
+    if (!selectedTournamentIdForMatches) return;
+    const filtered = fixtures.filter(f => f.tournamentId === selectedTournamentIdForMatches);
+    if (filtered.length === 0) return;
+    // If current active fixture is not in selected tournament, switch to first
+    if (!activeFixture || activeFixture.tournamentId !== selectedTournamentIdForMatches) {
+      setActiveFixtureId(filtered[0].id);
+    }
+  }, [selectedTournamentIdForMatches, fixtures, isLoading, activeFixture, setActiveFixtureId]);
 
   // Save fixtures whenever they change
   useEffect(() => {
@@ -1305,11 +1320,65 @@ const Matches = () => {
         <div className="transition-all duration-300 bg-transparent p-0 border-0 rounded-none shadow-none sm:backdrop-blur-md sm:bg-white/80 sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-2xl sm:p-6">
           {/* Header removed as requested */}
 
+          {/* Tournament Filter (above active fixtures) */}
+          {fixtures.length > 0 && (
+            <div className="mb-3">
+              <div className="relative">
+                {/* Scrollable chips */}
+                <div
+                  ref={tournamentScrollRef}
+                  className="overflow-x-auto scroll-smooth px-7 sm:px-9"
+                  style={{ scrollbarWidth: 'none' as any }}
+                >
+                  <div className="flex flex-nowrap items-center gap-1.5 py-0.5" style={{ msOverflowStyle: 'none' as any }}>
+                    <style>{`/* hide scrollbars */
+                      .no-scrollbar::-webkit-scrollbar{display:none}
+                    `}</style>
+                    {/* All tournaments chip */}
+                    <button
+                      onClick={() => setSelectedTournamentIdForMatches(null)}
+                      className={`shrink-0 px-2.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-colors ${
+                        selectedTournamentIdForMatches === null
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:text-blue-700'
+                      }`}
+                    >
+                      Tümü
+                    </button>
+                    {Array.from(
+                      fixtures.reduce((map, f) => {
+                        if (!map.has(f.tournamentId)) map.set(f.tournamentId, f.tournamentName);
+                        return map;
+                      }, new Map<string, string>())
+                    ).map(([tid, tname]) => (
+                      <button
+                        key={tid}
+                        onClick={() => setSelectedTournamentIdForMatches(tid)}
+                        className={`shrink-0 px-2.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-colors ${
+                          selectedTournamentIdForMatches === tid
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:text-blue-700'
+                        }`}
+                        title={tname}
+                      >
+                        {tname}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Edge fades */}
+                <div className="pointer-events-none absolute left-0 top-0 h-full w-7 sm:w-9 bg-gradient-to-r from-white/95 to-transparent" />
+                <div className="pointer-events-none absolute right-0 top-0 h-full w-7 sm:w-9 bg-gradient-to-l from-white/95 to-transparent" />
+              </div>
+            </div>
+          )}
+
           {/* Fixtures Navigation */}
           {fixtures.length > 0 && (
             <div className="mb-8">
               <ActiveFixturesNav
-                fixtures={fixtures}
+                fixtures={selectedTournamentIdForMatches ? fixtures.filter(f => f.tournamentId === selectedTournamentIdForMatches) : fixtures}
                 onFixtureSelect={handleFixtureSelect}
                 onFixtureClose={handleFixtureClose}
                 activeFixtureId={activeFixture?.id}
@@ -1626,81 +1695,86 @@ const Matches = () => {
       {/* Import Fixture Modal */}
       {isImportModalOpen && (
         <div
-          className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-[9998] overflow-hidden"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-2 sm:p-4 z-[100] overflow-hidden"
           onClick={resetImportModal}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md sm:max-w-lg max-h-[85vh] overflow-y-auto mx-2"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md sm:max-w-lg mx-2 sm:mx-4 max-h-[80vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{t('matches.importFixtureTitle')}</h3>
-                <p className="text-sm text-gray-600">Daha önce dışa aktardığınız bir fixtür dosyasını seçin</p>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 sm:px-5 py-3.5 sm:py-4 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-bold text-white truncate">{t('matches.importFixtureTitle')}</h3>
+                  <p className="text-blue-100 mt-0.5 text-xs">Daha önce dışa aktardığınız bir fixtür dosyasını seçin</p>
+                </div>
+                <button
+                  onClick={resetImportModal}
+                  className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg flex-shrink-0 ml-2"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={resetImportModal}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-200"
-              >
-                <XMarkIcon className="w-6 h-6" />
-              </button>
             </div>
 
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fixtür Dosyası (.json)
-                </label>
-                <input
-                  type="file"
-                  multiple
-                  accept=".json"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    setImportFiles(files);
-                    setImportFile(files[0] || null);
-                    setImportMessage(null);
-                  }}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer border border-gray-300 rounded-lg"
-                />
+            {/* Content */}
+            <div className="p-4 sm:p-5 overflow-y-auto">
+              <div className="space-y-3">
+                <div className="bg-gradient-to-br from-white to-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200/80 shadow-sm">
+                  <label className="block text-xs font-medium text-gray-700 mb-2">Fixtür Dosyası (.json)</label>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".json"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      setImportFiles(files);
+                      setImportFile(files[0] || null);
+                      setImportMessage(null);
+                    }}
+                    className="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer border border-gray-300 rounded-md"
+                  />
+                </div>
+
+                {importFiles.length > 0 && (
+                  <div className="bg-blue-50 rounded-md border border-blue-200 p-3">
+                    <p className="text-xs sm:text-sm text-blue-800">
+                      <span className="font-semibold">Seçilen dosyalar:</span> {importFiles.length}
+                    </p>
+                    <ul className="mt-2 space-y-1 max-h-28 overflow-auto text-xs text-blue-700 list-disc list-inside">
+                      {importFiles.map((f, idx) => (
+                        <li key={idx}>{f.name} <span className="text-blue-500">({(f.size / 1024).toFixed(2)} KB)</span></li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {importMessage && (
+                  <div className={`p-3 rounded-md border ${
+                    importMessage.type === 'success'
+                      ? 'bg-green-50 border-green-200 text-green-800'
+                      : 'bg-red-50 border-red-200 text-red-800'
+                  }`}>
+                    <p className="text-xs sm:text-sm">{importMessage.text}</p>
+                  </div>
+                )}
               </div>
-
-              {importFiles.length > 0 && (
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    <span className="font-semibold">Seçilen dosyalar:</span> {importFiles.length}
-                  </p>
-                  <ul className="mt-2 space-y-1 max-h-32 overflow-auto text-xs text-blue-700 list-disc list-inside">
-                    {importFiles.map((f, idx) => (
-                      <li key={idx}>{f.name} <span className="text-blue-500">({(f.size / 1024).toFixed(2)} KB)</span></li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {importMessage && (
-                <div className={`p-3 rounded-lg border ${
-                  importMessage.type === 'success' 
-                    ? 'bg-green-50 border-green-200 text-green-800' 
-                    : 'bg-red-50 border-red-200 text-red-800'
-                }`}>
-                  <p className="text-sm">{importMessage.text}</p>
-                </div>
-              )}
             </div>
 
-            <div className="flex justify-end gap-3">
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2.5 p-3 sm:p-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0">
               <button
                 onClick={resetImportModal}
-                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 text-sm font-semibold rounded-lg"
+                className="px-3.5 sm:px-4 py-2 rounded-md border-2 border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:text-gray-900 transition-colors font-semibold text-xs sm:text-sm"
                 disabled={isImporting}
               >
-                İptal
+                {t('matches.cancel')}
               </button>
               <button
                 onClick={handleImportFixture}
                 disabled={(importFiles.length === 0 && !importFile) || isImporting || (importMessage?.type === 'success')}
-                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 sm:px-5 py-2 rounded-md border-2 border-blue-300 bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 hover:border-blue-400 transition-colors font-semibold text-xs sm:text-sm disabled:bg-gray-300 disabled:border-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isImporting && (
                   <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
