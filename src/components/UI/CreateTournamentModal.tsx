@@ -34,7 +34,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
   initialData
 }) => {
   const { t } = useTranslation();
-  
+
   const [newTournamentName, setNewTournamentName] = useState(initialData?.name || '');
   const [weightRanges, setWeightRanges] = useState<WeightRange[]>(
     initialData?.weightRanges || [{ id: uuidv4(), name: '', min: 0, max: 0 }]
@@ -55,6 +55,9 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
   // Styled dropdown states (match Scoring sorting criteria UI)
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
   const [isHandDropdownOpen, setIsHandDropdownOpen] = useState(false);
+
+  // Mobile tab system state
+  const [activeTab, setActiveTab] = useState<'details' | 'weight'>('details');
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -94,8 +97,8 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
   };
 
   const handleWeightRangeChange = (id: string, field: 'name' | 'min' | 'max', value: string | number) => {
-    setWeightRanges(weightRanges.map(range => 
-      range.id === id 
+    setWeightRanges(weightRanges.map(range =>
+      range.id === id
         ? { ...range, [field]: value }
         : range
     ));
@@ -105,7 +108,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
     if (!newTournamentName.trim()) return;
 
     // Validate weight ranges
-    const validRanges = weightRanges.filter(range => 
+    const validRanges = weightRanges.filter(range =>
       range.name.trim() && range.min > 0 && range.max > 0 && range.max > range.min
     );
 
@@ -137,10 +140,10 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-2 sm:p-4 z-[100] overflow-hidden"
     >
-      <div 
+      <div
         className="bg-white rounded-xl shadow-2xl max-w-5xl w-full mx-2 sm:mx-4 max-h-[85vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
@@ -168,13 +171,39 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
             </button>
           </div>
         </div>
-        
-        <div className="flex flex-1 overflow-hidden flex-col lg:flex-row h-[calc(85vh-120px)] gap-3 lg:gap-0">
+
+        {/* Mobile Tab Navigation - Only visible on mobile */}
+        <div className="lg:hidden border-b border-gray-200 bg-white">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'details'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t('tournaments.details')}
+            </button>
+            <button
+              onClick={() => setActiveTab('weight')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'weight'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t('tournaments.weightRanges')} ({weightRanges.length})
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-1 overflow-hidden flex-col lg:flex-row h-[calc(85vh-120px)] lg:h-[calc(85vh-120px)] gap-3 lg:gap-0">
           {/* Left Column - Tournament Details and Filters */}
-          <div className="w-full lg:w-1/2 border-r-0 lg:border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-3 sm:p-4 lg:p-5 overflow-y-auto flex-shrink-0 lg:flex-shrink max-h-80 lg:max-h-none">
+          <div className={`w-full lg:w-1/2 border-r-0 lg:border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-3 sm:p-4 lg:p-5 overflow-y-auto flex-shrink-0 lg:flex-shrink max-h-[55vh] lg:h-full lg:max-h-none ${activeTab !== 'details' ? 'hidden lg:block' : ''}`}>
             <div className="space-y-4 sm:space-y-6">
               {/* Tournament Name */}
-              <div className="bg-white rounded-lg p-3 sm:p-5 border border-gray-200 shadow-sm">
+              <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-3 sm:p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2.5 sm:mb-3 flex items-center">
                   <span className="bg-blue-100 text-blue-600 rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs sm:text-sm font-bold mr-2 sm:mr-3 flex-shrink-0">1</span>
                   <span className="truncate">{t('tournaments.tournamentName')}</span>
@@ -194,7 +223,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
               </div>
 
               {/* Tournament Filters */}
-              <div className="bg-white rounded-lg p-3 sm:p-5 border border-gray-200 shadow-sm">
+              <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-3 sm:p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2.5 sm:mb-3 flex items-center">
                   <span className="bg-blue-100 text-blue-600 rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs sm:text-sm font-bold mr-2 sm:mr-3 flex-shrink-0">2</span>
                   <span className="truncate">{t('tournaments.filters')}</span>
@@ -211,8 +240,8 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                         className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-800 font-medium cursor-pointer hover:border-indigo-300 transition-all duration-200 flex items-center justify-between text-sm"
                       >
                         <span>{genderFilter === 'female' ? t('players.femaleOnly') : t('players.maleOnly')}</span>
-                        <svg 
-                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} 
+                        <svg
+                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isGenderDropdownOpen ? 'rotate-180' : ''}`}
                           fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -221,16 +250,15 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                       {isGenderDropdownOpen && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl z-[1000] max-h-48 overflow-y-auto">
                           <div className="p-2">
-                            {(['male','female'] as Array<'male'|'female'>).map((val) => (
+                            {(['male', 'female'] as Array<'male' | 'female'>).map((val) => (
                               <button
                                 key={val}
                                 onClick={() => {
                                   setGenderFilter(val);
                                   setIsGenderDropdownOpen(false);
                                 }}
-                                className={`w-full px-3 py-2 text-left hover:bg-indigo-50 transition-colors duration-200 flex items-center gap-3 rounded-md ${
-                                  genderFilter === val ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-gray-700'
-                                }`}
+                                className={`w-full px-3 py-2 text-left hover:bg-indigo-50 transition-colors duration-200 flex items-center gap-3 rounded-md ${genderFilter === val ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-gray-700'
+                                  }`}
                               >
                                 <div className={`w-2 h-2 rounded-full ${genderFilter === val ? 'bg-indigo-500' : 'bg-gray-300'}`}></div>
                                 <span className="flex-1 text-sm">{val === 'male' ? t('players.maleOnly') : t('players.femaleOnly')}</span>
@@ -260,11 +288,11 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                           {handPreferenceFilter === 'left'
                             ? t('players.leftHandOnly')
                             : handPreferenceFilter === 'right'
-                            ? t('players.rightHandOnly')
-                            : t('tournaments.allHandPreferences')}
+                              ? t('players.rightHandOnly')
+                              : t('tournaments.allHandPreferences')}
                         </span>
-                        <svg 
-                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isHandDropdownOpen ? 'rotate-180' : ''}`} 
+                        <svg
+                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isHandDropdownOpen ? 'rotate-180' : ''}`}
                           fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -286,9 +314,8 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                                     setHandPreferenceFilter(opt.id === '' ? null : (opt.id as 'left' | 'right'));
                                     setIsHandDropdownOpen(false);
                                   }}
-                                  className={`w-full px-3 py-2 text-left hover:bg-indigo-50 transition-colors duration-200 flex items-center gap-3 rounded-md ${
-                                    isSelected ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-gray-700'
-                                  }`}
+                                  className={`w-full px-3 py-2 text-left hover:bg-indigo-50 transition-colors duration-200 flex items-center gap-3 rounded-md ${isSelected ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-gray-700'
+                                    }`}
                                 >
                                   <div className={`w-2 h-2 rounded-full ${isSelected ? 'bg-indigo-500' : 'bg-gray-300'}`}></div>
                                   <span className="flex-1 text-sm">{opt.label}</span>
@@ -306,7 +333,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Birth Year Filter */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
                   <div>
@@ -343,9 +370,9 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
           </div>
 
           {/* Right Column - Weight Ranges */}
-          <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto bg-gray-50 min-h-0">
+          <div className={`flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto bg-gray-50 min-h-0 max-h-[55vh] lg:h-full ${activeTab !== 'weight' ? 'hidden lg:block' : ''}`}>
             <div className="space-y-4 sm:space-y-6">
-              <div className="bg-white rounded-lg p-3 sm:p-5 border border-gray-200 shadow-sm">
+              <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-3 sm:p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-3 sm:gap-0">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
                     <span className="bg-blue-100 text-blue-600 rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs sm:text-sm font-bold mr-2 sm:mr-3 flex-shrink-0">3</span>
@@ -353,16 +380,16 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                   </h3>
                   <button
                     onClick={handleAddWeightRange}
-                    className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium text-xs sm:text-sm w-full sm:w-auto"
+                    className="px-3 sm:px-4 py-2 rounded-lg border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 hover:border-blue-300 hover:from-blue-100 hover:to-indigo-100 transition-colors flex items-center justify-center gap-2 font-semibold text-xs sm:text-sm w-full sm:w-auto"
                   >
                     <span className="text-lg">+</span>
                     {t('tournaments.addRange')}
                   </button>
                 </div>
-                
+
                 <div className="space-y-3 sm:space-y-4 overflow-y-auto">
                   {weightRanges.map((range, index) => (
-                    <div key={range.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm">
+                    <div key={range.id} className="bg-gradient-to-br from-gray-50 to-white border border-gray-200/80 rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-2.5">
                         <span className="text-xs sm:text-sm font-medium text-gray-600">{t('tournaments.range')} #{index + 1}</span>
                         {weightRanges.length > 1 && (
@@ -375,7 +402,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                           </button>
                         )}
                       </div>
-                      
+
                       <div className="space-y-3">
                         <div>
                           <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
@@ -418,7 +445,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                           </div>
                         </div>
                         {range.min > 0 && range.max > 0 && (
-                          <div className="text-xs sm:text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
+                          <div className="text-xs sm:text-sm text-blue-700 bg-blue-50/80 border border-blue-200 px-3 py-2 rounded-lg">
                             {t('tournaments.rangeLabel', { min: range.min.toFixed(1), max: range.max.toFixed(1) })}
                           </div>
                         )}
@@ -432,11 +459,11 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-center p-3 sm:p-4 border-top border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-center p-3 sm:p-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 flex-shrink-0">
           <button
             onClick={handleSubmit}
             disabled={!newTournamentName.trim() || weightRanges.filter(r => r.name.trim() && r.min > 0 && r.max > 0).length === 0}
-            className="bg-blue-600 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed text-sm sm:text-base w-full sm:w-auto min-w-[180px]"
+            className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg border-2 border-blue-300 bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 hover:border-blue-400 transition-colors font-semibold disabled:bg-gray-300 disabled:border-gray-300 disabled:cursor-not-allowed text-sm sm:text-base w-full sm:w-auto min-w-[180px] shadow-sm"
           >
             {isEditMode ? t('tournaments.saveChanges') : t('tournaments.createTournament')}
           </button>
