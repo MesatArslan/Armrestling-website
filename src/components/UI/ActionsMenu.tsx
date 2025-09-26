@@ -42,8 +42,8 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({ items, buttonLabel = 'Actions
         onClick={() => setIsOpen((p) => !p)}
         aria-label={ariaLabel || buttonLabel}
         className={`${iconOnly
-          ? 'inline-flex items-center justify-center w-10 h-10 p-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 border border-transparent overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-300/50 appearance-none bg-clip-padding'
-          : 'inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base font-semibold border border-transparent overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-300/50'}`}
+          ? 'inline-flex items-center justify-center w-10 h-10 p-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow transition-all duration-200 border border-transparent overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-300/50 appearance-none bg-clip-padding'
+          : 'inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow transition-all duration-200 text-sm sm:text-base font-semibold border border-transparent overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-300/50'}`}
       >
         <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 16.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
@@ -52,21 +52,23 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({ items, buttonLabel = 'Actions
       </button>
 
       {isOpen && (
-        <div className="origin-top-right absolute right-0 mt-2 w-60 rounded-2xl shadow-xl bg-white ring-1 ring-black/5 focus:outline-none z-50">
-          <div className="p-2 space-y-1">
-            {items.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleItemClick(item)}
-                disabled={item.disabled}
-                className={`group w-full px-3.5 py-2.5 text-left flex items-center gap-3 rounded-lg text-sm transition-colors ${
-                  item.disabled
-                    ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-200'
-                }`}
-              >
-                <span className="truncate">{item.label}</span>
-              </button>
+        <div className="origin-top-right absolute right-0 mt-2 w-64 rounded-2xl shadow-2xl bg-white/95 backdrop-blur-md border border-gray-200 focus:outline-none z-50">
+          <div className="p-2">
+            {items.map((item, idx) => (
+              <div key={item.id}>
+                <button
+                  onClick={() => handleItemClick(item)}
+                  disabled={item.disabled}
+                  className={`w-full px-3.5 py-2.5 text-left flex items-center gap-3 rounded-xl text-sm transition-colors ${
+                    item.disabled
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200'
+                  }`}
+                >
+                  <span className="truncate">{item.label}</span>
+                </button>
+                {idx < items.length - 1 && <div className="mx-2 h-px bg-gray-100" />}
+              </div>
             ))}
           </div>
         </div>
