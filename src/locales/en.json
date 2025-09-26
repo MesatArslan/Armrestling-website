@@ -176,6 +176,7 @@
     "setupTournament": "Set up your tournament with custom weight ranges and filters",
     "details": "Tournament Details",
     "filters": "Tournament Filters",
+    "templates": "Templates",
     "genderRestriction": "Gender Restriction",
     "allGenders": "All Genders",
     "handPreference": "Hand Preference",

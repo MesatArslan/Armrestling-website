@@ -18,6 +18,8 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('15');
   const [selectedGender, setSelectedGender] = useState<'male' | 'female' | null>(null);
   const [selectedHandPreference, setSelectedHandPreference] = useState<'left' | 'right' | null>('right');
+  // Mobile tab system for Filters vs Templates
+  const [activeTab, setActiveTab] = useState<'filters' | 'templates'>('filters');
 
   const categories = getTemplatesByCategory();
   const filteredTemplates = selectedGender 
@@ -76,9 +78,35 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row h-[calc(85vh-120px)]">
+        {/* Mobile Tab Navigation - Only visible on mobile */}
+        <div className="lg:hidden border-b border-gray-200 bg-white">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('filters')}
+              className={`${
+                activeTab === 'filters'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                  : 'text-gray-600 hover:text-gray-800'
+              } flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
+            >
+              {t('tournaments.filters')}
+            </button>
+            <button
+              onClick={() => setActiveTab('templates')}
+              className={`${
+                activeTab === 'templates'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                  : 'text-gray-600 hover:text-gray-800'
+              } flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
+            >
+              {t('tournaments.templates') || 'Şablonlar'}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row h:[calc(85vh-120px)] lg:h-[calc(85vh-120px)]">
           {/* Sidebar - Categories */}
-          <div className="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-4 sm:p-6 overflow-y-auto max-h-80 lg:max-h-none">
+          <div className={`w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-4 sm:p-6 overflow-y-auto max-h-[55vh] lg:max-h-none ${activeTab !== 'filters' ? 'hidden lg:block' : ''}`}> 
             <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg flex items-center">
               <ScaleIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-blue-600" />
               {t('tournaments.ageCategory')}
@@ -174,7 +202,7 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
           </div>
 
           {/* Main Content - Templates */}
-          <div className="flex-1 p-4 sm:p-8 overflow-y-auto bg-gray-50">
+          <div className={`flex-1 p-4 sm:p-8 overflow-y-auto bg-gray-50 max-h-[55vh] lg:max-h-none ${activeTab !== 'templates' ? 'hidden lg:block' : ''}`}> 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {filteredTemplates.map((template) => (
                 <div
