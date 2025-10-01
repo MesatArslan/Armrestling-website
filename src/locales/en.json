@@ -530,7 +530,8 @@
   },
   "language": {
     "en": "English",
-    "tr": "Turkish"
+    "tr": "Turkish",
+    "ru": "Russian"
   },
   "auth": {
     "login": "Log In",

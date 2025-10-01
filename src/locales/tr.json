@@ -606,7 +606,8 @@
   },
   "language": {
     "en": "İngilizce",
-    "tr": "Türkçe"
+    "tr": "Türkçe",
+    "ru": "Rusça"
   },
   "auth": {
     "login": "Giriş Yap",
