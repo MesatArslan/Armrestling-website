@@ -8,6 +8,7 @@ import ruTranslation from './locales/ru.json';
 import azTranslation from './locales/az.json';
 import esTranslation from './locales/es.json';
 import ptTranslation from './locales/pt.json';
+import ukTranslation from './locales/uk.json';
 
 const resources = {
   en: { translation: enTranslation },
@@ -15,7 +16,8 @@ const resources = {
   ru: { translation: ruTranslation },
   az: { translation: azTranslation },
   es: { translation: esTranslation },
-  pt: { translation: ptTranslation }
+  pt: { translation: ptTranslation },
+  uk: { translation: ukTranslation }
 };
 
 i18n
@@ -26,7 +28,7 @@ i18n
     fallbackLng: 'en',
     debug: false,
     interpolation: { escapeValue: false },
-    supportedLngs: ['en', 'tr', 'ru', 'az', 'es', 'pt'],
+    supportedLngs: ['en', 'tr', 'ru', 'az', 'es', 'pt', 'uk'],
     nonExplicitSupportedLngs: true,
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
