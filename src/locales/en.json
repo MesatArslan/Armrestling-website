@@ -532,7 +532,10 @@
   "language": {
     "en": "English",
     "tr": "Turkish",
-    "ru": "Russian"
+    "ru": "Russian",
+    "az": "Azerbaijani",
+    "es": "Spanish",
+    "pt": "Portuguese"
   },
   "auth": {
     "login": "Log In",

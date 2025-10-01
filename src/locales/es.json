@@ -534,7 +534,8 @@
     "tr": "Turkish",
     "ru": "Russian",
     "az": "Azerbaijani",
-    "es": "Español"
+    "es": "Español",
+    "pt": "Português"
   },
   "auth": {
     "login": "Iniciar Sesión",
