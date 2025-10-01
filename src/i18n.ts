@@ -9,6 +9,7 @@ import azTranslation from './locales/az.json';
 import esTranslation from './locales/es.json';
 import ptTranslation from './locales/pt.json';
 import ukTranslation from './locales/uk.json';
+import kkTranslation from './locales/kk.json';
 
 const resources = {
   en: { translation: enTranslation },
@@ -17,7 +18,8 @@ const resources = {
   az: { translation: azTranslation },
   es: { translation: esTranslation },
   pt: { translation: ptTranslation },
-  uk: { translation: ukTranslation }
+  uk: { translation: ukTranslation },
+  kk: { translation: kkTranslation }
 };
 
 i18n
@@ -28,7 +30,7 @@ i18n
     fallbackLng: 'en',
     debug: false,
     interpolation: { escapeValue: false },
-    supportedLngs: ['en', 'tr', 'ru', 'az', 'es', 'pt', 'uk'],
+    supportedLngs: ['en', 'tr', 'ru', 'az', 'es', 'pt', 'uk', 'kk'],
     nonExplicitSupportedLngs: true,
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

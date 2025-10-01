@@ -88,6 +88,17 @@ const LanguageSwitcher: React.FC = () => {
         >
           RU
         </button>
+        <button
+          onClick={() => changeLanguage('kk')}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
+            i18n.language === 'kk'
+              ? 'bg-white text-blue-700 shadow border border-blue-200'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+          aria-pressed={i18n.language === 'kk'}
+        >
+          KK
+        </button>
       </div>
     </div>
   );
