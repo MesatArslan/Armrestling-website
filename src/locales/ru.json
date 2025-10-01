@@ -392,6 +392,7 @@
   },
   "matches": {
     "title": "Матчи",
+    "all": "Все",
     "activeFixtures": "Активные сетки",
     "completedMatches": "Завершенные матчи",
     "player1": "Участник 1",

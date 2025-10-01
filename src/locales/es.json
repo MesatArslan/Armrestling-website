@@ -392,6 +392,7 @@
   },
   "matches": {
     "title": "Enfrentamientos",
+    "all": "Todos",
     "activeFixtures": "Llaves Activas",
     "completedMatches": "Enfrentamientos Completados",
     "player1": "Jugador 1",

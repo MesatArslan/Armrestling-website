@@ -392,6 +392,7 @@
   },
   "matches": {
     "title": "Görüşlər",
+    "all": "Hamısı",
     "activeFixtures": "Aktiv çıxışlar",
     "completedMatches": "Tamamlanmış görüşlər",
     "player1": "1-ci idmançı",

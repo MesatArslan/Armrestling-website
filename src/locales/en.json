@@ -392,6 +392,7 @@
   },
   "matches": {
     "title": "Matches",
+    "all": "All",
     "activeFixtures": "Active Fixtures",
     "completedMatches": "Completed Matches",
     "player1": "Player 1",

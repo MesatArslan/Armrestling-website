@@ -1343,7 +1343,7 @@ const Matches = () => {
                           : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:text-blue-700'
                       }`}
                     >
-                      Tümü
+                      {t('matches.all')}
                     </button>
                     {Array.from(
                       fixtures.reduce((map, f) => {

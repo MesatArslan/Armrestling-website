@@ -468,6 +468,7 @@
   },
   "matches": {
     "title": "Maçlar",
+    "all": "Tümü",
     "activeFixtures": "Aktif Fikstürler",
     "completedMatches": "Tamamlanan Maçlar",
     "player1": "Yarışmacı 1",
