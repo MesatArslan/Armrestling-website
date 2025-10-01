@@ -722,7 +722,6 @@
     "tournamentsAndFixturesDesc": "Hem turnuva adları hem fikstür adları gösterilir",
     "selected": "Seçili",
     "tournamentsCount": "{{count}} turnuva",
-    "fixturesCount": "{{count}} fikstür",
     "pdfCreating": "PDF oluşturuluyor...",
     "downloading": "İndiriliyor...",
     "sortingBy": "Sıralama: {{criteria}}",
