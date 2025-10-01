@@ -45,6 +45,17 @@ const LanguageSwitcher: React.FC = () => {
           AZ
         </button>
         <button
+          onClick={() => changeLanguage('es')}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
+            i18n.language === 'es'
+              ? 'bg-white text-blue-700 shadow border border-blue-200'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+          aria-pressed={i18n.language === 'es'}
+        >
+          ES
+        </button>
+        <button
           onClick={() => changeLanguage('ru')}
           className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
             i18n.language === 'ru'
