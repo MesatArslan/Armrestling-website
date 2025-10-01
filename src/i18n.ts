@@ -5,11 +5,13 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslation from './locales/en.json';
 import trTranslation from './locales/tr.json';
 import ruTranslation from './locales/ru.json';
+import azTranslation from './locales/az.json';
 
 const resources = {
   en: { translation: enTranslation },
   tr: { translation: trTranslation },
-  ru: { translation: ruTranslation }
+  ru: { translation: ruTranslation },
+  az: { translation: azTranslation }
 };
 
 i18n
@@ -20,7 +22,7 @@ i18n
     fallbackLng: 'en',
     debug: false,
     interpolation: { escapeValue: false },
-    supportedLngs: ['en', 'tr', 'ru'],
+    supportedLngs: ['en', 'tr', 'ru', 'az'],
     nonExplicitSupportedLngs: true,
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
