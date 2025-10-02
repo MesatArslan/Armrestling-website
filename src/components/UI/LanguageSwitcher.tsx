@@ -1,149 +1,89 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 const LanguageSwitcher: React.FC = () => {
   const { i18n, t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const languages = [
+    { code: 'en', name: 'English', flag: 'EN' },
+    { code: 'tr', name: 'Türkçe', flag: 'TR' },
+    { code: 'az', name: 'Azərbaycan', flag: 'AZ' },
+    { code: 'es', name: 'Español', flag: 'ES' },
+    { code: 'pt', name: 'Português', flag: 'PT' },
+    { code: 'uk', name: 'Українська', flag: 'UK' },
+    { code: 'ru', name: 'Русский', flag: 'RU' },
+    { code: 'kk', name: 'Қазақша', flag: 'KK' },
+    { code: 'ar', name: 'العربية', flag: 'عربي' },
+    { code: 'fr', name: 'Français', flag: 'FR' },
+    { code: 'de', name: 'Deutsch', flag: 'DE' },
+    { code: 'tk', name: 'Türkmençe', flag: 'TK' }
+  ];
+
+  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
+    setIsOpen(false);
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="relative" ref={dropdownRef}>
+      {/* Main button showing current language */}
       <div className="inline-flex p-1 rounded-full bg-gray-100 border border-gray-200 shadow-inner">
         <button
-          onClick={() => changeLanguage('en')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'en'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'en'}
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-full bg-white text-blue-700 shadow border border-blue-200 transition-colors hover:bg-blue-50"
+          aria-expanded={isOpen}
+          aria-haspopup="true"
         >
-          EN
-        </button>
-        <button
-          onClick={() => changeLanguage('tr')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'tr'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'tr'}
-        >
-          TR
-        </button>
-        <button
-          onClick={() => changeLanguage('az')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'az'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'az'}
-        >
-          AZ
-        </button>
-        <button
-          onClick={() => changeLanguage('es')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'es'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'es'}
-        >
-          ES
-        </button>
-        <button
-          onClick={() => changeLanguage('pt')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'pt'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'pt'}
-        >
-          PT
-        </button>
-        <button
-          onClick={() => changeLanguage('uk')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'uk'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'uk'}
-        >
-          UK
-        </button>
-        <button
-          onClick={() => changeLanguage('ru')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'ru'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'ru'}
-        >
-          RU
-        </button>
-        <button
-          onClick={() => changeLanguage('kk')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'kk'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'kk'}
-        >
-          KK
-        </button>
-        <button
-          onClick={() => changeLanguage('ar')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'ar'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'ar'}
-        >
-          عربي
-        </button>
-        <button
-          onClick={() => changeLanguage('fr')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'fr'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'fr'}
-        >
-          FR
-        </button>
-        <button
-          onClick={() => changeLanguage('de')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'de'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'de'}
-        >
-          DE
-        </button>
-        <button
-          onClick={() => changeLanguage('tk')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
-            i18n.language === 'tk'
-              ? 'bg-white text-blue-700 shadow border border-blue-200'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-          aria-pressed={i18n.language === 'tk'}
-        >
-          TK
+          <span>{currentLanguage.flag}</span>
+          <ChevronDownIcon 
+            className={`w-3 h-3 text-blue-600 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+          />
         </button>
       </div>
+
+      {/* Dropdown menu */}
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 max-h-48 overflow-y-auto">
+          {languages.map((language) => (
+            <button
+              key={language.code}
+              onClick={() => changeLanguage(language.code)}
+              className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-3 ${
+                i18n.language === language.code
+                  ? 'bg-blue-50 text-blue-700 font-medium'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              <span className="font-semibold text-xs w-8 text-center">
+                {language.flag}
+              </span>
+              <span>{language.name}</span>
+              {i18n.language === language.code && (
+                <span className="ml-auto text-blue-600">✓</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
