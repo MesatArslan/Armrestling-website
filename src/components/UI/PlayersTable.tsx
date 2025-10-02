@@ -424,11 +424,19 @@ const PlayersTable: React.FC<PlayersTableProps> = ({
 
   const handleCellBlur = () => {
     if (editingCell) {
-      onPlayersChange(players.map(player => 
-        player.id === editingCell.id 
-          ? { ...player, [editingCell.column]: editingValue || null }
-          : player
-      ));
+      const updatedPlayers = players.map(player => {
+        if (player.id !== editingCell.id) return player;
+        // Coerce numeric fields to valid types to satisfy persistence schema
+        if (editingCell.column === 'weight') {
+          const parsed = parseFloat(editingValue);
+          const safeWeight = Number.isFinite(parsed) ? parsed : 0;
+          return { ...player, weight: safeWeight } as Player;
+        }
+        // For other fields, keep empty string as null to avoid stray blanks in table UI
+        const nextValue = editingValue === '' ? null : editingValue;
+        return { ...player, [editingCell.column]: nextValue } as Player;
+      });
+      onPlayersChange(updatedPlayers);
       setEditingCell(null);
     }
   };

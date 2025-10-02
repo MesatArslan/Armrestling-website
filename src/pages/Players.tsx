@@ -160,12 +160,7 @@ const Players = () => {
     saveColumns(normalized);
   };
 
-  const handleAddTestPlayers = () => {
-    const testPlayers = PlayersStorage.createTestPlayers();
-    const updatedPlayers = [...playersState, ...testPlayers];
-    setPlayersState(updatedPlayers);
-    savePlayers(updatedPlayers as unknown as Player[]);
-  };
+  // Removed: handleAddTestPlayers
 
   const handleClearAllData = () => {
     setConfirmationModal({
@@ -561,7 +556,6 @@ const Players = () => {
                 </div>
                 <ActionsMenu
                   items={[
-                    { id: 'add-test', label: t('players.addTestPlayers'), onClick: handleAddTestPlayers },
                     { id: 'clear', label: t('players.clearAllData'), onClick: handleClearAllData },
                     { id: 'manage-col', label: t('players.manageColumns'), onClick: () => setIsManageColumnsOpen(true) },
                     { id: 'export-json', label: t('players.exportJSON'), onClick: handleExportJSON },
