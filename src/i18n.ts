@@ -12,6 +12,7 @@ import ukTranslation from './locales/uk.json';
 import kkTranslation from './locales/kk.json';
 import arTranslation from './locales/ar.json';
 import frTranslation from './locales/fr.json';
+import deTranslation from './locales/de.json';
 
 const resources = {
   en: { translation: enTranslation },
@@ -23,7 +24,8 @@ const resources = {
   uk: { translation: ukTranslation },
   kk: { translation: kkTranslation },
   ar: { translation: arTranslation },
-  fr: { translation: frTranslation }
+  fr: { translation: frTranslation },
+  de: { translation: deTranslation }
 };
 
 i18n
@@ -34,7 +36,7 @@ i18n
     fallbackLng: 'en',
     debug: false,
     interpolation: { escapeValue: false },
-    supportedLngs: ['en', 'tr', 'ru', 'az', 'es', 'pt', 'uk', 'kk', 'ar', 'fr'],
+    supportedLngs: ['en', 'tr', 'ru', 'az', 'es', 'pt', 'uk', 'kk', 'ar', 'fr', 'de'],
     nonExplicitSupportedLngs: true,
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
