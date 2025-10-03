@@ -177,6 +177,19 @@ const Players = () => {
     });
   };
 
+  const handleDeletePlayer = (playerId: string) => {
+    setConfirmationModal({
+      isOpen: true,
+      title: t('players.deletePlayer'),
+      message: t('players.confirmDelete'),
+      onConfirm: () => {
+        const next = playersState.filter(p => p.id !== playerId);
+        setPlayersState(next);
+        savePlayers(next as unknown as Player[]);
+      }
+    });
+  };
+
   // JSON Export
   const handleExportJSON = () => {
     // Export exactly what File Management saves for type 'players': repository snapshot
@@ -597,6 +610,7 @@ const Players = () => {
             onSearchChange={setSearchTerm}
             showAddRow={false}
             showDeleteColumn={true}
+            onDeletePlayer={handleDeletePlayer}
             scrollToBottomTrigger={scrollKey}
             scrollToPlayerId={lastAddedId || undefined}
           />
