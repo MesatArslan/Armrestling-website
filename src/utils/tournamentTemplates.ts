@@ -81,7 +81,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ageCategory: '15',
     genderFilter: 'male',
     weightRanges: [
-      { id: '15-male-45', name: '45 kg', min: 0, max: 45 },
+      { id: '15-male-45', name: '45 kg', min: 1, max: 45 },
       { id: '15-male-50', name: '50 kg', min: 45.01, max: 50 },
       { id: '15-male-55', name: '55 kg', min: 50.01, max: 55 },
       { id: '15-male-60', name: '60 kg', min: 55.01, max: 60 },
@@ -98,7 +98,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ageCategory: '15',
     genderFilter: 'female',
     weightRanges: [
-      { id: '15-female-40', name: '40 kg', min: 0, max: 40 },
+      { id: '15-female-40', name: '40 kg', min: 1, max: 40 },
       { id: '15-female-45', name: '45 kg', min: 40.01, max: 45 },
       { id: '15-female-50', name: '50 kg', min: 45.01, max: 50 },
       { id: '15-female-55', name: '55 kg', min: 50.01, max: 55 },
@@ -117,7 +117,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ageCategory: '18',
     genderFilter: 'male',
     weightRanges: [
-      { id: '18-male-50', name: '50 kg', min: 0, max: 50 },
+      { id: '18-male-50', name: '50 kg', min: 1, max: 50 },
       { id: '18-male-55', name: '55 kg', min: 50.01, max: 55 },
       { id: '18-male-60', name: '60 kg', min: 55.01, max: 60 },
       { id: '18-male-65', name: '65 kg', min: 60.01, max: 65 },
@@ -136,7 +136,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ageCategory: '18',
     genderFilter: 'female',
     weightRanges: [
-      { id: '18-female-45', name: '45 kg', min: 0, max: 45 },
+      { id: '18-female-45', name: '45 kg', min: 1, max: 45 },
       { id: '18-female-50', name: '50 kg', min: 45.01, max: 50 },
       { id: '18-female-55', name: '55 kg', min: 50.01, max: 55 },
       { id: '18-female-60', name: '60 kg', min: 55.01, max: 60 },
@@ -155,7 +155,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ageCategory: '23',
     genderFilter: 'male',
     weightRanges: [
-      { id: '23-male-55', name: '55 kg', min: 0, max: 55 },
+      { id: '23-male-55', name: '55 kg', min: 1, max: 55 },
       { id: '23-male-60', name: '60 kg', min: 55.01, max: 60 },
       { id: '23-male-65', name: '65 kg', min: 60.01, max: 65 },
       { id: '23-male-70', name: '70 kg', min: 65.01, max: 70 },
@@ -176,7 +176,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ageCategory: '23',
     genderFilter: 'female',
     weightRanges: [
-      { id: '23-female-50', name: '50 kg', min: 0, max: 50 },
+      { id: '23-female-50', name: '50 kg', min: 1, max: 50 },
       { id: '23-female-55', name: '55 kg', min: 50.01, max: 55 },
       { id: '23-female-60', name: '60 kg', min: 55.01, max: 60 },
       { id: '23-female-65', name: '65 kg', min: 60.01, max: 65 },
@@ -196,7 +196,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ageCategory: 'senior',
     genderFilter: 'male',
     weightRanges: [
-      { id: 'senior-male-55', name: '55 kg', min: 0, max: 55 },
+      { id: 'senior-male-55', name: '55 kg', min: 1, max: 55 },
       { id: 'senior-male-60', name: '60 kg', min: 55.01, max: 60 },
       { id: 'senior-male-65', name: '65 kg', min: 60.01, max: 65 },
       { id: 'senior-male-70', name: '70 kg', min: 65.01, max: 70 },
@@ -217,7 +217,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ageCategory: 'senior',
     genderFilter: 'female',
     weightRanges: [
-      { id: 'senior-female-50', name: '50 kg', min: 0, max: 50 },
+      { id: 'senior-female-50', name: '50 kg', min: 1, max: 50 },
       { id: 'senior-female-55', name: '55 kg', min: 50.01, max: 55 },
       { id: 'senior-female-60', name: '60 kg', min: 55.01, max: 60 },
       { id: 'senior-female-65', name: '65 kg', min: 60.01, max: 65 },
@@ -237,7 +237,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ageCategory: 'master',
     genderFilter: 'male',
     weightRanges: [
-      { id: 'master-male-60', name: '60 kg', min: 0, max: 60 },
+      { id: 'master-male-60', name: '60 kg', min: 1, max: 60 },
       { id: 'master-male-70', name: '70 kg', min: 60.01, max: 70 },
       { id: 'master-male-80', name: '80 kg', min: 70.01, max: 80 },
       { id: 'master-male-90', name: '90 kg', min: 80.01, max: 90 },
@@ -253,7 +253,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ageCategory: 'master',
     genderFilter: 'female',
     weightRanges: [
-      { id: 'master-female-60', name: '60 kg', min: 0, max: 60 },
+      { id: 'master-female-60', name: '60 kg', min: 1, max: 60 },
       { id: 'master-female-70', name: '70 kg', min: 60.01, max: 70 },
       { id: 'master-female-80', name: '80 kg', min: 70.01, max: 80 },
       { id: 'master-female-80plus', name: '80+ kg', min: 80.01, max: 999 },
@@ -270,7 +270,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'male',
     handPreferenceFilter: 'right',
     weightRanges: [
-      { id: 'kucukler-right-male-35', name: '35 kg', min: 0, max: 35 },
+      { id: 'kucukler-right-male-35', name: '35 kg', min: 1, max: 35 },
       { id: 'kucukler-right-male-40', name: '40 kg', min: 35.01, max: 40 },
       { id: 'kucukler-right-male-45', name: '45 kg', min: 40.01, max: 45 },
       { id: 'kucukler-right-male-50', name: '50 kg', min: 45.01, max: 50 },
@@ -289,7 +289,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'male',
     handPreferenceFilter: 'left',
     weightRanges: [
-      { id: 'kucukler-left-male-35', name: '35 kg', min: 0, max: 35 },
+      { id: 'kucukler-left-male-35', name: '35 kg', min: 1, max: 35 },
       { id: 'kucukler-left-male-40', name: '40 kg', min: 35.01, max: 40 },
       { id: 'kucukler-left-male-45', name: '45 kg', min: 40.01, max: 45 },
       { id: 'kucukler-left-male-50', name: '50 kg', min: 45.01, max: 50 },
@@ -308,7 +308,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'female',
     handPreferenceFilter: 'right',
     weightRanges: [
-      { id: 'kucukler-right-female-30', name: '30 kg', min: 0, max: 30 },
+      { id: 'kucukler-right-female-30', name: '30 kg', min: 1, max: 30 },
       { id: 'kucukler-right-female-35', name: '35 kg', min: 30.01, max: 35 },
       { id: 'kucukler-right-female-40', name: '40 kg', min: 35.01, max: 40 },
       { id: 'kucukler-right-female-45', name: '45 kg', min: 40.01, max: 45 },
@@ -327,7 +327,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'female',
     handPreferenceFilter: 'left',
     weightRanges: [
-      { id: 'kucukler-left-female-30', name: '30 kg', min: 0, max: 30 },
+      { id: 'kucukler-left-female-30', name: '30 kg', min: 1, max: 30 },
       { id: 'kucukler-left-female-35', name: '35 kg', min: 30.01, max: 35 },
       { id: 'kucukler-left-female-40', name: '40 kg', min: 35.01, max: 40 },
       { id: 'kucukler-left-female-45', name: '45 kg', min: 40.01, max: 45 },
@@ -348,7 +348,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'male',
     handPreferenceFilter: 'right',
     weightRanges: [
-      { id: 'yildizlar12-right-male-40', name: '40 kg', min: 0, max: 40 },
+      { id: 'yildizlar12-right-male-40', name: '40 kg', min: 1, max: 40 },
       { id: 'yildizlar12-right-male-45', name: '45 kg', min: 40.01, max: 45 },
       { id: 'yildizlar12-right-male-50', name: '50 kg', min: 45.01, max: 50 },
       { id: 'yildizlar12-right-male-55', name: '55 kg', min: 50.01, max: 55 },
@@ -367,7 +367,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'male',
     handPreferenceFilter: 'left',
     weightRanges: [
-      { id: 'yildizlar12-left-male-40', name: '40 kg', min: 0, max: 40 },
+      { id: 'yildizlar12-left-male-40', name: '40 kg', min: 1, max: 40 },
       { id: 'yildizlar12-left-male-45', name: '45 kg', min: 40.01, max: 45 },
       { id: 'yildizlar12-left-male-50', name: '50 kg', min: 45.01, max: 50 },
       { id: 'yildizlar12-left-male-55', name: '55 kg', min: 50.01, max: 55 },
@@ -386,7 +386,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'female',
     handPreferenceFilter: 'right',
     weightRanges: [
-      { id: 'yildizlar12-right-female-35', name: '35 kg', min: 0, max: 35 },
+      { id: 'yildizlar12-right-female-35', name: '35 kg', min: 1, max: 35 },
       { id: 'yildizlar12-right-female-40', name: '40 kg', min: 35.01, max: 40 },
       { id: 'yildizlar12-right-female-45', name: '45 kg', min: 40.01, max: 45 },
       { id: 'yildizlar12-right-female-50', name: '50 kg', min: 45.01, max: 50 },
@@ -405,7 +405,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'female',
     handPreferenceFilter: 'left',
     weightRanges: [
-      { id: 'yildizlar12-left-female-35', name: '35 kg', min: 0, max: 35 },
+      { id: 'yildizlar12-left-female-35', name: '35 kg', min: 1, max: 35 },
       { id: 'yildizlar12-left-female-40', name: '40 kg', min: 35.01, max: 40 },
       { id: 'yildizlar12-left-female-45', name: '45 kg', min: 40.01, max: 45 },
       { id: 'yildizlar12-left-female-50', name: '50 kg', min: 45.01, max: 50 },
@@ -426,7 +426,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'male',
     handPreferenceFilter: 'right',
     weightRanges: [
-      { id: 'genclerB-right-male-45', name: '45 kg', min: 0, max: 45 },
+      { id: 'genclerB-right-male-45', name: '45 kg', min: 1, max: 45 },
       { id: 'genclerB-right-male-50', name: '50 kg', min: 45.01, max: 50 },
       { id: 'genclerB-right-male-55', name: '55 kg', min: 50.01, max: 55 },
       { id: 'genclerB-right-male-60', name: '60 kg', min: 55.01, max: 60 },
@@ -445,7 +445,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'male',
     handPreferenceFilter: 'left',
     weightRanges: [
-      { id: 'genclerB-left-male-45', name: '45 kg', min: 0, max: 45 },
+      { id: 'genclerB-left-male-45', name: '45 kg', min: 1, max: 45 },
       { id: 'genclerB-left-male-50', name: '50 kg', min: 45.01, max: 50 },
       { id: 'genclerB-left-male-55', name: '55 kg', min: 50.01, max: 55 },
       { id: 'genclerB-left-male-60', name: '60 kg', min: 55.01, max: 60 },
@@ -464,7 +464,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'female',
     handPreferenceFilter: 'right',
     weightRanges: [
-      { id: 'genclerB-right-female-40', name: '40 kg', min: 0, max: 40 },
+      { id: 'genclerB-right-female-40', name: '40 kg', min: 1, max: 40 },
       { id: 'genclerB-right-female-45', name: '45 kg', min: 40.01, max: 45 },
       { id: 'genclerB-right-female-50', name: '50 kg', min: 45.01, max: 50 },
       { id: 'genclerB-right-female-55', name: '55 kg', min: 50.01, max: 55 },
@@ -483,7 +483,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'female',
     handPreferenceFilter: 'left',
     weightRanges: [
-      { id: 'genclerB-left-female-40', name: '40 kg', min: 0, max: 40 },
+      { id: 'genclerB-left-female-40', name: '40 kg', min: 1, max: 40 },
       { id: 'genclerB-left-female-45', name: '45 kg', min: 40.01, max: 45 },
       { id: 'genclerB-left-female-50', name: '50 kg', min: 45.01, max: 50 },
       { id: 'genclerB-left-female-55', name: '55 kg', min: 50.01, max: 55 },
@@ -504,7 +504,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'male',
     handPreferenceFilter: 'right',
     weightRanges: [
-      { id: 'genclerA-right-male-50', name: '50 kg', min: 0, max: 50 },
+      { id: 'genclerA-right-male-50', name: '50 kg', min: 1, max: 50 },
       { id: 'genclerA-right-male-55', name: '55 kg', min: 50.01, max: 55 },
       { id: 'genclerA-right-male-60', name: '60 kg', min: 55.01, max: 60 },
       { id: 'genclerA-right-male-65', name: '65 kg', min: 60.01, max: 65 },
@@ -523,7 +523,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'male',
     handPreferenceFilter: 'left',
     weightRanges: [
-      { id: 'genclerA-left-male-50', name: '50 kg', min: 0, max: 50 },
+      { id: 'genclerA-left-male-50', name: '50 kg', min: 1, max: 50 },
       { id: 'genclerA-left-male-55', name: '55 kg', min: 50.01, max: 55 },
       { id: 'genclerA-left-male-60', name: '60 kg', min: 55.01, max: 60 },
       { id: 'genclerA-left-male-65', name: '65 kg', min: 60.01, max: 65 },
@@ -542,7 +542,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'female',
     handPreferenceFilter: 'right',
     weightRanges: [
-      { id: 'genclerA-right-female-45', name: '45 kg', min: 0, max: 45 },
+      { id: 'genclerA-right-female-45', name: '45 kg', min: 1, max: 45 },
       { id: 'genclerA-right-female-50', name: '50 kg', min: 45.01, max: 50 },
       { id: 'genclerA-right-female-55', name: '55 kg', min: 50.01, max: 55 },
       { id: 'genclerA-right-female-60', name: '60 kg', min: 55.01, max: 60 },
@@ -561,7 +561,7 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     genderFilter: 'female',
     handPreferenceFilter: 'left',
     weightRanges: [
-      { id: 'genclerA-left-female-45', name: '45 kg', min: 0, max: 45 },
+      { id: 'genclerA-left-female-45', name: '45 kg', min: 1, max: 45 },
       { id: 'genclerA-left-female-50', name: '50 kg', min: 45.01, max: 50 },
       { id: 'genclerA-left-female-55', name: '55 kg', min: 50.01, max: 55 },
       { id: 'genclerA-left-female-60', name: '60 kg', min: 55.01, max: 60 },
