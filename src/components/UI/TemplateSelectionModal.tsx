@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { XMarkIcon, InformationCircleIcon, ScaleIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import { TOURNAMENT_TEMPLATES, getTemplatesByCategory, type TournamentTemplate } from '../../utils/tournamentTemplates';
+import TemplateModalShell from './TemplateModalShell';
 
 interface TemplateSelectionModalProps {
   isOpen: boolean;
@@ -20,8 +21,7 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('15');
   const [selectedGender, setSelectedGender] = useState<'male' | 'female' | null>(null);
   const [selectedHandPreference, setSelectedHandPreference] = useState<'left' | 'right' | null>('right');
-  // Mobile tab system for Filters vs Templates
-  const [activeTab, setActiveTab] = useState<'filters' | 'templates'>('filters');
+  // Tab state handled by TemplateModalShell
 
   const categories = getTemplatesByCategory();
   const filteredTemplates = selectedGender 
@@ -46,12 +46,15 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-2 sm:p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[85vh] overflow-hidden">
-        {/* Header */}
+    <TemplateModalShell
+      isOpen={isOpen}
+      onClose={() => {
+        setSelectedHandPreference('right');
+        setSelectedGender(null);
+        onClose();
+      }}
+      header={(
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 sm:px-8 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
@@ -79,42 +82,15 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
             </button>
           </div>
         </div>
-
-        {/* Mobile Tab Navigation - Only visible on mobile */}
-        <div className="lg:hidden border-b border-gray-200 bg-white">
-          <div className="flex">
-            <button
-              onClick={() => setActiveTab('filters')}
-              className={`${
-                activeTab === 'filters'
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                  : 'text-gray-600 hover:text-gray-800'
-              } flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
-            >
-              {t('tournaments.filters')}
-            </button>
-            <button
-              onClick={() => setActiveTab('templates')}
-              className={`${
-                activeTab === 'templates'
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                  : 'text-gray-600 hover:text-gray-800'
-              } flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
-            >
-              {t('tournaments.templates') || 'Şablonlar'}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex flex-col lg:flex-row h:[calc(85vh-120px)] lg:h-[calc(85vh-120px)]">
-          {/* Sidebar - Categories */}
-          <div className={`w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-4 sm:p-6 overflow-y-auto max-h-[55vh] lg:max-h-none ${activeTab !== 'filters' ? 'hidden lg:block' : ''}`}> 
-            {/* Okul Şablonları Button */}
+      )}
+      render={({ sidebarClass, contentClass }) => (
+        <>
+          <div className={sidebarClass}>
             {onOpenDetailedTemplates && (
               <div className="mb-6">
                 <button
                   onClick={onOpenDetailedTemplates}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center space-x-2"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg ring-1 ring-inset ring-white/10 transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center space-x-2"
                 >
                   <ScaleIcon className="h-5 w-5" />
                   <span className="text-sm">{t('tournaments.newDetailedTemplate')}</span>
@@ -126,7 +102,6 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
               <ScaleIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-blue-600" />
               {t('tournaments.ageCategory')}
             </h3>
-            
             <div className="space-y-2">
               {Object.keys(categories).map((category) => (
                 <button
@@ -151,13 +126,12 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
               <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-base sm:text-lg">
                 {t('tournaments.selectGender')}
               </h3>
-              
               <div className="space-y-2">
                 <button
                   onClick={() => setSelectedGender(null)}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     selectedGender === null
-                      ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
                       : 'text-gray-700 hover:bg-white hover:shadow-md border border-gray-200'
                   }`}
                 >
@@ -177,7 +151,7 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
                   onClick={() => setSelectedGender('female')}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     selectedGender === 'female'
-                      ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg'
                       : 'text-gray-700 hover:bg-white hover:shadow-md border border-gray-200'
                   }`}
                 >
@@ -190,7 +164,6 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
               <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-base sm:text-lg">
                 {t('tournaments.handPreference')}
               </h3>
-              
               <div className="space-y-2">
                 <button
                   onClick={() => setSelectedHandPreference('right')}
@@ -216,39 +189,38 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
             </div>
           </div>
 
-          {/* Main Content - Templates */}
-          <div className={`flex-1 p-4 sm:p-8 overflow-y-auto bg-gray-50 max-h-[55vh] lg:max-h-none ${activeTab !== 'templates' ? 'hidden lg:block' : ''}`}> 
+          <div className={contentClass}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {filteredTemplates.map((template) => (
                 <div
                   key={template.id}
                   className={`border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-300 transform ${
-                    selectedHandPreference 
-                      ? 'bg-white hover:border-blue-400 hover:shadow-xl cursor-pointer hover:scale-105' 
+                    selectedHandPreference
+                      ? 'bg-white hover:border-blue-400 hover:shadow-xl cursor-pointer hover:scale-105'
                       : 'bg-gray-50 cursor-not-allowed opacity-60'
                   }`}
                   onClick={() => selectedHandPreference && handleTemplateSelect(template)}
                 >
                   <div className="flex items-start justify-between mb-4">
-                                      <div className="flex items-center space-x-3">
-                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-2">
-                      <ScaleIcon className="h-5 w-5 text-white" />
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-2">
+                        <ScaleIcon className="h-5 w-5 text-white" />
+                      </div>
+                      <h3 className="font-bold text-gray-900 text-lg sm:text-xl">
+                        {t(template.nameKey)}
+                        {selectedHandPreference && (
+                          <span className="text-xs sm:text-sm font-medium text-gray-600 ml-1 sm:ml-2">
+                            - {t(`players.${selectedHandPreference}Handed`)}
+                          </span>
+                        )}
+                      </h3>
                     </div>
-                    <h3 className="font-bold text-gray-900 text-lg sm:text-xl">
-                      {t(template.nameKey)}
-                      {selectedHandPreference && (
-                        <span className="text-xs sm:text-sm font-medium text-gray-600 ml-1 sm:ml-2">
-                          - {t(`players.${selectedHandPreference}Handed`)}
-                        </span>
-                      )}
-                    </h3>
+                    <InformationCircleIcon className="h-6 w-6 text-blue-500" />
                   </div>
-                  <InformationCircleIcon className="h-6 w-6 text-blue-500" />
-                </div>
-                
-                <p className="text-gray-600 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">
-                  {t(template.descriptionKey)}
-                </p>
+
+                  <p className="text-gray-600 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">
+                    {t(template.descriptionKey)}
+                  </p>
 
                   <div className="mb-4 sm:mb-6">
                     <h4 className="text-xs sm:text-sm font-semibold text-gray-800 mb-2 sm:mb-3 flex items-center">
@@ -274,7 +246,7 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
                     <div className="flex items-center space-x-2 sm:space-x-4">
                       <div className="flex items-center space-x-2">
                         <span className={`inline-block w-3 h-3 rounded-full ${
-                          template.genderFilter === 'male' ? 'bg-blue-500' : 
+                          template.genderFilter === 'male' ? 'bg-blue-500' :
                           template.genderFilter === 'female' ? 'bg-pink-500' : 'bg-green-500'
                         }`}></span>
                         <span className="text-xs sm:text-sm font-medium text-gray-700">
@@ -298,37 +270,37 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
               ))}
             </div>
 
-                          {!selectedHandPreference && filteredTemplates.length > 0 && (
-                <div className="text-center py-8">
-                  <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <InformationCircleIcon className="h-8 w-8 text-blue-500" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                    {t('tournaments.selectHandPreference')}
-                  </h3>
-                  <p className="text-gray-500">
-                    {t('tournaments.selectHandPreferenceDesc')}
-                  </p>
+            {!selectedHandPreference && filteredTemplates.length > 0 && (
+              <div className="text-center py-8">
+                <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <InformationCircleIcon className="h-8 w-8 text-blue-500" />
                 </div>
-              )}
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                  {t('tournaments.selectHandPreference')}
+                </h3>
+                <p className="text-gray-500">
+                  {t('tournaments.selectHandPreferenceDesc')}
+                </p>
+              </div>
+            )}
 
-              {filteredTemplates.length === 0 && (
-                <div className="text-center py-16">
-                  <div className="bg-gray-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                    <ScaleIcon className="h-10 w-10 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                    {t('tournaments.noTemplates')}
-                  </h3>
-                  <p className="text-gray-500">
-                    {t('tournaments.noTemplatesForCriteria')}
-                  </p>
+            {filteredTemplates.length === 0 && (
+              <div className="text-center py-16">
+                <div className="bg-gray-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                  <ScaleIcon className="h-10 w-10 text-gray-400" />
                 </div>
-              )}
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                  {t('tournaments.noTemplates')}
+                </h3>
+                <p className="text-gray-500">
+                  {t('tournaments.noTemplatesForCriteria')}
+                </p>
+              </div>
+            )}
           </div>
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    />
   );
 };
 
