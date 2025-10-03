@@ -17,7 +17,7 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
   onTemplateSelect,
   onOpenDetailedTemplates,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<string>('15');
   const [selectedGender, setSelectedGender] = useState<'male' | 'female' | null>(null);
   const [selectedHandPreference, setSelectedHandPreference] = useState<'left' | 'right' | null>('right');
@@ -86,7 +86,7 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
       render={({ sidebarClass, contentClass }) => (
         <>
           <div className={sidebarClass}>
-            {onOpenDetailedTemplates && (
+            {onOpenDetailedTemplates && (i18n.language === 'tr' || i18n.language === 'az') && (
               <div className="mb-6">
                 <button
                   onClick={onOpenDetailedTemplates}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 type TabKey = 'filters' | 'templates';
 
@@ -20,6 +21,7 @@ const TemplateModalShell: React.FC<TemplateModalShellProps> = ({
   header,
   render,
 }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = React.useState<TabKey>('filters');
 
   if (!isOpen) return null;
@@ -40,7 +42,7 @@ const TemplateModalShell: React.FC<TemplateModalShellProps> = ({
                   : 'text-gray-600 hover:text-gray-800'
               } flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
             >
-              Filtreler
+              {t('tournaments.filters')}
             </button>
             <button
               onClick={() => setActiveTab('templates')}
@@ -50,7 +52,7 @@ const TemplateModalShell: React.FC<TemplateModalShellProps> = ({
                   : 'text-gray-600 hover:text-gray-800'
               } flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
             >
-              Şablonlar
+              {t('tournaments.templates')}
             </button>
           </div>
         </div>

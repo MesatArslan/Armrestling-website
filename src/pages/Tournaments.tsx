@@ -31,7 +31,7 @@ interface ExtendedPlayer extends Player {
 }
 
 const Tournaments = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { tournaments: repoTournaments, selectedTournamentId, selectedWeightRangeId, playerFilters: repoFilters, isLoading, saveTournaments, setSelectedTournament, setSelectedWeightRange, savePlayerFilters, clearAllTournamentData } = useTournaments();
   const { players: repoPlayers, columns: playerColumns } = usePlayers();
   const { fixtures } = useMatches();
@@ -1447,7 +1447,7 @@ const Tournaments = () => {
           isOpen={isTemplateModalOpen}
           onClose={() => setIsTemplateModalOpen(false)}
           onTemplateSelect={handleTemplateSelect}
-          onOpenDetailedTemplates={handleOpenDetailedTemplateModal}
+          onOpenDetailedTemplates={(i18n.language === 'tr' || i18n.language === 'az') ? handleOpenDetailedTemplateModal : undefined}
         />
 
         {/* Detailed Template Selection Modal */}
