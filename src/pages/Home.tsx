@@ -70,12 +70,7 @@ const Hero = () => {
       // clear
       ctx.clearRect(0, 0, width, height);
 
-      // twinkling background slight vignette
-      const grd = ctx.createRadialGradient(width / 2, height / 2, Math.min(width, height) * 0.1, width / 2, height / 2, Math.max(width, height));
-      grd.addColorStop(0, 'rgba(255,255,255,0.02)');
-      grd.addColorStop(1, 'rgba(0,0,0,0.25)');
-      ctx.fillStyle = grd;
-      ctx.fillRect(0, 0, width, height);
+      // inherit page background; no vignette fill here to keep a single-canvas feel
 
       // stars
       ctx.fillStyle = '#ffffff';
