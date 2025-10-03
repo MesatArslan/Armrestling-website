@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { XMarkIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, UserGroupIcon, HashtagIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import type { WeightRange } from '../../storage/schemas';
 
@@ -391,7 +391,13 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                   {weightRanges.map((range, index) => (
                     <div key={range.id} className="bg-gradient-to-br from-gray-50 to-white border border-gray-200/80 rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-2.5">
-                        <span className="text-xs sm:text-sm font-medium text-gray-600">{t('tournaments.range')} #{index + 1}</span>
+                        <span
+                          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-2.5 py-1 text-xs sm:text-sm shadow-sm"
+                          title={`${index + 1}`}
+                        >
+                          <HashtagIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 opacity-90" />
+                          <span className="font-semibold">{index + 1}</span>
+                        </span>
                         {weightRanges.length > 1 && (
                           <button
                             onClick={() => handleRemoveWeightRange(range.id)}
