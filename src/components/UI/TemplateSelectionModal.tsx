@@ -7,12 +7,14 @@ interface TemplateSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onTemplateSelect: (template: TournamentTemplate, handPreference: 'left' | 'right') => void;
+  onOpenDetailedTemplates?: () => void;
 }
 
 const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
   isOpen,
   onClose,
   onTemplateSelect,
+  onOpenDetailedTemplates,
 }) => {
   const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<string>('15');
@@ -107,6 +109,19 @@ const TemplateSelectionModal: React.FC<TemplateSelectionModalProps> = ({
         <div className="flex flex-col lg:flex-row h:[calc(85vh-120px)] lg:h-[calc(85vh-120px)]">
           {/* Sidebar - Categories */}
           <div className={`w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100 p-4 sm:p-6 overflow-y-auto max-h-[55vh] lg:max-h-none ${activeTab !== 'filters' ? 'hidden lg:block' : ''}`}> 
+            {/* Okul Şablonları Button */}
+            {onOpenDetailedTemplates && (
+              <div className="mb-6">
+                <button
+                  onClick={onOpenDetailedTemplates}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center space-x-2"
+                >
+                  <ScaleIcon className="h-5 w-5" />
+                  <span className="text-sm">{t('tournaments.newDetailedTemplate')}</span>
+                </button>
+              </div>
+            )}
+
             <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg flex items-center">
               <ScaleIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-blue-600" />
               {t('tournaments.ageCategory')}

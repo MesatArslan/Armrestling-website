@@ -8,6 +8,7 @@ import type { Player } from '../types';
 import TournamentCard from '../components/UI/TournamentCard';
 import ActionsMenu from '../components/UI/ActionsMenu';
 import TemplateSelectionModal from '../components/UI/TemplateSelectionModal';
+import DetailedTemplateModal from '../components/UI/DetailedTemplateModal';
 import ConfirmationModal from '../components/UI/ConfirmationModal';
 import CreateTournamentModal from '../components/UI/CreateTournamentModal';
 import type { Tournament as StorageTournament, WeightRange } from '../storage/schemas';
@@ -41,6 +42,8 @@ const Tournaments = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingTournamentId, setEditingTournamentId] = useState<string | null>(null);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isDetailedTemplateModalOpen, setIsDetailedTemplateModalOpen] = useState(false);
   const [playerFilters, setPlayerFilters] = useState<import('../hooks/useTournaments').PlayerFilters>({
     gender: null,
     handPreference: null,
@@ -149,8 +152,6 @@ const Tournaments = () => {
     });
   }, [isPDFPreviewModalOpen, currentPreviewPage, previewZoom]);
 
-  // Template Selection Modal States
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
   // Import Tournament Package Modal
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -564,6 +565,36 @@ const Tournaments = () => {
 
   const handleOpenTemplateModal = () => {
     setIsTemplateModalOpen(true);
+  };
+
+  const handleOpenDetailedTemplateModal = () => {
+    setIsDetailedTemplateModalOpen(true);
+    setIsTemplateModalOpen(false);
+  };
+
+  const handleBackToMainTemplate = () => {
+    setIsDetailedTemplateModalOpen(false);
+    setIsTemplateModalOpen(true);
+  };
+
+  const handleDetailedTemplateSelect = (template: TournamentTemplate) => {
+    const handPreferenceText = template.handPreferenceFilter === 'left' ? t('players.leftHanded') : t('players.rightHanded');
+    const tournamentName = `${t(template.nameKey)} - ${handPreferenceText}`;
+    
+    setConfirmationModal({
+      isOpen: true,
+      title: t('tournaments.createTournamentFromTemplate'),
+      message: t('tournaments.createFromTemplateConfirm', { name: tournamentName }),
+      onConfirm: () => {
+        const newTournament = createTournamentFromTemplate(template, tournamentName);
+        // Apply hand preference filter to the tournament
+        newTournament.handPreferenceFilter = template.handPreferenceFilter;
+        const updatedTournaments = [...tournaments, newTournament];
+        setTournaments(updatedTournaments);
+        saveTournaments(updatedTournaments as any);
+      },
+      type: 'info'
+    });
   };
 
   const handleSaveEdit = (tournamentData: {
@@ -1416,6 +1447,15 @@ const Tournaments = () => {
           isOpen={isTemplateModalOpen}
           onClose={() => setIsTemplateModalOpen(false)}
           onTemplateSelect={handleTemplateSelect}
+          onOpenDetailedTemplates={handleOpenDetailedTemplateModal}
+        />
+
+        {/* Detailed Template Selection Modal */}
+        <DetailedTemplateModal
+          isOpen={isDetailedTemplateModalOpen}
+          onClose={() => setIsDetailedTemplateModalOpen(false)}
+          onTemplateSelect={handleDetailedTemplateSelect}
+          onBackToMain={handleBackToMainTemplate}
         />
 
         {/* Confirmation Modal */}

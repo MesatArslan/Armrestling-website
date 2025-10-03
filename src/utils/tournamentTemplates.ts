@@ -46,6 +46,27 @@ const calculateBirthYears = (ageCategory: string) => {
         birthYearMin: null,
         birthYearMax: currentYear - 40  // 40 yaş ve üzeri
       };
+    // Okul şablonları kategorileri
+    case 'kucukler': // Küçükler (10-11 yaş)
+      return {
+        birthYearMin: currentYear - 11, // 11 yaş
+        birthYearMax: currentYear - 10  // 10 yaş
+      };
+    case 'yildizlar12': // Yıldızlar (12-13 yaş)
+      return {
+        birthYearMin: currentYear - 13, // 13 yaş
+        birthYearMax: currentYear - 12  // 12 yaş
+      };
+    case 'genclerB': // Gençler (B) (14-15 yaş)
+      return {
+        birthYearMin: currentYear - 15, // 15 yaş
+        birthYearMax: currentYear - 14  // 14 yaş
+      };
+    case 'genclerA': // Gençler (A) (16-17 yaş)
+      return {
+        birthYearMin: currentYear - 17, // 17 yaş
+        birthYearMax: currentYear - 16  // 16 yaş
+      };
     default:
       return { birthYearMin: null, birthYearMax: null };
   }
@@ -239,6 +260,318 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
     ],
     ...calculateBirthYears('master'),
   },
+
+  // Okul şablonları - Küçükler (10-11 Yaş)
+  {
+    id: 'kucukler-right-male',
+    nameKey: 'tournaments.kucuklerErkekler',
+    descriptionKey: 'tournaments.kucuklerErkeklerDescription',
+    ageCategory: 'kucukler',
+    genderFilter: 'male',
+    handPreferenceFilter: 'right',
+    weightRanges: [
+      { id: 'kucukler-right-male-35', name: '35 kg', min: 0, max: 35 },
+      { id: 'kucukler-right-male-40', name: '40 kg', min: 35.01, max: 40 },
+      { id: 'kucukler-right-male-45', name: '45 kg', min: 40.01, max: 45 },
+      { id: 'kucukler-right-male-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'kucukler-right-male-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'kucukler-right-male-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'kucukler-right-male-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'kucukler-right-male-65plus', name: '+65 kg', min: 65.01, max: 999 },
+    ],
+    ...calculateBirthYears('kucukler'),
+  },
+  {
+    id: 'kucukler-left-male',
+    nameKey: 'tournaments.kucuklerErkekler',
+    descriptionKey: 'tournaments.kucuklerErkeklerDescription',
+    ageCategory: 'kucukler',
+    genderFilter: 'male',
+    handPreferenceFilter: 'left',
+    weightRanges: [
+      { id: 'kucukler-left-male-35', name: '35 kg', min: 0, max: 35 },
+      { id: 'kucukler-left-male-40', name: '40 kg', min: 35.01, max: 40 },
+      { id: 'kucukler-left-male-45', name: '45 kg', min: 40.01, max: 45 },
+      { id: 'kucukler-left-male-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'kucukler-left-male-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'kucukler-left-male-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'kucukler-left-male-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'kucukler-left-male-65plus', name: '+65 kg', min: 65.01, max: 999 },
+    ],
+    ...calculateBirthYears('kucukler'),
+  },
+  {
+    id: 'kucukler-right-female',
+    nameKey: 'tournaments.kucuklerKizlar',
+    descriptionKey: 'tournaments.kucuklerKizlarDescription',
+    ageCategory: 'kucukler',
+    genderFilter: 'female',
+    handPreferenceFilter: 'right',
+    weightRanges: [
+      { id: 'kucukler-right-female-30', name: '30 kg', min: 0, max: 30 },
+      { id: 'kucukler-right-female-35', name: '35 kg', min: 30.01, max: 35 },
+      { id: 'kucukler-right-female-40', name: '40 kg', min: 35.01, max: 40 },
+      { id: 'kucukler-right-female-45', name: '45 kg', min: 40.01, max: 45 },
+      { id: 'kucukler-right-female-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'kucukler-right-female-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'kucukler-right-female-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'kucukler-right-female-60plus', name: '+60 kg', min: 60.01, max: 999 },
+    ],
+    ...calculateBirthYears('kucukler'),
+  },
+  {
+    id: 'kucukler-left-female',
+    nameKey: 'tournaments.kucuklerKizlar',
+    descriptionKey: 'tournaments.kucuklerKizlarDescription',
+    ageCategory: 'kucukler',
+    genderFilter: 'female',
+    handPreferenceFilter: 'left',
+    weightRanges: [
+      { id: 'kucukler-left-female-30', name: '30 kg', min: 0, max: 30 },
+      { id: 'kucukler-left-female-35', name: '35 kg', min: 30.01, max: 35 },
+      { id: 'kucukler-left-female-40', name: '40 kg', min: 35.01, max: 40 },
+      { id: 'kucukler-left-female-45', name: '45 kg', min: 40.01, max: 45 },
+      { id: 'kucukler-left-female-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'kucukler-left-female-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'kucukler-left-female-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'kucukler-left-female-60plus', name: '+60 kg', min: 60.01, max: 999 },
+    ],
+    ...calculateBirthYears('kucukler'),
+  },
+
+  // Yıldızlar (12-13 Yaş)
+  {
+    id: 'yildizlar12-right-male',
+    nameKey: 'tournaments.yildizlar12Erkekler',
+    descriptionKey: 'tournaments.yildizlar12ErkeklerDescription',
+    ageCategory: 'yildizlar12',
+    genderFilter: 'male',
+    handPreferenceFilter: 'right',
+    weightRanges: [
+      { id: 'yildizlar12-right-male-40', name: '40 kg', min: 0, max: 40 },
+      { id: 'yildizlar12-right-male-45', name: '45 kg', min: 40.01, max: 45 },
+      { id: 'yildizlar12-right-male-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'yildizlar12-right-male-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'yildizlar12-right-male-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'yildizlar12-right-male-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'yildizlar12-right-male-70', name: '70 kg', min: 65.01, max: 70 },
+      { id: 'yildizlar12-right-male-70plus', name: '+70 kg', min: 70.01, max: 999 },
+    ],
+    ...calculateBirthYears('yildizlar12'),
+  },
+  {
+    id: 'yildizlar12-left-male',
+    nameKey: 'tournaments.yildizlar12Erkekler',
+    descriptionKey: 'tournaments.yildizlar12ErkeklerDescription',
+    ageCategory: 'yildizlar12',
+    genderFilter: 'male',
+    handPreferenceFilter: 'left',
+    weightRanges: [
+      { id: 'yildizlar12-left-male-40', name: '40 kg', min: 0, max: 40 },
+      { id: 'yildizlar12-left-male-45', name: '45 kg', min: 40.01, max: 45 },
+      { id: 'yildizlar12-left-male-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'yildizlar12-left-male-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'yildizlar12-left-male-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'yildizlar12-left-male-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'yildizlar12-left-male-70', name: '70 kg', min: 65.01, max: 70 },
+      { id: 'yildizlar12-left-male-70plus', name: '+70 kg', min: 70.01, max: 999 },
+    ],
+    ...calculateBirthYears('yildizlar12'),
+  },
+  {
+    id: 'yildizlar12-right-female',
+    nameKey: 'tournaments.yildizlar12Kizlar',
+    descriptionKey: 'tournaments.yildizlar12KizlarDescription',
+    ageCategory: 'yildizlar12',
+    genderFilter: 'female',
+    handPreferenceFilter: 'right',
+    weightRanges: [
+      { id: 'yildizlar12-right-female-35', name: '35 kg', min: 0, max: 35 },
+      { id: 'yildizlar12-right-female-40', name: '40 kg', min: 35.01, max: 40 },
+      { id: 'yildizlar12-right-female-45', name: '45 kg', min: 40.01, max: 45 },
+      { id: 'yildizlar12-right-female-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'yildizlar12-right-female-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'yildizlar12-right-female-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'yildizlar12-right-female-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'yildizlar12-right-female-65plus', name: '+65 kg', min: 65.01, max: 999 },
+    ],
+    ...calculateBirthYears('yildizlar12'),
+  },
+  {
+    id: 'yildizlar12-left-female',
+    nameKey: 'tournaments.yildizlar12Kizlar',
+    descriptionKey: 'tournaments.yildizlar12KizlarDescription',
+    ageCategory: 'yildizlar12',
+    genderFilter: 'female',
+    handPreferenceFilter: 'left',
+    weightRanges: [
+      { id: 'yildizlar12-left-female-35', name: '35 kg', min: 0, max: 35 },
+      { id: 'yildizlar12-left-female-40', name: '40 kg', min: 35.01, max: 40 },
+      { id: 'yildizlar12-left-female-45', name: '45 kg', min: 40.01, max: 45 },
+      { id: 'yildizlar12-left-female-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'yildizlar12-left-female-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'yildizlar12-left-female-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'yildizlar12-left-female-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'yildizlar12-left-female-65plus', name: '+65 kg', min: 65.01, max: 999 },
+    ],
+    ...calculateBirthYears('yildizlar12'),
+  },
+
+  // Gençler (B) (14-15 Yaş)
+  {
+    id: 'genclerB-right-male',
+    nameKey: 'tournaments.genclerBErkekler',
+    descriptionKey: 'tournaments.genclerBErkeklerDescription',
+    ageCategory: 'genclerB',
+    genderFilter: 'male',
+    handPreferenceFilter: 'right',
+    weightRanges: [
+      { id: 'genclerB-right-male-45', name: '45 kg', min: 0, max: 45 },
+      { id: 'genclerB-right-male-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'genclerB-right-male-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'genclerB-right-male-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'genclerB-right-male-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'genclerB-right-male-70', name: '70 kg', min: 65.01, max: 70 },
+      { id: 'genclerB-right-male-75', name: '75 kg', min: 70.01, max: 75 },
+      { id: 'genclerB-right-male-75plus', name: '+75 kg', min: 75.01, max: 999 },
+    ],
+    ...calculateBirthYears('genclerB'),
+  },
+  {
+    id: 'genclerB-left-male',
+    nameKey: 'tournaments.genclerBErkekler',
+    descriptionKey: 'tournaments.genclerBErkeklerDescription',
+    ageCategory: 'genclerB',
+    genderFilter: 'male',
+    handPreferenceFilter: 'left',
+    weightRanges: [
+      { id: 'genclerB-left-male-45', name: '45 kg', min: 0, max: 45 },
+      { id: 'genclerB-left-male-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'genclerB-left-male-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'genclerB-left-male-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'genclerB-left-male-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'genclerB-left-male-70', name: '70 kg', min: 65.01, max: 70 },
+      { id: 'genclerB-left-male-75', name: '75 kg', min: 70.01, max: 75 },
+      { id: 'genclerB-left-male-75plus', name: '+75 kg', min: 75.01, max: 999 },
+    ],
+    ...calculateBirthYears('genclerB'),
+  },
+  {
+    id: 'genclerB-right-female',
+    nameKey: 'tournaments.genclerBKizlar',
+    descriptionKey: 'tournaments.genclerBKizlarDescription',
+    ageCategory: 'genclerB',
+    genderFilter: 'female',
+    handPreferenceFilter: 'right',
+    weightRanges: [
+      { id: 'genclerB-right-female-40', name: '40 kg', min: 0, max: 40 },
+      { id: 'genclerB-right-female-45', name: '45 kg', min: 40.01, max: 45 },
+      { id: 'genclerB-right-female-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'genclerB-right-female-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'genclerB-right-female-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'genclerB-right-female-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'genclerB-right-female-70', name: '70 kg', min: 65.01, max: 70 },
+      { id: 'genclerB-right-female-70plus', name: '+70 kg', min: 70.01, max: 999 },
+    ],
+    ...calculateBirthYears('genclerB'),
+  },
+  {
+    id: 'genclerB-left-female',
+    nameKey: 'tournaments.genclerBKizlar',
+    descriptionKey: 'tournaments.genclerBKizlarDescription',
+    ageCategory: 'genclerB',
+    genderFilter: 'female',
+    handPreferenceFilter: 'left',
+    weightRanges: [
+      { id: 'genclerB-left-female-40', name: '40 kg', min: 0, max: 40 },
+      { id: 'genclerB-left-female-45', name: '45 kg', min: 40.01, max: 45 },
+      { id: 'genclerB-left-female-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'genclerB-left-female-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'genclerB-left-female-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'genclerB-left-female-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'genclerB-left-female-70', name: '70 kg', min: 65.01, max: 70 },
+      { id: 'genclerB-left-female-70plus', name: '+70 kg', min: 70.01, max: 999 },
+    ],
+    ...calculateBirthYears('genclerB'),
+  },
+
+  // Gençler (A) (16-17 Yaş)
+  {
+    id: 'genclerA-right-male',
+    nameKey: 'tournaments.genclerAErkekler',
+    descriptionKey: 'tournaments.genclerAErkeklerDescription',
+    ageCategory: 'genclerA',
+    genderFilter: 'male',
+    handPreferenceFilter: 'right',
+    weightRanges: [
+      { id: 'genclerA-right-male-50', name: '50 kg', min: 0, max: 50 },
+      { id: 'genclerA-right-male-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'genclerA-right-male-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'genclerA-right-male-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'genclerA-right-male-70', name: '70 kg', min: 65.01, max: 70 },
+      { id: 'genclerA-right-male-75', name: '75 kg', min: 70.01, max: 75 },
+      { id: 'genclerA-right-male-80', name: '80 kg', min: 75.01, max: 80 },
+      { id: 'genclerA-right-male-80plus', name: '+80 kg', min: 80.01, max: 999 },
+    ],
+    ...calculateBirthYears('genclerA'),
+  },
+  {
+    id: 'genclerA-left-male',
+    nameKey: 'tournaments.genclerAErkekler',
+    descriptionKey: 'tournaments.genclerAErkeklerDescription',
+    ageCategory: 'genclerA',
+    genderFilter: 'male',
+    handPreferenceFilter: 'left',
+    weightRanges: [
+      { id: 'genclerA-left-male-50', name: '50 kg', min: 0, max: 50 },
+      { id: 'genclerA-left-male-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'genclerA-left-male-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'genclerA-left-male-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'genclerA-left-male-70', name: '70 kg', min: 65.01, max: 70 },
+      { id: 'genclerA-left-male-75', name: '75 kg', min: 70.01, max: 75 },
+      { id: 'genclerA-left-male-80', name: '80 kg', min: 75.01, max: 80 },
+      { id: 'genclerA-left-male-80plus', name: '+80 kg', min: 80.01, max: 999 },
+    ],
+    ...calculateBirthYears('genclerA'),
+  },
+  {
+    id: 'genclerA-right-female',
+    nameKey: 'tournaments.genclerAKizlar',
+    descriptionKey: 'tournaments.genclerAKizlarDescription',
+    ageCategory: 'genclerA',
+    genderFilter: 'female',
+    handPreferenceFilter: 'right',
+    weightRanges: [
+      { id: 'genclerA-right-female-45', name: '45 kg', min: 0, max: 45 },
+      { id: 'genclerA-right-female-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'genclerA-right-female-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'genclerA-right-female-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'genclerA-right-female-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'genclerA-right-female-70', name: '70 kg', min: 65.01, max: 70 },
+      { id: 'genclerA-right-female-75', name: '75 kg', min: 70.01, max: 75 },
+      { id: 'genclerA-right-female-75plus', name: '+75 kg', min: 75.01, max: 999 },
+    ],
+    ...calculateBirthYears('genclerA'),
+  },
+  {
+    id: 'genclerA-left-female',
+    nameKey: 'tournaments.genclerAKizlar',
+    descriptionKey: 'tournaments.genclerAKizlarDescription',
+    ageCategory: 'genclerA',
+    genderFilter: 'female',
+    handPreferenceFilter: 'left',
+    weightRanges: [
+      { id: 'genclerA-left-female-45', name: '45 kg', min: 0, max: 45 },
+      { id: 'genclerA-left-female-50', name: '50 kg', min: 45.01, max: 50 },
+      { id: 'genclerA-left-female-55', name: '55 kg', min: 50.01, max: 55 },
+      { id: 'genclerA-left-female-60', name: '60 kg', min: 55.01, max: 60 },
+      { id: 'genclerA-left-female-65', name: '65 kg', min: 60.01, max: 65 },
+      { id: 'genclerA-left-female-70', name: '70 kg', min: 65.01, max: 70 },
+      { id: 'genclerA-left-female-75', name: '75 kg', min: 70.01, max: 75 },
+      { id: 'genclerA-left-female-75plus', name: '+75 kg', min: 75.01, max: 999 },
+    ],
+    ...calculateBirthYears('genclerA'),
+  },
 ];
 
 export const getTemplatesByCategory = () => {
@@ -248,6 +581,16 @@ export const getTemplatesByCategory = () => {
     '23': TOURNAMENT_TEMPLATES.filter(t => t.ageCategory === '23'),
     'senior': TOURNAMENT_TEMPLATES.filter(t => t.ageCategory === 'senior'),
     'master': TOURNAMENT_TEMPLATES.filter(t => t.ageCategory === 'master'),
+  };
+  return categories;
+};
+
+export const getSchoolTemplatesByCategory = () => {
+  const categories = {
+    'kucukler': TOURNAMENT_TEMPLATES.filter(t => t.ageCategory === 'kucukler'),
+    'yildizlar12': TOURNAMENT_TEMPLATES.filter(t => t.ageCategory === 'yildizlar12'),
+    'genclerB': TOURNAMENT_TEMPLATES.filter(t => t.ageCategory === 'genclerB'),
+    'genclerA': TOURNAMENT_TEMPLATES.filter(t => t.ageCategory === 'genclerA'),
   };
   return categories;
 };
