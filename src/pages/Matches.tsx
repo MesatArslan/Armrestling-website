@@ -1325,25 +1325,31 @@ const Matches = () => {
             <div className="mb-3">
               <div className="relative">
                 {/* Scrollable chips */}
+                {/* Beautified tournament filter chips with better visuals */}
                 <div
                   ref={tournamentScrollRef}
                   className="overflow-x-auto scroll-smooth px-7 sm:px-9"
                   style={{ scrollbarWidth: 'none' as any }}
                 >
-                  <div className="flex flex-nowrap items-center gap-1.5 py-0.5" style={{ msOverflowStyle: 'none' as any }}>
+                  <div className="flex flex-nowrap items-center gap-2 py-1" style={{ msOverflowStyle: 'none' as any }}>
                     <style>{`/* hide scrollbars */
                       .no-scrollbar::-webkit-scrollbar{display:none}
                     `}</style>
                     {/* All tournaments chip */}
                     <button
                       onClick={() => setSelectedTournamentIdForMatches(null)}
-                      className={`shrink-0 px-2.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-colors ${
+                      className={`shrink-0 px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold border transition-all duration-200 focus:outline-none ${
                         selectedTournamentIdForMatches === null
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:text-blue-700'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md hover:shadow-lg hover:brightness-105 ring-2 ring-blue-300/40'
+                          : 'bg-white/90 text-gray-700 border-gray-200 hover:border-blue-400 hover:text-blue-700 hover:shadow-md shadow-sm backdrop-blur'
                       }`}
                     >
-                      {t('matches.all')}
+                      <span className="inline-flex items-center gap-2">
+                        <svg className={`w-4 h-4 ${selectedTournamentIdForMatches === null ? 'text-white' : 'text-blue-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h7v7H3zM14 4h7v7h-7zM14 13h7v7h-7zM3 13h7v7H3z" />
+                        </svg>
+                        {t('matches.all')}
+                      </span>
                     </button>
                     {Array.from(
                       fixtures.reduce((map, f) => {
@@ -1354,14 +1360,19 @@ const Matches = () => {
                       <button
                         key={tid}
                         onClick={() => setSelectedTournamentIdForMatches(tid)}
-                        className={`shrink-0 px-2.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-colors ${
+                        className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold border transition-all duration-200 focus:outline-none ${
                           selectedTournamentIdForMatches === tid
-                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:text-blue-700'
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-md hover:shadow-lg hover:brightness-105 ring-2 ring-blue-300/40'
+                            : 'bg-white/90 text-gray-700 border-gray-200 hover:border-blue-400 hover:text-blue-700 hover:shadow-md shadow-sm backdrop-blur'
                         }`}
                         title={tname}
                       >
-                        {tname}
+                        <span className="inline-flex items-center gap-2">
+                          <svg className={`w-4 h-4 ${selectedTournamentIdForMatches === tid ? 'text-white' : 'text-amber-500'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17l3-10 5 2-4 5-4-2-4 5-4-5 5-2 3 10z" />
+                          </svg>
+                          <span title={tname}>{tname}</span>
+                        </span>
                       </button>
                     ))}
                   </div>
