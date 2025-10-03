@@ -87,6 +87,8 @@ const Scoring: React.FC = () => {
   const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
   const [previewPages, setPreviewPages] = useState<string[]>([]);
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0);
+  // Görünüm modu: sadece ayarlar, seçim+özet, seçim+detay
+  const [viewMode, setViewMode] = useState<'settings' | 'selection+summary' | 'selection+details'>('selection+summary');
   
   const [isGroupByDropdownOpen, setIsGroupByDropdownOpen] = useState(false);
   const [isPDFSettingsOpen, setIsPDFSettingsOpen] = useState(false);
@@ -138,6 +140,13 @@ const Scoring: React.FC = () => {
       localStorage.setItem(SCORING_STORAGE_KEY, JSON.stringify(config));
     } catch {}
   }, [config]);
+
+  // Basit modda detay sekmesine geçildiyse özet sekmesine al
+  useEffect(() => {
+    // Görünüm modları sekmeye bağlı değil; yine de state tutarlılığı için ayarla
+    if (viewMode === 'selection+summary' && activeTab !== 'summary') setActiveTab('summary');
+    if (viewMode === 'selection+details' && activeTab !== 'details') setActiveTab('details');
+  }, [viewMode]);
 
   const selectedTournaments = useMemo(() => {
     const setIds = new Set(config.selectedTournamentIds);
@@ -367,33 +376,33 @@ const Scoring: React.FC = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-start py-8 px-2">
       <div className="w-full max-w-7xl px-2 sm:px-6 lg:px-8">
 
-        {/* Mobile Tab Navigation (Selections / Summary / Details) */}
-        <div className="xl:hidden mb-4 border-b border-gray-200 bg-white rounded-lg overflow-hidden">
-          <div className="flex">
-            <button
-              onClick={() => setActiveTab('selections')}
-              className={`${activeTab === 'selections' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'} flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
-            >
-              {t('scoring.tabs.selections')}
-            </button>
-            <button
-              onClick={() => setActiveTab('summary')}
-              className={`${activeTab === 'summary' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'} flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
-            >
-              {t('scoring.tabs.summary')}
-            </button>
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`${activeTab === 'details' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'} flex-1 px-4 py-3 text-sm font-semibold transition-colors`}
-            >
-              {t('scoring.tabs.details')}
-            </button>
-          </div>
+        {/* Üst bar: 3 mod butonu */}
+        <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center justify-start">
+          <button
+            onClick={() => setViewMode('settings')}
+            className={`px-3 py-2 text-xs sm:text-sm rounded-lg border-2 font-semibold transition-all duration-200 ${viewMode === 'settings' ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
+          >
+            {t('scoring.pointsSettings')}
+          </button>
+          <button
+            onClick={() => setViewMode('selection+summary')}
+            className={`px-3 py-2 text-xs sm:text-sm rounded-lg border-2 font-semibold transition-all duration-200 ${viewMode === 'selection+summary' ? 'border-purple-300 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
+          >
+            {t('scoring.tournamentSelection')} + {t('scoring.totalPoints')}
+          </button>
+          <button
+            onClick={() => setViewMode('selection+details')}
+            className={`px-3 py-2 text-xs sm:text-sm rounded-lg border-2 font-semibold transition-all duration-200 ${viewMode === 'selection+details' ? 'border-orange-300 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
+          >
+            {t('scoring.tournamentSelection')} + {t('scoring.fixtureDetails')}
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Mobil sekmeler kaldırıldı; görünüm butonları her boyutta aynı davranır */}
+
+        <div className={`grid grid-cols-1 xl:grid-cols-1 gap-8`}>
           {/* Settings Panel */}
-          <div className={`xl:col-span-1 max-h-[calc(100vh-4rem)] overflow-y-auto ${activeTab !== 'selections' ? 'hidden xl:block' : ''}`}>
+          <div className={`xl:col-span-1 max-h-[calc(100vh-4rem)] overflow-y-auto ${viewMode === 'settings' ? '' : 'hidden'}`}>
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6 sticky top-24">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
@@ -511,7 +520,7 @@ const Scoring: React.FC = () => {
           </div>
 
           {/* Main Content */}
-          <div className={`xl:col-span-2 max-h-[calc(100vh-4rem)] overflow-y-auto space-y-6 ${activeTab === 'selections' ? 'hidden xl:block' : ''}`}>
+          <div className={`xl:col-span-2 max-h-[calc(100vh-4rem)] overflow-y-auto space-y-6 ${viewMode === 'settings' ? 'hidden' : ''}`}> 
             {/* Tournament Selection */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6">
               <div className="flex items-center gap-3 mb-6">
@@ -615,8 +624,8 @@ const Scoring: React.FC = () => {
               )}
             </div>
 
-            {/* Aggregated Scores (Summary Tab) */}
-            <div className={`bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-4 sm:p-6 ${activeTab !== 'summary' ? 'hidden xl:block' : ''}`}>
+            {/* Aggregated Scores (Summary) */}
+            <div className={`bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-4 sm:p-6 ${viewMode === 'selection+summary' ? '' : 'hidden'}`}>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3 mb-4 sm:mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -682,7 +691,7 @@ const Scoring: React.FC = () => {
             </div>
 
             {/* Per-tournament/fixture details (Details Tab) */}
-            <div className={`bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6 ${activeTab !== 'details' ? 'hidden xl:block' : ''}`}>
+            <div className={`bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6 ${viewMode === 'selection+details' ? '' : 'hidden'}`}>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                   <StarIcon className="w-5 h-5 text-white" />
