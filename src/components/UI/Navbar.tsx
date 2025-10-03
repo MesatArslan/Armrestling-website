@@ -14,6 +14,7 @@ const Navbar = () => {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [loginHint, setLoginHint] = useState<{ visible: boolean; text: string }>(() => ({ visible: false, text: '' }));
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
+  const [atTop, setAtTop] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   
@@ -43,6 +44,20 @@ const Navbar = () => {
     };
   }, [isOpen]);
 
+  // Detect if page is at top to toggle transparent navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      setAtTop(window.scrollY < 10);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
+
 
   const openAuthModal = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
@@ -64,7 +79,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[60] bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 shadow-sm border-b border-gray-100">
+    <nav className={`fixed top-0 left-0 right-0 z-[60] transition-colors duration-300 ${atTop ? 'bg-transparent backdrop-blur-none border-transparent shadow-none' : 'bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm border-b border-gray-100'}`}>
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
